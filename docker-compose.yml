@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: manutencao
+      POSTGRES_PASSWORD: manutencao
+      POSTGRES_DB: manutencao
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U manutencao -d manutencao"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: ${IMAGE_TARGET:-production}
+    environment:
+      DATABASE_URL: postgresql://manutencao:manutencao@db:5432/manutencao?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:-compose-session-secret}
+      COOKIE_SECURE: "false"
+      ATTACHMENT_DIR: /data/attachments
+      PORT: "3000"
+    volumes:
+      - attachments:/data/attachments
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: ${IMAGE_TARGET:-production}
+    environment:
+      API_PROXY: http://api:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  attachments:

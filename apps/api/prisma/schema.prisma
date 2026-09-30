@@ -1,0 +1,114 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Factory {
+  id        String    @id @default(cuid())
+  name      String
+  machines  Machine[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Machine {
+  id           String   @id @default(cuid())
+  name         String
+  factoryId    String
+  factory      Factory  @relation(fields: [factoryId], references: [id], onDelete: Restrict)
+  sector       String?
+  manufacturer String?
+  internalCode String?
+  status       String
+  notes        String?
+  isDailyLine  Boolean  @default(false)
+  isCritical   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([factoryId])
+}
+
+model TechnicianRole {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  technicians Technician[]
+}
+
+model Technician {
+  id           String         @id @default(cuid())
+  name         String
+  roleId       String
+  role         TechnicianRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  shift        String
+  area         String?
+  status       String
+  registration String?
+  contact      String?
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([roleId])
+}
+
+model Record {
+  id           String             @id @default(cuid())
+  type         String
+  body         String
+  occurredAt   DateTime
+  status       String
+  technicianId String?
+  factoryId    String?
+  machineId    String?
+  machineLabel String?
+  tag          String?
+  line         String?
+  priority     String?
+  dueAt        DateTime?
+  notes        String?
+  origin       String
+  attachments  RecordAttachment[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([type, status])
+  @@index([dueAt])
+  @@index([origin])
+}
+
+model RecordAttachment {
+  id         String   @id @default(cuid())
+  recordId   String
+  record     Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  fileName   String
+  mimeType   String
+  storageKey String   @unique
+  createdAt  DateTime @default(now())
+
+  @@index([recordId])
+}

@@ -1,0 +1,86 @@
+import { NavLink } from "react-router-dom";
+import { Button } from "../../design/ui/controls";
+import { useLogout } from "../data/session";
+import { ThemeToggle } from "./ThemeToggle";
+
+const notebook = [
+  { to: "/captura", label: "Captura" },
+  { to: "/registros", label: "Registros" },
+];
+
+const support = [
+  { to: "/cadastro/fabricas", label: "Fábricas" },
+  { to: "/cadastro/maquinas", label: "Máquinas" },
+  { to: "/cadastro/funcoes", label: "Funções" },
+  { to: "/cadastro/tecnicos", label: "Técnicos" },
+];
+
+function Item({ to, label, onNavigate }: { to: string; label: string; onNavigate: () => void }) {
+  return (
+    <NavLink
+      to={to}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        `block rounded-control px-3 py-2.5 text-sm font-medium ${
+          isActive ? "bg-sidebar-active text-sidebar-text" : "text-sidebar-muted"
+        }`
+      }
+    >
+      {label}
+    </NavLink>
+  );
+}
+
+export function Sidebar({
+  open,
+  email,
+  onClose,
+}: {
+  open: boolean;
+  email: string;
+  onClose: () => void;
+}) {
+  const logout = useLogout();
+  return (
+    <>
+      {open ? (
+        <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-canvas lg:hidden" onClick={onClose} />
+      ) : null}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col border-r border-sidebar-line bg-sidebar px-4 py-5 text-sidebar-text transition lg:static lg:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="px-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sidebar-muted">Gestor</p>
+          <p className="mt-1 text-lg font-semibold leading-tight">Gestão de Manutenção</p>
+          <p className="mt-1 truncate text-xs text-sidebar-muted">{email}</p>
+        </div>
+        <nav className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+          <div>
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted">Caderno</p>
+            <div className="mt-2 flex flex-col gap-1">
+              {notebook.map((item) => (
+                <Item key={item.to} {...item} onNavigate={onClose} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted">Apoio</p>
+            <div className="mt-2 flex flex-col gap-1">
+              {support.map((item) => (
+                <Item key={item.to} {...item} onNavigate={onClose} />
+              ))}
+            </div>
+          </div>
+        </nav>
+        <div className="mt-4 flex flex-col gap-3 border-t border-sidebar-line pt-4">
+          <ThemeToggle />
+          <Button tone="ghost" onClick={() => logout.mutate()}>
+            Sair
+          </Button>
+        </div>
+      </aside>
+    </>
+  );
+}
