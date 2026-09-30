@@ -1,5 +1,6 @@
 services:
   db:
+    profiles: ["local-db"]
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: manutencao
@@ -18,8 +19,11 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       target: ${IMAGE_TARGET:-production}
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DATABASE_URL: postgresql://manutencao:manutencao@db:5432/manutencao?schema=public
+      DATABASE_URL: ${DATABASE_URL:?Defina DATABASE_URL no .env}
       SESSION_SECRET: ${SESSION_SECRET:-compose-session-secret}
       COOKIE_SECURE: "false"
       ATTACHMENT_DIR: /data/attachments
@@ -29,6 +33,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+        required: false
     ports:
       - "3000:3000"
 

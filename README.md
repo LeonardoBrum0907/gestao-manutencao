@@ -4,7 +4,7 @@ Caderno do gestor: captura rápida e ficha. Fatias 1 a 6.
 
 ## Subir
 
-Na raiz do repositório:
+Copie `.env.example` para `.env` e preencha `DATABASE_URL` (banco `manutencao`) e `SESSION_SECRET`.
 
 ```bash
 docker compose up --build
@@ -14,9 +14,15 @@ docker compose up --build
 - Saúde: http://localhost:8080/health e http://localhost:3000/health
 - Conta: `gestor@local` / `gestor`
 
-O Compose sobe `db` (Postgres), `api` (Nest, `prisma migrate deploy` na entrada) e `web` (nginx com proxy `/api`). A API não sobe sem `DATABASE_URL` e `SESSION_SECRET`.
+A API lê `DATABASE_URL` do `.env`. Na entrada ela roda `prisma migrate deploy`. Sem `DATABASE_URL` e `SESSION_SECRET` ela não sobe.
 
-`IMAGE_TARGET=development` troca o alvo da imagem (watch na API, Vite na web) sem mudar os três serviços.
+Postgres local é opcional, no profile `local-db`:
+
+```bash
+docker compose --profile local-db up --build
+```
+
+`IMAGE_TARGET=development` troca o alvo da imagem (watch na API, Vite na web). O `web` continua na frente da API.
 
 ## O que esta versão faz
 
