@@ -54,6 +54,21 @@ export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
   high: "Alta",
 };
 
+export const GESTOR_TIME_ZONE = "America/Sao_Paulo";
+
+export const DUE_WINDOWS = ["overdue", "today", "tomorrow"] as const;
+export type DueWindow = (typeof DUE_WINDOWS)[number];
+
+export const DUE_WINDOW_LABELS: Record<DueWindow, string> = {
+  overdue: "Vencida",
+  today: "Hoje",
+  tomorrow: "Amanhã",
+};
+
+export function isDueWindow(value: string): value is DueWindow {
+  return (DUE_WINDOWS as readonly string[]).includes(value);
+}
+
 export const MACHINE_STATUS_LABELS: Record<MachineOperationalStatus, string> = {
   implanting: "Em Implantação",
   testing: "Em Teste",

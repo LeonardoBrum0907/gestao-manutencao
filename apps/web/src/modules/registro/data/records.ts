@@ -1,11 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AttachmentDto, RecordDto, RecordPriority, RecordStatus, RecordType } from "@manutencao/shared";
 import { api } from "../../../app/http";
+import { followUpSearch, type FollowUpQuery } from "../model/follow-up";
 
 export function useRecords() {
   return useQuery({
     queryKey: ["records"],
     queryFn: () => api<RecordDto[]>("/api/records"),
+  });
+}
+
+export function useFollowUp(query: FollowUpQuery) {
+  const search = followUpSearch(query).toString();
+  return useQuery({
+    queryKey: ["records", "follow-up", search],
+    queryFn: () => api<RecordDto[]>(search ? `/api/records?${search}` : "/api/records"),
   });
 }
 

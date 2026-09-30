@@ -4,6 +4,7 @@ import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { TechniciansPage } from "../modules/cadastro/ui/TechniciansPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
+import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
 import { RecordsPage } from "../modules/registro/ui/RecordsPage";
 import { AppShell } from "../shell/ui/AppShell";
@@ -15,6 +16,7 @@ export function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<AppShell />}>
         <Route path="/captura" element={<CapturePage />} />
+        <Route path="/acompanhamento" element={<FollowUpPage />} />
         <Route path="/registros" element={<RecordsPage />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/fabricas" element={<FactoriesPage />} />

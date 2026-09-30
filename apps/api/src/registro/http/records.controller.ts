@@ -7,21 +7,27 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
+import { FollowUpList } from "../application/follow-up-list";
+import { parseFollowUpQuery } from "../application/parse-follow-up";
 import { Records } from "../application/records";
 
 @Controller("api/records")
 export class RecordsController {
-  constructor(private readonly records: Records) {}
+  constructor(
+    private readonly records: Records,
+    private readonly followUp: FollowUpList,
+  ) {}
 
   @Get()
-  list() {
-    return this.records.list();
+  list(@Query("type") type?: unknown, @Query("status") status?: unknown, @Query("due") due?: unknown) {
+    return this.followUp.execute(parseFollowUpQuery({ type, status, due }));
   }
 
   @Get(":id")

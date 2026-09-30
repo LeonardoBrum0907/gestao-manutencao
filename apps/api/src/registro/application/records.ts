@@ -36,10 +36,6 @@ export class Records {
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
 
-  list(): Promise<RecordDto[]> {
-    return this.records.list();
-  }
-
   async get(id: string): Promise<RecordDto> {
     const row = await this.records.find(id);
     if (!row) throw new DomainError("not_found", 404, "Registro não encontrado.");

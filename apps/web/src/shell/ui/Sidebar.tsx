@@ -5,6 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const notebook = [
   { to: "/captura", label: "Captura" },
+  { to: "/acompanhamento", label: "Acompanhamento" },
   { to: "/registros", label: "Registros" },
 ];
 
