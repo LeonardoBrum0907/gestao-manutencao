@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes, InputHTMLAttributes } from "react";
+import { useEffect, useId, type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
+import { createPortal } from "react-dom";
 
 const tones = {
   primary: "bg-accent text-accent-contrast",
@@ -57,19 +58,72 @@ export function PageTitle({
   eyebrow,
   title,
   text,
+  action,
 }: {
   eyebrow?: string;
   title: string;
   text?: string;
+  action?: ReactNode;
 }) {
   return (
-    <header className="mb-6">
-      {eyebrow ? (
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{eyebrow}</p>
-      ) : null}
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
-      {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        {eyebrow ? (
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{eyebrow}</p>
+        ) : null}
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
+        {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
     </header>
+  );
+}
+
+export function Modal({
+  open,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+      <div className="absolute inset-0 bg-app/40" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative z-10 max-h-[min(40rem,calc(100vh-2rem))] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-card p-4 shadow-card sm:p-5"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h2 id={titleId} className="text-lg font-semibold text-app">
+            {title}
+          </h2>
+          <Button tone="ghost" onClick={onClose}>
+            Fechar
+          </Button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body,
   );
 }
 

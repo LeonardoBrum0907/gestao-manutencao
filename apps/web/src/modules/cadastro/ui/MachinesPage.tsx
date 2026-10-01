@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { MachineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useDeleteMachine, useFactories, useMachines, useSaveMachine } from "../data/cadastro";
 import { machineStatusLabel, machineStatusOptions } from "../model/labels";
 
@@ -48,60 +48,81 @@ export function MachinesPage() {
   const factories = useFactories();
   const save = useSaveMachine();
   const remove = useDeleteMachine();
+  const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(empty);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const factoryName = new Map(factories.data?.map((factory) => [factory.id, factory.name]));
 
-  function edit(machine: MachineDto) {
-    setEditingId(machine.id);
-    setDraft(toDraft(machine));
-  }
-
-  function reset() {
+  function close() {
+    setOpen(false);
     setEditingId(null);
     setDraft(empty);
   }
 
+  function create() {
+    setEditingId(null);
+    setDraft(empty);
+    setOpen(true);
+  }
+
+  function edit(machine: MachineDto) {
+    setEditingId(machine.id);
+    setDraft(toDraft(machine));
+    setOpen(true);
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div>
-        <PageTitle eyebrow="Apoio" title="Máquinas" text="Nome, fábrica e as duas marcas: linha de GD e apadrinhada." />
-        <div className="flex flex-col gap-3">
-          {machines.data?.length === 0 ? <Card>Nenhuma máquina ainda.</Card> : null}
-          {machines.data?.map((machine) => (
-            <Card key={machine.id} className="flex items-start justify-between gap-3">
-              <button type="button" className="text-left" onClick={() => edit(machine)}>
-                <p className="font-medium">{machine.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {factoryName.get(machine.factoryId) ?? "Fábrica"} · {machineStatusLabel(machine.status)}
-                  {machine.isDailyLine ? " · Linha de GD" : ""}
-                  {machine.isCritical ? " · Apadrinhada" : ""}
-                </p>
-              </button>
-              {pendingDelete === machine.id ? (
-                <Button tone="danger" onClick={() => remove.mutate(machine.id, { onSuccess: () => { setPendingDelete(null); if (editingId === machine.id) reset(); } })}>
-                  Confirmar
-                </Button>
-              ) : (
-                <Button tone="ghost" onClick={() => setPendingDelete(machine.id)}>
-                  Excluir
-                </Button>
-              )}
-            </Card>
-          ))}
-          {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
-        </div>
+    <div>
+      <PageTitle
+        eyebrow="Apoio"
+        title="Máquinas"
+        text="Nome, fábrica e as duas marcas: linha de GD e apadrinhada."
+        action={<Button onClick={create}>Nova máquina</Button>}
+      />
+      <div className="flex flex-col gap-3">
+        {machines.data?.length === 0 ? <Card>Nenhuma máquina ainda.</Card> : null}
+        {machines.data?.map((machine) => (
+          <Card key={machine.id} className="flex items-start justify-between gap-3">
+            <button type="button" className="text-left" onClick={() => edit(machine)}>
+              <p className="font-medium">{machine.name}</p>
+              <p className="mt-1 text-sm text-muted">
+                {factoryName.get(machine.factoryId) ?? "Fábrica"} · {machineStatusLabel(machine.status)}
+                {machine.isDailyLine ? " · Linha de GD" : ""}
+                {machine.isCritical ? " · Apadrinhada" : ""}
+              </p>
+            </button>
+            {pendingDelete === machine.id ? (
+              <Button
+                tone="danger"
+                onClick={() =>
+                  remove.mutate(machine.id, {
+                    onSuccess: () => {
+                      setPendingDelete(null);
+                      if (editingId === machine.id) close();
+                    },
+                  })
+                }
+              >
+                Confirmar
+              </Button>
+            ) : (
+              <Button tone="ghost" onClick={() => setPendingDelete(machine.id)}>
+                Excluir
+              </Button>
+            )}
+          </Card>
+        ))}
+        {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
       </div>
-      <Card>
+      <Modal open={open} title={editingId ? "Editar máquina" : "Nova máquina"} onClose={close}>
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault();
-            save.mutate({ id: editingId ?? undefined, body: toBody(draft) }, { onSuccess: reset });
+            save.mutate({ id: editingId ?? undefined, body: toBody(draft) }, { onSuccess: close });
           }}
         >
-          <h2 className="text-lg font-semibold">{editingId ? "Editar máquina" : "Nova máquina"}</h2>
           <Field label="Nome">
             <TextInput value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
           </Field>
@@ -165,16 +186,16 @@ export function MachinesPage() {
             Apadrinhada
           </label>
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <Button type="submit" disabled={save.isPending}>
-            Gravar
-          </Button>
-          {editingId ? (
-            <Button tone="ghost" onClick={reset}>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={save.isPending}>
+              Gravar
+            </Button>
+            <Button tone="ghost" onClick={close}>
               Cancelar
             </Button>
-          ) : null}
+          </div>
         </form>
-      </Card>
+      </Modal>
     </div>
   );
 }

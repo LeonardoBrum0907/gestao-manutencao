@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { TechnicianDto, TechnicianShift, TechnicianStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useDeleteTechnician, useRoles, useSaveTechnician, useTechnicians, type TechnicianWrite } from "../data/cadastro";
 import { shiftLabel, shiftOptions, technicianStatusLabel, technicianStatusOptions } from "../model/labels";
 
@@ -39,60 +39,72 @@ export function TechniciansPage() {
   const roles = useRoles();
   const save = useSaveTechnician();
   const remove = useDeleteTechnician();
+  const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<TechnicianWrite>(empty);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
-  function reset() {
+  function close() {
+    setOpen(false);
     setEditingId(null);
     setDraft(empty);
   }
 
+  function create() {
+    setEditingId(null);
+    setDraft(empty);
+    setOpen(true);
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div>
-        <PageTitle eyebrow="Apoio" title="Técnicos" text="Etiqueta do gestor. Sem login." />
-        <div className="flex flex-col gap-3">
-          {technicians.data?.length === 0 ? <Card>Nenhum técnico ainda.</Card> : null}
-          {technicians.data?.map((technician) => (
-            <Card key={technician.id} className="flex items-start justify-between gap-3">
-              <button
-                type="button"
-                className="text-left"
-                onClick={() => {
-                  setEditingId(technician.id);
-                  setDraft(fromDto(technician));
-                }}
+    <div>
+      <PageTitle
+        eyebrow="Apoio"
+        title="Técnicos"
+        text="Etiqueta do gestor. Sem login."
+        action={<Button onClick={create}>Novo técnico</Button>}
+      />
+      <div className="flex flex-col gap-3">
+        {technicians.data?.length === 0 ? <Card>Nenhum técnico ainda.</Card> : null}
+        {technicians.data?.map((technician) => (
+          <Card key={technician.id} className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              className="text-left"
+              onClick={() => {
+                setEditingId(technician.id);
+                setDraft(fromDto(technician));
+                setOpen(true);
+              }}
+            >
+              <p className="font-medium">{technician.name}</p>
+              <p className="mt-1 text-sm text-muted">
+                {technician.roleName} · {shiftLabel(technician.shift)} · {technicianStatusLabel(technician.status)}
+              </p>
+            </button>
+            {pendingDelete === technician.id ? (
+              <Button
+                tone="danger"
+                onClick={() =>
+                  remove.mutate(technician.id, {
+                    onSuccess: () => {
+                      setPendingDelete(null);
+                      if (editingId === technician.id) close();
+                    },
+                  })
+                }
               >
-                <p className="font-medium">{technician.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {technician.roleName} · {shiftLabel(technician.shift)} · {technicianStatusLabel(technician.status)}
-                </p>
-              </button>
-              {pendingDelete === technician.id ? (
-                <Button
-                  tone="danger"
-                  onClick={() =>
-                    remove.mutate(technician.id, {
-                      onSuccess: () => {
-                        setPendingDelete(null);
-                        if (editingId === technician.id) reset();
-                      },
-                    })
-                  }
-                >
-                  Confirmar
-                </Button>
-              ) : (
-                <Button tone="ghost" onClick={() => setPendingDelete(technician.id)}>
-                  Excluir
-                </Button>
-              )}
-            </Card>
-          ))}
-        </div>
+                Confirmar
+              </Button>
+            ) : (
+              <Button tone="ghost" onClick={() => setPendingDelete(technician.id)}>
+                Excluir
+              </Button>
+            )}
+          </Card>
+        ))}
       </div>
-      <Card>
+      <Modal open={open} title={editingId ? "Editar técnico" : "Novo técnico"} onClose={close}>
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
@@ -108,11 +120,10 @@ export function TechniciansPage() {
                   notes: blankToNull(draft.notes),
                 },
               },
-              { onSuccess: reset },
+              { onSuccess: close },
             );
           }}
         >
-          <h2 className="text-lg font-semibold">{editingId ? "Editar técnico" : "Novo técnico"}</h2>
           <Field label="Nome">
             <TextInput value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
           </Field>
@@ -166,16 +177,16 @@ export function TechniciansPage() {
             <TextArea value={draft.notes ?? ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} />
           </Field>
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <Button type="submit" disabled={save.isPending}>
-            Gravar
-          </Button>
-          {editingId ? (
-            <Button tone="ghost" onClick={reset}>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={save.isPending}>
+              Gravar
+            </Button>
+            <Button tone="ghost" onClick={close}>
               Cancelar
             </Button>
-          ) : null}
+          </div>
         </form>
-      </Card>
+      </Modal>
     </div>
   );
 }
