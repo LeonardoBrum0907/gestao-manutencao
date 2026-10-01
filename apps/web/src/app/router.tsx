@@ -3,6 +3,8 @@ import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { TechniciansPage } from "../modules/cadastro/ui/TechniciansPage";
+import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
+import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
 import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
@@ -17,6 +19,8 @@ export function AppRouter() {
       <Route element={<AppShell />}>
         <Route path="/captura" element={<CapturePage />} />
         <Route path="/acompanhamento" element={<FollowUpPage />} />
+        <Route path="/turno/chamado" element={<ChamadoPage />} />
+        <Route path="/turno/ocorrencia" element={<OcorrenciaPage />} />
         <Route path="/registros" element={<RecordsPage />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/fabricas" element={<FactoriesPage />} />

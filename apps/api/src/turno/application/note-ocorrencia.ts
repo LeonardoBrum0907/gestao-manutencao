@@ -1,0 +1,35 @@
+import { Inject, Injectable } from "@nestjs/common";
+import type { RecordDto } from "@manutencao/shared";
+import { DomainError } from "../../kernel/domain-error";
+import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
+import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
+import { noteOcorrencia } from "../domain/shift";
+import { parseOcorrencia } from "./parse-shift";
+
+@Injectable()
+export class NoteOcorrencia {
+  constructor(
+    @Inject(PROBLEM_LOG) private readonly problems: ProblemLogPort,
+    @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
+  ) {}
+
+  async execute(body: unknown, now: Date = new Date()): Promise<RecordDto> {
+    const write = noteOcorrencia(parseOcorrencia(body), now);
+    await this.assertFactory(write.factoryId);
+    return this.problems.save(write);
+  }
+
+  async replace(id: string, body: unknown): Promise<RecordDto> {
+    const current = await this.problems.find(id);
+    if (!current) throw new DomainError("not_found", 404, "Registro não encontrado.");
+    const write = noteOcorrencia(parseOcorrencia(body), new Date(current.occurredAt));
+    await this.assertFactory(write.factoryId);
+    return this.problems.replace(id, write);
+  }
+
+  private async assertFactory(id: string | null): Promise<void> {
+    if (!id || !(await this.refs.factoryExists(id))) {
+      throw new DomainError("factory", 400, "Fábrica não encontrada.");
+    }
+  }
+}

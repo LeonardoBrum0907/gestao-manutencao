@@ -48,6 +48,12 @@ export const RECORD_STATUS_LABELS: Record<RecordStatus, string> = {
   done: "Concluído",
 };
 
+export const RECORD_ORIGIN_LABELS: Record<RecordOrigin, string> = {
+  inbox: "Captura",
+  chamado: "Chamado",
+  ocorrencia: "Ocorrência",
+};
+
 export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
   low: "Baixa",
   medium: "Média",
@@ -179,6 +185,11 @@ export type RecordDto = {
   dueAt: string | null;
   notes: string | null;
   origin: RecordOrigin;
+  dayNumber: number | null;
+  openedAt: string | null;
+  closedAt: string | null;
+  durationMin: number | null;
+  technicianIds: string[];
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentDto[];

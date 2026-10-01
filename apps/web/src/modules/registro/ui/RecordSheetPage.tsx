@@ -1,7 +1,9 @@
 import { useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
+import { ChamadoForm } from "../../turno/ui/ChamadoForm";
+import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
 import { useRecord } from "../data/records";
-import { recordGestorName, recordShortName } from "../model/record";
+import { originLabel, recordGestorName, recordShortName } from "../model/record";
 import { FeedbackSheet } from "./FeedbackSheet";
 import { ProblemSheet } from "./ProblemSheet";
 import { TaskSheet } from "./TaskSheet";
@@ -14,10 +16,15 @@ export function RecordSheetPage() {
   const data = record.data;
   return (
     <div className="mx-auto max-w-2xl">
-      <PageTitle eyebrow={recordShortName(data.type)} title={recordGestorName(data.type)} />
+      <PageTitle
+        eyebrow={data.origin === "inbox" ? recordShortName(data.type) : "Problema"}
+        title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
+      />
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
-      {data.type === "problem" ? <ProblemSheet record={data} /> : null}
+      {data.type === "problem" && data.origin === "chamado" ? <ChamadoForm record={data} /> : null}
+      {data.type === "problem" && data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
+      {data.type === "problem" && data.origin === "inbox" ? <ProblemSheet record={data} /> : null}
     </div>
   );
 }

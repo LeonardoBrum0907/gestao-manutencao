@@ -8,9 +8,10 @@ import { IdentityModule } from "./identity/identity.module";
 import { SessionGuard } from "./identity/http/session.guard";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RegistroModule } from "./registro/registro.module";
+import { TurnoModule } from "./turno/turno.module";
 
 @Module({
-  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, RegistroModule],
+  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, RegistroModule, TurnoModule],
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_FILTER, useClass: DomainExceptionFilter },

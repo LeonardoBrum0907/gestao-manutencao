@@ -1,0 +1,172 @@
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import type { RecordDto, RecordStatus } from "@manutencao/shared";
+import { errorMessage } from "../../../app/http";
+import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput, controlClass } from "../../../design/ui/controls";
+import { useMachines, useTechnicians } from "../../cadastro/data/cadastro";
+import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
+import { useSaveChamado } from "../data/shift";
+
+function blank(value: string): string | null {
+  return value.trim() ? value.trim() : null;
+}
+
+function localOrNull(value: string): string | null {
+  return value ? fromLocalInput(value) : null;
+}
+
+function intOrNull(value: string): number | null {
+  const text = value.trim();
+  if (!text) return null;
+  return Number(text);
+}
+
+export function ChamadoForm({ record }: { record?: RecordDto }) {
+  const navigate = useNavigate();
+  const machines = useMachines();
+  const technicians = useTechnicians();
+  const save = useSaveChamado(record?.id);
+  const [dayNumber, setDayNumber] = useState(record?.dayNumber ? String(record.dayNumber) : "");
+  const [body, setBody] = useState(record?.body ?? "");
+  const [openedAt, setOpenedAt] = useState(record?.openedAt ? toLocalInput(record.openedAt) : "");
+  const [closedAt, setClosedAt] = useState(record?.closedAt ? toLocalInput(record.closedAt) : "");
+  const [durationMin, setDurationMin] = useState(record?.durationMin === null || record?.durationMin === undefined ? "" : String(record.durationMin));
+  const [technicianIds, setTechnicianIds] = useState<string[]>(record?.technicianIds ?? []);
+  const [mode, setMode] = useState<"machine" | "other">(record?.machineLabel ? "other" : "machine");
+  const [machineId, setMachineId] = useState(record?.machineId ?? "");
+  const [machineLabel, setMachineLabel] = useState(record?.machineLabel ?? "");
+  const [status, setStatus] = useState<RecordStatus>(record?.status ?? "open");
+  const [notes, setNotes] = useState(record?.notes ?? "");
+
+  function toggleTechnician(id: string) {
+    setTechnicianIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    save.mutate(
+      {
+        dayNumber: Number(dayNumber),
+        body,
+        openedAt: localOrNull(openedAt),
+        closedAt: localOrNull(closedAt),
+        durationMin: intOrNull(durationMin),
+        technicianIds,
+        machineId: mode === "machine" ? blank(machineId) : null,
+        machineLabel: mode === "other" ? blank(machineLabel) : null,
+        status,
+        notes: blank(notes),
+      },
+      { onSuccess: (saved) => {
+        if (!record) navigate(`/registros/${saved.id}`);
+      } },
+    );
+  }
+
+  return (
+    <Card>
+      <form className="flex flex-col gap-4" noValidate onSubmit={submit}>
+        <Field label="Nº do dia">
+          <input
+            type="number"
+            min={1}
+            className={controlClass}
+            value={dayNumber}
+            onChange={(event) => setDayNumber(event.target.value)}
+          />
+        </Field>
+        <Field label="Descrição">
+          <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Abertura">
+            <input type="datetime-local" className={controlClass} value={openedAt} onChange={(event) => setOpenedAt(event.target.value)} />
+          </Field>
+          <Field label="Fechamento">
+            <input type="datetime-local" className={controlClass} value={closedAt} onChange={(event) => setClosedAt(event.target.value)} />
+          </Field>
+        </div>
+        <Field label="Duração (minutos)">
+          <input
+            type="number"
+            min={0}
+            className={controlClass}
+            value={durationMin}
+            placeholder="Calculada pela abertura e o fechamento, se vazia"
+            onChange={(event) => setDurationMin(event.target.value)}
+          />
+        </Field>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium text-app">Técnicos</legend>
+          <div className="flex max-h-40 flex-col gap-2 overflow-y-auto rounded-control border border-line bg-surface p-3">
+            {technicians.data?.length ? (
+              technicians.data.map((technician) => (
+                <label key={technician.id} className="flex items-center gap-2 text-sm text-app">
+                  <input
+                    type="checkbox"
+                    checked={technicianIds.includes(technician.id)}
+                    onChange={() => toggleTechnician(technician.id)}
+                  />
+                  {technician.name}
+                </label>
+              ))
+            ) : (
+              <p className="text-sm text-muted">Nenhum técnico cadastrado.</p>
+            )}
+          </div>
+        </fieldset>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            aria-pressed={mode === "machine"}
+            onClick={() => setMode("machine")}
+            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+          >
+            Máquina cadastrada
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "other"}
+            onClick={() => setMode("other")}
+            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "other" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+          >
+            Outra
+          </button>
+        </div>
+        {mode === "machine" ? (
+          <Field label="Máquina">
+            <SelectInput value={machineId} onChange={(event) => setMachineId(event.target.value)}>
+              <option value="">Sem máquina</option>
+              {machines.data?.map((machine) => (
+                <option key={machine.id} value={machine.id}>
+                  {machine.name}
+                </option>
+              ))}
+            </SelectInput>
+          </Field>
+        ) : (
+          <Field label="Outra">
+            <TextInput value={machineLabel} placeholder="Descreva o equipamento" onChange={(event) => setMachineLabel(event.target.value)} />
+          </Field>
+        )}
+        <Field label="Status">
+          <SelectInput value={status} onChange={(event) => setStatus(event.target.value as RecordStatus)}>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+        <Field label="Observação">
+          <TextArea value={notes} onChange={(event) => setNotes(event.target.value)} />
+        </Field>
+        {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
+        {record && save.isSuccess ? <p className="text-sm text-muted">Chamado gravado.</p> : null}
+        <Button type="submit" disabled={save.isPending}>
+          {save.isPending ? "Gravando…" : record ? "Gravar chamado" : "Abrir chamado"}
+        </Button>
+      </form>
+    </Card>
+  );
+}

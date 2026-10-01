@@ -11,7 +11,10 @@ import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { RecordState } from "../domain/record-state";
 
-const include = { attachments: { orderBy: { createdAt: "asc" as const } } };
+const include = {
+  attachments: { orderBy: { createdAt: "asc" as const } },
+  technicians: { orderBy: { position: "asc" as const } },
+};
 
 type Row = {
   id: string;
@@ -29,8 +32,13 @@ type Row = {
   dueAt: Date | null;
   notes: string | null;
   origin: string;
+  dayNumber: number | null;
+  openedAt: Date | null;
+  closedAt: Date | null;
+  durationMin: number | null;
   createdAt: Date;
   updatedAt: Date;
+  technicians: { technicianId: string; position: number }[];
   attachments: {
     id: string;
     fileName: string;
@@ -62,6 +70,11 @@ function toDto(row: Row): RecordDto {
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
     notes: row.notes,
     origin: row.origin,
+    dayNumber: row.dayNumber,
+    openedAt: row.openedAt ? row.openedAt.toISOString() : null,
+    closedAt: row.closedAt ? row.closedAt.toISOString() : null,
+    durationMin: row.durationMin,
+    technicianIds: row.technicians.map((person) => person.technicianId),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     attachments: row.attachments.map(
@@ -75,7 +88,7 @@ function toDto(row: Row): RecordDto {
   };
 }
 
-function toData(state: RecordState) {
+function scalars(state: RecordState) {
   return {
     type: state.type,
     body: state.body,
@@ -91,7 +104,15 @@ function toData(state: RecordState) {
     dueAt: state.dueAt,
     notes: state.notes,
     origin: state.origin,
+    dayNumber: state.dayNumber,
+    openedAt: state.openedAt,
+    closedAt: state.closedAt,
+    durationMin: state.durationMin,
   };
+}
+
+function technicianRows(ids: string[]) {
+  return ids.map((technicianId, position) => ({ technicianId, position }));
 }
 
 @Injectable()
@@ -112,12 +133,22 @@ export class RecordRepository {
   }
 
   async insert(state: RecordState): Promise<RecordDto> {
-    const row = await this.prisma.record.create({ data: toData(state), include });
+    const row = await this.prisma.record.create({
+      data: { ...scalars(state), technicians: { create: technicianRows(state.technicianIds) } },
+      include,
+    });
     return toDto(row);
   }
 
   async update(id: string, state: RecordState): Promise<RecordDto> {
-    const row = await this.prisma.record.update({ where: { id }, data: toData(state), include });
+    const row = await this.prisma.record.update({
+      where: { id },
+      data: {
+        ...scalars(state),
+        technicians: { deleteMany: {}, create: technicianRows(state.technicianIds) },
+      },
+      include,
+    });
     return toDto(row);
   }
 

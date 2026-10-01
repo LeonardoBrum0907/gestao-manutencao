@@ -28,5 +28,10 @@ export function captureRecord(input: CaptureInput): RecordState {
     dueAt: null,
     notes: null,
     origin: "inbox",
+    dayNumber: null,
+    openedAt: null,
+    closedAt: null,
+    durationMin: null,
+    technicianIds: [],
   };
 }

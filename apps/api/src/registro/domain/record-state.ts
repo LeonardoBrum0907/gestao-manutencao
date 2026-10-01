@@ -20,6 +20,11 @@ export type RecordState = {
   dueAt: Date | null;
   notes: string | null;
   origin: RecordOrigin;
+  dayNumber: number | null;
+  openedAt: Date | null;
+  closedAt: Date | null;
+  durationMin: number | null;
+  technicianIds: string[];
 };
 
 export type CaptureInput = {

@@ -1,10 +1,12 @@
 import {
+  RECORD_ORIGIN_LABELS,
   RECORD_PRIORITIES,
   RECORD_PRIORITY_LABELS,
   RECORD_STATUSES,
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
   RECORD_TYPES,
+  type RecordOrigin,
   type RecordPriority,
   type RecordStatus,
   type RecordType,
@@ -16,6 +18,10 @@ export function recordGestorName(type: RecordType): string {
 
 export function recordShortName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].short;
+}
+
+export function originLabel(origin: RecordOrigin): string {
+  return RECORD_ORIGIN_LABELS[origin];
 }
 
 export function statusLabel(status: RecordStatus): string {

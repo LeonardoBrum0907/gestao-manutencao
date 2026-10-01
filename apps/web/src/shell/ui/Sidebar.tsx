@@ -9,6 +9,11 @@ const notebook = [
   { to: "/registros", label: "Registros" },
 ];
 
+const shift = [
+  { to: "/turno/chamado", label: "Chamado" },
+  { to: "/turno/ocorrencia", label: "Ocorrência" },
+];
+
 const support = [
   { to: "/cadastro/fabricas", label: "Fábricas" },
   { to: "/cadastro/maquinas", label: "Máquinas" },
@@ -62,6 +67,14 @@ export function Sidebar({
             <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted">Caderno</p>
             <div className="mt-2 flex flex-col gap-1">
               {notebook.map((item) => (
+                <Item key={item.to} {...item} onNavigate={onClose} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted">Turno</p>
+            <div className="mt-2 flex flex-col gap-1">
+              {shift.map((item) => (
                 <Item key={item.to} {...item} onNavigate={onClose} />
               ))}
             </div>

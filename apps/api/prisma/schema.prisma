@@ -92,6 +92,11 @@ model Record {
   dueAt        DateTime?
   notes        String?
   origin       String
+  dayNumber    Int?
+  openedAt     DateTime?
+  closedAt     DateTime?
+  durationMin  Int?
+  technicians  RecordTechnician[]
   attachments  RecordAttachment[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
@@ -99,6 +104,15 @@ model Record {
   @@index([type, status])
   @@index([dueAt])
   @@index([origin])
+}
+
+model RecordTechnician {
+  recordId     String
+  technicianId String
+  position     Int
+  record       Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@id([recordId, technicianId])
 }
 
 model RecordAttachment {

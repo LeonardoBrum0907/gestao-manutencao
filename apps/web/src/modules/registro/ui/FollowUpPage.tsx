@@ -11,7 +11,7 @@ import {
   prazoApplies,
   type FollowUpQuery,
 } from "../model/follow-up";
-import { recordShortName, statusLabel, statusOptions, typeChoices } from "../model/record";
+import { originLabel, recordShortName, statusLabel, statusOptions, typeChoices } from "../model/record";
 
 export function FollowUpPage() {
   const navigate = useNavigate();
@@ -129,7 +129,12 @@ export function FollowUpPage() {
                   }}
                   className="cursor-pointer border-t border-line hover:bg-accent-soft"
                 >
-                  <td className="px-4 py-3 font-medium">{recordShortName(record.type)}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{recordShortName(record.type)}</p>
+                    {record.origin !== "inbox" ? (
+                      <p className="text-xs text-muted">{originLabel(record.origin)}</p>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3">{record.body}</td>
                   <td className="px-4 py-3">
                     <span className="rounded-control bg-chip px-2 py-1 text-xs font-medium text-app">

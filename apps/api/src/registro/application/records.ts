@@ -25,6 +25,11 @@ function dtoToState(dto: RecordDto): RecordState {
     dueAt: dto.dueAt ? new Date(dto.dueAt) : null,
     notes: dto.notes,
     origin: dto.origin,
+    dayNumber: dto.dayNumber,
+    openedAt: dto.openedAt ? new Date(dto.openedAt) : null,
+    closedAt: dto.closedAt ? new Date(dto.closedAt) : null,
+    durationMin: dto.durationMin,
+    technicianIds: dto.technicianIds,
   };
 }
 
@@ -61,6 +66,9 @@ export class Records {
       const input = parseFeedbackSheet(body);
       await this.assertTechnician(input.technicianId);
       return this.records.update(id, applyFeedbackSheet(state, input));
+    }
+    if (current.origin !== "inbox") {
+      throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado ou pela ocorrência.");
     }
     const input = parseProblemSheet(body);
     await this.assertTechnician(input.technicianId);
