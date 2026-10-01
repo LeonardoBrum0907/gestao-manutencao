@@ -14,12 +14,20 @@ export function machineStatusLabel(status: MachineOperationalStatus): string {
   return MACHINE_STATUS_LABELS[status];
 }
 
+export function machineStatusClass(status: MachineOperationalStatus): string {
+  return status === "stopped" ? "font-semibold text-danger" : "";
+}
+
 export function shiftLabel(shift: TechnicianShift): string {
   return TECHNICIAN_SHIFT_LABELS[shift];
 }
 
 export function technicianStatusLabel(status: TechnicianStatus): string {
   return TECHNICIAN_STATUS_LABELS[status];
+}
+
+export function technicianStatusClass(status: TechnicianStatus): string {
+  return status === "active" ? "" : "font-semibold text-danger";
 }
 
 export const machineStatusOptions = MACHINE_STATUSES.map((status) => ({

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Link, Navigate, Outlet } from "react-router-dom";
 import { useSession } from "../data/session";
 import { Sidebar } from "./Sidebar";
 
@@ -20,7 +20,9 @@ export function AppShell() {
           <button type="button" className="text-sm font-semibold text-app" onClick={() => setOpen(true)}>
             Menu
           </button>
-          <span className="text-sm font-semibold">Gestão</span>
+          <Link to="/captura" className="text-sm font-semibold text-accent">
+            Captura
+          </Link>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">

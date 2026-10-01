@@ -21,7 +21,7 @@ export function LoginPage() {
   return (
     <div className="flex h-full items-center justify-center overflow-y-auto bg-canvas px-4 py-10">
       <div className="w-full max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">SIGEM</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">SIGEM</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-app">Gestão de Manutenção</h1>
         <p className="mt-2 text-sm text-muted">Caderno do gestor. Uma conta, captura rápida, ficha depois.</p>
         <Card className="mt-6">

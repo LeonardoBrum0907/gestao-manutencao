@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useTechnicians } from "../../cadastro/data/cadastro";
 import { useCaptureRecord } from "../data/records";
 import { fromLocalInput, nowLocalInput, typeChoices } from "../model/record";
@@ -44,8 +44,8 @@ export function CapturePage() {
               type="button"
               aria-pressed={type === choice.type}
               onClick={() => setType(choice.type)}
-              className={`rounded-card border px-4 py-4 text-left ${
-                type === choice.type ? "border-accent bg-accent-soft" : "border-line bg-card"
+              className={`rounded-card border px-4 py-4 text-left transition ${
+                type === choice.type ? "border-accent bg-accent-soft" : "border-line bg-card hover:bg-chip"
               }`}
             >
               <p className="text-base font-semibold">{choice.gestor}</p>
@@ -59,12 +59,7 @@ export function CapturePage() {
               <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
             </Field>
             <Field label="Quando">
-              <input
-                type="datetime-local"
-                className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app"
-                value={when}
-                onChange={(event) => setWhen(event.target.value)}
-              />
+              <TextInput type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} />
             </Field>
             <Field label="Quem, se souber">
               <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>

@@ -30,7 +30,7 @@ function Item({ to, label, onNavigate }: { to: string; label: string; onNavigate
       onClick={onNavigate}
       className={({ isActive }) =>
         `block rounded-control px-3 py-2.5 text-sm font-medium ${
-          isActive ? "bg-sidebar-active text-sidebar-text" : "text-sidebar-muted"
+          isActive ? "bg-sidebar-active text-sidebar-text" : "text-sidebar-muted transition hover:bg-chip"
         }`
       }
     >
@@ -52,7 +52,7 @@ export function Sidebar({
   return (
     <>
       {open ? (
-        <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-canvas lg:hidden" onClick={onClose} />
+        <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-app/40 lg:hidden" onClick={onClose} />
       ) : null}
       <aside
         className={`fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[272px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-4 py-5 text-sidebar-text transition lg:static lg:translate-x-0 ${
@@ -60,7 +60,7 @@ export function Sidebar({
         }`}
       >
         <div className="px-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sidebar-muted">Gestor</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-sidebar-muted">Gestor</p>
           <p className="mt-1 text-lg font-semibold leading-tight">Gestão de Manutenção</p>
           <p className="mt-1 truncate text-xs text-sidebar-muted">{email}</p>
         </div>

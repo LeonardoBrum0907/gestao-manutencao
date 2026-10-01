@@ -39,32 +39,44 @@ export function FactoriesPage() {
         text="Onde a máquina e a tarefa se penduram."
         action={<Button onClick={create}>Nova fábrica</Button>}
       />
-      <div className="flex flex-col gap-3">
+      {factories.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      <div className="flex flex-col gap-2">
         {factories.data?.length === 0 ? <Card>Nenhuma fábrica ainda.</Card> : null}
         {factories.data?.map((factory) => (
-          <Card key={factory.id} className="flex items-center justify-between gap-3">
-            <button type="button" className="text-left font-medium" onClick={() => edit(factory)}>
+          <Card key={factory.id} compact className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              className="text-left font-medium text-app transition hover:text-accent hover:underline"
+              onClick={() => edit(factory)}
+            >
               {factory.name}
             </button>
-            {pendingDelete === factory.id ? (
-              <Button
-                tone="danger"
-                onClick={() =>
-                  remove.mutate(factory.id, {
-                    onSuccess: () => {
-                      setPendingDelete(null);
-                      if (editing?.id === factory.id) close();
-                    },
-                  })
-                }
-              >
-                Confirmar exclusão
-              </Button>
-            ) : (
-              <Button tone="ghost" onClick={() => setPendingDelete(factory.id)}>
-                Excluir
-              </Button>
-            )}
+            <div className="flex justify-end gap-2">
+              {pendingDelete === factory.id ? (
+                <>
+                  <Button
+                    tone="danger"
+                    onClick={() =>
+                      remove.mutate(factory.id, {
+                        onSuccess: () => {
+                          setPendingDelete(null);
+                          if (editing?.id === factory.id) close();
+                        },
+                      })
+                    }
+                  >
+                    Confirmar
+                  </Button>
+                  <Button tone="ghost" onClick={() => setPendingDelete(null)}>
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button tone="ghost" onClick={() => setPendingDelete(factory.id)}>
+                  Excluir
+                </Button>
+              )}
+            </div>
           </Card>
         ))}
         {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}

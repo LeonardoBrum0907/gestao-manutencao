@@ -37,12 +37,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
           <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
         </Field>
         <Field label="Quando">
-          <input
-            type="datetime-local"
-            className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app"
-            value={when}
-            onChange={(event) => setWhen(event.target.value)}
-          />
+          <TextInput type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} />
         </Field>
         <Field label="Quem, se souber">
           <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>
@@ -59,7 +54,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
             type="button"
             aria-pressed={mode === "machine"}
             onClick={() => setMode("machine")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
             Máquina cadastrada
           </button>
@@ -67,7 +62,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
             type="button"
             aria-pressed={mode === "other"}
             onClick={() => setMode("other")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "other" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "other" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
             Outra
           </button>
@@ -93,7 +88,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
           </Field>
         )}
         {update.isError ? <Notice>{errorMessage(update.error)}</Notice> : null}
-        {update.isSuccess ? <p className="text-sm text-muted">Ficha gravada.</p> : null}
+        {update.isSuccess ? <p className="text-sm font-medium text-accent">Ficha gravada.</p> : null}
         <Button type="submit" disabled={update.isPending}>
           Gravar ficha
         </Button>

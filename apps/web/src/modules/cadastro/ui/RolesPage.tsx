@@ -37,11 +37,16 @@ export function RolesPage() {
         text="As funções do técnico. As seis do SIGEM já estão na lista."
         action={<Button onClick={create}>Nova função</Button>}
       />
-      <div className="flex flex-col gap-3">
+      {roles.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      <div className="flex flex-col gap-2">
         {roles.data?.length === 0 ? <Card>Nenhuma função ainda.</Card> : null}
         {roles.data?.map((role) => (
-          <Card key={role.id}>
-            <button type="button" className="text-left font-medium" onClick={() => edit(role)}>
+          <Card key={role.id} compact>
+            <button
+              type="button"
+              className="text-left font-medium text-app transition hover:text-accent hover:underline"
+              onClick={() => edit(role)}
+            >
               {role.name}
             </button>
           </Card>

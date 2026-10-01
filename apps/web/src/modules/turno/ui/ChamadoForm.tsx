@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput, controlClass } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMachines, useTechnicians } from "../../cadastro/data/cadastro";
 import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
 import { useSaveChamado } from "../data/shift";
@@ -67,30 +67,23 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
     <Card>
       <form className="flex flex-col gap-4" noValidate onSubmit={submit}>
         <Field label="Nº do dia">
-          <input
-            type="number"
-            min={1}
-            className={controlClass}
-            value={dayNumber}
-            onChange={(event) => setDayNumber(event.target.value)}
-          />
+          <TextInput type="number" min={1} value={dayNumber} onChange={(event) => setDayNumber(event.target.value)} />
         </Field>
         <Field label="Descrição">
           <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Abertura">
-            <input type="datetime-local" className={controlClass} value={openedAt} onChange={(event) => setOpenedAt(event.target.value)} />
+            <TextInput type="datetime-local" value={openedAt} onChange={(event) => setOpenedAt(event.target.value)} />
           </Field>
           <Field label="Fechamento">
-            <input type="datetime-local" className={controlClass} value={closedAt} onChange={(event) => setClosedAt(event.target.value)} />
+            <TextInput type="datetime-local" value={closedAt} onChange={(event) => setClosedAt(event.target.value)} />
           </Field>
         </div>
         <Field label="Duração (minutos)">
-          <input
+          <TextInput
             type="number"
             min={0}
-            className={controlClass}
             value={durationMin}
             placeholder="Calculada pela abertura e o fechamento, se vazia"
             onChange={(event) => setDurationMin(event.target.value)}
@@ -120,7 +113,7 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
             type="button"
             aria-pressed={mode === "machine"}
             onClick={() => setMode("machine")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
             Máquina cadastrada
           </button>
@@ -128,7 +121,7 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
             type="button"
             aria-pressed={mode === "other"}
             onClick={() => setMode("other")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium ${mode === "other" ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "other" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
             Outra
           </button>
@@ -162,7 +155,7 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
           <TextArea value={notes} onChange={(event) => setNotes(event.target.value)} />
         </Field>
         {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-        {record && save.isSuccess ? <p className="text-sm text-muted">Chamado gravado.</p> : null}
+        {record && save.isSuccess ? <p className="text-sm font-medium text-accent">Chamado gravado.</p> : null}
         <Button type="submit" disabled={save.isPending}>
           {save.isPending ? "Gravando…" : record ? "Gravar chamado" : "Abrir chamado"}
         </Button>

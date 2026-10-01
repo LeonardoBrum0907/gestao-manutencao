@@ -52,3 +52,20 @@ export function formatDueDay(iso: string): string {
 export function prazoApplies(type: RecordType | null): boolean {
   return type === null || type === "task";
 }
+
+function calendarDay(instant: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: GESTOR_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(instant);
+}
+
+export function dueTone(iso: string, now = new Date()): "overdue" | "today" | "later" {
+  const due = calendarDay(new Date(iso));
+  const today = calendarDay(now);
+  if (due < today) return "overdue";
+  if (due === today) return "today";
+  return "later";
+}

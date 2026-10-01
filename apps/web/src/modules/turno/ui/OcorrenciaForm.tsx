@@ -46,7 +46,7 @@ export function OcorrenciaForm({ record }: { record?: RecordDto }) {
           <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
         </Field>
         {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-        {record && save.isSuccess ? <p className="text-sm text-muted">Ocorrência gravada.</p> : null}
+        {record && save.isSuccess ? <p className="text-sm font-medium text-accent">Ocorrência gravada.</p> : null}
         <Button type="submit" disabled={save.isPending}>
           {save.isPending ? "Gravando…" : record ? "Gravar ocorrência" : "Anotar ocorrência"}
         </Button>

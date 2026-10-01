@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextArea } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useTechnicians } from "../../cadastro/data/cadastro";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
@@ -29,12 +29,7 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
           <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
         </Field>
         <Field label="Quando">
-          <input
-            type="datetime-local"
-            className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app"
-            value={when}
-            onChange={(event) => setWhen(event.target.value)}
-          />
+          <TextInput type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} />
         </Field>
         <Field label="Alvo">
           <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>
@@ -47,7 +42,7 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
           </SelectInput>
         </Field>
         {update.isError ? <Notice>{errorMessage(update.error)}</Notice> : null}
-        {update.isSuccess ? <p className="text-sm text-muted">Ficha gravada.</p> : null}
+        {update.isSuccess ? <p className="text-sm font-medium text-accent">Ficha gravada.</p> : null}
         <Button type="submit" disabled={update.isPending}>
           Gravar ficha
         </Button>

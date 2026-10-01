@@ -1,18 +1,30 @@
 import { Link } from "react-router-dom";
-import { RECORD_STATUS_LABELS, RECORD_TYPE_LABELS, type DashboardDto } from "@manutencao/shared";
+import { RECORD_TYPE_LABELS, type DashboardDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Notice, PageTitle } from "../../../design/ui/controls";
+import { statusChipClass, statusLabel } from "../../registro/model/record";
 import { useDashboard } from "../data/dashboard";
 import { formatDashboardWhen, openRankLabel } from "../model/when";
 
-const cardLink =
-  "block rounded-card border border-line bg-card p-4 shadow-card sm:p-5";
+const cardLink = "block rounded-card border p-4 shadow-card transition hover:border-accent sm:p-5";
 
-function CountLink({ to, label, count }: { to: string; label: string; count: number }) {
+function CountLink({
+  to,
+  label,
+  count,
+  tone = "neutral",
+}: {
+  to: string;
+  label: string;
+  count: number;
+  tone?: "neutral" | "danger" | "today" | "quiet";
+}) {
+  const frame = tone === "danger" ? "border-danger bg-card" : tone === "today" ? "border-line bg-accent-soft" : "border-line bg-card";
+  const number = tone === "danger" ? "text-danger" : tone === "quiet" ? "text-muted" : "text-app";
   return (
-    <Link to={to} className={cardLink}>
+    <Link to={to} className={`${cardLink} ${frame}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
-      <p className="mt-2 text-4xl font-semibold tracking-tight text-app">{count}</p>
+      <p className={`mt-2 text-4xl font-semibold tabular-nums tracking-tight ${number}`}>{count}</p>
     </Link>
   );
 }
@@ -26,7 +38,7 @@ function Ranking({ title, rows }: { title: string; rows: DashboardDto["machineRa
         {rows.map((row) => (
           <li key={row.id} className="flex items-baseline justify-between gap-3 text-sm">
             <span className="font-medium text-app">{row.name}</span>
-            <span className="shrink-0 text-muted">{openRankLabel(row.openCount)}</span>
+            <span className="shrink-0 tabular-nums text-muted">{openRankLabel(row.openCount)}</span>
           </li>
         ))}
       </ol>
@@ -46,9 +58,9 @@ export function DashboardPage() {
         <div className="flex flex-col gap-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <CountLink to="/acompanhamento?status=open" label="Abertas" count={data.openCount} />
-            <CountLink to="/acompanhamento?due=overdue" label="Vencidas" count={data.overdueCount} />
-            <CountLink to="/acompanhamento?due=today" label="Vencem hoje" count={data.dueTodayCount} />
-            <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} />
+            <CountLink to="/acompanhamento?due=overdue" label="Vencidas" count={data.overdueCount} tone="danger" />
+            <CountLink to="/acompanhamento?due=today" label="Vencem hoje" count={data.dueTodayCount} tone="today" />
+            <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <CountLink to="/cadastro/maquinas" label="Máquinas" count={data.machineCount} />
@@ -59,14 +71,12 @@ export function DashboardPage() {
             {data.recent.length === 0 ? <Card>Nenhum registro ainda.</Card> : null}
             <div className="flex flex-col gap-3">
               {data.recent.map((record) => (
-                <Link key={record.id} to={`/registros/${record.id}`} className={cardLink}>
+                <Link key={record.id} to={`/registros/${record.id}`} className={`${cardLink} border-line bg-card`}>
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                       {RECORD_TYPE_LABELS[record.type].short}
                     </p>
-                    <span className="rounded-control bg-chip px-2 py-1 text-xs font-medium text-app">
-                      {RECORD_STATUS_LABELS[record.status]}
-                    </span>
+                    <span className={statusChipClass(record.status)}>{statusLabel(record.status)}</span>
                   </div>
                   <p className="mt-2 line-clamp-2 font-medium text-app">{record.body}</p>
                   <p className="mt-2 text-sm text-muted">{formatDashboardWhen(record.occurredAt)}</p>

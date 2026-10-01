@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
 import { ChamadoForm } from "../../turno/ui/ChamadoForm";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
@@ -20,6 +20,9 @@ export function RecordSheetPage() {
         eyebrow={data.origin === "inbox" ? recordShortName(data.type) : "Problema"}
         title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
       />
+      <Link to="/acompanhamento" className="-mt-4 mb-6 inline-flex text-sm font-semibold text-accent">
+        Acompanhamento
+      </Link>
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
       {data.type === "problem" && data.origin === "chamado" ? <ChamadoForm record={data} /> : null}

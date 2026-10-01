@@ -15,7 +15,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         type="button"
         aria-pressed={theme === "light"}
         onClick={() => choose("light")}
-        className={`rounded-control px-3 py-2 text-sm font-medium ${theme === "light" ? "bg-accent text-accent-contrast" : "text-muted"}`}
+        className={`rounded-control px-3 py-2 text-sm font-medium transition ${theme === "light" ? "bg-accent text-accent-contrast" : "text-muted hover:bg-chip"}`}
       >
         Claro
       </button>
@@ -23,7 +23,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         type="button"
         aria-pressed={theme === "dark"}
         onClick={() => choose("dark")}
-        className={`rounded-control px-3 py-2 text-sm font-medium ${theme === "dark" ? "bg-accent text-accent-contrast" : "text-muted"}`}
+        className={`rounded-control px-3 py-2 text-sm font-medium transition ${theme === "dark" ? "bg-accent text-accent-contrast" : "text-muted hover:bg-chip"}`}
       >
         Escuro
       </button>

@@ -28,6 +28,12 @@ export function statusLabel(status: RecordStatus): string {
   return RECORD_STATUS_LABELS[status];
 }
 
+export function statusChipClass(status: RecordStatus): string {
+  if (status === "in_progress") return "rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent";
+  if (status === "done") return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
+  return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-app";
+}
+
 export function priorityLabel(priority: RecordPriority): string {
   return RECORD_PRIORITY_LABELS[priority];
 }

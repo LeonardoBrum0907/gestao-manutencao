@@ -1,10 +1,10 @@
-import { useEffect, useId, type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 
 const tones = {
-  primary: "bg-accent text-accent-contrast",
-  ghost: "border border-line bg-surface text-app",
-  danger: "bg-danger-soft text-danger",
+  primary: "bg-accent text-accent-contrast transition hover:brightness-90",
+  ghost: "border border-line bg-chip text-app transition hover:bg-accent-soft",
+  danger: "bg-danger text-canvas transition hover:brightness-90",
 };
 
 export function Button({
@@ -23,7 +23,7 @@ export function Button({
 }
 
 export const controlClass =
-  "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app";
+  "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app transition hover:border-accent";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -46,9 +46,18 @@ export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${controlClass} ${props.className ?? ""}`} />;
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  compact = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  compact?: boolean;
+}) {
+  const pad = compact ? "px-4 py-3" : "p-4 sm:p-5";
   return (
-    <section className={`rounded-card border border-line bg-card p-4 shadow-card sm:p-5 ${className}`}>
+    <section className={`rounded-card border border-line bg-card shadow-card ${pad} ${className}`}>
       {children}
     </section>
   );
@@ -69,7 +78,7 @@ export function PageTitle({
     <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{eyebrow}</p>
         ) : null}
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
         {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
@@ -78,6 +87,9 @@ export function PageTitle({
     </header>
   );
 }
+
+const focusable =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function Modal({
   open,
@@ -91,15 +103,46 @@ export function Modal({
   children: ReactNode;
 }) {
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
+    const previously = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const root = document.getElementById("root");
+    root?.setAttribute("inert", "");
+    const panel = panelRef.current;
+    const field = panel?.querySelector<HTMLElement>("input, select, textarea");
+    field?.focus();
+
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !panel) return;
+      const nodes = [...panel.querySelectorAll<HTMLElement>(focusable)];
+      if (nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
+
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      root?.removeAttribute("inert");
+      previously?.focus();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -107,6 +150,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
       <div className="absolute inset-0 bg-app/40" onClick={onClose} />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -116,9 +160,14 @@ export function Modal({
           <h2 id={titleId} className="text-lg font-semibold text-app">
             {title}
           </h2>
-          <Button tone="ghost" onClick={onClose}>
-            Fechar
-          </Button>
+          <button
+            type="button"
+            aria-label="Fechar"
+            onClick={onClose}
+            className="rounded-control px-2 py-1 text-lg leading-none text-muted transition hover:bg-chip hover:text-app"
+          >
+            ×
+          </button>
         </div>
         {children}
       </div>
