@@ -1,22 +1,27 @@
 # Gestão de Manutenção
 
-Caderno do gestor: captura rápida e ficha. Fatias 1 a 6.
+Caderno do gestor: captura, acompanhamento, turno e o card de registros abertos.
 
 ## Subir
 
-Copie `.env.example` para `.env` e preencha `DATABASE_URL` (banco `manutencao`) e `SESSION_SECRET`.
+Copie `.env.example` para `.env`. Preencha `DATABASE_URL` com o Postgres da VPS (banco `manutencao`) e `SESSION_SECRET`. O `.env` fica de fora do Git.
 
 ```bash
 docker compose up --build
 ```
 
+O comando padrão sobe só `web` e `api`. O Postgres local não entra.
+
 - App: http://localhost:8080
+- O `web` encaminha `/api` e `/health` para a `api`
 - Saúde: http://localhost:8080/health e http://localhost:3000/health
 - Conta: `gestor@local` / `gestor`
 
-A API lê `DATABASE_URL` do `.env`. Na entrada ela roda `prisma migrate deploy`. Sem `DATABASE_URL` e `SESSION_SECRET` ela não sobe.
+A API recusa o boot sem `DATABASE_URL` e `SESSION_SECRET`. Na entrada ela roda `prisma migrate deploy` e só então escuta na porta 3000. O `web` espera essa saúde antes de publicar a porta 8080.
 
-Postgres local é opcional, no profile `local-db`:
+### Postgres local
+
+Só com o profile `local-db`. Nesse caso o `DATABASE_URL` do `.env` aponta para o host `db`, porta `5432`, com o usuário, a senha e o banco do serviço `db`.
 
 ```bash
 docker compose --profile local-db up --build
@@ -32,7 +37,10 @@ docker compose --profile local-db up --build
 4. Fábricas, máquinas (linha de GD e apadrinhada), seis funções só leitura, técnicos sem login. Excluir fábrica com máquina é recusado.
 5. Captura de Tarefa, Feedback e Problema (texto, tipo, quando, técnico se souber).
 6. Ficha da Tarefa (prazo, prioridade, status, observação, fábrica, TAG, linha, anexo), do Feedback (alvo) e do Problema (máquina ou outra).
+7. Lista de acompanhamento em `/acompanhamento`, com filtros de tipo, status e prazo (vencida, hoje, amanhã).
+8. Chamado em `/turno/chamado` e ocorrência em `/turno/ocorrencia`, gravados como Problema.
+9. Dashboard em `/dashboard`: um card com a contagem de registros abertos e link para a lista.
 
 ## Fora desta versão
 
-Acompanhamento com filtros de prazo, chamado e ocorrência de turno, card do dashboard e o fechamento das fatias 7 a 10.
+Ranking, relatório do dia, PDF, Ishikawa, relatório de turno, gerar pendência e PWA.

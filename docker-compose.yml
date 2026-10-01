@@ -25,7 +25,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?Defina DATABASE_URL no .env}
       SESSION_SECRET: ${SESSION_SECRET:-compose-session-secret}
-      COOKIE_SECURE: "false"
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       ATTACHMENT_DIR: /data/attachments
       PORT: "3000"
     volumes:
@@ -36,6 +36,16 @@ services:
         required: false
     ports:
       - "3000:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
 
   web:
     build:
@@ -47,7 +57,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:
