@@ -64,6 +64,26 @@ export function useRoles() {
   });
 }
 
+export function useSaveRole() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; name: string }) =>
+      input.id
+        ? api<TechnicianRoleDto>(`/api/technician-roles/${input.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ name: input.name }),
+          })
+        : api<TechnicianRoleDto>("/api/technician-roles", {
+            method: "POST",
+            body: JSON.stringify({ name: input.name }),
+          }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["roles"] });
+      client.invalidateQueries({ queryKey: ["technicians"] });
+    },
+  });
+}
+
 export function useTechnicians() {
   return useQuery({
     queryKey: ["technicians"],

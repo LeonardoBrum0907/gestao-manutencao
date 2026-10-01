@@ -27,4 +27,18 @@ export class RoleRepository {
   find(id: string) {
     return this.prisma.technicianRole.findUnique({ where: { id } });
   }
+
+  findByName(name: string) {
+    return this.prisma.technicianRole.findUnique({ where: { name } });
+  }
+
+  async create(name: string): Promise<TechnicianRoleDto> {
+    const row = await this.prisma.technicianRole.create({ data: { name } });
+    return { id: row.id, name: row.name };
+  }
+
+  async rename(id: string, name: string): Promise<TechnicianRoleDto> {
+    const row = await this.prisma.technicianRole.update({ where: { id }, data: { name } });
+    return { id: row.id, name: row.name };
+  }
 }
