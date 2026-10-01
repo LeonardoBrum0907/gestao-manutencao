@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { OpenRecords } from "./application/open-records";
+import { ShowDashboard } from "./application/show-dashboard";
 import { DashboardController } from "./http/dashboard.controller";
-import { OpenRecordsQuery } from "./infra/open-records.prisma";
+import { DashboardRead } from "./infra/dashboard-read.prisma";
 
 @Module({
   controllers: [DashboardController],
-  providers: [OpenRecordsQuery, OpenRecords],
+  providers: [DashboardRead, ShowDashboard],
 })
 export class DashboardModule {}

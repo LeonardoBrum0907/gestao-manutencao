@@ -1,26 +1,85 @@
 import { Link } from "react-router-dom";
+import { RECORD_STATUS_LABELS, RECORD_TYPE_LABELS, type DashboardDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Notice, PageTitle } from "../../../design/ui/controls";
 import { useDashboard } from "../data/dashboard";
+import { formatDashboardWhen, openRankLabel } from "../model/when";
+
+const cardLink =
+  "block rounded-card border border-line bg-card p-4 shadow-card sm:p-5";
+
+function CountLink({ to, label, count }: { to: string; label: string; count: number }) {
+  return (
+    <Link to={to} className={cardLink}>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
+      <p className="mt-2 text-4xl font-semibold tracking-tight text-app">{count}</p>
+    </Link>
+  );
+}
+
+function Ranking({ title, rows }: { title: string; rows: DashboardDto["machineRanking"] }) {
+  return (
+    <Card>
+      <h2 className="text-sm font-semibold text-app">{title}</h2>
+      {rows.length === 0 ? <p className="mt-3 text-sm text-muted">Nenhum aberto.</p> : null}
+      <ol className="mt-3 flex flex-col gap-2">
+        {rows.map((row) => (
+          <li key={row.id} className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="font-medium text-app">{row.name}</span>
+            <span className="shrink-0 text-muted">{openRankLabel(row.openCount)}</span>
+          </li>
+        ))}
+      </ol>
+    </Card>
+  );
+}
 
 export function DashboardPage() {
   const dashboard = useDashboard();
+  const data = dashboard.data;
   return (
-    <div className="mx-auto max-w-lg">
-      <PageTitle eyebrow="Gestor" title="Dashboard" text="O número sai dos registros abertos." />
-      <Card>
-        {dashboard.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-        {dashboard.isError ? <Notice>{errorMessage(dashboard.error)}</Notice> : null}
-        {dashboard.data ? (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Abertos</p>
-            <p className="text-5xl font-semibold tracking-tight text-app">{dashboard.data.openCount}</p>
-            <Link to="/acompanhamento?status=open" className="text-sm font-semibold text-accent">
-              Ver na lista
-            </Link>
+    <div>
+      <PageTitle eyebrow="Gestor" title="Dashboard" text="Abertos, prazos, cadastro e o que entrou por último." />
+      {dashboard.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      {dashboard.isError ? <Notice>{errorMessage(dashboard.error)}</Notice> : null}
+      {data ? (
+        <div className="flex flex-col gap-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <CountLink to="/acompanhamento?status=open" label="Abertas" count={data.openCount} />
+            <CountLink to="/acompanhamento?due=overdue" label="Vencidas" count={data.overdueCount} />
+            <CountLink to="/acompanhamento?due=today" label="Vencem hoje" count={data.dueTodayCount} />
+            <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} />
           </div>
-        ) : null}
-      </Card>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CountLink to="/cadastro/maquinas" label="Máquinas" count={data.machineCount} />
+            <CountLink to="/cadastro/tecnicos" label="Técnicos ativos" count={data.activeTechnicianCount} />
+          </div>
+          <section>
+            <h2 className="mb-3 text-sm font-semibold text-app">Últimos registros</h2>
+            {data.recent.length === 0 ? <Card>Nenhum registro ainda.</Card> : null}
+            <div className="flex flex-col gap-3">
+              {data.recent.map((record) => (
+                <Link key={record.id} to={`/registros/${record.id}`} className={cardLink}>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                      {RECORD_TYPE_LABELS[record.type].short}
+                    </p>
+                    <span className="rounded-control bg-chip px-2 py-1 text-xs font-medium text-app">
+                      {RECORD_STATUS_LABELS[record.status]}
+                    </span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 font-medium text-app">{record.body}</p>
+                  <p className="mt-2 text-sm text-muted">{formatDashboardWhen(record.occurredAt)}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <Ranking title="Máquinas com mais abertos" rows={data.machineRanking} />
+            <Ranking title="Técnicos com mais abertos" rows={data.technicianRanking} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

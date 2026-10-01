@@ -199,6 +199,28 @@ export type SessionDto = {
   email: string;
 };
 
+export type DashboardRecentDto = {
+  id: string;
+  type: RecordType;
+  body: string;
+  occurredAt: string;
+  status: RecordStatus;
+};
+
+export type DashboardRankDto = {
+  id: string;
+  name: string;
+  openCount: number;
+};
+
 export type DashboardDto = {
   openCount: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  doneCount: number;
+  machineCount: number;
+  activeTechnicianCount: number;
+  recent: DashboardRecentDto[];
+  machineRanking: DashboardRankDto[];
+  technicianRanking: DashboardRankDto[];
 };
