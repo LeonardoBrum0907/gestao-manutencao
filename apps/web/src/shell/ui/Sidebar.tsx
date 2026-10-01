@@ -55,7 +55,7 @@ export function Sidebar({
         <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-canvas lg:hidden" onClick={onClose} />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col border-r border-sidebar-line bg-sidebar px-4 py-5 text-sidebar-text transition lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[272px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-4 py-5 text-sidebar-text transition lg:static lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -64,7 +64,7 @@ export function Sidebar({
           <p className="mt-1 text-lg font-semibold leading-tight">Gestão de Manutenção</p>
           <p className="mt-1 truncate text-xs text-sidebar-muted">{email}</p>
         </div>
-        <nav className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+        <nav className="mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
           <div>
             <div className="flex flex-col gap-1">
               {home.map((item) => (
