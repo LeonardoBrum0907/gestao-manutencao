@@ -3,6 +3,8 @@ import { Button } from "../../design/ui/controls";
 import { useLogout } from "../data/session";
 import { ThemeToggle } from "./ThemeToggle";
 
+const home = [{ to: "/dashboard", label: "Dashboard" }];
+
 const notebook = [
   { to: "/captura", label: "Captura" },
   { to: "/acompanhamento", label: "Acompanhamento" },
@@ -63,6 +65,13 @@ export function Sidebar({
           <p className="mt-1 truncate text-xs text-sidebar-muted">{email}</p>
         </div>
         <nav className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+          <div>
+            <div className="flex flex-col gap-1">
+              {home.map((item) => (
+                <Item key={item.to} {...item} onNavigate={onClose} />
+              ))}
+            </div>
+          </div>
           <div>
             <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted">Caderno</p>
             <div className="mt-2 flex flex-col gap-1">

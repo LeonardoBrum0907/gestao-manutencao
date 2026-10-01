@@ -198,3 +198,7 @@ export type RecordDto = {
 export type SessionDto = {
   email: string;
 };
+
+export type DashboardDto = {
+  openCount: number;
+};

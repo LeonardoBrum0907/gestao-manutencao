@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
+import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { TechniciansPage } from "../modules/cadastro/ui/TechniciansPage";
@@ -17,6 +18,7 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<AppShell />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/captura" element={<CapturePage />} />
         <Route path="/acompanhamento" element={<FollowUpPage />} />
         <Route path="/turno/chamado" element={<ChamadoPage />} />
