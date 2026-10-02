@@ -1,11 +1,6 @@
----
-cursor:
-  subagentId: "bc-da906054-88ce-5bee-b6ad-5206448c8a1a"
----
-
 # SIGEM novo — o que a lista ainda não tem
 
-Pacote lido: `SIGEM_5609.zip` (extraído em `/tmp/sigem-5609`). Fonte: `index.html` (carimbo da tela **2026-09-28.3**). A análise anterior descreve a tela **2026-09-07.1**. O menu lateral é o mesmo. `index_base.html` segue o casco antigo de entrega de máquinas, sem estas telas.
+Pacote lido: `SIGEM_5609.zip`. Fonte: `index.html` (carimbo da tela **2026-09-28.3**). A análise anterior descreve a tela **2026-09-07.1**. O menu lateral é o mesmo. `index_base.html` segue o casco antigo de entrega de máquinas, sem estas telas.
 
 Itens novos de verdade: **2**.
 

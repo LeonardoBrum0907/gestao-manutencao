@@ -1,8 +1,3 @@
----
-cursor:
-  subagentId: "bc-3f448f99-8d65-59f9-b38c-fdea58b3c705"
----
-
 # Todoist como canal de entrada do sistema próprio
 
 Para o Leonardo Brum. Pergunta: dá para o encarregado, no celular, falar ou digitar rápido no Todoist (com Ramble) e isso virar GD, chamado, pendência ou backlog no sistema de manutenção?
