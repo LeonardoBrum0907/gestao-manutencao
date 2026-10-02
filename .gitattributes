@@ -1,0 +1,7 @@
+# Arquivos que rodam em container Linux ficam em LF mesmo no Windows (core.autocrlf=true).
+# Com CRLF o entrypoint quebra: "set: Illegal option -".
+*.sh text eol=lf
+Dockerfile text eol=lf
+nginx.conf text eol=lf
+docker-compose.yml text eol=lf
+.env.example text eol=lf
