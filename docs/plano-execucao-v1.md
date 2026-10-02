@@ -1,13 +1,10 @@
----
-cursor:
-  subagentId: "bc-d5b0e70a-00dd-5442-a3d8-b2ca26ffb198"
----
-
 # Plano de execução — v1
 
 Para o Leonardo Brum. Documento executável: o que construir, em que ordem, e o que fica de fora. Não é implementação.
 
 Norte: [project-context.md](project-context.md). Corte: [lista-mvp-sigem.md](lista-mvp-sigem.md). Modularização React: [Juntao Qiu / Martin Fowler](https://martinfowler.com/articles/modularizing-react-apps.html) — view fina, domínio fora do componente, pastas por domínio.
+
+> **Atualizado em 2026-10-02 para o que está no código.** Três decisões mudaram depois da primeira versão deste plano: o dashboard segue a base do SIGEM (contagens, últimos registros e ranking curto, como na [lista MVP](lista-mvp-sigem.md)); as seis funções continuam como seed, mas o gestor cria e renomeia (a versão 2026-09-28.3 do SIGEM abriu esse cadastro, ver [sigem-nao-mapeado.md](sigem-nao-mapeado.md)); e o Compose sobe só `web` e `api`, com o Postgres de `DATABASE_URL` e o `db` local num profile.
 
 ---
 
@@ -37,8 +34,8 @@ O que está `[x]` no bloco **Registros**, mais o apoio `[x]` sem o qual o regist
 - Tarefa com os campos da ação: responsáveis, prazo, prioridade, status, observação; contexto fábrica / TAG / linha; anexo na tarefa (o `[x]` de foto/anexo da ação).
 - Feedback com alvo = técnico (etiqueta).
 - Problema; chamado (nº do dia, descrição, horários, duração, técnicos, máquina ou “outra”, status, observação) e ocorrência do GD (texto + fábrica + linha) como *origem* do Problema — não como telas CMMS.
-- Cadastros: fábricas; máquinas (nome, fábrica, setor, fabricante, código interno, status, observações); funções do técnico (as 6 do SIGEM); técnicos (nome, função, turno, área como texto, status, matrícula, contato, observações). Flags da máquina que já estão `[x]`: linha de GD e apadrinhada — só o campo, sem tela de apadrinhamento.
-- Dashboard: **um card** cujo número vem da fonte dos registros (abertos). Sem rankings, atalhos, relatório do dia ou PDF.
+- Cadastros: fábricas; máquinas (nome, fábrica, setor, fabricante, código interno, status, observações); funções do técnico (as 6 do SIGEM como seed, com criar e renomear); técnicos (nome, função, turno, área como texto, status, matrícula, contato, observações). Flags da máquina que já estão `[x]`: linha de GD e apadrinhada — só o campo, sem tela de apadrinhamento.
+- Dashboard na base do SIGEM, tudo lido da fonte dos registros: abertas, vencidas, vencem hoje e concluídas (cada card abre a lista filtrada), contagem de máquinas e de técnicos ativos, últimos registros e ranking curto de máquina e de técnico com mais abertos. Sem atalhos, relatório do dia ou PDF.
 - Atrasos como *filtro da lista*: vencidas, hoje, amanhã. Bloqueadas / “impactam entrega” ficam de fora (módulo de entrega não entra).
 - Visual SIGEM (sidebar clara, cards, tipografia, cores) com tema selecionável.
 - Uma conta gestor. Mesmo app React no celular (responsivo).
@@ -72,7 +69,7 @@ Voz no app próprio fica para depois. Todoist/Ramble não alimentam este sistema
     web/                 React + TanStack Query + Tailwind
   packages/
     shared/              tipos e enums compartilhados (opcional no dia 1)
-  docker-compose.yml     api, web, db — o mesmo desenho em qualquer ambiente
+  docker-compose.yml     web, api (+ db local no profile) — o mesmo desenho em qualquer ambiente
   package.json           pnpm workspace
 ```
 
@@ -111,7 +108,7 @@ apps/web/src/
     cadastro/               fábrica, máquina, função, técnico
     registro/               captura, ficha, lista de acompanhamento
     turno/                  chamado e ocorrência (nascem Problema)
-    dashboard/              o card com fonte
+    dashboard/              contagens, últimos e ranking, com fonte
 ```
 
 Dentro de cada módulo, camadas do Fowler — não pastas globais `hooks/` e `components/`:
@@ -133,14 +130,14 @@ apps/api/src/
   cadastro/          fábrica, máquina, função, técnico
   registro/          tarefa, feedback, problema, captura, lista
   turno/             chamado, ocorrência → criam/atualizam Problema em registro
-  dashboard/         leitura: um card, uma fonte
+  dashboard/         leitura: contagens, últimos e ranking, uma fonte
   identity/          uma conta gestor (session/cookie)
 ```
 
-- **Cadastro** — CRUD de apoio. Técnico sem senha. Funções: as 6 fixas (mecânico, eletricista, automação, instrumentação, manutenção, utilidades).
+- **Cadastro** — CRUD de apoio. Técnico sem senha. Funções: as 6 do SIGEM entram como seed (mecânico, eletricista, automação, instrumentação, manutenção, utilidades); o gestor cria e renomeia, sem excluir.
 - **Registro** — agregado `Registro` com tipo. Tarefa carrega os campos da ação. Lista de acompanhamento e filtros de atraso (prazo) saem daqui.
 - **Turno** — caso de uso “abrir chamado” e “anotar ocorrência”. Persiste como Problema (origem `chamado` | `ocorrencia`). Sem envelope de relatório de turno, sem Ishikawa, sem “gerar pendência”.
-- **Dashboard** — query de leitura sobre a tabela de registros (contagem do aberto). Não tem escrita própria.
+- **Dashboard** — query de leitura sobre a tabela de registros (contagens, últimos, ranking), com os mesmos filtros da lista de acompanhamento. Não tem escrita própria.
 
 Turno depende de Registro pela aplicação (porta / serviço), não pelo Prisma do outro módulo. Cadastro é referenciado por ID.
 
@@ -170,7 +167,7 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **Machine** — nome, `factoryId`, setor (texto), fabricante, código interno, status operacional (texto controlado do cadastro SIGEM: Em Implantação / Em Teste / Em Ajuste / Liberada / Parada / Finalizada — já está no `[x]` de máquinas), observações, `isDailyLine` (linha GD), `isCritical` (apadrinhada). Sem tela de situação/liberação.
 
-**TechnicianRole** — as 6 funções. Seed, não cadastro aberto.
+**TechnicianRole** — as 6 funções entram como seed. O gestor cria e renomeia; nome único.
 
 **Technician** — nome, `roleId`, turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login.
 
@@ -202,11 +199,13 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 | `openedAt` / `closedAt` / `durationMin` | horários do chamado |
 | `createdAt` / `updatedAt` | auditoria mínima |
 
+**RecordTechnician** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `technicianId`.
+
 **RecordAttachment** — arquivo da Tarefa (o `[x]` de anexo da ação). Sem anexo de chamado.
 
 Índices: `type+status`, `dueAt` (lista e filtros de atraso), `origin` (turno). Sem tabela de plano de ação, sem RP, sem sub-ação.
 
-Dashboard lê `COUNT(*)` de `Record` com status aberto — essa é a fonte do card.
+Dashboard lê `Record` (mais máquinas e técnicos, para os nomes do ranking) e conta com os mesmos filtros da lista — essa é a fonte dos cards.
 
 ---
 
@@ -217,24 +216,24 @@ Cada fatia deixa o Compose no ar e o gestor com um caminho clicável a mais. Nã
 1. **Repo e Compose** — workspace pnpm, `apps/api` Nest + Prisma, `apps/web` Vite/React/Tailwind, Postgres no Compose, `/health`, migrate deploy. TypeScript nos dois lados.
 2. **Identidade** — uma conta gestor, cookie de sessão (HTTP no Compose/dev). Sem isso não há “só o gestor”.
 3. **Shell e tokens** — login, sidebar clara, layout responsivo (lista no desktop, captura no celular), `data-theme` light/dark persistido. Primitives no token, não no hex.
-4. **Cadastro** — fábricas → máquinas (com as duas flags) → funções seed → técnicos. CRUD do gestor.
+4. **Cadastro** — fábricas → máquinas (com as duas flags) → funções (seed, criar e renomear) → técnicos. CRUD do gestor.
 5. **Registro mínimo** — criar os três tipos pela captura (texto, tipo, quando, quem se souber). Persistência `Record`. Sem os campos extras ainda.
 6. **Ficha e campos da ação** — editar depois: Tarefa (prazo, prioridade, status, observação, fábrica/TAG/linha, anexo); Feedback (alvo); Problema (máquina ou “outra”).
 7. **Acompanhamento** — uma lista: filtro tipo, status, prazo; fatias vencida / hoje / amanhã. É a tela de “organizar no computador”.
 8. **Turno → Problema** — abrir chamado (campos `[x]` do chamado) e anotar ocorrência (fábrica + linha + texto). Ambos criam `Record` tipo problema com `origin`. Sem relatório de turno e sem tela GD por fábrica.
-9. **Dashboard** — uma rota, um card, número = abertos da tabela de registros. Link para a lista. Sem ranking.
+9. **Dashboard** — uma rota: abertas, vencidas, vencem hoje e concluídas (cada uma abre a lista filtrada), máquinas, técnicos ativos, últimos registros e ranking curto de máquina e de técnico.
 10. **Fechamento v1** — migrate no Compose de deploy, tema sobrevive ao F5, captura no viewport estreito, lista no largo, critério da seção 9 verde.
 
 ---
 
 ## 7. Compose (dev e deploy)
 
-O mesmo `docker-compose.yml` para qualquer ambiente. Três serviços:
+O mesmo `docker-compose.yml` para qualquer ambiente. O `up` padrão sobe `web` e `api`; o `db` só entra com o profile `local-db`:
 
 | Serviço | Papel |
 |---|---|
-| `db` | Postgres. Volume nomeado. Healthcheck antes da API. |
-| `api` | Nest. `DATABASE_URL`, `JWT_SECRET` (ou equivalente de sessão). Migrate na entrada (`prisma migrate deploy`). Porta interna atrás do web ou publicada. |
+| `db` | Postgres local, só no profile `local-db`. Volume nomeado. Healthcheck antes da API. Sem o profile, a API usa o Postgres de `DATABASE_URL`. |
+| `api` | Nest. `DATABASE_URL`, `SESSION_SECRET`. Migrate na entrada (`prisma migrate deploy`). Porta interna atrás do web ou publicada. |
 | `web` | Build estático do React ou Vite. Em dev, proxy `/api` → api (cookie same-origin). Em deploy, o mesmo proxy (nginx no container web ou um reverse proxy na frente). |
 
 Regras:
@@ -243,7 +242,7 @@ Regras:
 - A API recusa boot sem `DATABASE_URL` e segredo de sessão.
 - Rede interna Compose; o navegador fala com `web`.
 - Sem serviço Pluggy, IA ou worker na v1.
-- Profile extra de Postgres local só se não houver URL remota — o desenho continua `api + web + db`.
+- Profile `local-db` para o Postgres local só quando não houver URL remota.
 
 ---
 
@@ -267,11 +266,11 @@ A v1 está pronta quando o gestor, sozinho, consegue:
 3. No viewport de celular: capturar texto como Tarefa, Feedback ou Problema e gravar.
 4. No computador: abrir a lista, filtrar por tipo/status/prazo (incluindo vencida/hoje/amanhã) e completar prazo, responsável e observação numa Tarefa.
 5. Abrir um chamado e uma ocorrência e vê-los na lista como Problema.
-6. Ver o card do dashboard com a contagem de abertos igual à lista.
+6. Ver no dashboard as contagens (abertas, vencidas, vencem hoje, concluídas) iguais à lista filtrada.
 7. Trocar light/dark, recarregar, permanecer no tema.
-8. Subir `api + web + db` com um `docker compose up` e persistir no Postgres.
+8. Subir `web + api` com um `docker compose up` e persistir no Postgres (`DATABASE_URL`, ou o profile `local-db`).
 
-Pronto **não** inclui: PDF, PWA, voz, segundo usuário, plano de ação em tabela, GD como reunião, avaliação de técnico, ranking no dashboard.
+Pronto **não** inclui: PDF, PWA, voz, segundo usuário, plano de ação em tabela, GD como reunião, avaliação de técnico.
 
 ---
 
@@ -284,6 +283,6 @@ Marcado como premissa — não é decisão inventada neste plano.
 | **Repo novo** | Este produto não nasce dentro do HTML do SIGEM nem de outro app do workspace. Monólito de repositório, apps separados. |
 | **Captura no celular = o mesmo app React responsivo** | Não há app nativo, PWA obrigatório nem front paralelo. Celular e computador são breakpoints. |
 | **Auth = uma conta gestor** | Sem papel de técnico, sem convite, sem multi-empresa. Técnico é dado. |
-| **Postgres** | Fonte da verdade no `db` do Compose. Sem localStorage como banco (o SIGEM atual não é o modelo). |
+| **Postgres** | Fonte da verdade no Postgres de `DATABASE_URL` (ou no `db` do profile `local-db`). Sem localStorage como banco (o SIGEM atual não é o modelo). |
 
-Decisões já tomadas (Leonardo), não premissas: monólito + Compose; TypeScript; React + TanStack Query + Tailwind; tokens + tema selecionável; Nest recomendado (Fastify = alternativa magra); Prisma; SOLID/DDD/Clean Code sem comentários; escopo = `[x]` de Registros + órfãos Chamado/Fábricas + campos da ação na Tarefa; dashboard só o card com fonte; só o gestor.
+Decisões já tomadas (Leonardo), não premissas: monólito + Compose; TypeScript; React + TanStack Query + Tailwind; tokens + tema selecionável; Nest recomendado (Fastify = alternativa magra); Prisma; SOLID/DDD/Clean Code sem comentários; escopo = `[x]` de Registros + órfãos Chamado/Fábricas + campos da ação na Tarefa; dashboard na base do SIGEM (contagens, últimos, ranking curto) com fonte; só o gestor.

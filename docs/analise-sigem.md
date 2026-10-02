@@ -1,23 +1,18 @@
----
-cursor:
-  subagentId: "bc-28dd5cae-0131-55f2-b75c-e15ca3f91761"
----
-
 # Análise do SIGEM — pacote completo
 
 Documento de levantamento a partir do artefato recebido por Leonardo Brum. Objetivo: listar funcionalidades e soluções já existentes, para um sistema próprio futuro.
 
-**Fontes lidas (pacote completo nesta VM):**
+**Fontes lidas (pacote completo):**
 
-| Arquivo no pacote | Caminho nesta VM | Papel |
-|---|---|---|
-| `LEIA-ME.md` | `LEIA-ME_2ef5.md` | Manual operacional (módulos, GD, sync) |
-| `INSTRUCOES.txt` | `INSTRUCOES_51d0.txt` | Instalação, licença, primeiros passos |
-| `index.html` | `index_a3d6.html` | App atual (~9,3 mil linhas + SheetJS 0.18.5) |
-| `index_base.html` | `index_base_f234.html` | Versão anterior (~865 linhas), núcleo “entrega de máquinas” |
-| `manifest.json` | `manifest_5e78.json` | PWA (nome, ícones SVG, standalone) |
-| `sw.js` | `sw_e95c.js` | Service worker rede-primeiro |
-| `SIGEM.bat` | `SIGEM_e8ea.bat` | Atalho Windows: abre `index.html` |
+| Arquivo no pacote | Papel |
+|---|---|
+| `LEIA-ME.md` | Manual operacional (módulos, GD, sync) |
+| `INSTRUCOES.txt` | Instalação, licença, primeiros passos |
+| `index.html` | App atual (~9,3 mil linhas + SheetJS 0.18.5) |
+| `index_base.html` | Versão anterior (~865 linhas), núcleo “entrega de máquinas” |
+| `manifest.json` | PWA (nome, ícones SVG, standalone) |
+| `sw.js` | Service worker rede-primeiro |
+| `SIGEM.bat` | Atalho Windows: abre `index.html` |
 
 Nada abaixo é inventado. Onde o código/manual não fecha o desenho, está marcado como **inferência**.
 
