@@ -79,6 +79,8 @@ Tudo **apoio** (ou extra de cadastro). Não é registro.
 - [x] Funções do técnico (hoje são 6 fixas: mecânico, eletricista, automação, instrumentação, manutenção, utilidades) — **apoio**
 - [x] Técnicos (nome, função, turno, área, status, matrícula, contato, observações) — **apoio** *(no produto novo o técnico é etiqueta: responsável da tarefa, alvo do feedback, nome no problema — sem login)*
   *Print: Amilton Nascimento, mecânico, 1º turno, Preventiva F2 e F3. Reforça Pessoas/Feedback como etiqueta; sem [x] extra (não é o módulo RH).*
+- [ ] Graus / senioridade do técnico (lista editável: Júnior, Pleno, Sênior, Especialista; campo Grau no técnico) — **apoio**
+  *SIGEM 2026-09-28.3, em Configurações (ver* `docs/sigem-nao-mapeado.md`*). Fora por enquanto.*
 - [ ] Técnico padrinho de determinadas máquinas — **extra**
 - [ ] Máquina de PDI no técnico (no SIGEM: “em desenvolvimento”) — **extra**
 - [ ] Central de links e acessos (URLs por categoria, atalho no dashboard) — **extra**
@@ -182,6 +184,8 @@ Tudo **extra** (RH de manutenção). **Não é o Feedback** do bloco Registros.
 - [x] Avaliação trimestral (12 competências + Pareto 80/20) — **extra**
 - [x] PDF “Avaliação Técnico” — **extra**
 - [x] Anexos do Plano de Desenvolvimento Individual (PDI) — **extra**
+- [ ] Matriz de Competências (checklist de conhecimento mecânico por equipamento: nota 0 a 4, nível esperado, aderência em %, PDF; catálogo fixo de 9 equipamentos e 222 habilidades) — **extra**
+  *SIGEM 2026-09-28.3, na análise do técnico, aba Anexo PDI (ver* `docs/sigem-nao-mapeado.md`*). Não é a avaliação trimestral de 12 competências. Fora por enquanto.*
 
 *Fora. O Feedback do gestor é anotação rápida (**Pessoas**), não nota nem PDI. Cadastro do técnico (etiqueta) está em Cadastros; print do Amilton reforça isso, sem [x] extra aqui.*
 
@@ -239,7 +243,7 @@ Versão mantida (marcas do Leonardo). Só entrei `[x]` em peça que a seleção 
 
 **Nesta versão, a dashboard** usa abertas, vencidas, hoje, concluídas, máquinas, técnicos, últimos registros e ranking curto. Relatório do Dia, período, GD e PDF continuam de fora. Painel de atrasos: vencida/hoje usam o prazo da Tarefa; bloqueadas e “impacta entrega” ficam sem o módulo de entrega.
 
-**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel.
+**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel · matriz de competências · graus / senioridade.
 
 ---
 
