@@ -27,7 +27,15 @@ Só com o profile `local-db`. Nesse caso o `DATABASE_URL` do `.env` aponta para 
 docker compose --profile local-db up --build
 ```
 
-`IMAGE_TARGET=development` troca o alvo da imagem (watch na API, Vite na web). O `web` continua na frente da API.
+### Desenvolvimento
+
+Recarrega ao salvar: a API recompila com `tsc --watch` e reinicia, e o `web` roda o Vite. O `docker-compose.dev.yml` vai por cima do principal e monta `apps/api/src`, `apps/web/src` e `apps/web/index.html` no container. O `web` continua na frente da API.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por isso os dois watchers rodam por polling. Mudou `schema.prisma`, dependências ou `packages/shared`? Suba de novo com `--build`.
 
 ## O que esta versão faz
 
