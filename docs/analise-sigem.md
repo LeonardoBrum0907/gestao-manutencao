@@ -2,6 +2,8 @@
 
 Documento de levantamento a partir do artefato recebido por Leonardo Brum. Objetivo: listar funcionalidades e soluções já existentes, para um sistema próprio futuro.
 
+> **Versão analisada:** tela `2026-09-07.1`. Conferido de novo em 2026-10-03 contra o pacote da tela `2026-09-28.3` (arquivos de 30/09). O que essa versão trouxe de novo está em [sigem-nao-mapeado.md](sigem-nao-mapeado.md); os trechos abaixo que mudaram estão marcados com *(2026-09-28.3)*.
+
 **Fontes lidas (pacote completo):**
 
 | Arquivo no pacote | Papel |
@@ -40,7 +42,7 @@ A versão atual cobre:
 - **apadrinhamento** de equipamentos críticos;
 - relatórios PDF / período / “relatório do dia”.
 
-Versões gravadas no `index.html`: carimbo da sidebar **`2026-09-07.1`**; constante JS `SIGEM_BUILD='2026-08-02.1'` (os dois números **não coincidem**). O splash canvas também desenha `versão 2026-09-07.1`.
+Versões gravadas no `index.html`: carimbo da sidebar **`2026-09-07.1`**; constante JS `SIGEM_BUILD='2026-08-02.1'` (os dois números **não coincidem**). O splash canvas também desenha `versão 2026-09-07.1`. *(2026-09-28.3)* O carimbo da sidebar e do splash passa a `2026-09-28.3`; `SIGEM_BUILD` continua `2026-08-02.1`.
 
 **Domínio (agora com evidência no seed da base):** equipamentos de exemplo Marchesini, Hüttlin, Uhlmann; áreas Embalagem / Sólidos / Blister / Compressão / Revestimento; tipos Validação e Processo. Isso sustenta **planta farmacêutica de sólidos/embalagem**, não só uma inferência por nomes de linha CAM/MED/UHL. Não há razão social da fábrica no pacote.
 
@@ -285,16 +287,16 @@ Ausente na base.
 
 ### 6.9 Técnicos (`tecnicos` + página `por-tecnico`)
 
-Cadastro: nome, função, turno, área, status (Ativo / Inativo / Férias / Afastado), matrícula, contato, obs, máquinas das quais é padrinho, “máquina PDI (em desenvolvimento)”.
+Cadastro: nome, função, turno, área, status (Ativo / Inativo / Férias / Afastado), matrícula, contato, obs, máquinas das quais é padrinho, “máquina PDI (em desenvolvimento)”. *(2026-09-28.3)* Mais grau / senioridade e fábrica.
 
-Lista: nota em estrelas, pendências abertas, atalho de máquinas.
+Lista: nota em estrelas, pendências abertas, atalho de máquinas. *(2026-09-28.3)* Mais a coluna Grau e o botão de máquinas sob responsabilidade, com **Gerar resumo** (PDF das pendências abertas nessas máquinas).
 
 Análise individual (4 abas no atual; 2 na base):
 
 1. **Perfil e Pendências** — dados + KPIs (abertas, críticas, vencidas, concluídas, corretivas liberadas, preventivas).
 2. **Comportamento** — nota 1–5, pontualidade/produtividade/colaboração, pills positivos/negativos/neutros, histórico de observações. Já existia na base.
 3. **Avaliação de Desempenho** — 12 competências × 4 trimestres (notas 10/8/6/4/2), média geral, gráfico Pareto 80/20 em canvas, PDF “Avaliação Técnico”. Só no atual.
-4. **Anexo PDI** — arquivos do Plano de Desenvolvimento Individual (até 8 MB). Só no atual.
+4. **Anexo PDI** — arquivos do Plano de Desenvolvimento Individual (até 8 MB). Só no atual. *(2026-09-28.3)* A aba traz também a **Matriz de Competências**: checklist de conhecimento mecânico por equipamento (nota 0 a 4, nível esperado, aderência em %, PDF), com catálogo fixo de 9 equipamentos e 222 habilidades.
 
 Competências: Segurança, Trabalho em equipe, Proatividade, Conhecimento técnico, Resolução de problemas, Relatórios, Apontamento de horas, Encerramento de ordens, Log book, Apontamento OEE, Melhorias, Comunicação.
 
@@ -340,7 +342,7 @@ Ausente na base (lá o PDF é só `window.print` da página visível).
 
 ### 6.14 Configurações (`config`)
 
-Fábricas (CRUD), Neural SIGEM (chave/modelo Gemini + 3 botões de IA), painel de armazenamento (MB localStorage vs IndexedDB, limpar fotos), tipos de atividade (CRUD; default Mecânica, Elétrica, Automação, Segurança, Documentação, Utilidades, Processo, Validação), cadastro de máquinas com flags GD/apadrinhada, áreas/setores, resumo de apadrinhadas, lista **read-only** de funções, zona de risco “Zerar Plano de Ação mantendo Stretch”.
+Fábricas (CRUD), Neural SIGEM (chave/modelo Gemini + 3 botões de IA), painel de armazenamento (MB localStorage vs IndexedDB, limpar fotos), tipos de atividade (CRUD; default Mecânica, Elétrica, Automação, Segurança, Documentação, Utilidades, Processo, Validação), cadastro de máquinas com flags GD/apadrinhada, áreas/setores, resumo de apadrinhadas, funções (lista **read-only** na `2026-09-07.1`; incluir, editar e apagar na `2026-09-28.3`), graus / senioridade *(2026-09-28.3; padrão Júnior, Pleno, Sênior, Especialista, com incluir, editar e apagar)*, zona de risco “Zerar Plano de Ação mantendo Stretch”.
 
 **Dados / Sync** (`dados`, botão no rodapé, não no menu): exportar JSON, importar (substitui tudo), alterar nome do admin, estatísticas, “apagar tudo e restaurar padrão”.
 
@@ -433,7 +435,7 @@ Prefixos de ID gerados no cliente: `T` técnicos, `M` máquinas, `P` pendências
 
 ### 10.1 Entidades e campos (do código de save / DEF atuais)
 
-**Técnico:** id, nome, funcao, turno, area, status, matricula, contato, obs, padrinhoMaquinas[], pdiMaquinas[], comp { nota, pont, prod, colab, attrs[], hist[{data,txt,tipo}], aval {t1..t4: {seg,eq,pro,ct,rp,rel,ah,eo,log,oee,mel,com}}, pdi[] anexos }.
+**Técnico:** id, nome, funcao, grau *(2026-09-28.3)*, turno, fabrica *(2026-09-28.3)*, area, status, matricula, contato, obs, padrinhoMaquinas[], pdiMaquinas[], matriz{} e matrizE{} (nota real e esperado por habilidade, *2026-09-28.3*), comp { nota, pont, prod, colab, attrs[], hist[{data,txt,tipo}], aval {t1..t4: {seg,eq,pro,ct,rp,rel,ah,eo,log,oee,mel,com}}, pdi[] anexos }.
 
 **Máquina:** id, nome, fabrica, idLinha (legado), linha, setor, fabricante, codigo, status, obs, padrinho (bool), gd (bool).
 
@@ -529,7 +531,7 @@ Pendências de exemplo: sensor da esteira (impacta entrega), válvula pneumátic
 - SheetJS inteiro (~centenas de KB minificados) dentro do HTML — manutenção difícil.
 - Página `planoAcao` + `db.planoAcao` órfãs; constante `AK` de auth órfã; CSS de senha órfão.
 - PWA declarado, mas **SW não sobe em `file://`** (uso via BAT). Cache name usa `Date.now()` porque `self.SIGEM_BUILD` nunca é injetado no worker.
-- `SIGEM_BUILD` JS (`2026-08-02.1`) ≠ carimbo da UI (`2026-09-07.1`).
+- `SIGEM_BUILD` JS (`2026-08-02.1`) ≠ carimbo da UI (`2026-09-07.1`; `2026-09-28.3` na versão nova).
 
 **Produto / UX**
 
@@ -537,15 +539,15 @@ Pendências de exemplo: sensor da esteira (impacta entrega), válvula pneumátic
 - Licença reversível no cliente (salt e algoritmo visíveis no HTML).
 - Sem concorrência: dois operadores no mesmo JSON se atropelam.
 - Formulários grandes (Pendência ~900 px) pouco adequados a tablet no chão.
-- Inconsistência de acento: filtro de críticas no Plano de Ação compara `'Critica'` **sem acento**; o enum é `'Crítica'`. O card “Críticas” tende a ficar zerado. **Bug no artefato.** Na base o dashboard compara `'Crítica'` certo.
+- Inconsistência de acento: o enum é `'Crítica'`, mas o card e o filtro “Críticas” do Plano de Ação, a fatia “Críticas” do Atrasos e as cores de prioridade comparam `'Critica'` **sem acento** — ficam sempre zerados ou sem cor. **Bug no artefato.** Na `2026-09-28.3` o card “Críticas” do dashboard filtra por `'Crítica'` e funciona; na base o dashboard também compara certo.
 - Preventiva guarda `maquina` como string, não `idMaq` — matching de apadrinhamento é por nome normalizado.
 - GD usa `idLinha` e `idMaq` após unificação; código ainda mistura os dois.
-- Funções de técnico não são editáveis (só as 6 constantes) — o INSTRUCOES pede cadastro de Funções.
+- Na `2026-09-07.1`, funções de técnico não eram editáveis (só as 6 constantes) — o INSTRUCOES pedia cadastro de Funções. Resolvido na `2026-09-28.3`.
 - AGMT é um **contador**, não uma lista de OS.
 - Inspeções são dump de Excel, sem modelo de “rota de inspeção”.
 - PDI de máquina no técnico está rotulado “em desenvolvimento”.
 - Chave Gemini no `prompt()` do navegador; modelo default `gemini-3.6-flash` (nome que o Google pode não reconhecer).
-- Dois nomes de produto no mesmo zip (Entrega de Máquinas vs Gestão de Manutenção). LEIA-ME desatualizado em relação ao menu.
+- Dois nomes de produto no mesmo zip (Entrega de Máquinas vs Gestão de Manutenção). LEIA-ME desatualizado em relação ao menu. Ele ainda manda gerenciar “Configurações > Linhas de Produção”, mas as linhas viraram máquinas marcadas como GD; `addLinha` / `delLinha` ficaram no código sem tela que as chame.
 
 **Cobertura funcional que o SIGEM não tem (e o código não finge ter)**
 

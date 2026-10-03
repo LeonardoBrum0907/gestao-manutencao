@@ -76,8 +76,8 @@ Tudo **apoio** (ou extra de cadastro). Não é registro.
 - [x] Marcar máquina como linha de Gerenciamento Diário — **extra**
 - [x] Marcar máquina como apadrinhada (equipamento crítico) — **extra**
 - [ ] Tipos de atividade (mecânica, elétrica, automação, segurança, etc.) — **apoio**
-- [x] Funções do técnico (hoje são 6 fixas: mecânico, eletricista, automação, instrumentação, manutenção, utilidades) — **apoio**
-- [x] Técnicos (nome, função, turno, área, status, matrícula, contato, observações) — **apoio** *(no produto novo o técnico é etiqueta: responsável da tarefa, alvo do feedback, nome no problema — sem login)*
+- [x] Funções do técnico (cadastro em Configurações, com incluir, editar e apagar; padrão: mecânico, eletricista, automação, instrumentação, manutenção, utilidades) — **apoio**
+- [x] Técnicos (nome, função, turno, fábrica, área, status, matrícula, contato, observações) — **apoio** *(no produto novo o técnico é etiqueta: responsável da tarefa, alvo do feedback, nome no problema — sem login)*
   *Print: Amilton Nascimento, mecânico, 1º turno, Preventiva F2 e F3. Reforça Pessoas/Feedback como etiqueta; sem [x] extra (não é o módulo RH).*
 - [ ] Graus / senioridade do técnico (lista editável: Júnior, Pleno, Sênior, Especialista; campo Grau no técnico) — **apoio**
   *SIGEM 2026-09-28.3, em Configurações (ver* `docs/sigem-nao-mapeado.md`*). Fora por enquanto.*
@@ -102,6 +102,7 @@ Tudo **apoio** (ou extra de cadastro). Não é registro.
 - [ ] Gerar pendência a partir da ocorrência — **→ Tarefa**
 - [ ] Backlog semanal (OS, técnico, atividade, prazo na terça) — **→ Tarefa**
 - [ ] Cadastro rápido de backlog (só técnico + OS) — **→ Tarefa** *(atalho do backlog, não a captura de texto no celular)*
+- [ ] Resumo do backlog por técnico (tabela na aba Backlog Semanal) — **extra**
 
 #### Extra
 
@@ -152,18 +153,18 @@ Tudo **apoio** (ou extra de cadastro). Não é registro.
 
 ### Relatórios
 
-A lista de acompanhamento continua sendo o lugar de organizar. A dashboard desta versão segue a **base** do SIGEM (cards, ranking, recentes), não o painel cheio de GD e atalhos.
+A lista de acompanhamento continua sendo o lugar de organizar. A dashboard desta versão segue a **base** do SIGEM (`index_base.html`, a versão antiga: cards, ranking, recentes), não o painel cheio de GD e atalhos do SIGEM atual.
 
 **Nesta versão**
 
 - [x] Dashboard: abertas, vencidas, vencem hoje, concluídas — cada card abre a lista filtrada
 - [x] Dashboard: contagem de máquinas e de técnicos ativos
-- [x] Dashboard: últimos registros
+- [x] Dashboard: últimos registros *(no SIGEM só existe na versão antiga, como “Pendências recentes”; o dashboard atual não tem)*
 - [x] Dashboard: ranking curto de máquina e de técnico com mais abertos
 
 **Fora desta versão**
 
-- [ ] Dashboard cheio (GD de hoje, atalhos de corretiva/preventiva, links) — **extra**
+- [ ] Dashboard cheio (ocorrências GD de hoje, análises GD abertas, críticas, avanço geral em %, alerta “Atenção necessária hoje”, atalhos de corretiva/preventiva, links) — **extra**
 - [ ] Relatório do Dia (gerencial do 1º turno, seções ligáveis) — **extra**
 - [ ] Relatório de período (intervalo de datas, turno, técnico) — **extra**
 - [ ] PDF da ação / das ações selecionadas — **extra**
@@ -171,7 +172,7 @@ A lista de acompanhamento continua sendo o lugar de organizar. A dashboard desta
 - [ ] PDF do relatório de corretivas — **extra**
 - [ ] Gerar PDF da tela que está aberta — **extra**
 
-*A base do SIGEM era cards de pendência + ranking + tabela recente. GD, relatório e PDF ficam de fora: o JSON não trouxe esse movimento.*
+*A base do SIGEM (`index_base.html`) era cards de pendência + ranking + tabela recente. O dashboard atual tirou a tabela recente e somou os cards de GD, críticas e avanço. GD, relatório e PDF ficam de fora: o JSON não trouxe esse movimento.*
 
 ---
 
@@ -216,6 +217,7 @@ Tudo **extra** em relação ao caderno do gestor. PWA/offline só importam se a 
 - [ ] Tela cheia ao entrar — **extra**
 - [ ] Tela de abertura (splash) — **extra**
 - [ ] Licença por computador + teste de 7 dias — **extra**
+- [ ] Login sem senha, só com o nome do administrador (trocado em Dados / Sync) — **extra** *(no produto novo é a conta única do gestor, com senha)*
 - [ ] Priorização automática por regras (o próprio SIGEM avisa: não é IA) — **extra**
 - [ ] Análise das ações abertas com IA (Gemini) — **extra**
 - [ ] Pergunta livre à IA sobre os dados — **extra**
