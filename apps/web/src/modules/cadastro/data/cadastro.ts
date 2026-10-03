@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FactoryDto, MachineDto, TechnicianDto, TechnicianRoleDto } from "@manutencao/shared";
+import type { FactoryDto, MachineDto, TechnicianDto, TechnicianGradeDto, TechnicianRoleDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export function useFactories() {
@@ -84,6 +84,41 @@ export function useSaveRole() {
   });
 }
 
+export function useGrades() {
+  return useQuery({
+    queryKey: ["grades"],
+    queryFn: () => api<TechnicianGradeDto[]>("/api/technician-grades"),
+  });
+}
+
+export function useSaveGrade() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; name: string }) =>
+      input.id
+        ? api<TechnicianGradeDto>(`/api/technician-grades/${input.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ name: input.name }),
+          })
+        : api<TechnicianGradeDto>("/api/technician-grades", {
+            method: "POST",
+            body: JSON.stringify({ name: input.name }),
+          }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["grades"] });
+      client.invalidateQueries({ queryKey: ["technicians"] });
+    },
+  });
+}
+
+export function useDeleteGrade() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/technician-grades/${id}`, { method: "DELETE" }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["grades"] }),
+  });
+}
+
 export function useTechnicians() {
   return useQuery({
     queryKey: ["technicians"],
@@ -94,6 +129,7 @@ export function useTechnicians() {
 export type TechnicianWrite = {
   name: string;
   roleId: string;
+  gradeId: string | null;
   shift: TechnicianDto["shift"];
   area: string | null;
   status: TechnicianDto["status"];

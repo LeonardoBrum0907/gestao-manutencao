@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
+import { GradesPage } from "../modules/cadastro/ui/GradesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { TechniciansPage } from "../modules/cadastro/ui/TechniciansPage";
@@ -28,6 +29,7 @@ export function AppRouter() {
         <Route path="/cadastro/fabricas" element={<FactoriesPage />} />
         <Route path="/cadastro/maquinas" element={<MachinesPage />} />
         <Route path="/cadastro/funcoes" element={<RolesPage />} />
+        <Route path="/cadastro/graus" element={<GradesPage />} />
         <Route path="/cadastro/tecnicos" element={<TechniciansPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/captura" replace />} />

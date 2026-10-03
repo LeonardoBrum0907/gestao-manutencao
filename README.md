@@ -42,7 +42,7 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 1. Monorepo pnpm: `apps/api`, `apps/web`, `packages/shared`, Compose.
 2. Uma conta gestor, cookie de sessão.
 3. Login, sidebar, tema claro/escuro em `data-theme`.
-4. Fábricas, máquinas (linha de GD e apadrinhada), funções (as seis do SIGEM como seed, com criar e renomear), técnicos sem login. Cadastro em modal. Excluir fábrica com máquina é recusado.
+4. Fábricas, máquinas (linha de GD e apadrinhada), funções (as seis do SIGEM como seed, com criar e renomear), graus (Júnior, Pleno, Sênior e Especialista de padrão; grau em uso não pode ser excluído), técnicos sem login. Cadastro em modal. Excluir fábrica com máquina é recusado.
 5. Captura de Tarefa, Feedback e Problema (texto, tipo, quando, técnico se souber).
 6. Ficha da Tarefa (prazo, prioridade, status, observação, fábrica, TAG, linha, anexo), do Feedback (alvo) e do Problema (máquina ou outra).
 7. Lista de acompanhamento em `/acompanhamento`, com filtros de tipo, status e prazo (vencida, hoje, amanhã).

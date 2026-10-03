@@ -20,6 +20,7 @@ const support = [
   { to: "/cadastro/fabricas", label: "Fábricas" },
   { to: "/cadastro/maquinas", label: "Máquinas" },
   { to: "/cadastro/funcoes", label: "Funções" },
+  { to: "/cadastro/graus", label: "Graus" },
   { to: "/cadastro/tecnicos", label: "Técnicos" },
 ];
 

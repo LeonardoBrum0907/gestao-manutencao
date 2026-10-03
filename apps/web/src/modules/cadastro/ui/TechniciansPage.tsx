@@ -2,12 +2,13 @@ import { useState } from "react";
 import type { TechnicianDto, TechnicianShift, TechnicianStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useDeleteTechnician, useRoles, useSaveTechnician, useTechnicians, type TechnicianWrite } from "../data/cadastro";
+import { useDeleteTechnician, useGrades, useRoles, useSaveTechnician, useTechnicians, type TechnicianWrite } from "../data/cadastro";
 import { shiftLabel, shiftOptions, technicianStatusClass, technicianStatusLabel, technicianStatusOptions } from "../model/labels";
 
 const empty: TechnicianWrite = {
   name: "",
   roleId: "",
+  gradeId: null,
   shift: "first",
   area: "",
   status: "active",
@@ -20,6 +21,7 @@ function fromDto(technician: TechnicianDto): TechnicianWrite {
   return {
     name: technician.name,
     roleId: technician.roleId,
+    gradeId: technician.gradeId,
     shift: technician.shift,
     area: technician.area ?? "",
     status: technician.status,
@@ -37,6 +39,7 @@ function blankToNull(value: string | null): string | null {
 export function TechniciansPage() {
   const technicians = useTechnicians();
   const roles = useRoles();
+  const grades = useGrades();
   const save = useSaveTechnician();
   const remove = useDeleteTechnician();
   const [open, setOpen] = useState(false);
@@ -80,7 +83,8 @@ export function TechniciansPage() {
             >
               <p className="font-medium text-app transition hover:text-accent hover:underline">{technician.name}</p>
               <p className="mt-1 text-sm text-muted">
-                {technician.roleName} · {shiftLabel(technician.shift)} ·{" "}
+                {technician.roleName}
+                {technician.gradeName ? ` · ${technician.gradeName}` : ""} · {shiftLabel(technician.shift)} ·{" "}
                 <span className={technicianStatusClass(technician.status)}>{technicianStatusLabel(technician.status)}</span>
               </p>
             </button>
@@ -144,6 +148,19 @@ export function TechniciansPage() {
                 {roles.data?.map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
+            <Field label="Grau">
+              <SelectInput
+                value={draft.gradeId ?? ""}
+                onChange={(event) => setDraft({ ...draft, gradeId: event.target.value || null })}
+              >
+                <option value="">Sem grau</option>
+                {grades.data?.map((grade) => (
+                  <option key={grade.id} value={grade.id}>
+                    {grade.name}
                   </option>
                 ))}
               </SelectInput>

@@ -59,21 +59,31 @@ model TechnicianRole {
   technicians Technician[]
 }
 
+model TechnicianGrade {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  position    Int
+  technicians Technician[]
+}
+
 model Technician {
-  id           String         @id @default(cuid())
+  id           String           @id @default(cuid())
   name         String
   roleId       String
-  role         TechnicianRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  role         TechnicianRole   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  gradeId      String?
+  grade        TechnicianGrade? @relation(fields: [gradeId], references: [id], onDelete: Restrict)
   shift        String
   area         String?
   status       String
   registration String?
   contact      String?
   notes        String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   @@index([roleId])
+  @@index([gradeId])
 }
 
 model Record {

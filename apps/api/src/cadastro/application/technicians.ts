@@ -3,6 +3,7 @@ import type { TechnicianDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
 import { requireName, requireShift, requireTechnicianStatus } from "../domain/names";
+import { GradeRepository } from "../infra/grade.repository";
 import { RoleRepository } from "../infra/role.repository";
 import { TechnicianRepository } from "../infra/technician.repository";
 
@@ -11,6 +12,7 @@ export class Technicians {
   constructor(
     private readonly technicians: TechnicianRepository,
     private readonly roles: RoleRepository,
+    private readonly grades: GradeRepository,
   ) {}
 
   list(): Promise<TechnicianDto[]> {
@@ -40,9 +42,14 @@ export class Technicians {
     const roleId = requiredString(source, "roleId", "Escolha a função.");
     const role = await this.roles.find(roleId);
     if (!role) throw new DomainError("role", 400, "Função não encontrada.");
+    const gradeId = optionalString(source, "gradeId");
+    if (gradeId && !(await this.grades.find(gradeId))) {
+      throw new DomainError("grade", 400, "Grau não encontrado.");
+    }
     const input = {
       name: requireName(requiredString(source, "name", "Informe o nome do técnico."), "Informe o nome do técnico."),
       roleId,
+      gradeId,
       shift: requireShift(requiredString(source, "shift", "Escolha o turno.")),
       area: optionalString(source, "area"),
       status: requireTechnicianStatus(requiredString(source, "status", "Escolha o status.")),
