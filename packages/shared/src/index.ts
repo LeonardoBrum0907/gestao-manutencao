@@ -149,11 +149,18 @@ export type TechnicianRoleDto = {
   name: string;
 };
 
+export type TechnicianGradeDto = {
+  id: string;
+  name: string;
+};
+
 export type TechnicianDto = {
   id: string;
   name: string;
   roleId: string;
   roleName: string;
+  gradeId: string | null;
+  gradeName: string | null;
   shift: TechnicianShift;
   area: string | null;
   status: TechnicianStatus;

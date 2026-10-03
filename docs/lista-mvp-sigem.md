@@ -79,8 +79,8 @@ Tudo **apoio** (ou extra de cadastro). Não é registro.
 - [x] Funções do técnico (cadastro em Configurações, com incluir, editar e apagar; padrão: mecânico, eletricista, automação, instrumentação, manutenção, utilidades) — **apoio**
 - [x] Técnicos (nome, função, turno, fábrica, área, status, matrícula, contato, observações) — **apoio** *(no produto novo o técnico é etiqueta: responsável da tarefa, alvo do feedback, nome no problema — sem login)*
   *Print: Amilton Nascimento, mecânico, 1º turno, Preventiva F2 e F3. Reforça Pessoas/Feedback como etiqueta; sem [x] extra (não é o módulo RH).*
-- [ ] Graus / senioridade do técnico (lista editável: Júnior, Pleno, Sênior, Especialista; campo Grau no técnico) — **apoio**
-  *SIGEM 2026-09-28.3, em Configurações (ver* `docs/sigem-nao-mapeado.md`*). Fora por enquanto.*
+- [x] Graus / senioridade do técnico (lista editável: Júnior, Pleno, Sênior, Especialista; campo Grau no técnico) — **apoio**
+  *SIGEM 2026-09-28.3, em Configurações (ver* `docs/sigem-nao-mapeado.md`*). Entrou em 2026-10-03: tela Graus em Apoio e campo Grau no técnico; grau em uso não pode ser excluído.*
 - [ ] Técnico padrinho de determinadas máquinas — **extra**
 - [ ] Máquina de PDI no técnico (no SIGEM: “em desenvolvimento”) — **extra**
 - [ ] Central de links e acessos (URLs por categoria, atalho no dashboard) — **extra**
@@ -245,7 +245,7 @@ Versão mantida (marcas do Leonardo). Só entrei `[x]` em peça que a seleção 
 
 **Nesta versão, a dashboard** usa abertas, vencidas, hoje, concluídas, máquinas, técnicos, últimos registros e ranking curto. Relatório do Dia, período, GD e PDF continuam de fora. Painel de atrasos: vencida/hoje usam o prazo da Tarefa; bloqueadas e “impacta entrega” ficam sem o módulo de entrega.
 
-**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel · matriz de competências · graus / senioridade.
+**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel · matriz de competências.
 
 ---
 

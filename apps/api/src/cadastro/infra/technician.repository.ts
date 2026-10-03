@@ -12,6 +12,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 type TechnicianWrite = {
   name: string;
   roleId: string;
+  gradeId: string | null;
   shift: TechnicianShift;
   area: string | null;
   status: TechnicianStatus;
@@ -24,6 +25,7 @@ function toDto(row: {
   id: string;
   name: string;
   roleId: string;
+  gradeId: string | null;
   shift: string;
   area: string | null;
   status: string;
@@ -31,6 +33,7 @@ function toDto(row: {
   contact: string | null;
   notes: string | null;
   role: { name: string };
+  grade: { name: string } | null;
 }): TechnicianDto {
   if (!isTechnicianShift(row.shift) || !isTechnicianStatus(row.status)) {
     throw new DomainError("invalid", 500, "Técnico gravado está inválido.");
@@ -40,6 +43,8 @@ function toDto(row: {
     name: row.name,
     roleId: row.roleId,
     roleName: row.role.name,
+    gradeId: row.gradeId,
+    gradeName: row.grade?.name ?? null,
     shift: row.shift,
     area: row.area,
     status: row.status,
@@ -55,7 +60,7 @@ export class TechnicianRepository {
 
   async list(): Promise<TechnicianDto[]> {
     const rows = await this.prisma.technician.findMany({
-      include: { role: true },
+      include: { role: true, grade: true },
       orderBy: { name: "asc" },
     });
     return rows.map(toDto);
@@ -66,7 +71,7 @@ export class TechnicianRepository {
   }
 
   async create(input: TechnicianWrite): Promise<TechnicianDto> {
-    const row = await this.prisma.technician.create({ data: input, include: { role: true } });
+    const row = await this.prisma.technician.create({ data: input, include: { role: true, grade: true } });
     return toDto(row);
   }
 
@@ -74,7 +79,7 @@ export class TechnicianRepository {
     const row = await this.prisma.technician.update({
       where: { id },
       data: input,
-      include: { role: true },
+      include: { role: true, grade: true },
     });
     return toDto(row);
   }

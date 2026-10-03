@@ -34,7 +34,7 @@ O que está `[x]` no bloco **Registros**, mais o apoio `[x]` sem o qual o regist
 - Tarefa com os campos da ação: responsáveis, prazo, prioridade, status, observação; contexto fábrica / TAG / linha; anexo na tarefa (o `[x]` de foto/anexo da ação).
 - Feedback com alvo = técnico (etiqueta).
 - Problema; chamado (nº do dia, descrição, horários, duração, técnicos, máquina ou “outra”, status, observação) e ocorrência do GD (texto + fábrica + linha) como *origem* do Problema — não como telas CMMS.
-- Cadastros: fábricas; máquinas (nome, fábrica, setor, fabricante, código interno, status, observações); funções do técnico (as 6 do SIGEM como seed, com criar e renomear); técnicos (nome, função, turno, área como texto, status, matrícula, contato, observações). Flags da máquina que já estão `[x]`: linha de GD e apadrinhada — só o campo, sem tela de apadrinhamento.
+- Cadastros: fábricas; máquinas (nome, fábrica, setor, fabricante, código interno, status, observações); funções do técnico (as 6 do SIGEM como seed, com criar e renomear); graus do técnico (Júnior, Pleno, Sênior, Especialista de padrão, com criar, renomear e excluir quando livre); técnicos (nome, função, grau, turno, área como texto, status, matrícula, contato, observações). Flags da máquina que já estão `[x]`: linha de GD e apadrinhada — só o campo, sem tela de apadrinhamento.
 - Dashboard na base do SIGEM, tudo lido da fonte dos registros: abertas, vencidas, vencem hoje e concluídas (cada card abre a lista filtrada), contagem de máquinas e de técnicos ativos, últimos registros e ranking curto de máquina e de técnico com mais abertos. Sem atalhos, relatório do dia ou PDF.
 - Atrasos como *filtro da lista*: vencidas, hoje, amanhã. Bloqueadas / “impactam entrega” ficam de fora (módulo de entrega não entra).
 - Visual SIGEM (sidebar clara, cards, tipografia, cores) com tema selecionável.
@@ -169,7 +169,9 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **TechnicianRole** — as 6 funções entram como seed. O gestor cria e renomeia; nome único.
 
-**Technician** — nome, `roleId`, turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login.
+**TechnicianGrade** — os 4 graus padrão entram pela migration, uma vez só; ordem por `position`. O gestor cria, renomeia e exclui o que não estiver em uso.
+
+**Technician** — nome, `roleId`, `gradeId` (opcional), turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login.
 
 ### Identidade
 
