@@ -54,7 +54,7 @@ export function Sidebar({
   return (
     <>
       {open ? (
-        <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-app/40 lg:hidden" onClick={onClose} />
+        <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={onClose} />
       ) : null}
       <aside
         className={`fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[272px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-4 py-5 text-sidebar-text transition lg:static lg:translate-x-0 ${
