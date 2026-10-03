@@ -49,6 +49,8 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 8. Chamado em `/turno/chamado` e ocorrência em `/turno/ocorrencia`, gravados como Problema.
 9. Dashboard em `/dashboard`: abertas, vencidas, vencem hoje e concluídas (cada card abre a lista filtrada), máquinas, técnicos ativos, últimos registros e ranking de máquinas e técnicos com mais abertos.
 
+10. Matriz de competências em `/competencias` (ou pelo botão Matriz em Técnicos): checklist de conhecimento mecânico com 9 equipamentos e 222 habilidades, nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico.
+
 ## Fora desta versão
 
 Relatório do dia, PDF, Ishikawa, relatório de turno, gerar pendência e PWA.

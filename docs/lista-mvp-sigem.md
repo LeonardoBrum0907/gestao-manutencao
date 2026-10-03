@@ -185,8 +185,8 @@ Tudo **extra** (RH de manutenção). **Não é o Feedback** do bloco Registros.
 - [x] Avaliação trimestral (12 competências + Pareto 80/20) — **extra**
 - [x] PDF “Avaliação Técnico” — **extra**
 - [x] Anexos do Plano de Desenvolvimento Individual (PDI) — **extra**
-- [ ] Matriz de Competências (checklist de conhecimento mecânico por equipamento: nota 0 a 4, nível esperado, aderência em %, PDF; catálogo fixo de 9 equipamentos e 222 habilidades) — **extra**
-  *SIGEM 2026-09-28.3, na análise do técnico, aba Anexo PDI (ver* `docs/sigem-nao-mapeado.md`*). Não é a avaliação trimestral de 12 competências. Fora por enquanto.*
+- [x] Matriz de Competências (checklist de conhecimento mecânico por equipamento: nota 0 a 4, nível esperado, aderência em %, PDF; catálogo fixo de 9 equipamentos e 222 habilidades) — **extra**
+  *SIGEM 2026-09-28.3, na análise do técnico, aba Anexo PDI (ver* `docs/sigem-nao-mapeado.md`*). Não é a avaliação trimestral de 12 competências. Entrou em 2026-10-03, a pedido do gestor, em `/competencias`, com três diferenças do SIGEM: o gestor marca os equipamentos que se aplicam ao técnico e a aderência conta só esses; “não se aplica” é separado da nota 0; sem PDF por enquanto.*
 
 *Fora. O Feedback do gestor é anotação rápida (**Pessoas**), não nota nem PDI. Cadastro do técnico (etiqueta) está em Cadastros; print do Amilton reforça isso, sem [x] extra aqui.*
 
@@ -245,7 +245,7 @@ Versão mantida (marcas do Leonardo). Só entrei `[x]` em peça que a seleção 
 
 **Nesta versão, a dashboard** usa abertas, vencidas, hoje, concluídas, máquinas, técnicos, últimos registros e ranking curto. Relatório do Dia, período, GD e PDF continuam de fora. Painel de atrasos: vencida/hoje usam o prazo da Tarefa; bloqueadas e “impacta entrega” ficam sem o módulo de entrega.
 
-**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel · matriz de competências.
+**Continua de fora:** Ishikawa · AGMT · inspeções · entrega de máquina · PWA / licença / IA · aviso ao entrar · sub-ações · concluir OK/Não OK · Excel.
 
 ---
 

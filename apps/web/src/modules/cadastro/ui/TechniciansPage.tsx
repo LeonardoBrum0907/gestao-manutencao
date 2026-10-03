@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { TechnicianDto, TechnicianShift, TechnicianStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
@@ -89,6 +90,12 @@ export function TechniciansPage() {
               </p>
             </button>
             <div className="flex shrink-0 justify-end gap-2">
+              <Link
+                to={`/competencias/${technician.id}`}
+                className="inline-flex items-center justify-center rounded-control border border-line bg-chip px-4 py-2.5 text-sm font-semibold text-app transition hover:bg-accent-soft"
+              >
+                Matriz
+              </Link>
               {pendingDelete === technician.id ? (
                 <>
                   <Button

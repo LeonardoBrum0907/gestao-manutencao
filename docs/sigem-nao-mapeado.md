@@ -2,7 +2,7 @@
 
 Pacote lido: `SIGEM_5609.zip`. Fonte: `index.html` (carimbo da tela **2026-09-28.3**). A análise anterior descreve a tela **2026-09-07.1**. O menu lateral é o mesmo. `index_base.html` segue o casco antigo de entrega de máquinas, sem estas telas.
 
-Itens novos de verdade: **2**. Desde 2026-10-02 os dois estão na [lista MVP](lista-mvp-sigem.md). Graus entrou na v1 em 2026-10-03; a matriz segue de fora por enquanto.
+Itens novos de verdade: **2**. Desde 2026-10-02 os dois estão na [lista MVP](lista-mvp-sigem.md). Graus e a matriz entraram na v1 em 2026-10-03.
 
 ---
 

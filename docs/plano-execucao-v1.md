@@ -4,7 +4,7 @@ Para o Leonardo Brum. Documento executável: o que construir, em que ordem, e o 
 
 Norte: [project-context.md](project-context.md). Corte: [lista-mvp-sigem.md](lista-mvp-sigem.md). Modularização React: [Juntao Qiu / Martin Fowler](https://martinfowler.com/articles/modularizing-react-apps.html) — view fina, domínio fora do componente, pastas por domínio.
 
-> **Atualizado em 2026-10-02 para o que está no código.** Três decisões mudaram depois da primeira versão deste plano: o dashboard segue a base do SIGEM (contagens, últimos registros e ranking curto, como na [lista MVP](lista-mvp-sigem.md)); as seis funções continuam como seed, mas o gestor cria e renomeia (a versão 2026-09-28.3 do SIGEM abriu esse cadastro, ver [sigem-nao-mapeado.md](sigem-nao-mapeado.md)); e o Compose sobe só `web` e `api`, com o Postgres de `DATABASE_URL` e o `db` local num profile.
+> **Atualizado em 2026-10-02 para o que está no código.** Três decisões mudaram depois da primeira versão deste plano: o dashboard segue a base do SIGEM (contagens, últimos registros e ranking curto, como na [lista MVP](lista-mvp-sigem.md)); as seis funções continuam como seed, mas o gestor cria e renomeia (a versão 2026-09-28.3 do SIGEM abriu esse cadastro, ver [sigem-nao-mapeado.md](sigem-nao-mapeado.md)); e o Compose sobe só `web` e `api`, com o Postgres de `DATABASE_URL` e o `db` local num profile. Em 2026-10-03 entraram, a pedido do gestor, os graus do técnico e a matriz de competências (módulo `competencia`, tela separada da captura).
 
 ---
 
@@ -51,7 +51,7 @@ Também de fora, mesmo quando o inventário SIGEM está `[x]` como *extra* (reun
 - Relatório de corretivas do turno, vincular RP ao chamado, diário de preventiva executada, Ishikawa, causa-raiz + duas contramedidas, ver RPs no GD.
 - Ficha RP 4M / WhatsApp / aviso de duplicado / relatório de RPs / tela de apadrinhamento.
 - Dashboard cheio, Relatório do Dia, Relatório de período, indicador de evolução, PDFs.
-- Avaliação, PDI, análise individual do técnico.
+- Avaliação, PDI, análise individual do técnico. *(Exceção desde 2026-10-03: a matriz de competências por equipamento.)*
 - Gerar pendência a partir de chamado/ocorrência, fotos no chamado, aviso ao entrar, backlog, inspeções, AGMT, entrega de máquina, PWA, offline, IA, licença.
 
 Voz no app próprio fica para depois. Todoist/Ramble não alimentam este sistema.
@@ -131,6 +131,7 @@ apps/api/src/
   registro/          tarefa, feedback, problema, captura, lista
   turno/             chamado, ocorrência → criam/atualizam Problema em registro
   dashboard/         leitura: contagens, últimos e ranking, uma fonte
+  competencia/       matriz de competências do técnico (catálogo fixo em packages/shared)
   identity/          uma conta gestor (session/cookie)
 ```
 
@@ -200,6 +201,8 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 | `dayNumber` | nº do dia (chamado) |
 | `openedAt` / `closedAt` / `durationMin` | horários do chamado |
 | `createdAt` / `updatedAt` | auditoria mínima |
+
+**TechnicianMatrixEquipment** / **TechnicianSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
 
 **RecordTechnician** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `technicianId`.
 
