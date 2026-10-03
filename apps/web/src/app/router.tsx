@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
+import { MatrixPage } from "../modules/competencia/ui/MatrixPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { GradesPage } from "../modules/cadastro/ui/GradesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
@@ -31,6 +32,8 @@ export function AppRouter() {
         <Route path="/cadastro/funcoes" element={<RolesPage />} />
         <Route path="/cadastro/graus" element={<GradesPage />} />
         <Route path="/cadastro/tecnicos" element={<TechniciansPage />} />
+        <Route path="/competencias" element={<MatrixPage />} />
+        <Route path="/competencias/:technicianId" element={<MatrixPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/captura" replace />} />
     </Routes>

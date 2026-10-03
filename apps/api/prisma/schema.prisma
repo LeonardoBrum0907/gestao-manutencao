@@ -82,8 +82,31 @@ model Technician {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
+  matrixEquipments TechnicianMatrixEquipment[]
+  skills           TechnicianSkill[]
+
   @@index([roleId])
   @@index([gradeId])
+}
+
+model TechnicianMatrixEquipment {
+  technicianId String
+  equipment    String
+  technician   Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@id([technicianId, equipment])
+}
+
+model TechnicianSkill {
+  technicianId  String
+  skillId       String
+  score         Int?
+  notApplicable Boolean    @default(false)
+  expected      Int?
+  updatedAt     DateTime   @updatedAt
+  technician    Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@id([technicianId, skillId])
 }
 
 model Record {

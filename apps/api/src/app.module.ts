@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { CadastroModule } from "./cadastro/cadastro.module";
+import { CompetenciaModule } from "./competencia/competencia.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { EnvModule } from "./env.module";
 import { HealthModule } from "./health/health.module";
@@ -12,7 +13,7 @@ import { RegistroModule } from "./registro/registro.module";
 import { TurnoModule } from "./turno/turno.module";
 
 @Module({
-  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, RegistroModule, TurnoModule, DashboardModule],
+  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, CompetenciaModule, RegistroModule, TurnoModule, DashboardModule],
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_FILTER, useClass: DomainExceptionFilter },

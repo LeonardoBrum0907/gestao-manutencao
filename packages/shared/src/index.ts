@@ -231,3 +231,42 @@ export type DashboardDto = {
   machineRanking: DashboardRankDto[];
   technicianRanking: DashboardRankDto[];
 };
+
+export * from "./competency-matrix";
+
+export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
+export type CompetencyScore = (typeof COMPETENCY_SCORES)[number];
+
+export const COMPETENCY_SCORE_LABELS: Record<CompetencyScore, { label: string; hint: string }> = {
+  0: { label: "Não apto", hint: "Não sabe executar a atividade, falta conhecimento." },
+  1: { label: "Em treinamento", hint: "Conhece a teoria, falta o treinamento prático." },
+  2: { label: "Treinado", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
+  3: { label: "Apto", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
+  4: { label: "Referência no tema", hint: "Consegue ensinar os demais e melhorar o processo." },
+};
+
+export type CompetencyEntryDto = {
+  skillId: string;
+  score: CompetencyScore | null;
+  notApplicable: boolean;
+  expected: CompetencyScore | null;
+};
+
+export type CompetencySummaryDto = {
+  applicable: number;
+  scored: number;
+  meets: number;
+  below: number;
+  unscored: number;
+  notApplicable: number;
+  average: number | null;
+  adherence: number | null;
+};
+
+export type TechnicianMatrixDto = {
+  technicianId: string;
+  equipments: string[];
+  entries: CompetencyEntryDto[];
+  summary: CompetencySummaryDto;
+  byEquipment: (CompetencySummaryDto & { equipment: string })[];
+};
