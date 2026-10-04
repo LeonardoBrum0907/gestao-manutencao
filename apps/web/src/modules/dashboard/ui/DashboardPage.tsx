@@ -29,7 +29,15 @@ function CountLink({
   );
 }
 
-function Ranking({ title, rows }: { title: string; rows: DashboardDto["machineRanking"] }) {
+function Ranking({
+  title,
+  rows,
+  linkTo,
+}: {
+  title: string;
+  rows: DashboardDto["machineRanking"];
+  linkTo?: (id: string) => string;
+}) {
   return (
     <Card>
       <h2 className="text-sm font-semibold text-app">{title}</h2>
@@ -37,7 +45,13 @@ function Ranking({ title, rows }: { title: string; rows: DashboardDto["machineRa
       <ol className="mt-3 flex flex-col gap-2">
         {rows.map((row) => (
           <li key={row.id} className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="font-medium text-app">{row.name}</span>
+            {linkTo ? (
+              <Link to={linkTo(row.id)} className="font-medium text-app hover:text-accent hover:underline">
+                {row.name}
+              </Link>
+            ) : (
+              <span className="font-medium text-app">{row.name}</span>
+            )}
             <span className="shrink-0 tabular-nums text-muted">{openRankLabel(row.openCount)}</span>
           </li>
         ))}
@@ -86,7 +100,11 @@ export function DashboardPage() {
           </section>
           <div className="grid gap-3 lg:grid-cols-2">
             <Ranking title="Máquinas com mais abertos" rows={data.machineRanking} />
-            <Ranking title="Colaboradores com mais abertos" rows={data.memberRanking} />
+            <Ranking
+              title="Colaboradores com mais abertos"
+              rows={data.memberRanking}
+              linkTo={(id) => `/cadastro/colaboradores/${id}`}
+            />
           </div>
         </div>
       ) : null}

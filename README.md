@@ -51,7 +51,9 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 
 10. Equipes em `/cadastro/equipes`: o coordenador cria equipes (por turno, por supervisor…), escolhe o supervisor de cada uma e coloca os técnicos. Um técnico fica em uma equipe só; o supervisor lidera, não é membro, e pode liderar mais de uma. Equipe com gente não pode ser excluída, nem supervisor que lidera equipe pode perder o cargo ou ser excluído. Colaboradores filtra por cargo e por equipe.
 
-11. Matriz de competências em `/competencias` (ou pelo botão Matriz em Colaboradores): checklist de conhecimento mecânico com 9 equipamentos e 222 habilidades, nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico. Supervisor não tem matriz.
+11. Ficha do colaborador em `/cadastro/colaboradores/:id` (clique no nome em Colaboradores ou no ranking do Dashboard), com abas. **Perfil**: dados, equipe (supervisor do técnico, ou técnicos das equipes que o supervisor lidera), contadores (em aberto, vencidas, concluídos, chamados, feedbacks) e os registros em que a pessoa aparece, como responsável, alvo ou técnico do chamado. Feedback não conta como aberto nem concluído. **Competências** (só técnico): a matriz abaixo.
+
+12. Matriz de competências na aba Competências da ficha (`/competencias/:id` antigo redireciona): checklist de conhecimento mecânico com 9 equipamentos e 222 habilidades, nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico. Supervisor não tem matriz.
 
 ## Fora desta versão
 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {
   COMPETENCY_EQUIPMENTS,
   COMPETENCY_LEVEL_EXPECTED,
@@ -14,9 +13,7 @@ import {
   type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
-import { useMembers } from "../../cadastro/data/cadastro";
-import { positionLabel } from "../../cadastro/model/labels";
+import { Card, Field, Notice, Stat, TextInput } from "../../../design/ui/controls";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, type SkillWrite } from "../data/matrix";
 import {
   adherenceTone,
@@ -31,15 +28,6 @@ import {
   skillState,
   stateRowClass,
 } from "../model/matrix";
-
-function Stat({ label, value, tone = "" }: { label: string; value: string | number; tone?: string }) {
-  return (
-    <Card compact>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${tone || "text-app"}`}>{value}</p>
-    </Card>
-  );
-}
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
   return (
@@ -296,41 +284,14 @@ function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
   );
 }
 
-export function MatrixPage() {
-  const { memberId } = useParams();
-  const navigate = useNavigate();
-  const members = useMembers();
+export function MatrixPanel({ memberId }: { memberId: string }) {
   const matrix = useMatrix(memberId);
-  const technicians = members.data?.filter((member) => member.position === "technician") ?? [];
-  const selected = members.data?.find((member) => member.id === memberId);
-  const notTechnician = selected !== undefined && selected.position !== "technician";
+  if (matrix.isPending) return <p className="text-sm text-muted">Carregando…</p>;
+  if (matrix.isError) return <Notice>{errorMessage(matrix.error)}</Notice>;
   return (
     <div>
-      <PageTitle eyebrow="Apoio" title="Matriz de competências" text={COMPETENCY_MATRIX_TITLE} />
-      <div className="mb-6 w-full sm:max-w-sm">
-        <Field label="Técnico">
-          <SelectInput value={memberId ?? ""} onChange={(event) => navigate(`/competencias/${event.target.value}`)}>
-            <option value="" disabled>
-              Escolha
-            </option>
-            {technicians.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-                {member.gradeName ? ` — ${member.gradeName}` : ""}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-      </div>
-      {!memberId ? <Card>Escolha um técnico para ver a matriz.</Card> : null}
-      {memberId && matrix.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      {matrix.isError ? <Notice>{errorMessage(matrix.error)}</Notice> : null}
-      {notTechnician ? (
-        <Card>
-          A matriz de competências é só para técnico. {selected.name} é {positionLabel(selected.position).toLowerCase()}.
-        </Card>
-      ) : null}
-      {matrix.data && !notTechnician ? <Matrix key={matrix.data.memberId} matrix={matrix.data} /> : null}
+      <p className="mb-4 text-sm text-muted">{COMPETENCY_MATRIX_TITLE}</p>
+      <Matrix key={matrix.data.memberId} matrix={matrix.data} />
     </div>
   );
 }
