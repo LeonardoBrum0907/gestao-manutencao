@@ -34,7 +34,11 @@ export class Members {
   async remove(id: string): Promise<void> {
     const current = await this.members.find(id);
     if (!current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
-    assertMemberCanBeRemoved(await this.members.countRecords(id), await this.teams.countLedBy(id));
+    assertMemberCanBeRemoved(
+      await this.members.countRecords(id),
+      await this.teams.countLedBy(id),
+      await this.members.countPdiFiles(id),
+    );
     await this.members.remove(id);
   }
 

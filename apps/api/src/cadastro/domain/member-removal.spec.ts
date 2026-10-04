@@ -14,14 +14,18 @@ function fails(run: () => void, code: string) {
 
 describe("exclusão de colaborador", () => {
   it("recusa quando ele aparece em algum registro", () => {
-    fails(() => assertMemberCanBeRemoved(2, 0), "member_in_use");
+    fails(() => assertMemberCanBeRemoved(2, 0, 0), "member_in_use");
   });
 
   it("recusa quando ele é supervisor de alguma equipe", () => {
-    fails(() => assertMemberCanBeRemoved(0, 1), "supervisor_leads_team");
+    fails(() => assertMemberCanBeRemoved(0, 1, 0), "supervisor_leads_team");
   });
 
-  it("permite quando ele não aparece em registro nem lidera equipe", () => {
-    assert.doesNotThrow(() => assertMemberCanBeRemoved(0, 0));
+  it("recusa quando ele tem anexos no PDI, para o arquivo não ficar perdido no disco", () => {
+    fails(() => assertMemberCanBeRemoved(0, 0, 1), "member_has_files");
+  });
+
+  it("permite quando ele não aparece em registro, não lidera equipe nem tem anexo", () => {
+    assert.doesNotThrow(() => assertMemberCanBeRemoved(0, 0, 0));
   });
 });

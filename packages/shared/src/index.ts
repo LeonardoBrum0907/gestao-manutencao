@@ -375,6 +375,13 @@ export type MemberPerformanceDto = {
   years: number[];
 };
 
+export type MemberPdiDto = {
+  memberId: string;
+  sponsorMachineIds: string[];
+  developmentMachineIds: string[];
+  attachments: AttachmentDto[];
+};
+
 export type MemberRecordSummaryDto = {
   open: number;
   overdue: number;

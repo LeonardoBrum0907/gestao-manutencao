@@ -8,6 +8,7 @@ import { MemberFormModal } from "../../cadastro/ui/MemberFormModal";
 import { MatrixPanel } from "../../competencia/ui/MatrixPanel";
 import { resolveTab, tabsFor } from "../model/tabs";
 import { BehaviorTab } from "./BehaviorTab";
+import { PdiTab } from "./PdiTab";
 import { PerformanceTab } from "./PerformanceTab";
 import { ProfileTab } from "./ProfileTab";
 
@@ -71,6 +72,7 @@ export function MemberPage() {
       {current === "comportamento" ? <BehaviorTab member={member} /> : null}
       {current === "desempenho" ? <PerformanceTab member={member} /> : null}
       {current === "competencias" ? <MatrixPanel memberId={member.id} /> : null}
+      {current === "pdi" ? <PdiTab member={member} /> : null}
       {editing ? <MemberFormModal member={member} onClose={() => setEditing(false)} /> : null}
     </div>
   );
