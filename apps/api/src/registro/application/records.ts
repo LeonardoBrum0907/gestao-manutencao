@@ -22,6 +22,7 @@ function dtoToState(dto: RecordDto): RecordState {
     tag: dto.tag,
     line: dto.line,
     priority: dto.priority,
+    tone: dto.tone,
     dueAt: dto.dueAt ? new Date(dto.dueAt) : null,
     notes: dto.notes,
     origin: dto.origin,

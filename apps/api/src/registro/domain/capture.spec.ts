@@ -11,6 +11,7 @@ describe("captura", () => {
       body: "  Trocar sensor  ",
       occurredAt: when,
       memberId: null,
+      tone: null,
     });
     assert.equal(record.body, "Trocar sensor");
     assert.equal(record.status, "open");
@@ -27,8 +28,23 @@ describe("captura", () => {
           body: "   ",
           occurredAt: new Date(),
           memberId: null,
+          tone: null,
         }),
       (error: unknown) => error instanceof DomainError && error.code === "empty_body",
+    );
+  });
+});
+
+describe("tom do feedback", () => {
+  it("guarda o tom no feedback", () => {
+    const record = captureRecord({ type: "feedback", body: "Ajudou o colega", occurredAt: new Date(), memberId: "ana", tone: "positive" });
+    assert.equal(record.tone, "positive");
+  });
+
+  it("recusa tom fora do feedback", () => {
+    assert.throws(
+      () => captureRecord({ type: "task", body: "Trocar sensor", occurredAt: new Date(), memberId: null, tone: "negative" }),
+      (error: unknown) => error instanceof DomainError && error.code === "tone",
     );
   });
 });

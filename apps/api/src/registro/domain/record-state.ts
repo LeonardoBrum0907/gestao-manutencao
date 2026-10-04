@@ -1,4 +1,5 @@
 import type {
+  FeedbackTone,
   RecordOrigin,
   RecordPriority,
   RecordStatus,
@@ -17,6 +18,7 @@ export type RecordState = {
   tag: string | null;
   line: string | null;
   priority: RecordPriority | null;
+  tone: FeedbackTone | null;
   dueAt: Date | null;
   notes: string | null;
   origin: RecordOrigin;
@@ -32,6 +34,7 @@ export type CaptureInput = {
   body: string;
   occurredAt: Date;
   memberId: string | null;
+  tone: FeedbackTone | null;
 };
 
 export type TaskSheetInput = {
@@ -51,6 +54,7 @@ export type FeedbackSheetInput = {
   body: string;
   occurredAt: Date;
   memberId: string | null;
+  tone: FeedbackTone | null;
 };
 
 export type ProblemSheetInput = {

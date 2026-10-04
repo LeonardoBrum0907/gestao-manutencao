@@ -50,6 +50,7 @@ export function applyFeedbackSheet(state: RecordState, input: FeedbackSheetInput
     tag: null,
     line: null,
     priority: null,
+    tone: input.tone,
     dueAt: null,
     notes: null,
   };

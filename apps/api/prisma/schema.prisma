@@ -103,10 +103,21 @@ model Member {
   records          Record[]
   recordLinks      RecordMember[]
   supervisedTeams  Team[]                  @relation("TeamSupervisor")
+  behavior         MemberBehavior?
 
   @@index([roleId])
   @@index([gradeId])
   @@index([teamId])
+}
+
+model MemberBehavior {
+  memberId      String   @id
+  punctuality   String?
+  productivity  String?
+  collaboration String?
+  tags          String[]
+  updatedAt     DateTime @updatedAt
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model MemberMatrixEquipment {
@@ -143,6 +154,7 @@ model Record {
   tag          String?
   line         String?
   priority     String?
+  tone         String?
   dueAt        DateTime?
   notes        String?
   origin       String

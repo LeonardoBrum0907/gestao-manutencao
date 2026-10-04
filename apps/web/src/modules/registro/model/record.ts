@@ -1,4 +1,6 @@
 import {
+  FEEDBACK_TONE_LABELS,
+  FEEDBACK_TONES,
   RECORD_ORIGIN_LABELS,
   RECORD_PRIORITIES,
   RECORD_PRIORITY_LABELS,
@@ -6,6 +8,7 @@ import {
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
   RECORD_TYPES,
+  type FeedbackTone,
   type RecordOrigin,
   type RecordPriority,
   type RecordStatus,
@@ -36,6 +39,18 @@ export function statusChipClass(status: RecordStatus): string {
 
 export function priorityLabel(priority: RecordPriority): string {
   return RECORD_PRIORITY_LABELS[priority];
+}
+
+export const toneOptions = FEEDBACK_TONES.map((tone) => ({ value: tone, label: FEEDBACK_TONE_LABELS[tone] }));
+
+export function toneLabel(tone: FeedbackTone): string {
+  return FEEDBACK_TONE_LABELS[tone];
+}
+
+export function toneChipClass(tone: FeedbackTone | null): string {
+  if (tone === "positive") return "rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent";
+  if (tone === "negative") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-danger";
+  return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
 }
 
 export const typeChoices = RECORD_TYPES.map((type) => ({
