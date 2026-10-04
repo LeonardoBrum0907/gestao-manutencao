@@ -104,6 +104,10 @@ export class MemberRepository {
     return owned + linked;
   }
 
+  countPdiFiles(id: string) {
+    return this.prisma.memberAttachment.count({ where: { memberId: id } });
+  }
+
   async setTeam(id: string, teamId: string | null): Promise<void> {
     await this.prisma.member.update({ where: { id }, data: { teamId } });
   }

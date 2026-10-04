@@ -209,6 +209,10 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **MemberEvaluation** — avaliação de desempenho: nota (10 / 8 / 6 / 4 / 2) por colaborador, ano, trimestre e competência; as 12 competências ficam no código, como o catálogo da matriz. Sem nota é sem linha. Só técnico. Sai junto com o colaborador.
 
+**MemberMachine** — máquinas do PDI: `kind` `sponsor` (padrinho) ou `development` (aprendendo); a mesma máquina não pode ter os dois para a mesma pessoa. Sai com o colaborador e com a máquina.
+
+**MemberAttachment** — anexos do PDI, no mesmo armazenamento dos anexos da Tarefa. `Restrict` no colaborador: quem tem anexo não é excluído, para o arquivo não ficar perdido no disco.
+
 **MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
 
 **RecordMember** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `memberId`.

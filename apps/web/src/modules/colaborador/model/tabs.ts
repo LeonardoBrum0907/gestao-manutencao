@@ -5,6 +5,7 @@ export const MEMBER_TABS = [
   { key: "comportamento", label: "Comportamento", positions: ["technician", "supervisor"] },
   { key: "desempenho", label: "Desempenho", positions: ["technician"] },
   { key: "competencias", label: "Competências", positions: ["technician"] },
+  { key: "pdi", label: "PDI", positions: ["technician", "supervisor"] },
 ] as const satisfies readonly { key: string; label: string; positions: readonly MemberPosition[] }[];
 
 export type MemberTab = (typeof MEMBER_TABS)[number]["key"];

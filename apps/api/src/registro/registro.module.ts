@@ -22,6 +22,6 @@ import { RecordRepository } from "./infra/record.repository";
     ProblemLog,
     { provide: PROBLEM_LOG, useExisting: ProblemLog },
   ],
-  exports: [PROBLEM_LOG],
+  exports: [PROBLEM_LOG, AttachmentStorage],
 })
 export class RegistroModule {}

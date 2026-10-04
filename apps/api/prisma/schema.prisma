@@ -36,19 +36,20 @@ model Factory {
 }
 
 model Machine {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   name         String
   factoryId    String
-  factory      Factory  @relation(fields: [factoryId], references: [id], onDelete: Restrict)
+  factory      Factory         @relation(fields: [factoryId], references: [id], onDelete: Restrict)
   sector       String?
   manufacturer String?
   internalCode String?
   status       String
   notes        String?
-  isDailyLine  Boolean  @default(false)
-  isCritical   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isDailyLine  Boolean         @default(false)
+  isCritical   Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  memberLinks  MemberMachine[]
 
   @@index([factoryId])
 }
@@ -105,6 +106,8 @@ model Member {
   supervisedTeams  Team[]                  @relation("TeamSupervisor")
   behavior         MemberBehavior?
   evaluations      MemberEvaluation[]
+  machines         MemberMachine[]
+  pdiAttachments   MemberAttachment[]
 
   @@index([roleId])
   @@index([gradeId])
@@ -131,6 +134,31 @@ model MemberEvaluation {
   member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@id([memberId, year, quarter, competency])
+}
+
+// Máquinas do PDI: "sponsor" (padrinho, responsável) ou "development" (aprendendo).
+model MemberMachine {
+  memberId  String
+  machineId String
+  kind      String
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@id([memberId, machineId, kind])
+  @@index([machineId])
+}
+
+// Arquivos do PDI. Restrict: excluir o colaborador apagaria a linha e deixaria o arquivo no disco.
+model MemberAttachment {
+  id         String   @id @default(cuid())
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  fileName   String
+  mimeType   String
+  storageKey String   @unique
+  createdAt  DateTime @default(now())
+
+  @@index([memberId])
 }
 
 model MemberMatrixEquipment {
