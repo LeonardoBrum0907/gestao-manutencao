@@ -9,6 +9,14 @@
   },
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://hdhmtlaaccq9ddome3d7wbhi.edumudu.dev/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://hdhmtlaaccq9ddome3d7wbhi.edumudu.dev/health"
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "web"
