@@ -5,7 +5,6 @@ import { DomainError } from "../../kernel/domain-error";
 import {
   assertPerformanceEditable,
   currentYear,
-  requireCompetency,
   requireQuarter,
   requireScore,
   requireYear,
@@ -23,14 +22,12 @@ describe("avaliação de desempenho", () => {
     for (const value of [0, 5, 9, 11, "8"]) rejects(() => requireScore(value));
   });
 
-  it("valida ano, trimestre e competência", () => {
+  it("valida ano e trimestre", () => {
     assert.equal(requireYear(2026), 2026);
     rejects(() => requireYear(1999));
     rejects(() => requireYear(2026.5));
     assert.equal(requireQuarter(4), 4);
     rejects(() => requireQuarter(5));
-    assert.equal(requireCompetency("safety"), "safety");
-    rejects(() => requireCompetency("seg"));
   });
 
   it("só técnico tem a avaliação editada", () => {
@@ -40,23 +37,27 @@ describe("avaliação de desempenho", () => {
 
   it("calcula as médias como o SIGEM, ignorando o que está vazio", () => {
     const entries: PerformanceEntryDto[] = [
-      { competency: "safety", quarter: 1, score: 10 },
-      { competency: "teamwork", quarter: 1, score: 6 },
-      { competency: "safety", quarter: 2, score: 8 },
-      { competency: "proactivity", quarter: 2, score: 4 },
-      { competency: "communication", quarter: 2, score: 6 },
+      { competencyId: "safety", quarter: 1, score: 10 },
+      { competencyId: "teamwork", quarter: 1, score: 6 },
+      { competencyId: "safety", quarter: 2, score: 8 },
+      { competencyId: "proactivity", quarter: 2, score: 4 },
+      { competencyId: "communication", quarter: 2, score: 6 },
     ];
-    const summary = summarizePerformance(entries);
+    const rows = ["safety", "teamwork", "proactivity", "reports", "communication"];
+    const summary = summarizePerformance(entries, rows);
     assert.deepEqual(summary.quarterAverages, [8, 6, null, null]);
     assert.equal(summary.average, 7);
-    const safety = summary.competencyAverages.find((item) => item.competency === "safety");
-    assert.deepEqual(safety, { competency: "safety", average: 9, quarters: 2 });
-    assert.equal(summary.competencyAverages.find((item) => item.competency === "reports")?.average, null);
-    assert.equal(summary.competencyAverages.length, 12);
+    const safety = summary.competencyAverages.find((item) => item.competencyId === "safety");
+    assert.deepEqual(safety, { competencyId: "safety", average: 9, quarters: 2 });
+    assert.equal(summary.competencyAverages.find((item) => item.competencyId === "reports")?.average, null);
+    assert.deepEqual(
+      summary.competencyAverages.map((item) => item.competencyId),
+      rows,
+    );
   });
 
   it("sem nota nenhuma, a média do ano fica vazia", () => {
-    assert.equal(summarizePerformance([]).average, null);
+    assert.equal(summarizePerformance([], ["safety"]).average, null);
   });
 
   it("o ano corrente segue o fuso do gestor", () => {

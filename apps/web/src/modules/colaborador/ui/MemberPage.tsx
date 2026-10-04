@@ -71,7 +71,7 @@ export function MemberPage() {
       {current === "perfil" ? <ProfileTab member={member} members={members.data ?? []} teams={allTeams} /> : null}
       {current === "comportamento" ? <BehaviorTab member={member} /> : null}
       {current === "desempenho" ? <PerformanceTab member={member} /> : null}
-      {current === "competencias" ? <MatrixPanel memberId={member.id} /> : null}
+      {current === "matriz" ? <MatrixPanel memberId={member.id} /> : null}
       {current === "pdi" ? <PdiTab member={member} /> : null}
       {editing ? <MemberFormModal member={member} onClose={() => setEditing(false)} /> : null}
     </div>

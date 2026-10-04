@@ -207,7 +207,9 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **MemberBehavior** — comportamento do colaborador, uma linha por pessoa: pontualidade e colaboração (Excelente / Boa / Regular / Ruim), produtividade (Alta / Média / Baixa) e etiquetas do catálogo do SIGEM (pontos positivos, de atenção, situação atual). Sai junto com o colaborador.
 
-**MemberEvaluation** — avaliação de desempenho: nota (10 / 8 / 6 / 4 / 2) por colaborador, ano, trimestre e competência; as 12 competências ficam no código, como o catálogo da matriz. Sem nota é sem linha. Só técnico. Sai junto com o colaborador.
+**PerformanceCompetency** — competências da avaliação de desempenho, cadastro do coordenador: nome único, ordem e arquivada. As 12 do SIGEM entram pela migration, com o id igual à chave antiga. Com nota, não exclui: arquiva (some da avaliação dos anos sem nota dela; a nota antiga continua contando onde existe).
+
+**MemberEvaluation** — avaliação de desempenho: nota (10 / 8 / 6 / 4 / 2) por colaborador, ano, trimestre e `competencyId`. Sem nota é sem linha. Só técnico. Sai junto com o colaborador.
 
 **MemberMachine** — máquinas do PDI: `kind` `sponsor` (padrinho) ou `development` (aprendendo); a mesma máquina não pode ter os dois para a mesma pessoa. Sai com o colaborador e com a máquina.
 

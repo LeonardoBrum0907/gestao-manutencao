@@ -4,7 +4,7 @@ export const MEMBER_TABS = [
   { key: "perfil", label: "Perfil", positions: ["technician", "supervisor"] },
   { key: "comportamento", label: "Comportamento", positions: ["technician", "supervisor"] },
   { key: "desempenho", label: "Desempenho", positions: ["technician"] },
-  { key: "competencias", label: "Competências", positions: ["technician"] },
+  { key: "matriz", label: "Matriz", positions: ["technician"] },
   { key: "pdi", label: "PDI", positions: ["technician", "supervisor"] },
 ] as const satisfies readonly { key: string; label: string; positions: readonly MemberPosition[] }[];
 

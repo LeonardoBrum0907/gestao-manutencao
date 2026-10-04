@@ -124,16 +124,27 @@ model MemberBehavior {
   member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
-model MemberEvaluation {
-  memberId   String
-  year       Int
-  quarter    Int
-  competency String
-  score      Int
-  updatedAt  DateTime @updatedAt
-  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+// Competências da avaliação de desempenho: cadastro do coordenador. Arquivada sai da avaliação, mas a nota antiga fica.
+model PerformanceCompetency {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  position    Int
+  archived    Boolean            @default(false)
+  evaluations MemberEvaluation[]
+}
 
-  @@id([memberId, year, quarter, competency])
+model MemberEvaluation {
+  memberId     String
+  year         Int
+  quarter      Int
+  competencyId String
+  score        Int
+  updatedAt    DateTime              @updatedAt
+  member       Member                @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  competency   PerformanceCompetency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
+
+  @@id([memberId, year, quarter, competencyId])
+  @@index([competencyId])
 }
 
 // Máquinas do PDI: "sponsor" (padrinho, responsável) ou "development" (aprendendo).
