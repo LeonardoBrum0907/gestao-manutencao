@@ -23,7 +23,6 @@ const support = [
   { to: "/cadastro/graus", label: "Graus" },
   { to: "/cadastro/colaboradores", label: "Colaboradores" },
   { to: "/cadastro/equipes", label: "Equipes" },
-  { to: "/competencias", label: "Competências" },
 ];
 
 function Item({ to, label, onNavigate }: { to: string; label: string; onNavigate: () => void }) {

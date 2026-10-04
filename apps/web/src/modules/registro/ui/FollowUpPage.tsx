@@ -1,18 +1,17 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { DueWindow, RecordDto, RecordType } from "@manutencao/shared";
+import type { DueWindow, RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { useFollowUp } from "../data/records";
 import {
   dueChoices,
-  dueTone,
   followUpFromSearch,
   followUpSearch,
-  formatDueDay,
   prazoApplies,
   type FollowUpQuery,
 } from "../model/follow-up";
-import { originLabel, priorityLabel, recordShortName, statusChipClass, statusLabel, statusOptions, typeChoices } from "../model/record";
+import { originLabel, recordShortName, statusChipClass, statusLabel, statusOptions, typeChoices } from "../model/record";
+import { DueMark, PriorityMark } from "./RecordMarks";
 
 export function FollowUpPage() {
   const navigate = useNavigate();
@@ -193,25 +192,4 @@ export function FollowUpPage() {
       ) : null}
     </div>
   );
-}
-
-function DueMark({ record }: { record: RecordDto }) {
-  if (record.type !== "task" || !record.dueAt) return <span className="text-muted">—</span>;
-  const label = formatDueDay(record.dueAt);
-  const tone = dueTone(record.dueAt);
-  if (tone === "overdue") return <span className="font-semibold text-danger">{label}</span>;
-  if (tone === "today") {
-    return <span className="rounded-control bg-accent-soft px-2 py-1 font-semibold text-app">{label}</span>;
-  }
-  return <span className="text-muted">{label}</span>;
-}
-
-function PriorityMark({ record }: { record: RecordDto }) {
-  if (record.type !== "task" || !record.priority) return null;
-  if (record.priority === "high") {
-    return (
-      <span className="mt-1 flex w-fit rounded-control bg-chip px-2 py-1 text-xs font-semibold text-app">Alta</span>
-    );
-  }
-  return <p className="mt-1 text-xs text-muted">{priorityLabel(record.priority)}</p>;
 }

@@ -226,6 +226,19 @@ export type RecordDto = {
   attachments: AttachmentDto[];
 };
 
+export type MemberRecordSummaryDto = {
+  open: number;
+  overdue: number;
+  done: number;
+  chamados: number;
+  feedbacks: number;
+};
+
+export type MemberRecordsDto = {
+  summary: MemberRecordSummaryDto;
+  records: RecordDto[];
+};
+
 export type SessionDto = {
   email: string;
 };

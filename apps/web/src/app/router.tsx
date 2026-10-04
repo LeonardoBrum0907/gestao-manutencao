@@ -1,11 +1,11 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
-import { MatrixPage } from "../modules/competencia/ui/MatrixPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { GradesPage } from "../modules/cadastro/ui/GradesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
+import { MemberPage } from "../modules/colaborador/ui/MemberPage";
 import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
 import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
 import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
@@ -15,6 +15,12 @@ import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
 import { RecordsPage } from "../modules/registro/ui/RecordsPage";
 import { AppShell } from "../shell/ui/AppShell";
 import { LoginPage } from "../shell/ui/LoginPage";
+
+// A matriz passou a morar na ficha do colaborador.
+function MatrixRedirect() {
+  const { memberId } = useParams();
+  return <Navigate to={`/cadastro/colaboradores/${memberId}/competencias`} replace />;
+}
 
 export function AppRouter() {
   return (
@@ -33,10 +39,11 @@ export function AppRouter() {
         <Route path="/cadastro/funcoes" element={<RolesPage />} />
         <Route path="/cadastro/graus" element={<GradesPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
+        <Route path="/cadastro/colaboradores/:memberId/:tab?" element={<MemberPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/cadastro/equipes" element={<TeamsPage />} />
-        <Route path="/competencias" element={<MatrixPage />} />
-        <Route path="/competencias/:memberId" element={<MatrixPage />} />
+        <Route path="/competencias" element={<Navigate to="/cadastro/colaboradores" replace />} />
+        <Route path="/competencias/:memberId" element={<MatrixRedirect />} />
       </Route>
       <Route path="*" element={<Navigate to="/captura" replace />} />
     </Routes>

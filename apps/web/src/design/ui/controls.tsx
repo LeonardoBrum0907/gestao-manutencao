@@ -63,6 +63,15 @@ export function Card({
   );
 }
 
+export function Stat({ label, value, tone = "" }: { label: string; value: string | number; tone?: string }) {
+  return (
+    <Card compact>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums ${tone || "text-app"}`}>{value}</p>
+    </Card>
+  );
+}
+
 export function PageTitle({
   eyebrow,
   title,
