@@ -37,7 +37,7 @@ export function parseChamado(body: unknown): ChamadoInput {
     openedAt: optionalDate(source, "openedAt"),
     closedAt: optionalDate(source, "closedAt"),
     durationMin: optionalInt(source, "durationMin"),
-    technicianIds: stringList(source, "technicianIds"),
+    memberIds: stringList(source, "memberIds"),
     machineId: optionalString(source, "machineId"),
     machineLabel: optionalString(source, "machineLabel"),
     status: status as RecordStatus,

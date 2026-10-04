@@ -168,11 +168,11 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **Machine** — nome, `factoryId`, setor (texto), fabricante, código interno, status operacional (texto controlado do cadastro SIGEM: Em Implantação / Em Teste / Em Ajuste / Liberada / Parada / Finalizada — já está no `[x]` de máquinas), observações, `isDailyLine` (linha GD), `isCritical` (apadrinhada). Sem tela de situação/liberação.
 
-**TechnicianRole** — as 6 funções entram como seed. O gestor cria e renomeia; nome único.
+**MemberRole** — as 6 funções entram como seed. O gestor cria e renomeia; nome único.
 
-**TechnicianGrade** — os 4 graus padrão entram pela migration, uma vez só; ordem por `position`. O gestor cria, renomeia e exclui o que não estiver em uso.
+**MemberGrade** — os 4 graus padrão entram pela migration, uma vez só; ordem por `position`. O gestor cria, renomeia e exclui o que não estiver em uso.
 
-**Technician** — nome, `roleId`, `gradeId` (opcional), turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login.
+**Member** (colaborador; até 2026-10-04 se chamava `Technician`) — nome, `roleId`, `gradeId` (opcional), turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login. Quem aparece em algum registro não pode ser excluído: o caminho é mudar o status para Inativo.
 
 ### Identidade
 
@@ -188,7 +188,7 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 | `body` | texto da captura |
 | `occurredAt` | quando |
 | `status` | aberto / em andamento / concluído (vocabulário mínimo; detalhe depois) |
-| `technicianId` | quem, se souber (responsável da tarefa, alvo do feedback, nome no problema) |
+| `memberId` | quem, se souber (responsável da tarefa, alvo do feedback, nome no problema). Chave estrangeira para `Member` |
 | `factoryId` | contexto |
 | `machineId` | ou nulo |
 | `machineLabel` | texto “outra” quando não há cadastro |
@@ -202,15 +202,15 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 | `openedAt` / `closedAt` / `durationMin` | horários do chamado |
 | `createdAt` / `updatedAt` | auditoria mínima |
 
-**TechnicianMatrixEquipment** / **TechnicianSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
+**MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
 
-**RecordTechnician** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `technicianId`.
+**RecordMember** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `memberId`.
 
 **RecordAttachment** — arquivo da Tarefa (o `[x]` de anexo da ação). Sem anexo de chamado.
 
 Índices: `type+status`, `dueAt` (lista e filtros de atraso), `origin` (turno). Sem tabela de plano de ação, sem RP, sem sub-ação.
 
-Dashboard lê `Record` (mais máquinas e técnicos, para os nomes do ranking) e conta com os mesmos filtros da lista — essa é a fonte dos cards.
+Dashboard lê `Record` (mais máquinas e colaboradores, para os nomes do ranking) e conta com os mesmos filtros da lista — essa é a fonte dos cards.
 
 ---
 

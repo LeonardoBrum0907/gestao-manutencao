@@ -8,7 +8,7 @@ export type ChamadoBody = {
   openedAt: string | null;
   closedAt: string | null;
   durationMin: number | null;
-  technicianIds: string[];
+  memberIds: string[];
   machineId: string | null;
   machineLabel: string | null;
   status: RecordStatus;

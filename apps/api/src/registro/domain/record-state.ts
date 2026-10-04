@@ -10,7 +10,7 @@ export type RecordState = {
   body: string;
   occurredAt: Date;
   status: RecordStatus;
-  technicianId: string | null;
+  memberId: string | null;
   factoryId: string | null;
   machineId: string | null;
   machineLabel: string | null;
@@ -24,21 +24,21 @@ export type RecordState = {
   openedAt: Date | null;
   closedAt: Date | null;
   durationMin: number | null;
-  technicianIds: string[];
+  memberIds: string[];
 };
 
 export type CaptureInput = {
   type: RecordType;
   body: string;
   occurredAt: Date;
-  technicianId: string | null;
+  memberId: string | null;
 };
 
 export type TaskSheetInput = {
   body: string;
   occurredAt: Date;
   status: RecordStatus;
-  technicianId: string | null;
+  memberId: string | null;
   factoryId: string | null;
   tag: string | null;
   line: string | null;
@@ -50,13 +50,13 @@ export type TaskSheetInput = {
 export type FeedbackSheetInput = {
   body: string;
   occurredAt: Date;
-  technicianId: string | null;
+  memberId: string | null;
 };
 
 export type ProblemSheetInput = {
   body: string;
   occurredAt: Date;
-  technicianId: string | null;
+  memberId: string | null;
   machineId: string | null;
   machineLabel: string | null;
   notes: string | null;

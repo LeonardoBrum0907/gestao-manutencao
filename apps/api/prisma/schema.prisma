@@ -53,60 +53,62 @@ model Machine {
   @@index([factoryId])
 }
 
-model TechnicianRole {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  technicians Technician[]
+model MemberRole {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  members Member[]
 }
 
-model TechnicianGrade {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  position    Int
-  technicians Technician[]
+model MemberGrade {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  position Int
+  members  Member[]
 }
 
-model Technician {
-  id           String           @id @default(cuid())
+model Member {
+  id           String       @id @default(cuid())
   name         String
   roleId       String
-  role         TechnicianRole   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  role         MemberRole   @relation(fields: [roleId], references: [id], onDelete: Restrict)
   gradeId      String?
-  grade        TechnicianGrade? @relation(fields: [gradeId], references: [id], onDelete: Restrict)
+  grade        MemberGrade? @relation(fields: [gradeId], references: [id], onDelete: Restrict)
   shift        String
   area         String?
   status       String
   registration String?
   contact      String?
   notes        String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  matrixEquipments TechnicianMatrixEquipment[]
-  skills           TechnicianSkill[]
+  matrixEquipments MemberMatrixEquipment[]
+  skills           MemberSkill[]
+  records          Record[]
+  recordLinks      RecordMember[]
 
   @@index([roleId])
   @@index([gradeId])
 }
 
-model TechnicianMatrixEquipment {
-  technicianId String
-  equipment    String
-  technician   Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+model MemberMatrixEquipment {
+  memberId  String
+  equipment String
+  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@id([technicianId, equipment])
+  @@id([memberId, equipment])
 }
 
-model TechnicianSkill {
-  technicianId  String
+model MemberSkill {
+  memberId      String
   skillId       String
   score         Int?
-  notApplicable Boolean    @default(false)
+  notApplicable Boolean  @default(false)
   expected      Int?
-  updatedAt     DateTime   @updatedAt
-  technician    Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  updatedAt     DateTime @updatedAt
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@id([technicianId, skillId])
+  @@id([memberId, skillId])
 }
 
 model Record {
@@ -115,7 +117,8 @@ model Record {
   body         String
   occurredAt   DateTime
   status       String
-  technicianId String?
+  memberId     String?
+  member       Member?            @relation(fields: [memberId], references: [id], onDelete: Restrict)
   factoryId    String?
   machineId    String?
   machineLabel String?
@@ -129,7 +132,7 @@ model Record {
   openedAt     DateTime?
   closedAt     DateTime?
   durationMin  Int?
-  technicians  RecordTechnician[]
+  members      RecordMember[]
   attachments  RecordAttachment[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
@@ -137,15 +140,18 @@ model Record {
   @@index([type, status])
   @@index([dueAt])
   @@index([origin])
+  @@index([memberId])
 }
 
-model RecordTechnician {
-  recordId     String
-  technicianId String
-  position     Int
-  record       Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+model RecordMember {
+  recordId String
+  memberId String
+  position Int
+  record   Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Restrict)
 
-  @@id([recordId, technicianId])
+  @@id([recordId, memberId])
+  @@index([memberId])
 }
 
 model RecordAttachment {

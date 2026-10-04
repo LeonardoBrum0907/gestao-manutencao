@@ -5,7 +5,7 @@ export type ProblemWrite = {
   body: string;
   occurredAt: Date;
   status: RecordStatus;
-  technicianIds: string[];
+  memberIds: string[];
   factoryId: string | null;
   machineId: string | null;
   machineLabel: string | null;

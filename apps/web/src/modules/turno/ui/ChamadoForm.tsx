@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useMachines, useTechnicians } from "../../cadastro/data/cadastro";
+import { useMachines, useMembers } from "../../cadastro/data/cadastro";
 import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
 import { useSaveChamado } from "../data/shift";
 
@@ -24,22 +24,22 @@ function intOrNull(value: string): number | null {
 export function ChamadoForm({ record }: { record?: RecordDto }) {
   const navigate = useNavigate();
   const machines = useMachines();
-  const technicians = useTechnicians();
+  const members = useMembers();
   const save = useSaveChamado(record?.id);
   const [dayNumber, setDayNumber] = useState(record?.dayNumber ? String(record.dayNumber) : "");
   const [body, setBody] = useState(record?.body ?? "");
   const [openedAt, setOpenedAt] = useState(record?.openedAt ? toLocalInput(record.openedAt) : "");
   const [closedAt, setClosedAt] = useState(record?.closedAt ? toLocalInput(record.closedAt) : "");
   const [durationMin, setDurationMin] = useState(record?.durationMin === null || record?.durationMin === undefined ? "" : String(record.durationMin));
-  const [technicianIds, setTechnicianIds] = useState<string[]>(record?.technicianIds ?? []);
+  const [memberIds, setMemberIds] = useState<string[]>(record?.memberIds ?? []);
   const [mode, setMode] = useState<"machine" | "other">(record?.machineLabel ? "other" : "machine");
   const [machineId, setMachineId] = useState(record?.machineId ?? "");
   const [machineLabel, setMachineLabel] = useState(record?.machineLabel ?? "");
   const [status, setStatus] = useState<RecordStatus>(record?.status ?? "open");
   const [notes, setNotes] = useState(record?.notes ?? "");
 
-  function toggleTechnician(id: string) {
-    setTechnicianIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  function toggleMember(id: string) {
+    setMemberIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
   function submit(event: FormEvent) {
@@ -51,7 +51,7 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
         openedAt: localOrNull(openedAt),
         closedAt: localOrNull(closedAt),
         durationMin: intOrNull(durationMin),
-        technicianIds,
+        memberIds,
         machineId: mode === "machine" ? blank(machineId) : null,
         machineLabel: mode === "other" ? blank(machineLabel) : null,
         status,
@@ -92,15 +92,15 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
         <fieldset className="flex flex-col gap-2">
           <legend className="text-sm font-medium text-app">Técnicos</legend>
           <div className="flex max-h-40 flex-col gap-2 overflow-y-auto rounded-control border border-line bg-surface p-3">
-            {technicians.data?.length ? (
-              technicians.data.map((technician) => (
-                <label key={technician.id} className="flex items-center gap-2 text-sm text-app">
+            {members.data?.length ? (
+              members.data.map((member) => (
+                <label key={member.id} className="flex items-center gap-2 text-sm text-app">
                   <input
                     type="checkbox"
-                    checked={technicianIds.includes(technician.id)}
-                    onChange={() => toggleTechnician(technician.id)}
+                    checked={memberIds.includes(member.id)}
+                    onChange={() => toggleMember(member.id)}
                   />
-                  {technician.name}
+                  {member.name}
                 </label>
               ))
             ) : (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TechnicianGradeDto } from "@manutencao/shared";
+import type { MemberGradeDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
 import { useDeleteGrade, useGrades, useSaveGrade } from "../data/cadastro";
@@ -9,7 +9,7 @@ export function GradesPage() {
   const save = useSaveGrade();
   const remove = useDeleteGrade();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<TechnicianGradeDto | null>(null);
+  const [editing, setEditing] = useState<MemberGradeDto | null>(null);
   const [name, setName] = useState("");
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export function GradesPage() {
     setOpen(true);
   }
 
-  function edit(grade: TechnicianGradeDto) {
+  function edit(grade: MemberGradeDto) {
     setEditing(grade);
     setName(grade.name);
     setOpen(true);
@@ -36,7 +36,7 @@ export function GradesPage() {
       <PageTitle
         eyebrow="Apoio"
         title="Graus"
-        text="A senioridade do técnico. Grau em uso não sai da lista."
+        text="A senioridade do colaborador. Grau em uso não sai da lista."
         action={<Button onClick={create}>Novo grau</Button>}
       />
       {grades.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}

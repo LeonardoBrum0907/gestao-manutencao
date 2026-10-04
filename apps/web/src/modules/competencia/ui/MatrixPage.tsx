@@ -11,11 +11,11 @@ import {
   type CompetencyScore,
   type CompetencySkill,
   type CompetencySummaryDto,
-  type TechnicianMatrixDto,
+  type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
-import { useTechnicians } from "../../cadastro/data/cadastro";
+import { useMembers } from "../../cadastro/data/cadastro";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, type SkillWrite } from "../data/matrix";
 import {
   adherenceTone,
@@ -162,7 +162,7 @@ function Equipment({
   onChange,
   disabled,
 }: {
-  matrix: TechnicianMatrixDto;
+  matrix: MemberMatrixDto;
   equipment: string;
   open: boolean;
   onToggle: () => void;
@@ -220,9 +220,9 @@ function Equipment({
   );
 }
 
-function Matrix({ matrix }: { matrix: TechnicianMatrixDto }) {
-  const setEquipments = useSetMatrixEquipments(matrix.technicianId);
-  const setSkill = useSetSkill(matrix.technicianId);
+function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
+  const setEquipments = useSetMatrixEquipments(matrix.memberId);
+  const setSkill = useSetSkill(matrix.memberId);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | null>(matrix.equipments[0] ?? null);
 
@@ -296,32 +296,32 @@ function Matrix({ matrix }: { matrix: TechnicianMatrixDto }) {
 }
 
 export function MatrixPage() {
-  const { technicianId } = useParams();
+  const { memberId } = useParams();
   const navigate = useNavigate();
-  const technicians = useTechnicians();
-  const matrix = useMatrix(technicianId);
+  const members = useMembers();
+  const matrix = useMatrix(memberId);
   return (
     <div>
       <PageTitle eyebrow="Apoio" title="Matriz de competências" text={COMPETENCY_MATRIX_TITLE} />
       <div className="mb-6 w-full sm:max-w-sm">
         <Field label="Técnico">
-          <SelectInput value={technicianId ?? ""} onChange={(event) => navigate(`/competencias/${event.target.value}`)}>
+          <SelectInput value={memberId ?? ""} onChange={(event) => navigate(`/competencias/${event.target.value}`)}>
             <option value="" disabled>
               Escolha
             </option>
-            {technicians.data?.map((technician) => (
-              <option key={technician.id} value={technician.id}>
-                {technician.name}
-                {technician.gradeName ? ` — ${technician.gradeName}` : ""}
+            {members.data?.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name}
+                {member.gradeName ? ` — ${member.gradeName}` : ""}
               </option>
             ))}
           </SelectInput>
         </Field>
       </div>
-      {!technicianId ? <Card>Escolha um técnico para ver a matriz.</Card> : null}
-      {technicianId && matrix.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      {!memberId ? <Card>Escolha um técnico para ver a matriz.</Card> : null}
+      {memberId && matrix.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {matrix.isError ? <Notice>{errorMessage(matrix.error)}</Notice> : null}
-      {matrix.data ? <Matrix key={matrix.data.technicianId} matrix={matrix.data} /> : null}
+      {matrix.data ? <Matrix key={matrix.data.memberId} matrix={matrix.data} /> : null}
     </div>
   );
 }

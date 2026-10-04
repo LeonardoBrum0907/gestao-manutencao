@@ -1,21 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import {
-  isTechnicianShift,
-  isTechnicianStatus,
-  type TechnicianDto,
-  type TechnicianShift,
-  type TechnicianStatus,
+  isMemberShift,
+  isMemberStatus,
+  type MemberDto,
+  type MemberShift,
+  type MemberStatus,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 
-type TechnicianWrite = {
+type MemberWrite = {
   name: string;
   roleId: string;
   gradeId: string | null;
-  shift: TechnicianShift;
+  shift: MemberShift;
   area: string | null;
-  status: TechnicianStatus;
+  status: MemberStatus;
   registration: string | null;
   contact: string | null;
   notes: string | null;
@@ -34,9 +34,9 @@ function toDto(row: {
   notes: string | null;
   role: { name: string };
   grade: { name: string } | null;
-}): TechnicianDto {
-  if (!isTechnicianShift(row.shift) || !isTechnicianStatus(row.status)) {
-    throw new DomainError("invalid", 500, "Técnico gravado está inválido.");
+}): MemberDto {
+  if (!isMemberShift(row.shift) || !isMemberStatus(row.status)) {
+    throw new DomainError("invalid", 500, "Colaborador gravado está inválido.");
   }
   return {
     id: row.id,
@@ -55,11 +55,11 @@ function toDto(row: {
 }
 
 @Injectable()
-export class TechnicianRepository {
+export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(): Promise<TechnicianDto[]> {
-    const rows = await this.prisma.technician.findMany({
+  async list(): Promise<MemberDto[]> {
+    const rows = await this.prisma.member.findMany({
       include: { role: true, grade: true },
       orderBy: { name: "asc" },
     });
@@ -67,16 +67,16 @@ export class TechnicianRepository {
   }
 
   find(id: string) {
-    return this.prisma.technician.findUnique({ where: { id } });
+    return this.prisma.member.findUnique({ where: { id } });
   }
 
-  async create(input: TechnicianWrite): Promise<TechnicianDto> {
-    const row = await this.prisma.technician.create({ data: input, include: { role: true, grade: true } });
+  async create(input: MemberWrite): Promise<MemberDto> {
+    const row = await this.prisma.member.create({ data: input, include: { role: true, grade: true } });
     return toDto(row);
   }
 
-  async update(id: string, input: TechnicianWrite): Promise<TechnicianDto> {
-    const row = await this.prisma.technician.update({
+  async update(id: string, input: MemberWrite): Promise<MemberDto> {
+    const row = await this.prisma.member.update({
       where: { id },
       data: input,
       include: { role: true, grade: true },
@@ -84,7 +84,15 @@ export class TechnicianRepository {
     return toDto(row);
   }
 
+  async countRecords(id: string): Promise<number> {
+    const [owned, linked] = await Promise.all([
+      this.prisma.record.count({ where: { memberId: id } }),
+      this.prisma.recordMember.count({ where: { memberId: id } }),
+    ]);
+    return owned + linked;
+  }
+
   remove(id: string) {
-    return this.prisma.technician.delete({ where: { id } });
+    return this.prisma.member.delete({ where: { id } });
   }
 }

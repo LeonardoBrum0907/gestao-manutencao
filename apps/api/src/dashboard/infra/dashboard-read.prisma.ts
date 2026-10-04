@@ -11,9 +11,9 @@ export class DashboardRead {
   async load(): Promise<{
     records: PanelRecord[];
     machines: { id: string; name: string }[];
-    technicians: { id: string; name: string; status: string }[];
+    members: { id: string; name: string; status: string }[];
   }> {
-    const [records, machines, technicians] = await Promise.all([
+    const [records, machines, members] = await Promise.all([
       this.prisma.record.findMany({
         select: {
           id: true,
@@ -24,11 +24,11 @@ export class DashboardRead {
           occurredAt: true,
           createdAt: true,
           machineId: true,
-          technicianId: true,
+          memberId: true,
         },
       }),
       this.prisma.machine.findMany({ select: { id: true, name: true } }),
-      this.prisma.technician.findMany({ select: { id: true, name: true, status: true } }),
+      this.prisma.member.findMany({ select: { id: true, name: true, status: true } }),
     ]);
     return {
       records: records.map((row) => ({
@@ -40,10 +40,10 @@ export class DashboardRead {
         occurredAt: row.occurredAt,
         createdAt: row.createdAt,
         machineId: row.machineId,
-        technicianId: row.technicianId,
+        memberId: row.memberId,
       })),
       machines,
-      technicians,
+      members,
     };
   }
 }

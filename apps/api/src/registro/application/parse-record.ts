@@ -13,7 +13,7 @@ export function parseCapture(body: unknown): CaptureInput {
     type,
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
-    technicianId: optionalString(source, "technicianId"),
+    memberId: optionalString(source, "memberId"),
   };
 }
 
@@ -31,7 +31,7 @@ export function parseTaskSheet(body: unknown): TaskSheetInput {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     status,
-    technicianId: optionalString(source, "technicianId"),
+    memberId: optionalString(source, "memberId"),
     factoryId: optionalString(source, "factoryId"),
     tag: optionalString(source, "tag"),
     line: optionalString(source, "line"),
@@ -46,7 +46,7 @@ export function parseFeedbackSheet(body: unknown): FeedbackSheetInput {
   return {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
-    technicianId: optionalString(source, "technicianId"),
+    memberId: optionalString(source, "memberId"),
   };
 }
 
@@ -55,7 +55,7 @@ export function parseProblemSheet(body: unknown): ProblemSheetInput {
   return {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
-    technicianId: optionalString(source, "technicianId"),
+    memberId: optionalString(source, "memberId"),
     machineId: optionalString(source, "machineId"),
     machineLabel: optionalString(source, "machineLabel"),
     notes: optionalString(source, "notes"),

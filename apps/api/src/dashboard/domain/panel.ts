@@ -14,7 +14,7 @@ export type PanelRecord = {
   occurredAt: Date;
   createdAt: Date;
   machineId: string | null;
-  technicianId: string | null;
+  memberId: string | null;
 };
 
 export type PanelRank = {
@@ -30,7 +30,7 @@ export type RecordPanel = {
   doneCount: number;
   recent: PanelRecord[];
   machineRanking: PanelRank[];
-  technicianRanking: PanelRank[];
+  memberRanking: PanelRank[];
 };
 
 const openFilter: FollowUpFilter = { type: null, status: "open", due: null };
@@ -68,7 +68,7 @@ function rankOpen(
 
 export function buildRecordPanel(
   records: PanelRecord[],
-  names: { machines: Map<string, string>; technicians: Map<string, string> },
+  names: { machines: Map<string, string>; members: Map<string, string> },
   now: Date,
 ): RecordPanel {
   const recent = [...records]
@@ -81,6 +81,6 @@ export function buildRecordPanel(
     doneCount: countMatching(records, doneFilter, now),
     recent,
     machineRanking: rankOpen(records, (record) => record.machineId, names.machines),
-    technicianRanking: rankOpen(records, (record) => record.technicianId, names.technicians),
+    memberRanking: rankOpen(records, (record) => record.memberId, names.members),
   };
 }

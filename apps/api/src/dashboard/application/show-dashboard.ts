@@ -13,7 +13,7 @@ export class ShowDashboard {
       snapshot.records,
       {
         machines: new Map(snapshot.machines.map((machine) => [machine.id, machine.name])),
-        technicians: new Map(snapshot.technicians.map((technician) => [technician.id, technician.name])),
+        members: new Map(snapshot.members.map((member) => [member.id, member.name])),
       },
       now,
     );
@@ -23,7 +23,7 @@ export class ShowDashboard {
       dueTodayCount: panel.dueTodayCount,
       doneCount: panel.doneCount,
       machineCount: snapshot.machines.length,
-      activeTechnicianCount: snapshot.technicians.filter((technician) => technician.status === "active").length,
+      activeMemberCount: snapshot.members.filter((member) => member.status === "active").length,
       recent: panel.recent.map((record) => ({
         id: record.id,
         type: record.type,
@@ -32,7 +32,7 @@ export class ShowDashboard {
         status: record.status,
       })),
       machineRanking: panel.machineRanking,
-      technicianRanking: panel.technicianRanking,
+      memberRanking: panel.memberRanking,
     };
   }
 }

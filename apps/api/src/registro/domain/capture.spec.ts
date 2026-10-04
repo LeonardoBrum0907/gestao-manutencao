@@ -10,7 +10,7 @@ describe("captura", () => {
       type: "task",
       body: "  Trocar sensor  ",
       occurredAt: when,
-      technicianId: null,
+      memberId: null,
     });
     assert.equal(record.body, "Trocar sensor");
     assert.equal(record.status, "open");
@@ -26,7 +26,7 @@ describe("captura", () => {
           type: "feedback",
           body: "   ",
           occurredAt: new Date(),
-          technicianId: null,
+          memberId: null,
         }),
       (error: unknown) => error instanceof DomainError && error.code === "empty_body",
     );

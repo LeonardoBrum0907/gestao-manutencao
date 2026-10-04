@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FactoryDto, MachineDto, TechnicianDto, TechnicianGradeDto, TechnicianRoleDto } from "@manutencao/shared";
+import type { FactoryDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export function useFactories() {
@@ -60,7 +60,7 @@ export function useDeleteMachine() {
 export function useRoles() {
   return useQuery({
     queryKey: ["roles"],
-    queryFn: () => api<TechnicianRoleDto[]>("/api/technician-roles"),
+    queryFn: () => api<MemberRoleDto[]>("/api/member-roles"),
   });
 }
 
@@ -69,17 +69,17 @@ export function useSaveRole() {
   return useMutation({
     mutationFn: (input: { id?: string; name: string }) =>
       input.id
-        ? api<TechnicianRoleDto>(`/api/technician-roles/${input.id}`, {
+        ? api<MemberRoleDto>(`/api/member-roles/${input.id}`, {
             method: "PATCH",
             body: JSON.stringify({ name: input.name }),
           })
-        : api<TechnicianRoleDto>("/api/technician-roles", {
+        : api<MemberRoleDto>("/api/member-roles", {
             method: "POST",
             body: JSON.stringify({ name: input.name }),
           }),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["roles"] });
-      client.invalidateQueries({ queryKey: ["technicians"] });
+      client.invalidateQueries({ queryKey: ["members"] });
     },
   });
 }
@@ -87,7 +87,7 @@ export function useSaveRole() {
 export function useGrades() {
   return useQuery({
     queryKey: ["grades"],
-    queryFn: () => api<TechnicianGradeDto[]>("/api/technician-grades"),
+    queryFn: () => api<MemberGradeDto[]>("/api/member-grades"),
   });
 }
 
@@ -96,17 +96,17 @@ export function useSaveGrade() {
   return useMutation({
     mutationFn: (input: { id?: string; name: string }) =>
       input.id
-        ? api<TechnicianGradeDto>(`/api/technician-grades/${input.id}`, {
+        ? api<MemberGradeDto>(`/api/member-grades/${input.id}`, {
             method: "PATCH",
             body: JSON.stringify({ name: input.name }),
           })
-        : api<TechnicianGradeDto>("/api/technician-grades", {
+        : api<MemberGradeDto>("/api/member-grades", {
             method: "POST",
             body: JSON.stringify({ name: input.name }),
           }),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["grades"] });
-      client.invalidateQueries({ queryKey: ["technicians"] });
+      client.invalidateQueries({ queryKey: ["members"] });
     },
   });
 }
@@ -114,48 +114,48 @@ export function useSaveGrade() {
 export function useDeleteGrade() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api(`/api/technician-grades/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => api(`/api/member-grades/${id}`, { method: "DELETE" }),
     onSuccess: () => client.invalidateQueries({ queryKey: ["grades"] }),
   });
 }
 
-export function useTechnicians() {
+export function useMembers() {
   return useQuery({
-    queryKey: ["technicians"],
-    queryFn: () => api<TechnicianDto[]>("/api/technicians"),
+    queryKey: ["members"],
+    queryFn: () => api<MemberDto[]>("/api/members"),
   });
 }
 
-export type TechnicianWrite = {
+export type MemberWrite = {
   name: string;
   roleId: string;
   gradeId: string | null;
-  shift: TechnicianDto["shift"];
+  shift: MemberDto["shift"];
   area: string | null;
-  status: TechnicianDto["status"];
+  status: MemberDto["status"];
   registration: string | null;
   contact: string | null;
   notes: string | null;
 };
 
-export function useSaveTechnician() {
+export function useSaveMember() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id?: string; body: TechnicianWrite }) =>
+    mutationFn: (input: { id?: string; body: MemberWrite }) =>
       input.id
-        ? api<TechnicianDto>(`/api/technicians/${input.id}`, {
+        ? api<MemberDto>(`/api/members/${input.id}`, {
             method: "PATCH",
             body: JSON.stringify(input.body),
           })
-        : api<TechnicianDto>("/api/technicians", { method: "POST", body: JSON.stringify(input.body) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["technicians"] }),
+        : api<MemberDto>("/api/members", { method: "POST", body: JSON.stringify(input.body) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["members"] }),
   });
 }
 
-export function useDeleteTechnician() {
+export function useDeleteMember() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api(`/api/technicians/${id}`, { method: "DELETE" }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["technicians"] }),
+    mutationFn: (id: string) => api(`/api/members/${id}`, { method: "DELETE" }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["members"] }),
   });
 }

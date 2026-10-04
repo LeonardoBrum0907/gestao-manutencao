@@ -1,10 +1,10 @@
 import {
   isMachineStatus,
-  isTechnicianShift,
-  isTechnicianStatus,
+  isMemberShift,
+  isMemberStatus,
   type MachineOperationalStatus,
-  type TechnicianShift,
-  type TechnicianStatus,
+  type MemberShift,
+  type MemberStatus,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
@@ -21,16 +21,16 @@ export function requireMachineStatus(value: string): MachineOperationalStatus {
   return value;
 }
 
-export function requireShift(value: string): TechnicianShift {
-  if (!isTechnicianShift(value)) {
+export function requireShift(value: string): MemberShift {
+  if (!isMemberShift(value)) {
     throw new DomainError("invalid", 400, "Turno inválido.");
   }
   return value;
 }
 
-export function requireTechnicianStatus(value: string): TechnicianStatus {
-  if (!isTechnicianStatus(value)) {
-    throw new DomainError("invalid", 400, "Status do técnico inválido.");
+export function requireMemberStatus(value: string): MemberStatus {
+  if (!isMemberStatus(value)) {
+    throw new DomainError("invalid", 400, "Status do colaborador inválido.");
   }
   return value;
 }

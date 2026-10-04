@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { Grades } from "../application/grades";
 
-@Controller("api/technician-grades")
+@Controller("api/member-grades")
 export class GradesController {
   constructor(private readonly grades: Grades) {}
 

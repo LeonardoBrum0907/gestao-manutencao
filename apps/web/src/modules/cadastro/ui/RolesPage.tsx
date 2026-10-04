@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TechnicianRoleDto } from "@manutencao/shared";
+import type { MemberRoleDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
 import { useRoles, useSaveRole } from "../data/cadastro";
@@ -8,7 +8,7 @@ export function RolesPage() {
   const roles = useRoles();
   const save = useSaveRole();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<TechnicianRoleDto | null>(null);
+  const [editing, setEditing] = useState<MemberRoleDto | null>(null);
   const [name, setName] = useState("");
 
   function close() {
@@ -23,7 +23,7 @@ export function RolesPage() {
     setOpen(true);
   }
 
-  function edit(role: TechnicianRoleDto) {
+  function edit(role: MemberRoleDto) {
     setEditing(role);
     setName(role.name);
     setOpen(true);
@@ -34,7 +34,7 @@ export function RolesPage() {
       <PageTitle
         eyebrow="Apoio"
         title="Funções"
-        text="As funções do técnico. As seis do SIGEM já estão na lista."
+        text="As funções do colaborador. As seis do SIGEM já estão na lista."
         action={<Button onClick={create}>Nova função</Button>}
       />
       {roles.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
