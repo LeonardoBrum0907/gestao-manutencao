@@ -34,8 +34,8 @@ export class MemberPerformance {
   }
 
   async setScore(memberId: string, year: string, quarter: string, competencyId: string, body: unknown): Promise<MemberPerformanceDto> {
-    assertPerformanceEditable(await this.position(memberId));
-    const competency = await this.competencies.find(competencyId);
+    const [position, competency] = await Promise.all([this.position(memberId), this.competencies.find(competencyId)]);
+    assertPerformanceEditable(position);
     if (!competency) throw new DomainError("invalid", 400, "Competência não encontrada.");
     const target = { year: requireYear(Number(year)), quarter: requireQuarter(Number(quarter)) };
     const score = requireScore(readObject(body).score ?? null);

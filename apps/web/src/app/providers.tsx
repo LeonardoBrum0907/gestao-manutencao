@@ -7,7 +7,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { retry: false, refetchOnWindowFocus: false },
+          // Dado novo vale por 1 min: navegar entre telas não busca de novo, e voltar para a aba
+          // atualiza só o que já venceu.
+          queries: { retry: false, staleTime: 60_000, refetchOnWindowFocus: true },
         },
       }),
   );

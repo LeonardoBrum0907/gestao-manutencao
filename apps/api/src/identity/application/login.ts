@@ -36,6 +36,8 @@ export class Login {
     const token = createSessionToken();
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
     await this.sessions.create(user.id, hashSessionToken(token, this.env.sessionSecret), expiresAt);
+    // Sessões vencidas nunca eram apagadas; o login é o momento barato para limpar.
+    void this.sessions.deleteExpired(new Date()).catch(() => undefined);
     return {
       session: { email: user.email },
       token,

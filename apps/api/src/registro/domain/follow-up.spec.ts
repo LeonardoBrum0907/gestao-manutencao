@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { FollowUpSubject } from "./follow-up";
-import { matchesFollowUp, taskDueWindow } from "./follow-up";
+import { dueRange, matchesFollowUp, startOfDay, taskDueWindow } from "./follow-up";
 
 const now = new Date("2026-09-30T15:00:00.000Z");
 
@@ -62,5 +62,23 @@ describe("prazo da tarefa", () => {
       false,
     );
     assert.equal(matchesFollowUp(overdue, { type: null, status: null, due: null }, now), true);
+  });
+});
+
+describe("intervalo do prazo para o banco", () => {
+  it("começa o dia à meia-noite de São Paulo", () => {
+    assert.equal(startOfDay("2026-09-30").toISOString(), "2026-09-30T03:00:00.000Z");
+  });
+
+  it("concorda com taskDueWindow em todas as horas ao redor da virada do dia", () => {
+    for (let hours = -50; hours <= 100; hours += 1) {
+      const dueAt = new Date(now.getTime() + hours * 3_600_000);
+      const expected = taskDueWindow(dueAt, now);
+      for (const window of ["overdue", "today", "tomorrow"] as const) {
+        const range = dueRange(window, now);
+        const inside = (!range.gte || dueAt >= range.gte) && (!range.lt || dueAt < range.lt);
+        assert.equal(inside, expected === window, `${dueAt.toISOString()} em ${window}`);
+      }
+    }
   });
 });

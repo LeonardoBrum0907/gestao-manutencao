@@ -20,11 +20,12 @@ export class NoteOcorrencia {
   }
 
   async replace(id: string, body: unknown): Promise<RecordDto> {
-    const current = await this.problems.find(id);
-    if (!current) throw new DomainError("not_found", 404, "Registro não encontrado.");
-    const write = noteOcorrencia(parseOcorrencia(body), new Date(current.occurredAt));
-    await this.assertFactory(write.factoryId);
-    return this.problems.replace(id, write);
+    const input = parseOcorrencia(body);
+    return this.problems.replace(id, async (current) => {
+      const write = noteOcorrencia(input, new Date(current.occurredAt));
+      await this.assertFactory(write.factoryId);
+      return write;
+    });
   }
 
   private async assertFactory(id: string | null): Promise<void> {

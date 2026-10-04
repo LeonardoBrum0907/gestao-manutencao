@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSkillDto } from "@manutencao/shared";
+import { REFERENCE_DATA } from "../../../app/cache";
 import { api } from "../../../app/http";
 
 export function useMatrixCatalog() {
   return useQuery({
     queryKey: ["matrix-catalog"],
+    ...REFERENCE_DATA,
     queryFn: () => api<MatrixCatalogDto>("/api/matrix-catalog"),
   });
 }

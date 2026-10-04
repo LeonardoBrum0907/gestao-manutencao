@@ -19,8 +19,8 @@ export type ProblemWrite = {
 
 export interface ProblemLogPort {
   save(write: ProblemWrite): Promise<RecordDto>;
-  replace(id: string, write: ProblemWrite): Promise<RecordDto>;
-  find(id: string): Promise<RecordDto | null>;
+  // Quem substitui recebe o registro atual para montar a gravação: o adaptador o lê uma vez só.
+  replace(id: string, build: (current: RecordDto) => ProblemWrite | Promise<ProblemWrite>): Promise<RecordDto>;
 }
 
 export const PROBLEM_LOG = Symbol("PROBLEM_LOG");

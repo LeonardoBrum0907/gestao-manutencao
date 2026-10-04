@@ -20,8 +20,9 @@ export class MemberBehavior {
 
   async save(memberId: string, body: unknown): Promise<MemberBehaviorDto> {
     await this.assertMember(memberId);
-    await this.behaviors.save(memberId, normalizeBehavior(parseBehavior(body)));
-    return this.show(memberId);
+    const behavior = normalizeBehavior(parseBehavior(body));
+    await this.behaviors.save(memberId, behavior);
+    return { memberId, ...behavior };
   }
 
   private async assertMember(id: string): Promise<void> {

@@ -34,35 +34,36 @@ export class Members {
   async remove(id: string): Promise<void> {
     const current = await this.members.find(id);
     if (!current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
-    assertMemberCanBeRemoved(
-      await this.members.countRecords(id),
-      await this.teams.countLedBy(id),
-      await this.members.countPdiFiles(id),
-    );
+    const [records, ledTeams, pdiFiles] = await Promise.all([
+      this.members.countRecords(id),
+      this.teams.countLedBy(id),
+      this.members.countPdiFiles(id),
+    ]);
+    assertMemberCanBeRemoved(records, ledTeams, pdiFiles);
     await this.members.remove(id);
   }
 
   private async write(body: unknown, id: string | null): Promise<MemberDto> {
-    const current = id ? await this.members.find(id) : null;
-    if (id && !current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
     const source = readObject(body);
-    const position = requirePosition(requiredString(source, "position", "Escolha o cargo."));
     const roleId = optionalString(source, "roleId");
+    const gradeId = optionalString(source, "gradeId");
     const teamId = optionalString(source, "teamId");
+    // As buscas não dependem umas das outras: uma viagem ao banco em vez de cinco.
+    const [current, role, grade, team] = await Promise.all([
+      id ? this.members.find(id) : null,
+      roleId ? this.roles.find(roleId) : null,
+      gradeId ? this.grades.find(gradeId) : null,
+      teamId ? this.teams.find(teamId) : null,
+    ]);
+    if (id && !current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
+    const position = requirePosition(requiredString(source, "position", "Escolha o cargo."));
     assertMemberShape({ position, roleId, teamId });
     if (current) {
       assertPositionChange(requirePosition(current.position), position, await this.teams.countLedBy(current.id));
     }
-    if (roleId && !(await this.roles.find(roleId))) {
-      throw new DomainError("role", 400, "Função não encontrada.");
-    }
-    const gradeId = optionalString(source, "gradeId");
-    if (gradeId && !(await this.grades.find(gradeId))) {
-      throw new DomainError("grade", 400, "Grau não encontrado.");
-    }
-    if (teamId && !(await this.teams.find(teamId))) {
-      throw new DomainError("team", 400, "Equipe não encontrada.");
-    }
+    if (roleId && !role) throw new DomainError("role", 400, "Função não encontrada.");
+    if (gradeId && !grade) throw new DomainError("grade", 400, "Grau não encontrado.");
+    if (teamId && !team) throw new DomainError("team", 400, "Equipe não encontrada.");
     const input = {
       name: requireName(requiredString(source, "name", "Informe o nome do colaborador."), "Informe o nome do colaborador."),
       position,

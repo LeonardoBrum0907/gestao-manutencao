@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../../design/ui/icons";
-import { useDashboard } from "../../modules/dashboard/data/dashboard";
+import { useOverdueCount } from "../../modules/dashboard/data/dashboard";
 import { useLogout } from "../data/session";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -36,8 +36,8 @@ const itemClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 function OverdueBadge() {
-  const dashboard = useDashboard();
-  const overdue = dashboard.data?.overdueCount ?? 0;
+  const overdueCount = useOverdueCount();
+  const overdue = overdueCount.data?.overdueCount ?? 0;
   if (!overdue) return null;
   return (
     <span className="ml-auto rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-danger">

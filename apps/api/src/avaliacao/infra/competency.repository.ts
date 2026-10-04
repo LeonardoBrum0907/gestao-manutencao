@@ -37,9 +37,10 @@ export class CompetencyRepository {
   }
 
   async reorder(ids: string[]): Promise<void> {
-    await this.prisma.$transaction(
-      ids.map((id, index) => this.prisma.performanceCompetency.update({ where: { id }, data: { position: index + 1 } })),
-    );
+    await this.prisma.$executeRaw`
+      UPDATE "PerformanceCompetency" AS t SET "position" = o.pos::int
+      FROM unnest(${ids}::text[]) WITH ORDINALITY AS o(id, pos)
+      WHERE t."id" = o.id`;
   }
 
   countScores(id: string) {

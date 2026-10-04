@@ -25,6 +25,10 @@ export class MemberPdi {
 
   async show(memberId: string): Promise<MemberPdiDto> {
     await this.assertMember(memberId);
+    return this.read(memberId);
+  }
+
+  private async read(memberId: string): Promise<MemberPdiDto> {
     const [machines, attachments] = await Promise.all([this.pdi.machines(memberId), this.pdi.attachments(memberId)]);
     return { memberId, sponsorMachineIds: machines.sponsor, developmentMachineIds: machines.development, attachments };
   }
@@ -33,11 +37,11 @@ export class MemberPdi {
     await this.assertMember(memberId);
     const source = readObject(body);
     const machines = normalizePdiMachines({ sponsor: idList(source, "sponsor"), development: idList(source, "development") });
-    for (const id of [...machines.sponsor, ...machines.development]) {
-      if (!(await this.refs.machineExists(id))) throw new DomainError("machine", 400, "Máquina não encontrada.");
+    if (!(await this.refs.machinesExist([...machines.sponsor, ...machines.development]))) {
+      throw new DomainError("machine", 400, "Máquina não encontrada.");
     }
     await this.pdi.replaceMachines(memberId, machines);
-    return this.show(memberId);
+    return this.read(memberId);
   }
 
   async addAttachment(memberId: string, file: Express.Multer.File | undefined): Promise<AttachmentDto> {

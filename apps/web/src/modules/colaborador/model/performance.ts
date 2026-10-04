@@ -4,8 +4,10 @@ export function formatScore(value: number | null): string {
   return value === null ? "—" : value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
+const yearFormat = new Intl.DateTimeFormat("en-CA", { timeZone: GESTOR_TIME_ZONE, year: "numeric" });
+
 export function thisYear(now = new Date()): number {
-  return Number(new Intl.DateTimeFormat("en-CA", { timeZone: GESTOR_TIME_ZONE, year: "numeric" }).format(now));
+  return Number(yearFormat.format(now));
 }
 
 // O ano corrente e o anterior sempre aparecem; os demais, só se tiverem nota.

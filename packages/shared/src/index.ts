@@ -378,9 +378,16 @@ export type MemberRecordSummaryDto = {
   feedbacks: number;
 };
 
-export type MemberRecordsDto = {
-  summary: MemberRecordSummaryDto;
-  records: RecordDto[];
+// O que a lista precisa para desenhar a linha: sem anexos, observações e técnicos do chamado.
+export type RecordListItemDto = Pick<
+  RecordDto,
+  "id" | "type" | "body" | "occurredAt" | "status" | "origin" | "priority" | "tone" | "dueAt" | "machineId"
+>;
+
+// Lista paginada por cursor: nextCursor vem nulo na última página.
+export type RecordPageDto = {
+  items: RecordListItemDto[];
+  nextCursor: string | null;
 };
 
 export type SessionDto = {
@@ -399,6 +406,11 @@ export type DashboardRankDto = {
   id: string;
   name: string;
   openCount: number;
+};
+
+// Só o selo da barra lateral: uma contagem barata, em vez do painel inteiro a cada tela.
+export type OverdueCountDto = {
+  overdueCount: number;
 };
 
 export type DashboardDto = {

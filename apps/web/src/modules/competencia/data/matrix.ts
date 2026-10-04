@@ -37,6 +37,23 @@ export function useSetSkill(memberId: string) {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    // Marca na hora (os totais chegam com a resposta); se a API recusar, volta ao que estava.
+    onMutate: async ({ skillId, ...body }) => {
+      await client.cancelQueries({ queryKey: ["matrix", memberId] });
+      const previous = client.getQueryData<MemberMatrixDto>(["matrix", memberId]);
+      if (previous) {
+        const others = previous.entries.filter((entry) => entry.skillId !== skillId);
+        const kept = body.score !== null || body.notApplicable || body.expected !== null;
+        client.setQueryData<MemberMatrixDto>(["matrix", memberId], {
+          ...previous,
+          entries: kept ? [...others, { skillId, ...body }] : others,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _write, context) => {
+      if (context?.previous) client.setQueryData(["matrix", memberId], context.previous);
+    },
     onSuccess: (matrix) => client.setQueryData(["matrix", memberId], matrix),
   });
 }

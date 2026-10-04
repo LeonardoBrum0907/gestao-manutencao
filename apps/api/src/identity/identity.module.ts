@@ -6,6 +6,7 @@ import { SeedGestor } from "./application/seed-gestor";
 import { SessionController } from "./http/session.controller";
 import { SessionGuard } from "./http/session.guard";
 import { PasswordHasher } from "./infra/password.hasher";
+import { SessionCache } from "./infra/session.cache";
 import { SessionRepository } from "./infra/session.repository";
 import { UserRepository } from "./infra/user.repository";
 
@@ -14,6 +15,7 @@ import { UserRepository } from "./infra/user.repository";
   providers: [
     UserRepository,
     SessionRepository,
+    SessionCache,
     PasswordHasher,
     SeedGestor,
     Login,

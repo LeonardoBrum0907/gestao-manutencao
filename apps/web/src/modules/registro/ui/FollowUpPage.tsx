@@ -1,8 +1,8 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { DueWindow, RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
-import { useFollowUp } from "../data/records";
+import { Button, Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
+import { flattenPages, useFollowUp, usePrefetchRecord } from "../data/records";
 import {
   dueChoices,
   followUpFromSearch,
@@ -18,6 +18,8 @@ export function FollowUpPage() {
   const [params, setParams] = useSearchParams();
   const filter = followUpFromSearch(params);
   const list = useFollowUp(filter);
+  const records = flattenPages(list.data?.pages);
+  const prefetch = usePrefetchRecord();
   const dueEnabled = prazoApplies(filter.type);
 
   function apply(next: FollowUpQuery) {
@@ -37,7 +39,7 @@ export function FollowUpPage() {
     apply({ ...filter, due: filter.due === due ? null : due });
   }
 
-  const empty = list.data?.length === 0;
+  const empty = list.isSuccess && records.length === 0;
   const filtered = Boolean(filter.type || filter.status || filter.due);
 
   return (
@@ -101,16 +103,18 @@ export function FollowUpPage() {
       {empty ? (
         <Card>{filtered ? "Nenhum registro com esses filtros." : "Nenhum registro ainda. Comece por Registrar."}</Card>
       ) : null}
-      {list.data && list.data.length > 0 ? (
+      {records.length > 0 ? (
         <>
           <div className="flex flex-col gap-3 sm:hidden">
-            {list.data.map((record) => (
+            {records.map((record) => (
               <div
                 key={record.id}
                 role="link"
                 tabIndex={0}
                 aria-label={`Abrir ficha: ${record.body}`}
                 onClick={() => navigate(`/registros/${record.id}`)}
+                onFocus={() => prefetch.start(record.id)}
+                onBlur={prefetch.cancel}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
@@ -149,13 +153,17 @@ export function FollowUpPage() {
                 </tr>
               </thead>
               <tbody>
-                {list.data.map((record) => (
+                {records.map((record) => (
                   <tr
                     key={record.id}
                     role="link"
                     tabIndex={0}
                     aria-label={`Abrir ficha: ${record.body}`}
                     onClick={() => navigate(`/registros/${record.id}`)}
+                    onMouseEnter={() => prefetch.start(record.id)}
+                    onMouseLeave={prefetch.cancel}
+                    onFocus={() => prefetch.start(record.id)}
+                    onBlur={prefetch.cancel}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
@@ -187,6 +195,13 @@ export function FollowUpPage() {
               </tbody>
             </table>
           </div>
+          {list.hasNextPage ? (
+            <div className="mt-4 flex justify-center">
+              <Button tone="ghost" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
+                {list.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+              </Button>
+            </div>
+          ) : null}
         </>
       ) : null}
     </div>
