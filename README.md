@@ -42,14 +42,16 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 1. Monorepo pnpm: `apps/api`, `apps/web`, `packages/shared`, Compose.
 2. Uma conta gestor, cookie de sessão.
 3. Login, sidebar, tema claro/escuro em `data-theme`.
-4. Fábricas, máquinas (linha de GD e apadrinhada), funções (as seis do SIGEM como seed, com criar e renomear), graus (Júnior, Pleno, Sênior e Especialista de padrão; grau em uso não pode ser excluído), colaboradores sem login (quem aparece em registro não pode ser excluído, só inativado). Cadastro em modal. Excluir fábrica com máquina é recusado.
+4. Fábricas, máquinas (linha de GD e apadrinhada), funções (as seis do SIGEM como seed, com criar e renomear), graus (Júnior, Pleno, Sênior e Especialista de padrão; grau em uso não pode ser excluído), colaboradores sem login, com cargo Técnico ou Supervisor (quem aparece em registro não pode ser excluído, só inativado). Cadastro em modal. Excluir fábrica com máquina é recusado.
 5. Captura de Tarefa, Feedback e Problema (texto, tipo, quando, técnico se souber).
 6. Ficha da Tarefa (prazo, prioridade, status, observação, fábrica, TAG, linha, anexo), do Feedback (alvo) e do Problema (máquina ou outra).
 7. Lista de acompanhamento em `/acompanhamento`, com filtros de tipo, status e prazo (vencida, hoje, amanhã).
 8. Chamado em `/turno/chamado` e ocorrência em `/turno/ocorrencia`, gravados como Problema.
 9. Dashboard em `/dashboard`: abertas, vencidas, vencem hoje e concluídas (cada card abre a lista filtrada), máquinas, colaboradores ativos, últimos registros e ranking de máquinas e colaboradores com mais abertos.
 
-10. Matriz de competências em `/competencias` (ou pelo botão Matriz em Colaboradores): checklist de conhecimento mecânico com 9 equipamentos e 222 habilidades, nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico.
+10. Equipes em `/cadastro/equipes`: o coordenador cria equipes (por turno, por supervisor…), escolhe o supervisor de cada uma e coloca os técnicos. Um técnico fica em uma equipe só; o supervisor lidera, não é membro, e pode liderar mais de uma. Equipe com gente não pode ser excluída, nem supervisor que lidera equipe pode perder o cargo ou ser excluído. Colaboradores filtra por cargo e por equipe.
+
+11. Matriz de competências em `/competencias` (ou pelo botão Matriz em Colaboradores): checklist de conhecimento mecânico com 9 equipamentos e 222 habilidades, nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico. Supervisor não tem matriz.
 
 ## Fora desta versão
 

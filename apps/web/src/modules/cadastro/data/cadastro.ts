@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FactoryDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto } from "@manutencao/shared";
+import type { FactoryDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto, TeamDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export function useFactories() {
@@ -128,7 +128,9 @@ export function useMembers() {
 
 export type MemberWrite = {
   name: string;
-  roleId: string;
+  position: MemberDto["position"];
+  teamId: string | null;
+  roleId: string | null;
   gradeId: string | null;
   shift: MemberDto["shift"];
   area: string | null;
@@ -148,7 +150,7 @@ export function useSaveMember() {
             body: JSON.stringify(input.body),
           })
         : api<MemberDto>("/api/members", { method: "POST", body: JSON.stringify(input.body) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["members"] }),
+    onSuccess: () => invalidatePeople(client),
   });
 }
 
@@ -156,6 +158,53 @@ export function useDeleteMember() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/members/${id}`, { method: "DELETE" }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["members"] }),
+    onSuccess: () => invalidatePeople(client),
+  });
+}
+
+// Equipe e colaborador se mostram um ao outro (membros, supervisor, nome da equipe): muda um, recarrega os dois.
+function invalidatePeople(client: ReturnType<typeof useQueryClient>) {
+  client.invalidateQueries({ queryKey: ["members"] });
+  client.invalidateQueries({ queryKey: ["teams"] });
+}
+
+export function useTeams() {
+  return useQuery({
+    queryKey: ["teams"],
+    queryFn: () => api<TeamDto[]>("/api/teams"),
+  });
+}
+
+export type TeamWrite = {
+  name: string;
+  description: string | null;
+  supervisorId: string | null;
+};
+
+export function useSaveTeam() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; body: TeamWrite }) =>
+      input.id
+        ? api<TeamDto>(`/api/teams/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
+        : api<TeamDto>("/api/teams", { method: "POST", body: JSON.stringify(input.body) }),
+    onSuccess: () => invalidatePeople(client),
+  });
+}
+
+export function useDeleteTeam() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/teams/${id}`, { method: "DELETE" }),
+    onSuccess: () => invalidatePeople(client),
+  });
+}
+
+export function useTeamMembership() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { teamId: string; memberId: string; action: "add" | "remove" }) =>
+      api(`/api/teams/${input.teamId}/members/${input.memberId}`, { method: input.action === "add" ? "PUT" : "DELETE" }),
+    onSuccess: () => invalidatePeople(client),
   });
 }

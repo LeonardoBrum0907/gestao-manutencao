@@ -26,6 +26,9 @@ export type MemberShift = (typeof MEMBER_SHIFTS)[number];
 export const MEMBER_STATUSES = ["active", "inactive", "vacation", "away"] as const;
 export type MemberStatus = (typeof MEMBER_STATUSES)[number];
 
+export const MEMBER_POSITIONS = ["technician", "supervisor"] as const;
+export type MemberPosition = (typeof MEMBER_POSITIONS)[number];
+
 export const MEMBER_ROLES = [
   "mecânico",
   "eletricista",
@@ -91,6 +94,11 @@ export const MEMBER_SHIFT_LABELS: Record<MemberShift, string> = {
   administrative: "Administrativo",
 };
 
+export const MEMBER_POSITION_LABELS: Record<MemberPosition, string> = {
+  technician: "Técnico",
+  supervisor: "Supervisor",
+};
+
 export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
   active: "Ativo",
   inactive: "Inativo",
@@ -126,6 +134,10 @@ export function isMemberStatus(value: string): value is MemberStatus {
   return (MEMBER_STATUSES as readonly string[]).includes(value);
 }
 
+export function isMemberPosition(value: string): value is MemberPosition {
+  return (MEMBER_POSITIONS as readonly string[]).includes(value);
+}
+
 export type FactoryDto = {
   id: string;
   name: string;
@@ -157,8 +169,11 @@ export type MemberGradeDto = {
 export type MemberDto = {
   id: string;
   name: string;
-  roleId: string;
-  roleName: string;
+  position: MemberPosition;
+  teamId: string | null;
+  teamName: string | null;
+  roleId: string | null;
+  roleName: string | null;
   gradeId: string | null;
   gradeName: string | null;
   shift: MemberShift;
@@ -167,6 +182,15 @@ export type MemberDto = {
   registration: string | null;
   contact: string | null;
   notes: string | null;
+};
+
+export type TeamDto = {
+  id: string;
+  name: string;
+  description: string | null;
+  supervisorId: string | null;
+  supervisorName: string | null;
+  memberIds: string[];
 };
 
 export type AttachmentDto = {

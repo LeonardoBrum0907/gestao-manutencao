@@ -5,6 +5,7 @@ import {
   type CompetencyScore,
   type CompetencySkill,
   type CompetencySummaryDto,
+  type MemberPosition,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
@@ -76,6 +77,12 @@ export function buildMatrix(equipments: readonly string[], entries: readonly Mat
       ...summarize(skillsOf(equipment.key), byId),
     })),
   };
+}
+
+export function assertMatrixEditable(position: MemberPosition): void {
+  if (position !== "technician") {
+    throw new DomainError("matrix_technician_only", 409, "A matriz de competências é só para técnico.");
+  }
 }
 
 export function requireEquipments(values: unknown): string[] {

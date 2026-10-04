@@ -4,6 +4,7 @@ import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { memberOptionLabel } from "../../cadastro/model/labels";
 import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
 import { useSaveChamado } from "../data/shift";
 
@@ -100,7 +101,7 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
                     checked={memberIds.includes(member.id)}
                     onChange={() => toggleMember(member.id)}
                   />
-                  {member.name}
+                  {memberOptionLabel(member)}
                 </label>
               ))
             ) : (

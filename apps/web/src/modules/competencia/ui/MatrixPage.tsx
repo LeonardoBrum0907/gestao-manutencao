@@ -16,6 +16,7 @@ import {
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import { useMembers } from "../../cadastro/data/cadastro";
+import { positionLabel } from "../../cadastro/model/labels";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, type SkillWrite } from "../data/matrix";
 import {
   adherenceTone,
@@ -300,6 +301,9 @@ export function MatrixPage() {
   const navigate = useNavigate();
   const members = useMembers();
   const matrix = useMatrix(memberId);
+  const technicians = members.data?.filter((member) => member.position === "technician") ?? [];
+  const selected = members.data?.find((member) => member.id === memberId);
+  const notTechnician = selected !== undefined && selected.position !== "technician";
   return (
     <div>
       <PageTitle eyebrow="Apoio" title="Matriz de competências" text={COMPETENCY_MATRIX_TITLE} />
@@ -309,7 +313,7 @@ export function MatrixPage() {
             <option value="" disabled>
               Escolha
             </option>
-            {members.data?.map((member) => (
+            {technicians.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name}
                 {member.gradeName ? ` — ${member.gradeName}` : ""}
@@ -321,7 +325,12 @@ export function MatrixPage() {
       {!memberId ? <Card>Escolha um técnico para ver a matriz.</Card> : null}
       {memberId && matrix.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {matrix.isError ? <Notice>{errorMessage(matrix.error)}</Notice> : null}
-      {matrix.data ? <Matrix key={matrix.data.memberId} matrix={matrix.data} /> : null}
+      {notTechnician ? (
+        <Card>
+          A matriz de competências é só para técnico. {selected.name} é {positionLabel(selected.position).toLowerCase()}.
+        </Card>
+      ) : null}
+      {matrix.data && !notTechnician ? <Matrix key={matrix.data.memberId} matrix={matrix.data} /> : null}
     </div>
   );
 }

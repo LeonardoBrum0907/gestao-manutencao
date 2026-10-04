@@ -3,6 +3,7 @@ import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMembers } from "../../cadastro/data/cadastro";
+import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
 
@@ -36,7 +37,7 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
             <option value="">Ninguém</option>
             {members.data?.map((member) => (
               <option key={member.id} value={member.id}>
-                {member.name}
+                {memberOptionLabel(member)}
               </option>
             ))}
           </SelectInput>

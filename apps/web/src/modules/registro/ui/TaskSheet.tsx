@@ -3,6 +3,7 @@ import type { RecordDto, RecordPriority, RecordStatus } from "@manutencao/shared
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput, controlClass } from "../../../design/ui/controls";
 import { useFactories, useMembers } from "../../cadastro/data/cadastro";
+import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useAddAttachment, useRemoveAttachment, useUpdateRecord } from "../data/records";
 import { fromLocalInput, priorityOptions, statusOptions, toLocalInput } from "../model/record";
 
@@ -82,7 +83,7 @@ export function TaskSheet({ record }: { record: RecordDto }) {
                 <option value="">Ninguém</option>
                 {members.data?.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
+                    {memberOptionLabel(member)}
                   </option>
                 ))}
               </SelectInput>

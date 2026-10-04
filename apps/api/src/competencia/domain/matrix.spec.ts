@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { COMPETENCY_SKILLS, type CompetencySkill } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
-import { buildMatrix, normalizeEntry, requireEquipments, summarize, type MatrixEntry } from "./matrix";
+import { assertMatrixEditable, buildMatrix, normalizeEntry, requireEquipments, summarize, type MatrixEntry } from "./matrix";
 
 const skills: CompetencySkill[] = [
   { id: "A", equipment: "blistadeira-cam", subgroup: "Alimentação", text: "a", level: "basic" },
@@ -106,5 +106,17 @@ describe("nota da habilidade", () => {
 
   it("entrada vazia apaga a linha", () => {
     assert.equal(normalizeEntry("A", { score: null, notApplicable: false, expected: null }), null);
+  });
+});
+
+describe("quem tem matriz", () => {
+  it("só técnico tem a matriz editada", () => {
+    assert.doesNotThrow(() => assertMatrixEditable("technician"));
+    assert.throws(() => assertMatrixEditable("supervisor"), (error: unknown) => {
+      assert.ok(error instanceof DomainError);
+      assert.equal(error.code, "matrix_technician_only");
+      assert.equal(error.statusCode, 409);
+      return true;
+    });
   });
 });

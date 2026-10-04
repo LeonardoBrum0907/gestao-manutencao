@@ -66,11 +66,27 @@ model MemberGrade {
   members  Member[]
 }
 
+model Team {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  supervisorId String?
+  supervisor   Member?  @relation("TeamSupervisor", fields: [supervisorId], references: [id], onDelete: Restrict)
+  members      Member[] @relation("TeamMembers")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([supervisorId])
+}
+
 model Member {
   id           String       @id @default(cuid())
   name         String
-  roleId       String
-  role         MemberRole   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  position     String       @default("technician")
+  teamId       String?
+  team         Team?        @relation("TeamMembers", fields: [teamId], references: [id], onDelete: Restrict)
+  roleId       String?
+  role         MemberRole?  @relation(fields: [roleId], references: [id], onDelete: Restrict)
   gradeId      String?
   grade        MemberGrade? @relation(fields: [gradeId], references: [id], onDelete: Restrict)
   shift        String
@@ -86,9 +102,11 @@ model Member {
   skills           MemberSkill[]
   records          Record[]
   recordLinks      RecordMember[]
+  supervisedTeams  Team[]                  @relation("TeamSupervisor")
 
   @@index([roleId])
   @@index([gradeId])
+  @@index([teamId])
 }
 
 model MemberMatrixEquipment {
