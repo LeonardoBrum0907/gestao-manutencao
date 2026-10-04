@@ -22,6 +22,7 @@ export default {
         "danger-soft": "var(--danger-soft)",
         chip: "var(--chip-bg)",
         overlay: "var(--overlay)",
+        chart: "var(--chart-1)",
       },
       borderRadius: {
         card: "var(--radius-card)",

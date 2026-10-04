@@ -207,6 +207,8 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **MemberBehavior** — comportamento do colaborador, uma linha por pessoa: pontualidade e colaboração (Excelente / Boa / Regular / Ruim), produtividade (Alta / Média / Baixa) e etiquetas do catálogo do SIGEM (pontos positivos, de atenção, situação atual). Sai junto com o colaborador.
 
+**MemberEvaluation** — avaliação de desempenho: nota (10 / 8 / 6 / 4 / 2) por colaborador, ano, trimestre e competência; as 12 competências ficam no código, como o catálogo da matriz. Sem nota é sem linha. Só técnico. Sai junto com o colaborador.
+
 **MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
 
 **RecordMember** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `memberId`.

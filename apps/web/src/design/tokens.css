@@ -19,6 +19,8 @@
   --danger-soft: #f8e8e6;
   --chip-bg: #eef3f0;
   --overlay: rgb(28 40 34 / 0.4);
+  /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
+  --chart-1: #1f744b;
   --shadow-card: 0 1px 2px rgb(28 40 34 / 0.05), 0 10px 28px rgb(28 40 34 / 0.06);
   --radius-card: 16px;
   --radius-control: 10px;
@@ -45,6 +47,7 @@
   --danger-soft: #3a2422;
   --chip-bg: #24302a;
   --overlay: rgb(0 0 0 / 0.6);
+  --chart-1: #34a96c;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.28);
   --radius-card: 16px;
   --radius-control: 10px;
