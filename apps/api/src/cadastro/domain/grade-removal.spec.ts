@@ -4,7 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { assertGradeCanBeRemoved } from "./grade-removal";
 
 describe("exclusão de grau", () => {
-  it("recusa quando existe técnico com o grau", () => {
+  it("recusa quando existe colaborador com o grau", () => {
     assert.throws(() => assertGradeCanBeRemoved(1), (error: unknown) => {
       assert.ok(error instanceof DomainError);
       assert.equal(error.statusCode, 409);
@@ -13,7 +13,7 @@ describe("exclusão de grau", () => {
     });
   });
 
-  it("permite quando nenhum técnico usa o grau", () => {
+  it("permite quando nenhum colaborador usa o grau", () => {
     assert.doesNotThrow(() => assertGradeCanBeRemoved(0));
   });
 });

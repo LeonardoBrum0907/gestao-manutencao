@@ -18,7 +18,7 @@ export function captureRecord(input: CaptureInput): RecordState {
     body,
     occurredAt: input.occurredAt,
     status: "open",
-    technicianId: input.technicianId,
+    memberId: input.memberId,
     factoryId: null,
     machineId: null,
     machineLabel: null,
@@ -32,6 +32,6 @@ export function captureRecord(input: CaptureInput): RecordState {
     openedAt: null,
     closedAt: null,
     durationMin: null,
-    technicianIds: [],
+    memberIds: [],
   };
 }

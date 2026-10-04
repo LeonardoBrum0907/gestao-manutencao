@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
 import { Roles } from "../application/roles";
 
-@Controller("api/technician-roles")
+@Controller("api/member-roles")
 export class RolesController {
   constructor(private readonly roles: Roles) {}
 

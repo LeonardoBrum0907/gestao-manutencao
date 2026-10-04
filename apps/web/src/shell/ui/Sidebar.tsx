@@ -21,7 +21,7 @@ const support = [
   { to: "/cadastro/maquinas", label: "Máquinas" },
   { to: "/cadastro/funcoes", label: "Funções" },
   { to: "/cadastro/graus", label: "Graus" },
-  { to: "/cadastro/tecnicos", label: "Técnicos" },
+  { to: "/cadastro/colaboradores", label: "Colaboradores" },
   { to: "/competencias", label: "Competências" },
 ];
 

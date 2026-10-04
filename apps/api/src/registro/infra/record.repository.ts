@@ -13,7 +13,7 @@ import type { RecordState } from "../domain/record-state";
 
 const include = {
   attachments: { orderBy: { createdAt: "asc" as const } },
-  technicians: { orderBy: { position: "asc" as const } },
+  members: { orderBy: { position: "asc" as const } },
 };
 
 type Row = {
@@ -22,7 +22,7 @@ type Row = {
   body: string;
   occurredAt: Date;
   status: string;
-  technicianId: string | null;
+  memberId: string | null;
   factoryId: string | null;
   machineId: string | null;
   machineLabel: string | null;
@@ -38,7 +38,7 @@ type Row = {
   durationMin: number | null;
   createdAt: Date;
   updatedAt: Date;
-  technicians: { technicianId: string; position: number }[];
+  members: { memberId: string; position: number }[];
   attachments: {
     id: string;
     fileName: string;
@@ -60,7 +60,7 @@ function toDto(row: Row): RecordDto {
     body: row.body,
     occurredAt: row.occurredAt.toISOString(),
     status: row.status,
-    technicianId: row.technicianId,
+    memberId: row.memberId,
     factoryId: row.factoryId,
     machineId: row.machineId,
     machineLabel: row.machineLabel,
@@ -74,7 +74,7 @@ function toDto(row: Row): RecordDto {
     openedAt: row.openedAt ? row.openedAt.toISOString() : null,
     closedAt: row.closedAt ? row.closedAt.toISOString() : null,
     durationMin: row.durationMin,
-    technicianIds: row.technicians.map((person) => person.technicianId),
+    memberIds: row.members.map((person) => person.memberId),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     attachments: row.attachments.map(
@@ -94,7 +94,7 @@ function scalars(state: RecordState) {
     body: state.body,
     occurredAt: state.occurredAt,
     status: state.status,
-    technicianId: state.technicianId,
+    memberId: state.memberId,
     factoryId: state.factoryId,
     machineId: state.machineId,
     machineLabel: state.machineLabel,
@@ -111,8 +111,8 @@ function scalars(state: RecordState) {
   };
 }
 
-function technicianRows(ids: string[]) {
-  return ids.map((technicianId, position) => ({ technicianId, position }));
+function memberRows(ids: string[]) {
+  return ids.map((memberId, position) => ({ memberId, position }));
 }
 
 @Injectable()
@@ -134,7 +134,7 @@ export class RecordRepository {
 
   async insert(state: RecordState): Promise<RecordDto> {
     const row = await this.prisma.record.create({
-      data: { ...scalars(state), technicians: { create: technicianRows(state.technicianIds) } },
+      data: { ...scalars(state), members: { create: memberRows(state.memberIds) } },
       include,
     });
     return toDto(row);
@@ -145,7 +145,7 @@ export class RecordRepository {
       where: { id },
       data: {
         ...scalars(state),
-        technicians: { deleteMany: {}, create: technicianRows(state.technicianIds) },
+        members: { deleteMany: {}, create: memberRows(state.memberIds) },
       },
       include,
     });

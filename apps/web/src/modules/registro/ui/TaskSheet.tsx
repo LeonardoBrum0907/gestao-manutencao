@@ -2,20 +2,20 @@ import { useState, type FormEvent } from "react";
 import type { RecordDto, RecordPriority, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput, controlClass } from "../../../design/ui/controls";
-import { useFactories, useTechnicians } from "../../cadastro/data/cadastro";
+import { useFactories, useMembers } from "../../cadastro/data/cadastro";
 import { useAddAttachment, useRemoveAttachment, useUpdateRecord } from "../data/records";
 import { fromLocalInput, priorityOptions, statusOptions, toLocalInput } from "../model/record";
 
 export function TaskSheet({ record }: { record: RecordDto }) {
   const factories = useFactories();
-  const technicians = useTechnicians();
+  const members = useMembers();
   const update = useUpdateRecord(record.id);
   const add = useAddAttachment(record.id);
   const remove = useRemoveAttachment(record.id);
   const [body, setBody] = useState(record.body);
   const [when, setWhen] = useState(toLocalInput(record.occurredAt));
   const [status, setStatus] = useState<RecordStatus>(record.status);
-  const [technicianId, setTechnicianId] = useState(record.technicianId ?? "");
+  const [memberId, setMemberId] = useState(record.memberId ?? "");
   const [factoryId, setFactoryId] = useState(record.factoryId ?? "");
   const [tag, setTag] = useState(record.tag ?? "");
   const [line, setLine] = useState(record.line ?? "");
@@ -30,7 +30,7 @@ export function TaskSheet({ record }: { record: RecordDto }) {
       body,
       occurredAt: fromLocalInput(when),
       status,
-      technicianId: technicianId || null,
+      memberId: memberId || null,
       factoryId: factoryId || null,
       tag: tag || null,
       line: line || null,
@@ -78,11 +78,11 @@ export function TaskSheet({ record }: { record: RecordDto }) {
               <TextInput type="datetime-local" value={due} onChange={(event) => setDue(event.target.value)} />
             </Field>
             <Field label="Responsável">
-              <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>
+              <SelectInput value={memberId} onChange={(event) => setMemberId(event.target.value)}>
                 <option value="">Ninguém</option>
-                {technicians.data?.map((technician) => (
-                  <option key={technician.id} value={technician.id}>
-                    {technician.name}
+                {members.data?.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
                   </option>
                 ))}
               </SelectInput>

@@ -5,27 +5,27 @@ import { Grades } from "./application/grades";
 import { Machines } from "./application/machines";
 import { Roles } from "./application/roles";
 import { SeedRoles } from "./application/seed-roles";
-import { Technicians } from "./application/technicians";
+import { Members } from "./application/members";
 import { FactoriesController } from "./http/factories.controller";
 import { GradesController } from "./http/grades.controller";
 import { MachinesController } from "./http/machines.controller";
 import { RolesController } from "./http/roles.controller";
-import { TechniciansController } from "./http/technicians.controller";
+import { MembersController } from "./http/members.controller";
 import { PrismaCadastroRefs } from "./infra/cadastro-refs.prisma";
 import { FactoryRepository } from "./infra/factory.repository";
 import { GradeRepository } from "./infra/grade.repository";
 import { MachineRepository } from "./infra/machine.repository";
 import { RoleRepository } from "./infra/role.repository";
-import { TechnicianRepository } from "./infra/technician.repository";
+import { MemberRepository } from "./infra/member.repository";
 
 @Module({
-  controllers: [FactoriesController, MachinesController, RolesController, GradesController, TechniciansController],
+  controllers: [FactoriesController, MachinesController, RolesController, GradesController, MembersController],
   providers: [
     FactoryRepository,
     MachineRepository,
     RoleRepository,
     GradeRepository,
-    TechnicianRepository,
+    MemberRepository,
     PrismaCadastroRefs,
     { provide: CADASTRO_REFS, useExisting: PrismaCadastroRefs },
     SeedRoles,
@@ -33,7 +33,7 @@ import { TechnicianRepository } from "./infra/technician.repository";
     Machines,
     Roles,
     Grades,
-    Technicians,
+    Members,
   ],
   exports: [CADASTRO_REFS],
 })

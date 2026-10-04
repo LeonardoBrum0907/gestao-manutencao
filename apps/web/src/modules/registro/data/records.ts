@@ -28,7 +28,7 @@ export function useRecord(id: string) {
 export function useCaptureRecord() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { type: RecordType; body: string; occurredAt: string; technicianId: string | null }) =>
+    mutationFn: (input: { type: RecordType; body: string; occurredAt: string; memberId: string | null }) =>
       api<RecordDto>("/api/records", { method: "POST", body: JSON.stringify(input) }),
     onSuccess: () => client.invalidateQueries({ queryKey: ["records"] }),
   });
@@ -38,7 +38,7 @@ export type TaskSheetBody = {
   body: string;
   occurredAt: string;
   status: RecordStatus;
-  technicianId: string | null;
+  memberId: string | null;
   factoryId: string | null;
   tag: string | null;
   line: string | null;
@@ -50,13 +50,13 @@ export type TaskSheetBody = {
 export type FeedbackSheetBody = {
   body: string;
   occurredAt: string;
-  technicianId: string | null;
+  memberId: string | null;
 };
 
 export type ProblemSheetBody = {
   body: string;
   occurredAt: string;
-  technicianId: string | null;
+  memberId: string | null;
   machineId: string | null;
   machineLabel: string | null;
   notes: string | null;

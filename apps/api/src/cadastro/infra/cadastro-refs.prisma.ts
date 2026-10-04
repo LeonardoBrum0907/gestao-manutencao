@@ -16,8 +16,8 @@ export class PrismaCadastroRefs implements CadastroRefs {
     return Boolean(row);
   }
 
-  async technicianExists(id: string): Promise<boolean> {
-    const row = await this.prisma.technician.findUnique({ where: { id }, select: { id: true } });
+  async memberExists(id: string): Promise<boolean> {
+    const row = await this.prisma.member.findUnique({ where: { id }, select: { id: true } });
     return Boolean(row);
   }
 }

@@ -1,22 +1,22 @@
 import { Body, Controller, Get, Param, Put } from "@nestjs/common";
-import { TechnicianMatrix } from "../application/technician-matrix";
+import { MemberMatrix } from "../application/member-matrix";
 
-@Controller("api/technicians/:technicianId/matrix")
+@Controller("api/members/:memberId/matrix")
 export class MatrixController {
-  constructor(private readonly matrix: TechnicianMatrix) {}
+  constructor(private readonly matrix: MemberMatrix) {}
 
   @Get()
-  show(@Param("technicianId") technicianId: string) {
-    return this.matrix.show(technicianId);
+  show(@Param("memberId") memberId: string) {
+    return this.matrix.show(memberId);
   }
 
   @Put("equipments")
-  setEquipments(@Param("technicianId") technicianId: string, @Body() body: unknown) {
-    return this.matrix.setEquipments(technicianId, body);
+  setEquipments(@Param("memberId") memberId: string, @Body() body: unknown) {
+    return this.matrix.setEquipments(memberId, body);
   }
 
   @Put("skills/:skillId")
-  setSkill(@Param("technicianId") technicianId: string, @Param("skillId") skillId: string, @Body() body: unknown) {
-    return this.matrix.setSkill(technicianId, skillId, body);
+  setSkill(@Param("memberId") memberId: string, @Param("skillId") skillId: string, @Body() body: unknown) {
+    return this.matrix.setSkill(memberId, skillId, body);
   }
 }

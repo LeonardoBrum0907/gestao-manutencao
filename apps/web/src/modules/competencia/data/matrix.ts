@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyScore, TechnicianMatrixDto } from "@manutencao/shared";
+import type { CompetencyScore, MemberMatrixDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export type SkillWrite = {
@@ -9,34 +9,34 @@ export type SkillWrite = {
   expected: CompetencyScore | null;
 };
 
-export function useMatrix(technicianId: string | undefined) {
+export function useMatrix(memberId: string | undefined) {
   return useQuery({
-    queryKey: ["matrix", technicianId],
-    queryFn: () => api<TechnicianMatrixDto>(`/api/technicians/${technicianId}/matrix`),
-    enabled: Boolean(technicianId),
+    queryKey: ["matrix", memberId],
+    queryFn: () => api<MemberMatrixDto>(`/api/members/${memberId}/matrix`),
+    enabled: Boolean(memberId),
   });
 }
 
-export function useSetMatrixEquipments(technicianId: string) {
+export function useSetMatrixEquipments(memberId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (equipments: string[]) =>
-      api<TechnicianMatrixDto>(`/api/technicians/${technicianId}/matrix/equipments`, {
+      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/equipments`, {
         method: "PUT",
         body: JSON.stringify({ equipments }),
       }),
-    onSuccess: (matrix) => client.setQueryData(["matrix", technicianId], matrix),
+    onSuccess: (matrix) => client.setQueryData(["matrix", memberId], matrix),
   });
 }
 
-export function useSetSkill(technicianId: string) {
+export function useSetSkill(memberId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: ({ skillId, ...body }: SkillWrite) =>
-      api<TechnicianMatrixDto>(`/api/technicians/${technicianId}/matrix/skills/${skillId}`, {
+      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills/${skillId}`, {
         method: "PUT",
         body: JSON.stringify(body),
       }),
-    onSuccess: (matrix) => client.setQueryData(["matrix", technicianId], matrix),
+    onSuccess: (matrix) => client.setQueryData(["matrix", memberId], matrix),
   });
 }

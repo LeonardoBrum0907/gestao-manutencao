@@ -8,7 +8,7 @@ export type ChamadoInput = {
   openedAt: Date | null;
   closedAt: Date | null;
   durationMin: number | null;
-  technicianIds: string[];
+  memberIds: string[];
   machineId: string | null;
   machineLabel: string | null;
   status: RecordStatus;
@@ -76,7 +76,7 @@ export function openChamado(input: ChamadoInput, now: Date): ProblemWrite {
     body: text(input.body, "Escreva a descrição do chamado."),
     occurredAt: openedAt ?? now,
     status: input.status,
-    technicianIds: people(input.technicianIds),
+    memberIds: people(input.memberIds),
     factoryId: null,
     machineId: spot.machineId,
     machineLabel: spot.machineLabel,
@@ -97,7 +97,7 @@ export function noteOcorrencia(input: OcorrenciaInput, occurredAt: Date): Proble
     body: text(input.body, "Escreva a ocorrência."),
     occurredAt,
     status: "open",
-    technicianIds: [],
+    memberIds: [],
     factoryId,
     machineId: null,
     machineLabel: null,

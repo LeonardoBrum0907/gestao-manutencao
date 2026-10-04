@@ -15,7 +15,7 @@ function dtoToState(dto: RecordDto): RecordState {
     body: dto.body,
     occurredAt: new Date(dto.occurredAt),
     status: dto.status,
-    technicianId: dto.technicianId,
+    memberId: dto.memberId,
     factoryId: dto.factoryId,
     machineId: dto.machineId,
     machineLabel: dto.machineLabel,
@@ -29,7 +29,7 @@ function dtoToState(dto: RecordDto): RecordState {
     openedAt: dto.openedAt ? new Date(dto.openedAt) : null,
     closedAt: dto.closedAt ? new Date(dto.closedAt) : null,
     durationMin: dto.durationMin,
-    technicianIds: dto.technicianIds,
+    memberIds: dto.memberIds,
   };
 }
 
@@ -49,7 +49,7 @@ export class Records {
 
   async capture(body: unknown): Promise<RecordDto> {
     const input = parseCapture(body);
-    await this.assertTechnician(input.technicianId);
+    await this.assertMember(input.memberId);
     return this.records.insert(captureRecord(input));
   }
 
@@ -58,20 +58,20 @@ export class Records {
     const state = dtoToState(current);
     if (current.type === "task") {
       const input = parseTaskSheet(body);
-      await this.assertTechnician(input.technicianId);
+      await this.assertMember(input.memberId);
       await this.assertFactory(input.factoryId);
       return this.records.update(id, applyTaskSheet(state, input));
     }
     if (current.type === "feedback") {
       const input = parseFeedbackSheet(body);
-      await this.assertTechnician(input.technicianId);
+      await this.assertMember(input.memberId);
       return this.records.update(id, applyFeedbackSheet(state, input));
     }
     if (current.origin !== "inbox") {
       throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado ou pela ocorrência.");
     }
     const input = parseProblemSheet(body);
-    await this.assertTechnician(input.technicianId);
+    await this.assertMember(input.memberId);
     await this.assertMachine(input.machineId);
     return this.records.update(id, applyProblemSheet(state, input));
   }
@@ -101,10 +101,10 @@ export class Records {
     await this.records.removeAttachment(recordId, attachmentId);
   }
 
-  private async assertTechnician(id: string | null): Promise<void> {
+  private async assertMember(id: string | null): Promise<void> {
     if (!id) return;
-    if (!(await this.refs.technicianExists(id))) {
-      throw new DomainError("technician", 400, "Técnico não encontrado.");
+    if (!(await this.refs.memberExists(id))) {
+      throw new DomainError("member", 400, "Colaborador não encontrado.");
     }
   }
 

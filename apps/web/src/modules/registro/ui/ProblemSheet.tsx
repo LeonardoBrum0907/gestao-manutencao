@@ -2,18 +2,18 @@ import { useState, type FormEvent } from "react";
 import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useMachines, useTechnicians } from "../../cadastro/data/cadastro";
+import { useMachines, useMembers } from "../../cadastro/data/cadastro";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
 
 export function ProblemSheet({ record }: { record: RecordDto }) {
   const machines = useMachines();
-  const technicians = useTechnicians();
+  const members = useMembers();
   const update = useUpdateRecord(record.id);
   const initialMode = record.machineLabel ? "other" : "machine";
   const [body, setBody] = useState(record.body);
   const [when, setWhen] = useState(toLocalInput(record.occurredAt));
-  const [technicianId, setTechnicianId] = useState(record.technicianId ?? "");
+  const [memberId, setMemberId] = useState(record.memberId ?? "");
   const [mode, setMode] = useState<"machine" | "other">(initialMode);
   const [machineId, setMachineId] = useState(record.machineId ?? "");
   const [machineLabel, setMachineLabel] = useState(record.machineLabel ?? "");
@@ -23,7 +23,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
     update.mutate({
       body,
       occurredAt: fromLocalInput(when),
-      technicianId: technicianId || null,
+      memberId: memberId || null,
       machineId: mode === "machine" ? machineId || null : null,
       machineLabel: mode === "other" ? machineLabel || null : null,
       notes: record.notes,
@@ -40,11 +40,11 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
           <TextInput type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} />
         </Field>
         <Field label="Quem, se souber">
-          <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>
+          <SelectInput value={memberId} onChange={(event) => setMemberId(event.target.value)}>
             <option value="">Não sei</option>
-            {technicians.data?.map((technician) => (
-              <option key={technician.id} value={technician.id}>
-                {technician.name}
+            {members.data?.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name}
               </option>
             ))}
           </SelectInput>

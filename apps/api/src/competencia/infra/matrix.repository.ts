@@ -13,10 +13,10 @@ function score(value: number | null): MatrixEntry["score"] {
 export class MatrixRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async load(technicianId: string): Promise<{ equipments: string[]; entries: MatrixEntry[] }> {
+  async load(memberId: string): Promise<{ equipments: string[]; entries: MatrixEntry[] }> {
     const [equipments, skills] = await Promise.all([
-      this.prisma.technicianMatrixEquipment.findMany({ where: { technicianId }, select: { equipment: true } }),
-      this.prisma.technicianSkill.findMany({ where: { technicianId } }),
+      this.prisma.memberMatrixEquipment.findMany({ where: { memberId }, select: { equipment: true } }),
+      this.prisma.memberSkill.findMany({ where: { memberId } }),
     ]);
     return {
       equipments: equipments.map((row) => row.equipment),
@@ -29,25 +29,25 @@ export class MatrixRepository {
     };
   }
 
-  async replaceEquipments(technicianId: string, equipments: string[]): Promise<void> {
+  async replaceEquipments(memberId: string, equipments: string[]): Promise<void> {
     await this.prisma.$transaction([
-      this.prisma.technicianMatrixEquipment.deleteMany({ where: { technicianId } }),
-      this.prisma.technicianMatrixEquipment.createMany({
-        data: equipments.map((equipment) => ({ technicianId, equipment })),
+      this.prisma.memberMatrixEquipment.deleteMany({ where: { memberId } }),
+      this.prisma.memberMatrixEquipment.createMany({
+        data: equipments.map((equipment) => ({ memberId, equipment })),
       }),
     ]);
   }
 
-  async saveSkill(technicianId: string, entry: MatrixEntry): Promise<void> {
+  async saveSkill(memberId: string, entry: MatrixEntry): Promise<void> {
     const data = { score: entry.score, notApplicable: entry.notApplicable, expected: entry.expected };
-    await this.prisma.technicianSkill.upsert({
-      where: { technicianId_skillId: { technicianId, skillId: entry.skillId } },
-      create: { technicianId, skillId: entry.skillId, ...data },
+    await this.prisma.memberSkill.upsert({
+      where: { memberId_skillId: { memberId, skillId: entry.skillId } },
+      create: { memberId, skillId: entry.skillId, ...data },
       update: data,
     });
   }
 
-  async clearSkill(technicianId: string, skillId: string): Promise<void> {
-    await this.prisma.technicianSkill.deleteMany({ where: { technicianId, skillId } });
+  async clearSkill(memberId: string, skillId: string): Promise<void> {
+    await this.prisma.memberSkill.deleteMany({ where: { memberId, skillId } });
   }
 }

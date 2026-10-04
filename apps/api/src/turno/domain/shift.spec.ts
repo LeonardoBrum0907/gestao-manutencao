@@ -14,7 +14,7 @@ function chamado(partial: Partial<ChamadoInput> = {}): ChamadoInput {
     openedAt: opened,
     closedAt: closed,
     durationMin: null,
-    technicianIds: ["a", "a", " b "],
+    memberIds: ["a", "a", " b "],
     machineId: null,
     machineLabel: "Esteira 4",
     status: "in_progress",
@@ -31,7 +31,7 @@ describe("chamado", () => {
     assert.equal(write.dayNumber, 3);
     assert.equal(write.durationMin, 90);
     assert.equal(write.occurredAt, opened);
-    assert.deepEqual(write.technicianIds, ["a", "b"]);
+    assert.deepEqual(write.memberIds, ["a", "b"]);
     assert.equal(write.machineLabel, "Esteira 4");
     assert.equal(write.notes, null);
     assert.equal(write.status, "in_progress");

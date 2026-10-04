@@ -11,7 +11,7 @@ function chamado(): ProblemWrite {
     body: "Parou a esteira",
     occurredAt: when,
     status: "open",
-    technicianIds: ["t1", "t2"],
+    memberIds: ["t1", "t2"],
     factoryId: null,
     machineId: "maq",
     machineLabel: null,
@@ -30,7 +30,7 @@ describe("turno vira problema", () => {
     assert.equal(state.type, "problem");
     assert.equal(state.origin, "chamado");
     assert.equal(state.dayNumber, 4);
-    assert.deepEqual(state.technicianIds, ["t1", "t2"]);
+    assert.deepEqual(state.memberIds, ["t1", "t2"]);
     assert.equal(state.priority, null);
     assert.equal(state.dueAt, null);
   });
@@ -41,7 +41,7 @@ describe("turno vira problema", () => {
       origin: "ocorrencia",
       body: "Folga no rolamento",
       status: "open",
-      technicianIds: [],
+      memberIds: [],
       factoryId: "fab",
       machineId: null,
       line: "Linha 2",

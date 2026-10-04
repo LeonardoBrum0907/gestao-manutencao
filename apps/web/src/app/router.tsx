@@ -5,7 +5,7 @@ import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { GradesPage } from "../modules/cadastro/ui/GradesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
-import { TechniciansPage } from "../modules/cadastro/ui/TechniciansPage";
+import { MembersPage } from "../modules/cadastro/ui/MembersPage";
 import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
 import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
@@ -31,9 +31,10 @@ export function AppRouter() {
         <Route path="/cadastro/maquinas" element={<MachinesPage />} />
         <Route path="/cadastro/funcoes" element={<RolesPage />} />
         <Route path="/cadastro/graus" element={<GradesPage />} />
-        <Route path="/cadastro/tecnicos" element={<TechniciansPage />} />
+        <Route path="/cadastro/colaboradores" element={<MembersPage />} />
+        <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/competencias" element={<MatrixPage />} />
-        <Route path="/competencias/:technicianId" element={<MatrixPage />} />
+        <Route path="/competencias/:memberId" element={<MatrixPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/captura" replace />} />
     </Routes>

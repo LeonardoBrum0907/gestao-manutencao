@@ -31,9 +31,9 @@ export class OpenChamado {
     if (write.machineId && !(await this.refs.machineExists(write.machineId))) {
       throw new DomainError("machine", 400, "Máquina não encontrada.");
     }
-    for (const id of write.technicianIds) {
-      if (!(await this.refs.technicianExists(id))) {
-        throw new DomainError("technician", 400, "Técnico não encontrado.");
+    for (const id of write.memberIds) {
+      if (!(await this.refs.memberExists(id))) {
+        throw new DomainError("member", 400, "Colaborador não encontrado.");
       }
     }
   }

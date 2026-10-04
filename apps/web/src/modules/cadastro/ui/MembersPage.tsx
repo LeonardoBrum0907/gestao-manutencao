@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { TechnicianDto, TechnicianShift, TechnicianStatus } from "@manutencao/shared";
+import type { MemberDto, MemberShift, MemberStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useDeleteTechnician, useGrades, useRoles, useSaveTechnician, useTechnicians, type TechnicianWrite } from "../data/cadastro";
-import { shiftLabel, shiftOptions, technicianStatusClass, technicianStatusLabel, technicianStatusOptions } from "../model/labels";
+import { useDeleteMember, useGrades, useRoles, useSaveMember, useMembers, type MemberWrite } from "../data/cadastro";
+import { shiftLabel, shiftOptions, memberStatusClass, memberStatusLabel, memberStatusOptions } from "../model/labels";
 
-const empty: TechnicianWrite = {
+const empty: MemberWrite = {
   name: "",
   roleId: "",
   gradeId: null,
@@ -18,17 +18,17 @@ const empty: TechnicianWrite = {
   notes: "",
 };
 
-function fromDto(technician: TechnicianDto): TechnicianWrite {
+function fromDto(member: MemberDto): MemberWrite {
   return {
-    name: technician.name,
-    roleId: technician.roleId,
-    gradeId: technician.gradeId,
-    shift: technician.shift,
-    area: technician.area ?? "",
-    status: technician.status,
-    registration: technician.registration ?? "",
-    contact: technician.contact ?? "",
-    notes: technician.notes ?? "",
+    name: member.name,
+    roleId: member.roleId,
+    gradeId: member.gradeId,
+    shift: member.shift,
+    area: member.area ?? "",
+    status: member.status,
+    registration: member.registration ?? "",
+    contact: member.contact ?? "",
+    notes: member.notes ?? "",
   };
 }
 
@@ -37,15 +37,15 @@ function blankToNull(value: string | null): string | null {
   return trimmed.length ? trimmed : null;
 }
 
-export function TechniciansPage() {
-  const technicians = useTechnicians();
+export function MembersPage() {
+  const members = useMembers();
   const roles = useRoles();
   const grades = useGrades();
-  const save = useSaveTechnician();
-  const remove = useDeleteTechnician();
+  const save = useSaveMember();
+  const remove = useDeleteMember();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<TechnicianWrite>(empty);
+  const [draft, setDraft] = useState<MemberWrite>(empty);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   function close() {
@@ -64,67 +64,80 @@ export function TechniciansPage() {
     <div>
       <PageTitle
         eyebrow="Apoio"
-        title="Técnicos"
+        title="Colaboradores"
         text="Etiqueta do gestor. Sem login."
-        action={<Button onClick={create}>Novo técnico</Button>}
+        action={<Button onClick={create}>Novo colaborador</Button>}
       />
-      {technicians.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      {members.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       <div className="flex flex-col gap-2">
-        {technicians.data?.length === 0 ? <Card>Nenhum técnico ainda.</Card> : null}
-        {technicians.data?.map((technician) => (
-          <Card key={technician.id} compact className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {members.data?.length === 0 ? <Card>Nenhum colaborador ainda.</Card> : null}
+        {members.data?.map((member) => (
+          <Card key={member.id} compact className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
               className="min-w-0 text-left"
               onClick={() => {
-                setEditingId(technician.id);
-                setDraft(fromDto(technician));
+                setEditingId(member.id);
+                setDraft(fromDto(member));
                 setOpen(true);
               }}
             >
-              <p className="font-medium text-app transition hover:text-accent hover:underline">{technician.name}</p>
+              <p className="font-medium text-app transition hover:text-accent hover:underline">{member.name}</p>
               <p className="mt-1 text-sm text-muted">
-                {technician.roleName}
-                {technician.gradeName ? ` · ${technician.gradeName}` : ""} · {shiftLabel(technician.shift)} ·{" "}
-                <span className={technicianStatusClass(technician.status)}>{technicianStatusLabel(technician.status)}</span>
+                {member.roleName}
+                {member.gradeName ? ` · ${member.gradeName}` : ""} · {shiftLabel(member.shift)} ·{" "}
+                <span className={memberStatusClass(member.status)}>{memberStatusLabel(member.status)}</span>
               </p>
             </button>
             <div className="flex shrink-0 justify-end gap-2">
               <Link
-                to={`/competencias/${technician.id}`}
+                to={`/competencias/${member.id}`}
                 className="inline-flex items-center justify-center rounded-control border border-line bg-chip px-4 py-2.5 text-sm font-semibold text-app transition hover:bg-accent-soft"
               >
                 Matriz
               </Link>
-              {pendingDelete === technician.id ? (
+              {pendingDelete === member.id ? (
                 <>
                   <Button
                     tone="danger"
                     onClick={() =>
-                      remove.mutate(technician.id, {
+                      remove.mutate(member.id, {
                         onSuccess: () => {
                           setPendingDelete(null);
-                          if (editingId === technician.id) close();
+                          if (editingId === member.id) close();
                         },
                       })
                     }
                   >
                     Confirmar
                   </Button>
-                  <Button tone="ghost" onClick={() => setPendingDelete(null)}>
+                  <Button
+                    tone="ghost"
+                    onClick={() => {
+                      setPendingDelete(null);
+                      remove.reset();
+                    }}
+                  >
                     Cancelar
                   </Button>
                 </>
               ) : (
-                <Button tone="ghost" onClick={() => setPendingDelete(technician.id)}>
+                <Button
+                  tone="ghost"
+                  onClick={() => {
+                    remove.reset();
+                    setPendingDelete(member.id);
+                  }}
+                >
                   Excluir
                 </Button>
               )}
             </div>
           </Card>
         ))}
+        {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
       </div>
-      <Modal open={open} title={editingId ? "Editar técnico" : "Novo técnico"} onClose={close}>
+      <Modal open={open} title={editingId ? "Editar colaborador" : "Novo colaborador"} onClose={close}>
         <form
           className="flex flex-col gap-6"
           onSubmit={(event) => {
@@ -175,7 +188,7 @@ export function TechniciansPage() {
             <Field label="Turno">
               <SelectInput
                 value={draft.shift}
-                onChange={(event) => setDraft({ ...draft, shift: event.target.value as TechnicianShift })}
+                onChange={(event) => setDraft({ ...draft, shift: event.target.value as MemberShift })}
               >
                 {shiftOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -190,9 +203,9 @@ export function TechniciansPage() {
             <Field label="Status">
               <SelectInput
                 value={draft.status}
-                onChange={(event) => setDraft({ ...draft, status: event.target.value as TechnicianStatus })}
+                onChange={(event) => setDraft({ ...draft, status: event.target.value as MemberStatus })}
               >
-                {technicianStatusOptions.map((option) => (
+                {memberStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

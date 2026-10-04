@@ -3,18 +3,18 @@ import { useNavigate } from "react-router-dom";
 import type { RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useTechnicians } from "../../cadastro/data/cadastro";
+import { useMembers } from "../../cadastro/data/cadastro";
 import { useCaptureRecord } from "../data/records";
 import { fromLocalInput, nowLocalInput, typeChoices } from "../model/record";
 
 export function CapturePage() {
-  const technicians = useTechnicians();
+  const members = useMembers();
   const capture = useCaptureRecord();
   const navigate = useNavigate();
   const [type, setType] = useState<RecordType>("task");
   const [body, setBody] = useState("");
   const [when, setWhen] = useState(nowLocalInput);
-  const [technicianId, setTechnicianId] = useState("");
+  const [memberId, setMemberId] = useState("");
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -23,7 +23,7 @@ export function CapturePage() {
         type,
         body,
         occurredAt: fromLocalInput(when),
-        technicianId: technicianId || null,
+        memberId: memberId || null,
       },
       { onSuccess: (record) => navigate(`/registros/${record.id}`) },
     );
@@ -62,11 +62,11 @@ export function CapturePage() {
               <TextInput type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} />
             </Field>
             <Field label="Quem, se souber">
-              <SelectInput value={technicianId} onChange={(event) => setTechnicianId(event.target.value)}>
+              <SelectInput value={memberId} onChange={(event) => setMemberId(event.target.value)}>
                 <option value="">Não sei</option>
-                {technicians.data?.map((technician) => (
-                  <option key={technician.id} value={technician.id}>
-                    {technician.name}
+                {members.data?.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
                   </option>
                 ))}
               </SelectInput>

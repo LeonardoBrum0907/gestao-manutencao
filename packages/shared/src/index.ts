@@ -20,13 +20,13 @@ export const MACHINE_STATUSES = [
 ] as const;
 export type MachineOperationalStatus = (typeof MACHINE_STATUSES)[number];
 
-export const TECHNICIAN_SHIFTS = ["first", "second", "third", "administrative"] as const;
-export type TechnicianShift = (typeof TECHNICIAN_SHIFTS)[number];
+export const MEMBER_SHIFTS = ["first", "second", "third", "administrative"] as const;
+export type MemberShift = (typeof MEMBER_SHIFTS)[number];
 
-export const TECHNICIAN_STATUSES = ["active", "inactive", "vacation", "away"] as const;
-export type TechnicianStatus = (typeof TECHNICIAN_STATUSES)[number];
+export const MEMBER_STATUSES = ["active", "inactive", "vacation", "away"] as const;
+export type MemberStatus = (typeof MEMBER_STATUSES)[number];
 
-export const TECHNICIAN_ROLES = [
+export const MEMBER_ROLES = [
   "mecânico",
   "eletricista",
   "automação",
@@ -34,7 +34,7 @@ export const TECHNICIAN_ROLES = [
   "manutenção",
   "utilidades",
 ] as const;
-export type TechnicianRoleName = (typeof TECHNICIAN_ROLES)[number];
+export type MemberRoleName = (typeof MEMBER_ROLES)[number];
 
 export const RECORD_TYPE_LABELS: Record<RecordType, { short: string; gestor: string }> = {
   task: { short: "Tarefa", gestor: "Pendências do dia a dia" },
@@ -84,14 +84,14 @@ export const MACHINE_STATUS_LABELS: Record<MachineOperationalStatus, string> = {
   finished: "Finalizada",
 };
 
-export const TECHNICIAN_SHIFT_LABELS: Record<TechnicianShift, string> = {
+export const MEMBER_SHIFT_LABELS: Record<MemberShift, string> = {
   first: "1º turno",
   second: "2º turno",
   third: "3º turno",
   administrative: "Administrativo",
 };
 
-export const TECHNICIAN_STATUS_LABELS: Record<TechnicianStatus, string> = {
+export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
   active: "Ativo",
   inactive: "Inativo",
   vacation: "Férias",
@@ -118,12 +118,12 @@ export function isMachineStatus(value: string): value is MachineOperationalStatu
   return (MACHINE_STATUSES as readonly string[]).includes(value);
 }
 
-export function isTechnicianShift(value: string): value is TechnicianShift {
-  return (TECHNICIAN_SHIFTS as readonly string[]).includes(value);
+export function isMemberShift(value: string): value is MemberShift {
+  return (MEMBER_SHIFTS as readonly string[]).includes(value);
 }
 
-export function isTechnicianStatus(value: string): value is TechnicianStatus {
-  return (TECHNICIAN_STATUSES as readonly string[]).includes(value);
+export function isMemberStatus(value: string): value is MemberStatus {
+  return (MEMBER_STATUSES as readonly string[]).includes(value);
 }
 
 export type FactoryDto = {
@@ -144,26 +144,26 @@ export type MachineDto = {
   isCritical: boolean;
 };
 
-export type TechnicianRoleDto = {
+export type MemberRoleDto = {
   id: string;
   name: string;
 };
 
-export type TechnicianGradeDto = {
+export type MemberGradeDto = {
   id: string;
   name: string;
 };
 
-export type TechnicianDto = {
+export type MemberDto = {
   id: string;
   name: string;
   roleId: string;
   roleName: string;
   gradeId: string | null;
   gradeName: string | null;
-  shift: TechnicianShift;
+  shift: MemberShift;
   area: string | null;
-  status: TechnicianStatus;
+  status: MemberStatus;
   registration: string | null;
   contact: string | null;
   notes: string | null;
@@ -182,7 +182,7 @@ export type RecordDto = {
   body: string;
   occurredAt: string;
   status: RecordStatus;
-  technicianId: string | null;
+  memberId: string | null;
   factoryId: string | null;
   machineId: string | null;
   machineLabel: string | null;
@@ -196,7 +196,7 @@ export type RecordDto = {
   openedAt: string | null;
   closedAt: string | null;
   durationMin: number | null;
-  technicianIds: string[];
+  memberIds: string[];
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentDto[];
@@ -226,10 +226,10 @@ export type DashboardDto = {
   dueTodayCount: number;
   doneCount: number;
   machineCount: number;
-  activeTechnicianCount: number;
+  activeMemberCount: number;
   recent: DashboardRecentDto[];
   machineRanking: DashboardRankDto[];
-  technicianRanking: DashboardRankDto[];
+  memberRanking: DashboardRankDto[];
 };
 
 export * from "./competency-matrix";
@@ -263,8 +263,8 @@ export type CompetencySummaryDto = {
   adherence: number | null;
 };
 
-export type TechnicianMatrixDto = {
-  technicianId: string;
+export type MemberMatrixDto = {
+  memberId: string;
   equipments: string[];
   entries: CompetencyEntryDto[];
   summary: CompetencySummaryDto;

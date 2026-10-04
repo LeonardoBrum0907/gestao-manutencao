@@ -64,7 +64,7 @@ export function DashboardPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <CountLink to="/cadastro/maquinas" label="Máquinas" count={data.machineCount} />
-            <CountLink to="/cadastro/tecnicos" label="Técnicos ativos" count={data.activeTechnicianCount} />
+            <CountLink to="/cadastro/colaboradores" label="Colaboradores ativos" count={data.activeMemberCount} />
           </div>
           <section>
             <h2 className="mb-3 text-sm font-semibold text-app">Últimos registros</h2>
@@ -86,7 +86,7 @@ export function DashboardPage() {
           </section>
           <div className="grid gap-3 lg:grid-cols-2">
             <Ranking title="Máquinas com mais abertos" rows={data.machineRanking} />
-            <Ranking title="Técnicos com mais abertos" rows={data.technicianRanking} />
+            <Ranking title="Colaboradores com mais abertos" rows={data.memberRanking} />
           </div>
         </div>
       ) : null}

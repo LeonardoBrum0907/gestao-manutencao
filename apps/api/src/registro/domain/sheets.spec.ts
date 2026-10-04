@@ -12,14 +12,14 @@ describe("ficha", () => {
       type: "problem",
       body: "Vazamento",
       occurredAt: when,
-      technicianId: null,
+      memberId: null,
     });
     assert.throws(
       () =>
         applyProblemSheet(problem, {
           body: "Vazamento",
           occurredAt: when,
-          technicianId: null,
+          memberId: null,
           machineId: "maq",
           machineLabel: "outra linha",
           notes: null,
@@ -33,14 +33,14 @@ describe("ficha", () => {
       type: "task",
       body: "Lubrificar",
       occurredAt: when,
-      technicianId: null,
+      memberId: null,
     });
     const due = new Date("2026-10-02T15:00:00.000Z");
     const next = applyTaskSheet(task, {
       body: "Lubrificar",
       occurredAt: when,
       status: "in_progress",
-      technicianId: "tec",
+      memberId: "tec",
       factoryId: "fab",
       tag: "TAG-1",
       line: "Linha A",
