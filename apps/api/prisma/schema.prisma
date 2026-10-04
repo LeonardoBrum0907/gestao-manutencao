@@ -104,6 +104,7 @@ model Member {
   recordLinks      RecordMember[]
   supervisedTeams  Team[]                  @relation("TeamSupervisor")
   behavior         MemberBehavior?
+  evaluations      MemberEvaluation[]
 
   @@index([roleId])
   @@index([gradeId])
@@ -118,6 +119,18 @@ model MemberBehavior {
   tags          String[]
   updatedAt     DateTime @updatedAt
   member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MemberEvaluation {
+  memberId   String
+  year       Int
+  quarter    Int
+  competency String
+  score      Int
+  updatedAt  DateTime @updatedAt
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([memberId, year, quarter, competency])
 }
 
 model MemberMatrixEquipment {

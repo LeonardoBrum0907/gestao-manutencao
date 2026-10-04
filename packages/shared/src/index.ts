@@ -319,6 +319,62 @@ export type MemberBehaviorDto = {
   tags: BehaviorTag[];
 };
 
+// Avaliação de desempenho (SIGEM: Por Técnico › Avaliação de Desempenho): 12 competências, nota por trimestre.
+export const PERFORMANCE_COMPETENCIES = [
+  { key: "safety", label: "Segurança" },
+  { key: "teamwork", label: "Trabalho em equipe" },
+  { key: "proactivity", label: "Proatividade" },
+  { key: "technical_knowledge", label: "Conhecimento técnico" },
+  { key: "problem_solving", label: "Resolução de problemas" },
+  { key: "reports", label: "Relatórios" },
+  { key: "time_logging", label: "Apontamento de horas" },
+  { key: "order_closing", label: "Encerramento de ordens" },
+  { key: "log_book", label: "Log book" },
+  { key: "oee_logging", label: "Apontamento OEE" },
+  { key: "improvements", label: "Melhorias" },
+  { key: "communication", label: "Comunicação" },
+] as const;
+
+export type PerformanceCompetency = (typeof PERFORMANCE_COMPETENCIES)[number]["key"];
+
+export const PERFORMANCE_SCORES = [10, 8, 6, 4, 2] as const;
+export type PerformanceScore = (typeof PERFORMANCE_SCORES)[number];
+
+export const PERFORMANCE_SCORE_LABELS: Record<PerformanceScore, string> = {
+  10: "Excelente",
+  8: "Muito bom",
+  6: "Bom",
+  4: "Regular",
+  2: "Ruim",
+};
+
+export const QUARTERS = [1, 2, 3, 4] as const;
+export type Quarter = (typeof QUARTERS)[number];
+
+export function isPerformanceCompetency(value: string): value is PerformanceCompetency {
+  return PERFORMANCE_COMPETENCIES.some((competency) => competency.key === value);
+}
+
+export function isPerformanceScore(value: number): value is PerformanceScore {
+  return (PERFORMANCE_SCORES as readonly number[]).includes(value);
+}
+
+export type PerformanceEntryDto = {
+  competency: PerformanceCompetency;
+  quarter: Quarter;
+  score: PerformanceScore;
+};
+
+export type MemberPerformanceDto = {
+  memberId: string;
+  year: number;
+  entries: PerformanceEntryDto[];
+  quarterAverages: (number | null)[];
+  competencyAverages: { competency: PerformanceCompetency; average: number | null; quarters: number }[];
+  average: number | null;
+  years: number[];
+};
+
 export type MemberRecordSummaryDto = {
   open: number;
   overdue: number;
