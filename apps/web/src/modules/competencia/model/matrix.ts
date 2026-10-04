@@ -1,9 +1,8 @@
 import {
-  COMPETENCY_EQUIPMENTS,
   COMPETENCY_LEVEL_EXPECTED,
-  COMPETENCY_SKILLS,
   type CompetencyEntryDto,
-  type CompetencySkill,
+  type MatrixCatalogDto,
+  type MatrixSkillDto,
 } from "@manutencao/shared";
 
 export type SkillState = "meets" | "below" | "unscored" | "na";
@@ -12,39 +11,37 @@ export function entriesById(entries: CompetencyEntryDto[]): Map<string, Competen
   return new Map(entries.map((entry) => [entry.skillId, entry]));
 }
 
-export function expectedOf(skill: CompetencySkill, entry: CompetencyEntryDto | undefined): number {
+export function expectedOf(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined): number {
   return entry?.expected ?? COMPETENCY_LEVEL_EXPECTED[skill.level];
 }
 
-export function skillState(skill: CompetencySkill, entry: CompetencyEntryDto | undefined): SkillState {
+export function skillState(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined): SkillState {
   if (entry?.notApplicable) return "na";
   if (entry?.score === null || entry?.score === undefined) return "unscored";
   return entry.score >= expectedOf(skill, entry) ? "meets" : "below";
 }
 
-export function equipmentName(key: string): string {
-  return COMPETENCY_EQUIPMENTS.find((equipment) => equipment.key === key)?.name ?? key;
+export function equipmentName(catalog: MatrixCatalogDto, id: string): string {
+  return catalog.equipments.find((equipment) => equipment.id === id)?.name ?? id;
 }
 
-export function skillsOf(equipment: string): CompetencySkill[] {
-  return COMPETENCY_SKILLS.filter((skill) => skill.equipment === equipment);
+// Na matriz do técnico só aparece o que está ativo no cadastro.
+export function skillsOf(catalog: MatrixCatalogDto, equipmentId: string): MatrixSkillDto[] {
+  return catalog.skills.filter((skill) => skill.equipmentId === equipmentId && !skill.archived);
 }
 
-export function bySubgroup(skills: CompetencySkill[]): { subgroup: string; skills: CompetencySkill[] }[] {
-  const groups: { subgroup: string; skills: CompetencySkill[] }[] = [];
-  for (const skill of skills) {
-    const last = groups[groups.length - 1];
-    if (last && last.subgroup === skill.subgroup) last.skills.push(skill);
-    else groups.push({ subgroup: skill.subgroup, skills: [skill] });
-  }
-  return groups;
+// Agrupa pelo nome do subconjunto, na ordem em que ele aparece primeiro.
+export function bySubgroup(skills: MatrixSkillDto[]): { subgroup: string; skills: MatrixSkillDto[] }[] {
+  const groups = new Map<string, MatrixSkillDto[]>();
+  for (const skill of skills) groups.set(skill.subgroup, [...(groups.get(skill.subgroup) ?? []), skill]);
+  return [...groups].map(([subgroup, items]) => ({ subgroup, skills: items }));
 }
 
 function fold(text: string): string {
   return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-export function matchesSearch(skill: CompetencySkill, query: string): boolean {
+export function matchesSearch(skill: MatrixSkillDto, query: string): boolean {
   const needle = fold(query.trim());
   if (!needle) return true;
   return fold(skill.text).includes(needle) || fold(skill.subgroup).includes(needle);

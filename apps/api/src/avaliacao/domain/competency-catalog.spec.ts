@@ -5,7 +5,6 @@ import {
   assertCompetencyCanBeRemoved,
   assertCompetencyNameAvailable,
   assertScorable,
-  requireOrder,
   rowsForYear,
 } from "./competency-catalog";
 
@@ -33,13 +32,6 @@ describe("cadastro de competências", () => {
     fails(() => assertScorable({ archived: true }, 8), "competency_archived", 409);
     assert.doesNotThrow(() => assertScorable({ archived: true }, null));
     assert.doesNotThrow(() => assertScorable({ archived: false }, 8));
-  });
-
-  it("a nova ordem tem que trazer todas, uma vez cada", () => {
-    assert.deepEqual(requireOrder(["b", "a"], ["a", "b"]), ["b", "a"]);
-    fails(() => requireOrder(["a"], ["a", "b"]), "invalid", 400);
-    fails(() => requireOrder(["a", "a"], ["a", "b"]), "invalid", 400);
-    fails(() => requireOrder(["a", "c"], ["a", "b"]), "invalid", 400);
   });
 
   it("mostra as ativas e as arquivadas só no ano em que têm nota", () => {

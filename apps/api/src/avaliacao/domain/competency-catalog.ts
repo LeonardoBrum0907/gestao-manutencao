@@ -24,15 +24,6 @@ export function assertScorable(competency: { archived: boolean }, score: number 
   }
 }
 
-// A nova ordem precisa trazer cada competência uma vez, nem mais nem menos.
-export function requireOrder(ids: string[], existing: string[]): string[] {
-  const unique = new Set(ids);
-  if (unique.size !== ids.length || ids.length !== existing.length || existing.some((id) => !unique.has(id))) {
-    throw new DomainError("invalid", 400, "A ordem precisa ter todas as competências, uma vez cada.");
-  }
-  return ids;
-}
-
 // Linhas do ano: as ativas, e as arquivadas só onde já têm nota, na ordem do cadastro.
 export function rowsForYear(
   all: (PerformanceCompetencyDto & { position: number })[],

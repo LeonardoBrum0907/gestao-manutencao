@@ -3,7 +3,8 @@ import type { PerformanceCompetencyDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredBoolean, requiredString } from "../../kernel/parse";
 import { requireName } from "../../cadastro/domain/names";
-import { assertCompetencyCanBeRemoved, assertCompetencyNameAvailable, requireOrder } from "../domain/competency-catalog";
+import { requireOrder } from "../../kernel/order";
+import { assertCompetencyCanBeRemoved, assertCompetencyNameAvailable } from "../domain/competency-catalog";
 import { CompetencyRepository } from "../infra/competency.repository";
 
 const NAME_MESSAGE = "Informe o nome da competência.";
@@ -31,12 +32,8 @@ export class Competencies {
   }
 
   async reorder(body: unknown): Promise<PerformanceCompetencyDto[]> {
-    const ids = readObject(body).ids;
-    if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) {
-      throw new DomainError("invalid", 400, "Ordem inválida.");
-    }
     const existing = (await this.competencies.list()).map((competency) => competency.id);
-    await this.competencies.reorder(requireOrder(ids, existing));
+    await this.competencies.reorder(requireOrder(readObject(body).ids, existing));
     return this.competencies.list();
   }
 

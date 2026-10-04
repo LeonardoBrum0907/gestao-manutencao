@@ -1,15 +1,42 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { COMPETENCY_SKILLS, type CompetencySkill } from "@manutencao/shared";
+import type { MatrixCatalogDto, MatrixSkillDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
-import { assertMatrixEditable, buildMatrix, normalizeEntry, requireEquipments, summarize, type MatrixEntry } from "./matrix";
+import {
+  assertMatrixEditable,
+  buildMatrix,
+  normalizeEntry,
+  requireEquipments,
+  requireSkill,
+  summarize,
+  type MatrixEntry,
+} from "./matrix";
 
-const skills: CompetencySkill[] = [
-  { id: "A", equipment: "blistadeira-cam", subgroup: "Alimentação", text: "a", level: "basic" },
-  { id: "B", equipment: "blistadeira-cam", subgroup: "Alimentação", text: "b", level: "intermediate" },
-  { id: "C", equipment: "blistadeira-cam", subgroup: "Selagem", text: "c", level: "advanced" },
-  { id: "D", equipment: "blistadeira-cam", subgroup: "Selagem", text: "d", level: "advanced" },
+function skill(id: string, equipmentId: string, level: MatrixSkillDto["level"], archived = false): MatrixSkillDto {
+  return { id, equipmentId, subgroup: "Selagem", text: id, level, archived };
+}
+
+const skills: MatrixSkillDto[] = [
+  skill("A", "blistadeira-cam", "basic"),
+  skill("B", "blistadeira-cam", "intermediate"),
+  skill("C", "blistadeira-cam", "advanced"),
+  skill("D", "blistadeira-cam", "advanced"),
 ];
+
+const catalog: MatrixCatalogDto = {
+  equipments: [
+    { id: "blistadeira-cam", name: "Blistadeira CAM", archived: false },
+    { id: "encaixotadora-cam", name: "Encaixotadora CAM", archived: false },
+    { id: "prensa-antiga", name: "Prensa antiga", archived: true },
+  ],
+  skills: [
+    ...skills,
+    skill("E1", "encaixotadora-cam", "basic"),
+    skill("E2", "encaixotadora-cam", "basic"),
+    skill("E3", "encaixotadora-cam", "basic", true),
+    skill("P1", "prensa-antiga", "basic"),
+  ],
+};
 
 function entry(skillId: string, partial: Partial<MatrixEntry>): MatrixEntry {
   return { skillId, score: null, notApplicable: false, expected: null, ...partial };
@@ -57,36 +84,47 @@ describe("resumo da matriz", () => {
 });
 
 describe("matriz do técnico", () => {
-  it("conta só os equipamentos que se aplicam a ele", () => {
-    const encaixotadora = COMPETENCY_SKILLS.filter((skill) => skill.equipment === "encaixotadora-cam");
-    const entries = encaixotadora.map((skill) => entry(skill.id, { score: 4 }));
-    const matrix = buildMatrix(["encaixotadora-cam"], entries);
-    assert.equal(matrix.summary.applicable, encaixotadora.length);
+  it("conta só os equipamentos que se aplicam a ele e só as habilidades ativas", () => {
+    const entries = ["E1", "E2", "E3"].map((id) => entry(id, { score: 4 }));
+    const matrix = buildMatrix(catalog, ["encaixotadora-cam"], entries);
+    assert.equal(matrix.summary.applicable, 2);
     assert.equal(matrix.summary.adherence, 100);
     assert.deepEqual(matrix.byEquipment.map((item) => item.equipment), ["encaixotadora-cam"]);
   });
 
   it("guarda a nota de equipamento desmarcado sem contar", () => {
-    const blister = COMPETENCY_SKILLS.find((skill) => skill.equipment === "blistadeira-cam");
-    assert.ok(blister);
-    const matrix = buildMatrix([], [entry(blister.id, { score: 4 })]);
+    const matrix = buildMatrix(catalog, [], [entry("A", { score: 4 })]);
     assert.equal(matrix.summary.applicable, 0);
     assert.equal(matrix.summary.adherence, null);
   });
 
-  it("devolve os equipamentos na ordem do catálogo", () => {
-    assert.deepEqual(buildMatrix(["encaixotadora-cam", "blistadeira-cam"], []).equipments, [
+  it("devolve os equipamentos na ordem do cadastro, sem os arquivados", () => {
+    assert.deepEqual(buildMatrix(catalog, ["encaixotadora-cam", "prensa-antiga", "blistadeira-cam"], []).equipments, [
       "blistadeira-cam",
       "encaixotadora-cam",
     ]);
   });
 
-  it("aceita só equipamento do catálogo, na ordem do catálogo", () => {
-    assert.deepEqual(requireEquipments(["encaixotadora-cam", "blistadeira-cam", "blistadeira-cam"]), [
+  it("aceita só equipamento ativo e mantém o arquivado que já estava marcado", () => {
+    assert.deepEqual(requireEquipments(["encaixotadora-cam", "blistadeira-cam", "blistadeira-cam"], catalog, []), [
       "blistadeira-cam",
       "encaixotadora-cam",
     ]);
-    assert.throws(() => requireEquipments(["prensa"]), (error: unknown) => error instanceof DomainError && error.statusCode === 400);
+    assert.deepEqual(requireEquipments(["encaixotadora-cam"], catalog, ["prensa-antiga", "blistadeira-cam"]), [
+      "encaixotadora-cam",
+      "prensa-antiga",
+    ]);
+    for (const values of [["prensa"], ["prensa-antiga"], "blistadeira-cam"]) {
+      assert.throws(() => requireEquipments(values, catalog, []), (error: unknown) => error instanceof DomainError && error.statusCode === 400);
+    }
+  });
+
+  it("não aceita nota em habilidade arquivada nem de equipamento arquivado", () => {
+    assert.equal(requireSkill("E1", catalog).id, "E1");
+    for (const id of ["E3", "P1"]) {
+      assert.throws(() => requireSkill(id, catalog), (error: unknown) => error instanceof DomainError && error.code === "skill_archived");
+    }
+    assert.throws(() => requireSkill("X", catalog), (error: unknown) => error instanceof DomainError && error.statusCode === 404);
   });
 });
 
