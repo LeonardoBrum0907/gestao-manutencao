@@ -23,7 +23,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">SIGEM</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-app">Gestão de Manutenção</h1>
-        <p className="mt-2 text-sm text-muted">Caderno do gestor. Uma conta, captura rápida, ficha depois.</p>
+        <p className="mt-2 text-sm text-muted">Caderno do gestor. Registre rápido, organize depois.</p>
         <Card className="mt-6">
           <form className="flex flex-col gap-4" onSubmit={submit}>
             <Field label="E-mail">

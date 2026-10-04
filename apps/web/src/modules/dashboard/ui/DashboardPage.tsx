@@ -65,7 +65,7 @@ export function DashboardPage() {
   const data = dashboard.data;
   return (
     <div>
-      <PageTitle eyebrow="Gestor" title="Dashboard" text="Abertos, prazos, cadastro e o que entrou por último." />
+      <PageTitle title="Dashboard" text="Abertos, prazos, cadastro e o que entrou por último." />
       {dashboard.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {dashboard.isError ? <Notice>{errorMessage(dashboard.error)}</Notice> : null}
       {data ? (
@@ -77,7 +77,7 @@ export function DashboardPage() {
             <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <CountLink to="/cadastro/maquinas" label="Máquinas" count={data.machineCount} />
+            <CountLink to="/configuracoes/fabricas" label="Máquinas" count={data.machineCount} />
             <CountLink to="/cadastro/colaboradores" label="Colaboradores ativos" count={data.activeMemberCount} />
           </div>
           <section>

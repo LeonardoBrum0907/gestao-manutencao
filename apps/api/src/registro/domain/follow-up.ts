@@ -44,6 +44,7 @@ export function matchesFollowUp(subject: FollowUpSubject, filter: FollowUpFilter
   if (filter.type && subject.type !== filter.type) return false;
   if (filter.status && subject.status !== filter.status) return false;
   if (!filter.due) return true;
-  if (subject.type !== "task" || subject.dueAt === null) return false;
+  // Prazo é de tarefa ainda por fazer: concluída não vence nem vence hoje.
+  if (subject.type !== "task" || subject.dueAt === null || subject.status === "done") return false;
   return taskDueWindow(subject.dueAt, now) === filter.due;
 }

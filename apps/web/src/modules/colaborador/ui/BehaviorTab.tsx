@@ -183,7 +183,7 @@ function History({ member }: { member: MemberDto }) {
       {records.isError ? <Notice>{errorMessage(records.error)}</Notice> : null}
       {records.data && feedbacks.length === 0 && !adding ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">
-          Nenhuma observação ainda. Os feedbacks da captura com {member.name} como alvo aparecem aqui.
+          Nenhuma observação ainda. Os feedbacks registrados com {member.name} como alvo aparecem aqui.
         </p>
       ) : null}
       <ul>

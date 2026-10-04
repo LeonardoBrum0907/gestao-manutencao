@@ -31,7 +31,7 @@ export function MembersPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Apoio"
+        eyebrow="Equipe"
         title="Colaboradores"
         text="Etiqueta do gestor. Sem login."
         action={<Button onClick={() => setEditing(null)}>Novo colaborador</Button>}

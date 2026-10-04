@@ -8,7 +8,7 @@ import {
   type MatrixSkillDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import {
   useDeleteEquipment,
   useDeleteSkill,
@@ -110,7 +110,7 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-app">Equipamentos</h2>
+        <h3 className="text-sm font-semibold text-app">Equipamentos</h3>
         <Button tone="ghost" className={small} onClick={() => open(null)}>
           Novo equipamento
         </Button>
@@ -272,7 +272,7 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
 
   return (
     <Card>
-      <h2 className="text-sm font-semibold text-app">Habilidades</h2>
+      <h3 className="text-sm font-semibold text-app">Habilidades</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
         <Field label="Equipamento">
           <SelectInput value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
@@ -352,12 +352,11 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
   );
 }
 
-export function MatrixCatalogPage() {
+export function MatrixCatalogSection() {
   const catalog = useMatrixCatalog();
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
+      <SectionTitle
         title="Matriz de habilidades"
         text="Os equipamentos e as habilidades da aba Matriz da ficha do técnico. Com nota ou marcação, arquive em vez de excluir: o que já foi avaliado fica guardado e volta se reativar."
       />

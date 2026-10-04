@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { MemberGradeDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
 import { useDeleteGrade, useGrades, useSaveGrade } from "../data/cadastro";
 
-export function GradesPage() {
+export function GradesSection() {
   const grades = useGrades();
   const save = useSaveGrade();
   const remove = useDeleteGrade();
@@ -33,8 +33,7 @@ export function GradesPage() {
 
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
+      <SectionTitle
         title="Graus"
         text="A senioridade do colaborador. Grau em uso não sai da lista."
         action={<Button onClick={create}>Novo grau</Button>}

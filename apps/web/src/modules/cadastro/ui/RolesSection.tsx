@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { MemberRoleDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
 import { useRoles, useSaveRole } from "../data/cadastro";
 
-export function RolesPage() {
+export function RolesSection() {
   const roles = useRoles();
   const save = useSaveRole();
   const [open, setOpen] = useState(false);
@@ -31,8 +31,7 @@ export function RolesPage() {
 
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
+      <SectionTitle
         title="Funções"
         text="As funções do colaborador. As seis do SIGEM já estão na lista."
         action={<Button onClick={create}>Nova função</Button>}

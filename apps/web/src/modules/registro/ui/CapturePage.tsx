@@ -33,8 +33,7 @@ export function CapturePage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle
-        eyebrow="Caderno"
-        title="Captura"
+        title="Registrar"
         text="Texto, tipo, quando e quem — se souber. O resto fica para a ficha."
       />
       <form className="flex flex-col gap-4" noValidate onSubmit={submit}>

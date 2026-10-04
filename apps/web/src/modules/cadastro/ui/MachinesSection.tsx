@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { MachineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useDeleteMachine, useFactories, useMachines, useSaveMachine } from "../data/cadastro";
 import { machineStatusClass, machineStatusLabel, machineStatusOptions } from "../model/labels";
 
@@ -43,7 +43,7 @@ function toBody(draft: Draft): Draft {
   };
 }
 
-export function MachinesPage() {
+export function MachinesSection() {
   const machines = useMachines();
   const factories = useFactories();
   const save = useSaveMachine();
@@ -74,8 +74,7 @@ export function MachinesPage() {
 
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
+      <SectionTitle
         title="Máquinas"
         text="Nome, fábrica e as duas marcas: linha de GD e apadrinhada."
         action={<Button onClick={create}>Nova máquina</Button>}

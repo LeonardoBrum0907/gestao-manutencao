@@ -174,7 +174,7 @@ export function TeamsPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Apoio"
+        eyebrow="Equipe"
         title="Equipes"
         text="Cada equipe tem um supervisor e seus técnicos. Um técnico fica em uma equipe só."
         action={<Button onClick={create}>Nova equipe</Button>}

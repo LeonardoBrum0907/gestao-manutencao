@@ -21,7 +21,7 @@ export function RecordSheetPage() {
         title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
       />
       <Link to="/acompanhamento" className="-mt-4 mb-6 inline-flex text-sm font-semibold text-accent">
-        Acompanhamento
+        ← Pendências
       </Link>
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}

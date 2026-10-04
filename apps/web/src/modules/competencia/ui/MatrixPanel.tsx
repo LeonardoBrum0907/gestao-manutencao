@@ -301,7 +301,7 @@ export function MatrixPanel({ memberId }: { memberId: string }) {
     <div>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-muted">{COMPETENCY_MATRIX_TITLE}</p>
-        <Link to="/cadastro/matriz" className="text-sm font-medium text-accent hover:underline">
+        <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
           Editar equipamentos e habilidades
         </Link>
       </div>

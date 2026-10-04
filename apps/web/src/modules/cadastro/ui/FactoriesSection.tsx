@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { FactoryDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
 import { useDeleteFactory, useFactories, useSaveFactory } from "../data/cadastro";
 
-export function FactoriesPage() {
+export function FactoriesSection() {
   const factories = useFactories();
   const save = useSaveFactory();
   const remove = useDeleteFactory();
@@ -33,8 +33,7 @@ export function FactoriesPage() {
 
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
+      <SectionTitle
         title="Fábricas"
         text="Onde a máquina e a tarefa se penduram."
         action={<Button onClick={create}>Nova fábrica</Button>}

@@ -40,6 +40,13 @@ describe("prazo da tarefa", () => {
     assert.equal(matchesFollowUp(subject({ type: "task", dueAt: null }), filter, now), false);
   });
 
+  it("tarefa concluída não conta como vencida nem como vence hoje", () => {
+    const pastDue = subject({ type: "task", status: "done", dueAt: new Date("2026-09-28T15:00:00.000Z") });
+    const todayDue = subject({ type: "task", status: "done", dueAt: new Date("2026-09-30T15:00:00.000Z") });
+    assert.equal(matchesFollowUp(pastDue, { type: null, status: null, due: "overdue" }, now), false);
+    assert.equal(matchesFollowUp(todayDue, { type: null, status: null, due: "today" }, now), false);
+  });
+
   it("combina tipo, status e prazo", () => {
     const overdue = subject({
       type: "task",

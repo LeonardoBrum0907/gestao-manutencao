@@ -1,20 +1,14 @@
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
-import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
-import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
-import { CompetenciesPage } from "../modules/cadastro/ui/CompetenciesPage";
-import { GradesPage } from "../modules/cadastro/ui/GradesPage";
-import { MatrixCatalogPage } from "../modules/competencia/ui/MatrixCatalogPage";
-import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
-import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
-import { MemberPage } from "../modules/colaborador/ui/MemberPage";
 import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
-import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
-import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
+import { MemberPage } from "../modules/colaborador/ui/MemberPage";
+import { SettingsPage } from "../modules/configuracoes/ui/SettingsPage";
+import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
 import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
-import { RecordsPage } from "../modules/registro/ui/RecordsPage";
+import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
+import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
 import { AppShell } from "../shell/ui/AppShell";
 import { LoginPage } from "../shell/ui/LoginPage";
 
@@ -23,6 +17,16 @@ function MatrixRedirect() {
   const { memberId } = useParams();
   return <Navigate to={`/cadastro/colaboradores/${memberId}/matriz`} replace />;
 }
+
+// Endereços antigos dos cadastros, que foram para Configurações.
+const settingsRedirects = [
+  ["/cadastro/fabricas", "fabricas"],
+  ["/cadastro/maquinas", "fabricas"],
+  ["/cadastro/funcoes", "funcoes"],
+  ["/cadastro/graus", "funcoes"],
+  ["/cadastro/competencias", "avaliacao"],
+  ["/cadastro/matriz", "avaliacao"],
+] as const;
 
 export function AppRouter() {
   return (
@@ -34,18 +38,16 @@ export function AppRouter() {
         <Route path="/acompanhamento" element={<FollowUpPage />} />
         <Route path="/turno/chamado" element={<ChamadoPage />} />
         <Route path="/turno/ocorrencia" element={<OcorrenciaPage />} />
-        <Route path="/registros" element={<RecordsPage />} />
+        <Route path="/registros" element={<Navigate to="/acompanhamento" replace />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
-        <Route path="/cadastro/fabricas" element={<FactoriesPage />} />
-        <Route path="/cadastro/maquinas" element={<MachinesPage />} />
-        <Route path="/cadastro/funcoes" element={<RolesPage />} />
-        <Route path="/cadastro/graus" element={<GradesPage />} />
-        <Route path="/cadastro/competencias" element={<CompetenciesPage />} />
-        <Route path="/cadastro/matriz" element={<MatrixCatalogPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
         <Route path="/cadastro/colaboradores/:memberId/:tab?" element={<MemberPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/cadastro/equipes" element={<TeamsPage />} />
+        <Route path="/configuracoes/:tab?" element={<SettingsPage />} />
+        {settingsRedirects.map(([from, tab]) => (
+          <Route key={from} path={from} element={<Navigate to={`/configuracoes/${tab}`} replace />} />
+        ))}
         <Route path="/competencias" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/competencias/:memberId" element={<MatrixRedirect />} />
       </Route>

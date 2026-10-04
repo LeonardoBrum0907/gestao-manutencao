@@ -97,6 +97,19 @@ export function PageTitle({
   );
 }
 
+// Título de uma parte da página (dentro de Configurações, por exemplo): h2, sem sobretítulo.
+export function SectionTitle({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
+  return (
+    <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold tracking-tight text-app">{title}</h2>
+        {text ? <p className="mt-1 max-w-2xl text-sm text-muted">{text}</p> : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </header>
+  );
+}
+
 const focusable =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
