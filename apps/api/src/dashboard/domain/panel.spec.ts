@@ -25,6 +25,7 @@ describe("painel", () => {
         record({ id: "vencida", type: "task", dueAt: new Date("2026-09-29T15:00:00.000Z"), machineId: "m1", memberId: "t1" }),
         record({ id: "hoje", type: "task", status: "in_progress", dueAt: new Date("2026-10-01T02:30:00.000Z") }),
         record({ id: "feita", type: "problem", status: "done" }),
+        record({ id: "concluida-atrasada", type: "task", status: "done", dueAt: new Date("2026-09-29T15:00:00.000Z") }),
         record({ id: "problema-com-data", type: "problem", dueAt: new Date("2026-09-29T15:00:00.000Z") }),
       ],
       {
@@ -36,7 +37,7 @@ describe("painel", () => {
     assert.equal(panel.openCount, 3);
     assert.equal(panel.overdueCount, 1);
     assert.equal(panel.dueTodayCount, 1);
-    assert.equal(panel.doneCount, 1);
+    assert.equal(panel.doneCount, 2);
     assert.deepEqual(panel.machineRanking, [{ id: "m1", name: "MED 02", openCount: 2 }]);
     assert.deepEqual(panel.memberRanking, [{ id: "t1", name: "AMILTON NASCIMENTO", openCount: 2 }]);
   });

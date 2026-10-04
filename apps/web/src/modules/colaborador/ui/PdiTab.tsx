@@ -206,7 +206,7 @@ export function PdiTab({ member }: { member: MemberDto }) {
           ) : (
             <p className="text-sm text-muted">
               Nenhuma máquina cadastrada.{" "}
-              <Link to="/cadastro/maquinas" className="font-medium text-accent hover:underline">
+              <Link to="/configuracoes/fabricas" className="font-medium text-accent hover:underline">
                 Cadastrar máquinas
               </Link>
             </p>

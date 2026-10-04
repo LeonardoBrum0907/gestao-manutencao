@@ -31,6 +31,7 @@ export function useSaveChamado(id?: string) {
     onSuccess: (record) => {
       client.setQueryData(["records", record.id], record);
       void client.invalidateQueries({ queryKey: ["records"] });
+      void client.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
@@ -45,6 +46,7 @@ export function useSaveOcorrencia(id?: string) {
     onSuccess: (record) => {
       client.setQueryData(["records", record.id], record);
       void client.invalidateQueries({ queryKey: ["records"] });
+      void client.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

@@ -30,7 +30,10 @@ export function useCaptureRecord() {
   return useMutation({
     mutationFn: (input: { type: RecordType; body: string; occurredAt: string; memberId: string | null; tone?: FeedbackTone | null }) =>
       api<RecordDto>("/api/records", { method: "POST", body: JSON.stringify(input) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["records"] }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ["records"] });
+      void client.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -71,6 +74,7 @@ export function useUpdateRecord(id: string) {
     onSuccess: (record) => {
       client.setQueryData(["records", id], record);
       void client.invalidateQueries({ queryKey: ["records"] });
+      void client.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

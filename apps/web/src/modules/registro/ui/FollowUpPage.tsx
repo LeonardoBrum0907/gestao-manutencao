@@ -43,9 +43,8 @@ export function FollowUpPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Caderno"
-        title="Acompanhamento"
-        text="Organize no computador por tipo, status e prazo. Abra a ficha pela linha."
+        title="Pendências"
+        text="Tudo o que foi registrado, para organizar por tipo, status e prazo. Abra a ficha pela linha."
       />
       <Card className="mb-4">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
@@ -100,7 +99,7 @@ export function FollowUpPage() {
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
       {list.isPending ? <p className="text-sm text-muted">Carregando lista…</p> : null}
       {empty ? (
-        <Card>{filtered ? "Nenhum registro com esses filtros." : "Nenhum registro ainda. Comece pela captura."}</Card>
+        <Card>{filtered ? "Nenhum registro com esses filtros." : "Nenhum registro ainda. Comece por Registrar."}</Card>
       ) : null}
       {list.data && list.data.length > 0 ? (
         <>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { PerformanceCompetencyDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, PageTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
 import {
   useDeleteCompetency,
   usePerformanceCompetencies,
@@ -17,7 +17,7 @@ function moved(ids: string[], index: number, step: -1 | 1): string[] {
 
 const small = "px-3 py-1.5";
 
-export function CompetenciesPage() {
+export function CompetenciesSection() {
   const competencies = usePerformanceCompetencies();
   const save = useSaveCompetency();
   const reorder = useReorderCompetencies();
@@ -46,9 +46,8 @@ export function CompetenciesPage() {
 
   return (
     <div>
-      <PageTitle
-        eyebrow="Apoio"
-        title="Competências"
+      <SectionTitle
+        title="Competências do Desempenho"
         text="As competências da avaliação de desempenho, na aba Desempenho da ficha do técnico. A ordem daqui é a ordem da avaliação. Com nota lançada, arquive em vez de excluir: a nota antiga continua valendo."
         action={<Button onClick={() => edit(null)}>Nova competência</Button>}
       />

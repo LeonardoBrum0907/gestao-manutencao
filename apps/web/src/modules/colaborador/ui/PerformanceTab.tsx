@@ -171,7 +171,7 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
           <p className="text-xs text-muted">
             {PERFORMANCE_SCORES.map((value) => `${value} ${PERFORMANCE_SCORE_LABELS[value]}`).join(" · ")} · grava ao escolher
           </p>
-          <Link to="/cadastro/competencias" className="text-sm font-medium text-accent hover:underline">
+          <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
             Editar competências
           </Link>
         </div>
