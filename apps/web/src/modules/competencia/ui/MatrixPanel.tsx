@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  COMPETENCY_EQUIPMENTS,
   COMPETENCY_LEVEL_EXPECTED,
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_MATRIX_TITLE,
@@ -8,12 +8,14 @@ import {
   COMPETENCY_SCORES,
   type CompetencyEntryDto,
   type CompetencyScore,
-  type CompetencySkill,
+  type MatrixCatalogDto,
+  type MatrixSkillDto,
   type CompetencySummaryDto,
   type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, Stat, TextInput } from "../../../design/ui/controls";
+import { useMatrixCatalog } from "../data/catalog";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, type SkillWrite } from "../data/matrix";
 import {
   adherenceTone,
@@ -63,7 +65,7 @@ function SkillRow({
   onChange,
   disabled,
 }: {
-  skill: CompetencySkill;
+  skill: MatrixSkillDto;
   entry: CompetencyEntryDto | undefined;
   onChange: (write: SkillWrite) => void;
   disabled: boolean;
@@ -143,6 +145,7 @@ function SkillRow({
 }
 
 function Equipment({
+  catalog,
   matrix,
   equipment,
   open,
@@ -151,6 +154,7 @@ function Equipment({
   onChange,
   disabled,
 }: {
+  catalog: MatrixCatalogDto;
   matrix: MemberMatrixDto;
   equipment: string;
   open: boolean;
@@ -161,7 +165,7 @@ function Equipment({
 }) {
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
-  const skills = skillsOf(equipment).filter((skill) => matchesSearch(skill, query));
+  const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
   if (query && skills.length === 0) return null;
   const expanded = open || Boolean(query);
   return (
@@ -172,7 +176,7 @@ function Equipment({
         onClick={onToggle}
         className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-chip sm:px-5"
       >
-        <span className="font-semibold text-app">{equipmentName(equipment)}</span>
+        <span className="font-semibold text-app">{equipmentName(catalog, equipment)}</span>
         {summary ? (
           <span className="flex items-center gap-3 text-sm text-muted">
             <span className="tabular-nums">
@@ -209,7 +213,7 @@ function Equipment({
   );
 }
 
-function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
+function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: MemberMatrixDto }) {
   const setEquipments = useSetMatrixEquipments(matrix.memberId);
   const setSkill = useSetSkill(matrix.memberId);
   const [query, setQuery] = useState("");
@@ -230,23 +234,25 @@ function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
         <h2 className="text-sm font-semibold text-app">Equipamentos que se aplicam</h2>
         <p className="mt-1 text-sm text-muted">A aderência conta só estes. Quem não é mecânico fica sem nenhum.</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {COMPETENCY_EQUIPMENTS.map((equipment) => {
-            const pressed = matrix.equipments.includes(equipment.key);
-            return (
-              <button
-                key={equipment.key}
-                type="button"
-                aria-pressed={pressed}
-                disabled={setEquipments.isPending}
-                onClick={() => toggleEquipment(equipment.key)}
-                className={`rounded-control border px-3 py-2 text-sm font-medium transition ${
-                  pressed ? "border-accent bg-accent-soft text-app" : "border-line bg-surface text-muted hover:bg-chip"
-                }`}
-              >
-                {equipment.name}
-              </button>
-            );
-          })}
+          {catalog.equipments
+            .filter((equipment) => !equipment.archived)
+            .map((equipment) => {
+              const pressed = matrix.equipments.includes(equipment.id);
+              return (
+                <button
+                  key={equipment.id}
+                  type="button"
+                  aria-pressed={pressed}
+                  disabled={setEquipments.isPending}
+                  onClick={() => toggleEquipment(equipment.id)}
+                  className={`rounded-control border px-3 py-2 text-sm font-medium transition ${
+                    pressed ? "border-accent bg-accent-soft text-app" : "border-line bg-surface text-muted hover:bg-chip"
+                  }`}
+                >
+                  {equipment.name}
+                </button>
+              );
+            })}
         </div>
       </Card>
       {error ? <Notice>{errorMessage(error)}</Notice> : null}
@@ -266,6 +272,7 @@ function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
             {matrix.equipments.map((equipment) => (
               <Equipment
                 key={equipment}
+                catalog={catalog}
                 matrix={matrix}
                 equipment={equipment}
                 open={open === equipment}
@@ -286,12 +293,19 @@ function Matrix({ matrix }: { matrix: MemberMatrixDto }) {
 
 export function MatrixPanel({ memberId }: { memberId: string }) {
   const matrix = useMatrix(memberId);
-  if (matrix.isPending) return <p className="text-sm text-muted">Carregando…</p>;
+  const catalog = useMatrixCatalog();
+  if (matrix.isPending || catalog.isPending) return <p className="text-sm text-muted">Carregando…</p>;
   if (matrix.isError) return <Notice>{errorMessage(matrix.error)}</Notice>;
+  if (catalog.isError) return <Notice>{errorMessage(catalog.error)}</Notice>;
   return (
     <div>
-      <p className="mb-4 text-sm text-muted">{COMPETENCY_MATRIX_TITLE}</p>
-      <Matrix key={matrix.data.memberId} matrix={matrix.data} />
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm text-muted">{COMPETENCY_MATRIX_TITLE}</p>
+        <Link to="/cadastro/matriz" className="text-sm font-medium text-accent hover:underline">
+          Editar equipamentos e habilidades
+        </Link>
+      </div>
+      <Matrix key={matrix.data.memberId} catalog={catalog.data} matrix={matrix.data} />
     </div>
   );
 }

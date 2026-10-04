@@ -3,6 +3,7 @@ import { FactoriesPage } from "../modules/cadastro/ui/FactoriesPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { CompetenciesPage } from "../modules/cadastro/ui/CompetenciesPage";
 import { GradesPage } from "../modules/cadastro/ui/GradesPage";
+import { MatrixCatalogPage } from "../modules/competencia/ui/MatrixCatalogPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
@@ -40,6 +41,7 @@ export function AppRouter() {
         <Route path="/cadastro/funcoes" element={<RolesPage />} />
         <Route path="/cadastro/graus" element={<GradesPage />} />
         <Route path="/cadastro/competencias" element={<CompetenciesPage />} />
+        <Route path="/cadastro/matriz" element={<MatrixCatalogPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
         <Route path="/cadastro/colaboradores/:memberId/:tab?" element={<MemberPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />

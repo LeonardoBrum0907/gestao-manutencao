@@ -1,10 +1,9 @@
 import {
-  COMPETENCY_EQUIPMENTS,
   COMPETENCY_LEVEL_EXPECTED,
-  COMPETENCY_SKILLS,
   type CompetencyScore,
-  type CompetencySkill,
   type CompetencySummaryDto,
+  type MatrixCatalogDto,
+  type MatrixSkillDto,
   type MemberPosition,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
@@ -22,17 +21,15 @@ export type EntryInput = {
   expected: number | null;
 };
 
-const EQUIPMENT_KEYS: readonly string[] = COMPETENCY_EQUIPMENTS.map((equipment) => equipment.key);
-
 export function isCompetencyScore(value: number): value is CompetencyScore {
   return Number.isInteger(value) && value >= 0 && value <= 4;
 }
 
-export function expectedFor(skill: CompetencySkill, entry: MatrixEntry | undefined): number {
+export function expectedFor(skill: Pick<MatrixSkillDto, "level">, entry: MatrixEntry | undefined): number {
   return entry?.expected ?? COMPETENCY_LEVEL_EXPECTED[skill.level];
 }
 
-export function summarize(skills: readonly CompetencySkill[], entries: ReadonlyMap<string, MatrixEntry>): CompetencySummaryDto {
+export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMap<string, MatrixEntry>): CompetencySummaryDto {
   let applicable = 0;
   let scored = 0;
   let meets = 0;
@@ -62,19 +59,20 @@ export function summarize(skills: readonly CompetencySkill[], entries: ReadonlyM
   };
 }
 
-export function buildMatrix(equipments: readonly string[], entries: readonly MatrixEntry[]) {
+// Só o que está ativo entra na matriz. Equipamento ou habilidade arquivada fica guardada, fora da conta.
+export function buildMatrix(catalog: MatrixCatalogDto, equipments: readonly string[], entries: readonly MatrixEntry[]) {
   const byId = new Map(entries.map((entry) => [entry.skillId, entry]));
-  const selected = COMPETENCY_EQUIPMENTS.filter((equipment) => equipments.includes(equipment.key));
-  const skillsOf = (key: string) => COMPETENCY_SKILLS.filter((skill) => skill.equipment === key);
+  const selected = catalog.equipments.filter((equipment) => !equipment.archived && equipments.includes(equipment.id));
+  const skillsOf = (id: string) => catalog.skills.filter((skill) => !skill.archived && skill.equipmentId === id);
   return {
-    equipments: selected.map((equipment) => equipment.key),
+    equipments: selected.map((equipment) => equipment.id),
     summary: summarize(
-      selected.flatMap((equipment) => skillsOf(equipment.key)),
+      selected.flatMap((equipment) => skillsOf(equipment.id)),
       byId,
     ),
     byEquipment: selected.map((equipment) => ({
-      equipment: equipment.key,
-      ...summarize(skillsOf(equipment.key), byId),
+      equipment: equipment.id,
+      ...summarize(skillsOf(equipment.id), byId),
     })),
   };
 }
@@ -85,16 +83,25 @@ export function assertMatrixEditable(position: MemberPosition): void {
   }
 }
 
-export function requireEquipments(values: unknown): string[] {
-  if (!Array.isArray(values) || values.some((value) => typeof value !== "string" || !EQUIPMENT_KEYS.includes(value))) {
+// O técnico marca só equipamento ativo; os arquivados que ele já tinha marcado continuam guardados.
+export function requireEquipments(values: unknown, catalog: MatrixCatalogDto, current: readonly string[]): string[] {
+  const active = new Set(catalog.equipments.filter((equipment) => !equipment.archived).map((equipment) => equipment.id));
+  if (!Array.isArray(values) || values.some((value) => typeof value !== "string" || !active.has(value))) {
     throw new DomainError("equipment", 400, "Equipamento inválido.");
   }
-  return EQUIPMENT_KEYS.filter((key) => values.includes(key));
+  const archived = new Set(catalog.equipments.filter((equipment) => equipment.archived).map((equipment) => equipment.id));
+  return catalog.equipments
+    .map((equipment) => equipment.id)
+    .filter((id) => values.includes(id) || (archived.has(id) && current.includes(id)));
 }
 
-export function requireSkill(skillId: string): CompetencySkill {
-  const skill = COMPETENCY_SKILLS.find((item) => item.id === skillId);
+export function requireSkill(skillId: string, catalog: MatrixCatalogDto): MatrixSkillDto {
+  const skill = catalog.skills.find((item) => item.id === skillId);
   if (!skill) throw new DomainError("not_found", 404, "Habilidade não encontrada.");
+  const equipment = catalog.equipments.find((item) => item.id === skill.equipmentId);
+  if (skill.archived || equipment?.archived) {
+    throw new DomainError("skill_archived", 409, "Habilidade arquivada não recebe nota. Reative no cadastro da matriz.");
+  }
   return skill;
 }
 

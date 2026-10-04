@@ -15,11 +15,11 @@ export class MatrixRepository {
 
   async load(memberId: string): Promise<{ equipments: string[]; entries: MatrixEntry[] }> {
     const [equipments, skills] = await Promise.all([
-      this.prisma.memberMatrixEquipment.findMany({ where: { memberId }, select: { equipment: true } }),
+      this.prisma.memberMatrixEquipment.findMany({ where: { memberId }, select: { equipmentId: true } }),
       this.prisma.memberSkill.findMany({ where: { memberId } }),
     ]);
     return {
-      equipments: equipments.map((row) => row.equipment),
+      equipments: equipments.map((row) => row.equipmentId),
       entries: skills.map((row) => ({
         skillId: row.skillId,
         score: score(row.score),
@@ -33,7 +33,7 @@ export class MatrixRepository {
     await this.prisma.$transaction([
       this.prisma.memberMatrixEquipment.deleteMany({ where: { memberId } }),
       this.prisma.memberMatrixEquipment.createMany({
-        data: equipments.map((equipment) => ({ memberId, equipment })),
+        data: equipments.map((equipmentId) => ({ memberId, equipmentId })),
       }),
     ]);
   }

@@ -131,7 +131,7 @@ apps/api/src/
   registro/          tarefa, feedback, problema, captura, lista
   turno/             chamado, ocorrência → criam/atualizam Problema em registro
   dashboard/         leitura: contagens, últimos e ranking, uma fonte
-  competencia/       matriz de competências do técnico (catálogo fixo em packages/shared)
+  competencia/       matriz de competências do técnico e o cadastro dela (equipamentos e habilidades)
   identity/          uma conta gestor (session/cookie)
 ```
 
@@ -215,7 +215,9 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **MemberAttachment** — anexos do PDI, no mesmo armazenamento dos anexos da Tarefa. `Restrict` no colaborador: quem tem anexo não é excluído, para o arquivo não ficar perdido no disco.
 
-**MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
+**MatrixEquipment** / **MatrixSkill** — catálogo da matriz, cadastro do coordenador: equipamento (nome único, ordem, arquivado) e habilidade (equipamento, subconjunto, texto, nível básico / intermediário / avançado, ordem dentro do equipamento, arquivada). Os 9 equipamentos e as 222 habilidades do SIGEM entram pela migration com o id que já era usado (chave do equipamento e H1…H222). Arquivado sai da matriz do técnico e da conta, mas a marcação e a nota ficam guardadas e voltam ao reativar; excluir só o que não tem nota nem marcação.
+
+**MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico (`equipmentId`) e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado), com chave estrangeira para o catálogo. Saem junto com o técnico.
 
 **RecordMember** — os técnicos do chamado (vários, com ordem). A Tarefa, o Feedback e o Problema da captura usam só `memberId`.
 

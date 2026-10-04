@@ -172,24 +172,53 @@ model MemberAttachment {
   @@index([memberId])
 }
 
-model MemberMatrixEquipment {
-  memberId  String
-  equipment String
-  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+// Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
+// Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
+model MatrixEquipment {
+  id       String                  @id @default(cuid())
+  name     String                  @unique
+  position Int
+  archived Boolean                 @default(false)
+  skills   MatrixSkill[]
+  members  MemberMatrixEquipment[]
+}
 
-  @@id([memberId, equipment])
+model MatrixSkill {
+  id          String          @id @default(cuid())
+  equipmentId String
+  equipment   MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  subgroup    String
+  text        String
+  level       String
+  position    Int
+  archived    Boolean         @default(false)
+  scores      MemberSkill[]
+
+  @@index([equipmentId])
+}
+
+model MemberMatrixEquipment {
+  memberId    String
+  equipmentId String
+  member      Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  equipment   MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+
+  @@id([memberId, equipmentId])
+  @@index([equipmentId])
 }
 
 model MemberSkill {
   memberId      String
   skillId       String
   score         Int?
-  notApplicable Boolean  @default(false)
+  notApplicable Boolean     @default(false)
   expected      Int?
-  updatedAt     DateTime @updatedAt
-  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  updatedAt     DateTime    @updatedAt
+  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  skill         MatrixSkill @relation(fields: [skillId], references: [id], onDelete: Restrict)
 
   @@id([memberId, skillId])
+  @@index([skillId])
 }
 
 model Record {
