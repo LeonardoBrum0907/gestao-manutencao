@@ -3,6 +3,7 @@ import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
 
@@ -44,7 +45,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
             <option value="">Não sei</option>
             {members.data?.map((member) => (
               <option key={member.id} value={member.id}>
-                {member.name}
+                {memberOptionLabel(member)}
               </option>
             ))}
           </SelectInput>

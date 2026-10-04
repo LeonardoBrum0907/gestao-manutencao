@@ -6,6 +6,7 @@ import { GradesPage } from "../modules/cadastro/ui/GradesPage";
 import { MachinesPage } from "../modules/cadastro/ui/MachinesPage";
 import { RolesPage } from "../modules/cadastro/ui/RolesPage";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
+import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
 import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
 import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
@@ -33,6 +34,7 @@ export function AppRouter() {
         <Route path="/cadastro/graus" element={<GradesPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
+        <Route path="/cadastro/equipes" element={<TeamsPage />} />
         <Route path="/competencias" element={<MatrixPage />} />
         <Route path="/competencias/:memberId" element={<MatrixPage />} />
       </Route>

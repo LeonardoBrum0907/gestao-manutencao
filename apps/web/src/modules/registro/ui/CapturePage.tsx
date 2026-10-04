@@ -4,6 +4,7 @@ import type { RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMembers } from "../../cadastro/data/cadastro";
+import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useCaptureRecord } from "../data/records";
 import { fromLocalInput, nowLocalInput, typeChoices } from "../model/record";
 
@@ -66,7 +67,7 @@ export function CapturePage() {
                 <option value="">Não sei</option>
                 {members.data?.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
+                    {memberOptionLabel(member)}
                   </option>
                 ))}
               </SelectInput>

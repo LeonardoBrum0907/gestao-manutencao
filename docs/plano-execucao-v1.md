@@ -135,7 +135,7 @@ apps/api/src/
   identity/          uma conta gestor (session/cookie)
 ```
 
-- **Cadastro** — CRUD de apoio. Técnico sem senha. Funções: as 6 do SIGEM entram como seed (mecânico, eletricista, automação, instrumentação, manutenção, utilidades); o gestor cria e renomeia, sem excluir.
+- **Cadastro** — CRUD de apoio. Colaborador (técnico ou supervisor) sem senha; equipes com supervisor. Funções: as 6 do SIGEM entram como seed (mecânico, eletricista, automação, instrumentação, manutenção, utilidades); o gestor cria e renomeia, sem excluir.
 - **Registro** — agregado `Registro` com tipo. Tarefa carrega os campos da ação. Lista de acompanhamento e filtros de atraso (prazo) saem daqui.
 - **Turno** — caso de uso “abrir chamado” e “anotar ocorrência”. Persiste como Problema (origem `chamado` | `ocorrencia`). Sem envelope de relatório de turno, sem Ishikawa, sem “gerar pendência”.
 - **Dashboard** — query de leitura sobre a tabela de registros (contagens, últimos, ranking), com os mesmos filtros da lista de acompanhamento. Não tem escrita própria.
@@ -172,7 +172,9 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 
 **MemberGrade** — os 4 graus padrão entram pela migration, uma vez só; ordem por `position`. O gestor cria, renomeia e exclui o que não estiver em uso.
 
-**Member** (colaborador; até 2026-10-04 se chamava `Technician`) — nome, `roleId`, `gradeId` (opcional), turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login. Quem aparece em algum registro não pode ser excluído: o caminho é mudar o status para Inativo.
+**Member** (colaborador; até 2026-10-04 se chamava `Technician`) — nome, cargo (`position`: `technician` | `supervisor`, lista fixa porque muda o comportamento), `teamId` (opcional; só técnico), `roleId` (obrigatória para técnico, opcional para supervisor), `gradeId` (opcional), turno (1º / 2º / 3º / Administrativo), área (texto), status (Ativo / Inativo / Férias / Afastado), matrícula, contato, observações. Sem login. Quem aparece em algum registro não pode ser excluído: o caminho é mudar o status para Inativo. Só técnico tem matriz.
+
+**Team** (equipe) — nome único, descrição, `supervisorId` (opcional; precisa ter o cargo Supervisor). Os técnicos apontam para a equipe por `Member.teamId`, então cada técnico fica em uma equipe só e o supervisor dele é o da equipe. O supervisor lidera, não é membro, e pode liderar mais de uma equipe. Equipe com gente não sai; supervisor que lidera não perde o cargo nem é excluído. Relatórios por equipe usam a equipe atual, sem histórico de trocas.
 
 ### Identidade
 
