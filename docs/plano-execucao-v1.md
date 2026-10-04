@@ -197,12 +197,15 @@ Postgres. Nomes em português de domínio; persistência em inglês estável.
 | `tag` | texto, contexto da ação |
 | `line` | texto, contexto da ação |
 | `priority` | só Tarefa |
+| `tone` | só Feedback: `positive` \| `negative` \| `neutral` (histórico de observações da ficha do colaborador) |
 | `dueAt` | só Tarefa |
 | `notes` | observação da ação / chamado |
 | `origin` | `inbox` \| `chamado` \| `ocorrencia` |
 | `dayNumber` | nº do dia (chamado) |
 | `openedAt` / `closedAt` / `durationMin` | horários do chamado |
 | `createdAt` / `updatedAt` | auditoria mínima |
+
+**MemberBehavior** — comportamento do colaborador, uma linha por pessoa: pontualidade e colaboração (Excelente / Boa / Regular / Ruim), produtividade (Alta / Média / Baixa) e etiquetas do catálogo do SIGEM (pontos positivos, de atenção, situação atual). Sai junto com o colaborador.
 
 **MemberMatrixEquipment** / **MemberSkill** — equipamentos da matriz que se aplicam ao técnico e a nota de cada habilidade (0 a 4, “não se aplica”, esperado ajustado). Saem junto com o técnico. O catálogo das 222 habilidades fica no código, não no banco.
 

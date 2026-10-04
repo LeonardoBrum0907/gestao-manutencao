@@ -1,7 +1,14 @@
-import { isRecordPriority, isRecordStatus, isRecordType, type RecordPriority } from "@manutencao/shared";
+import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
 import type { CaptureInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
+
+function parseTone(source: Record<string, unknown>): FeedbackTone | null {
+  const tone = optionalString(source, "tone");
+  if (tone === null) return null;
+  if (!isFeedbackTone(tone)) throw new DomainError("tone", 400, "Tom inválido.");
+  return tone;
+}
 
 export function parseCapture(body: unknown): CaptureInput {
   const source = readObject(body);
@@ -14,6 +21,7 @@ export function parseCapture(body: unknown): CaptureInput {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
+    tone: parseTone(source),
   };
 }
 
@@ -47,6 +55,7 @@ export function parseFeedbackSheet(body: unknown): FeedbackSheetInput {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
+    tone: parseTone(source),
   };
 }
 

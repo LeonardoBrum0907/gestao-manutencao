@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
-import type { RecordDto } from "@manutencao/shared";
+import type { FeedbackTone, RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useUpdateRecord } from "../data/records";
-import { fromLocalInput, toLocalInput } from "../model/record";
+import { fromLocalInput, toLocalInput, toneOptions } from "../model/record";
 
 export function FeedbackSheet({ record }: { record: RecordDto }) {
   const members = useMembers();
@@ -13,6 +13,7 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
   const [body, setBody] = useState(record.body);
   const [when, setWhen] = useState(toLocalInput(record.occurredAt));
   const [memberId, setMemberId] = useState(record.memberId ?? "");
+  const [tone, setTone] = useState<FeedbackTone | "">(record.tone ?? "");
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -20,6 +21,7 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
       body,
       occurredAt: fromLocalInput(when),
       memberId: memberId || null,
+      tone: tone || null,
     });
   }
 
@@ -38,6 +40,16 @@ export function FeedbackSheet({ record }: { record: RecordDto }) {
             {members.data?.map((member) => (
               <option key={member.id} value={member.id}>
                 {memberOptionLabel(member)}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+        <Field label="Tom">
+          <SelectInput value={tone} onChange={(event) => setTone(event.target.value as FeedbackTone | "")}>
+            <option value="">Sem tom</option>
+            {toneOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </SelectInput>

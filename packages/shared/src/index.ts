@@ -4,6 +4,19 @@ export type RecordType = (typeof RECORD_TYPES)[number];
 export const RECORD_STATUSES = ["open", "in_progress", "done"] as const;
 export type RecordStatus = (typeof RECORD_STATUSES)[number];
 
+export const FEEDBACK_TONES = ["positive", "negative", "neutral"] as const;
+export type FeedbackTone = (typeof FEEDBACK_TONES)[number];
+
+export const FEEDBACK_TONE_LABELS: Record<FeedbackTone, string> = {
+  positive: "Positivo",
+  negative: "Negativo",
+  neutral: "Neutro",
+};
+
+export function isFeedbackTone(value: string): value is FeedbackTone {
+  return (FEEDBACK_TONES as readonly string[]).includes(value);
+}
+
 export const RECORD_PRIORITIES = ["low", "medium", "high"] as const;
 export type RecordPriority = (typeof RECORD_PRIORITIES)[number];
 
@@ -213,6 +226,7 @@ export type RecordDto = {
   tag: string | null;
   line: string | null;
   priority: RecordPriority | null;
+  tone: FeedbackTone | null;
   dueAt: string | null;
   notes: string | null;
   origin: RecordOrigin;
@@ -224,6 +238,85 @@ export type RecordDto = {
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentDto[];
+};
+
+// Comportamento (SIGEM: Por Técnico › Comportamento). Chaves estáveis, rótulos do SIGEM.
+export const BEHAVIOR_RATINGS = ["excellent", "good", "regular", "poor"] as const;
+export type BehaviorRating = (typeof BEHAVIOR_RATINGS)[number];
+
+export const BEHAVIOR_RATING_LABELS: Record<BehaviorRating, string> = {
+  excellent: "Excelente",
+  good: "Boa",
+  regular: "Regular",
+  poor: "Ruim",
+};
+
+export const PRODUCTIVITY_LEVELS = ["high", "medium", "low"] as const;
+export type ProductivityLevel = (typeof PRODUCTIVITY_LEVELS)[number];
+
+export const PRODUCTIVITY_LEVEL_LABELS: Record<ProductivityLevel, string> = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
+};
+
+export const BEHAVIOR_TAG_GROUPS = [
+  {
+    key: "strengths",
+    label: "Pontos positivos",
+    tags: [
+      { key: "proactive", label: "Proativo" },
+      { key: "communicates", label: "Comunica bem" },
+      { key: "meets_deadlines", label: "Cumpre prazos" },
+      { key: "organized", label: "Organizado" },
+      { key: "teamwork", label: "Trabalho em equipe" },
+      { key: "solves_problems", label: "Resolve problemas" },
+    ],
+  },
+  {
+    key: "attention",
+    label: "Pontos de atenção",
+    tags: [
+      { key: "missed_deadlines", label: "Prazos perdidos" },
+      { key: "poor_communication", label: "Falta comunicação" },
+      { key: "frequent_rework", label: "Retrabalho frequente" },
+      { key: "stale_tasks", label: "Pendências sem atualização" },
+    ],
+  },
+  {
+    key: "situation",
+    label: "Situação atual",
+    tags: [
+      { key: "adapting", label: "Em adaptação" },
+      { key: "new_to_team", label: "Novo na equipe" },
+      { key: "under_supervision", label: "Sob supervisão" },
+    ],
+  },
+] as const;
+
+export type BehaviorTagGroup = (typeof BEHAVIOR_TAG_GROUPS)[number]["key"];
+export type BehaviorTag = (typeof BEHAVIOR_TAG_GROUPS)[number]["tags"][number]["key"];
+
+export const BEHAVIOR_TAGS: readonly BehaviorTag[] = BEHAVIOR_TAG_GROUPS.flatMap((group) => group.tags.map((tag) => tag.key));
+
+export function isBehaviorRating(value: string): value is BehaviorRating {
+  return (BEHAVIOR_RATINGS as readonly string[]).includes(value);
+}
+
+export function isProductivityLevel(value: string): value is ProductivityLevel {
+  return (PRODUCTIVITY_LEVELS as readonly string[]).includes(value);
+}
+
+export function isBehaviorTag(value: string): value is BehaviorTag {
+  return (BEHAVIOR_TAGS as readonly string[]).includes(value);
+}
+
+export type MemberBehaviorDto = {
+  memberId: string;
+  punctuality: BehaviorRating | null;
+  productivity: ProductivityLevel | null;
+  collaboration: BehaviorRating | null;
+  tags: BehaviorTag[];
 };
 
 export type MemberRecordSummaryDto = {

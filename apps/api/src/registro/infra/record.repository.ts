@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import {
+  isFeedbackTone,
   isRecordOrigin,
   isRecordPriority,
   isRecordStatus,
@@ -29,6 +30,7 @@ type Row = {
   tag: string | null;
   line: string | null;
   priority: string | null;
+  tone: string | null;
   dueAt: Date | null;
   notes: string | null;
   origin: string;
@@ -54,6 +56,9 @@ function toDto(row: Row): RecordDto {
   if (row.priority !== null && !isRecordPriority(row.priority)) {
     throw new DomainError("invalid", 500, "Prioridade gravada está inválida.");
   }
+  if (row.tone !== null && !isFeedbackTone(row.tone)) {
+    throw new DomainError("invalid", 500, "Tom gravado está inválido.");
+  }
   return {
     id: row.id,
     type: row.type,
@@ -67,6 +72,7 @@ function toDto(row: Row): RecordDto {
     tag: row.tag,
     line: row.line,
     priority: row.priority,
+    tone: row.tone,
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
     notes: row.notes,
     origin: row.origin,
@@ -101,6 +107,7 @@ function scalars(state: RecordState) {
     tag: state.tag,
     line: state.line,
     priority: state.priority,
+    tone: state.tone,
     dueAt: state.dueAt,
     notes: state.notes,
     origin: state.origin,

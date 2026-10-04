@@ -109,7 +109,6 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
   const pending = all.filter((record) => record.type !== "feedback");
   const open = pending.filter((record) => record.status !== "done");
   const done = pending.filter((record) => record.status === "done");
-  const feedbacks = all.filter((record) => record.type === "feedback");
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -153,14 +152,6 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
             </summary>
             <div className="mt-3">
               <RecordList title="Concluídos" records={done} empty="Nada concluído ainda." />
-            </div>
-          </details>
-          <details className="group">
-            <summary className="cursor-pointer text-sm font-semibold text-app">
-              Feedbacks <span className="font-normal text-muted">({feedbacks.length})</span>
-            </summary>
-            <div className="mt-3">
-              <RecordList title="Feedbacks" records={feedbacks} empty="Nenhum feedback sobre esta pessoa." />
             </div>
           </details>
         </>

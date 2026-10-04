@@ -13,6 +13,7 @@ describe("ficha", () => {
       body: "Vazamento",
       occurredAt: when,
       memberId: null,
+      tone: null,
     });
     assert.throws(
       () =>
@@ -34,6 +35,7 @@ describe("ficha", () => {
       body: "Lubrificar",
       occurredAt: when,
       memberId: null,
+      tone: null,
     });
     const due = new Date("2026-10-02T15:00:00.000Z");
     const next = applyTaskSheet(task, {

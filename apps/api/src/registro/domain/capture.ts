@@ -13,6 +13,9 @@ export function captureRecord(input: CaptureInput): RecordState {
   if (Number.isNaN(input.occurredAt.getTime())) {
     throw new DomainError("when", 400, "Informe quando aconteceu.");
   }
+  if (input.tone && input.type !== "feedback") {
+    throw new DomainError("tone", 400, "Tom é só do feedback.");
+  }
   return {
     type: input.type,
     body,
@@ -25,6 +28,7 @@ export function captureRecord(input: CaptureInput): RecordState {
     tag: null,
     line: null,
     priority: null,
+    tone: input.tone,
     dueAt: null,
     notes: null,
     origin: "inbox",

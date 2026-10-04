@@ -22,5 +22,6 @@ export function problemFromShift(write: ProblemWrite): RecordState {
     openedAt: write.openedAt,
     closedAt: write.closedAt,
     durationMin: write.durationMin,
+    tone: null,
   };
 }

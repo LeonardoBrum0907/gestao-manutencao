@@ -2,6 +2,7 @@ import type { MemberPosition } from "@manutencao/shared";
 
 export const MEMBER_TABS = [
   { key: "perfil", label: "Perfil", positions: ["technician", "supervisor"] },
+  { key: "comportamento", label: "Comportamento", positions: ["technician", "supervisor"] },
   { key: "competencias", label: "Competências", positions: ["technician"] },
 ] as const satisfies readonly { key: string; label: string; positions: readonly MemberPosition[] }[];
 

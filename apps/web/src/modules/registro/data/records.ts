@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AttachmentDto, RecordDto, RecordPriority, RecordStatus, RecordType } from "@manutencao/shared";
+import type { AttachmentDto, FeedbackTone, RecordDto, RecordPriority, RecordStatus, RecordType } from "@manutencao/shared";
 import { api } from "../../../app/http";
 import { followUpSearch, type FollowUpQuery } from "../model/follow-up";
 
@@ -28,7 +28,7 @@ export function useRecord(id: string) {
 export function useCaptureRecord() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { type: RecordType; body: string; occurredAt: string; memberId: string | null }) =>
+    mutationFn: (input: { type: RecordType; body: string; occurredAt: string; memberId: string | null; tone?: FeedbackTone | null }) =>
       api<RecordDto>("/api/records", { method: "POST", body: JSON.stringify(input) }),
     onSuccess: () => client.invalidateQueries({ queryKey: ["records"] }),
   });
@@ -51,6 +51,7 @@ export type FeedbackSheetBody = {
   body: string;
   occurredAt: string;
   memberId: string | null;
+  tone: FeedbackTone | null;
 };
 
 export type ProblemSheetBody = {
