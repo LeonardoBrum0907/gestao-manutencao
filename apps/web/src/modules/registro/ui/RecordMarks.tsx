@@ -2,7 +2,7 @@ import type { RecordDto } from "@manutencao/shared";
 import { dueTone, formatDueDay } from "../model/follow-up";
 import { priorityLabel } from "../model/record";
 
-export function DueMark({ record }: { record: RecordDto }) {
+export function DueMark({ record }: { record: Pick<RecordDto, "type" | "dueAt"> }) {
   if (record.type !== "task" || !record.dueAt) return <span className="text-muted">—</span>;
   const label = formatDueDay(record.dueAt);
   const tone = dueTone(record.dueAt);
@@ -13,7 +13,7 @@ export function DueMark({ record }: { record: RecordDto }) {
   return <span className="text-muted">{label}</span>;
 }
 
-export function PriorityMark({ record }: { record: RecordDto }) {
+export function PriorityMark({ record }: { record: Pick<RecordDto, "type" | "priority"> }) {
   if (record.type !== "task" || !record.priority) return null;
   if (record.priority === "high") {
     return (

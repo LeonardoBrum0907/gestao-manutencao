@@ -22,6 +22,18 @@ export class PrismaCadastroRefs implements CadastroRefs {
     return Boolean(row);
   }
 
+  async machinesExist(ids: string[]): Promise<boolean> {
+    const unique = [...new Set(ids)];
+    if (!unique.length) return true;
+    return (await this.prisma.machine.count({ where: { id: { in: unique } } })) === unique.length;
+  }
+
+  async membersExist(ids: string[]): Promise<boolean> {
+    const unique = [...new Set(ids)];
+    if (!unique.length) return true;
+    return (await this.prisma.member.count({ where: { id: { in: unique } } })) === unique.length;
+  }
+
   async memberPosition(id: string): Promise<MemberPosition | null> {
     const row = await this.prisma.member.findUnique({ where: { id }, select: { position: true } });
     return row && isMemberPosition(row.position) ? row.position : null;

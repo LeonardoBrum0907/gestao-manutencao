@@ -40,26 +40,30 @@ export function followUpSearch(query: FollowUpQuery): URLSearchParams {
   return params;
 }
 
+const dueDayFormat = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: GESTOR_TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
 export function formatDueDay(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: GESTOR_TIME_ZONE,
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
+  return dueDayFormat.format(new Date(iso));
 }
 
 export function prazoApplies(type: RecordType | null): boolean {
   return type === null || type === "task";
 }
 
+const calendarDayFormat = new Intl.DateTimeFormat("en-CA", {
+  timeZone: GESTOR_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 function calendarDay(instant: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: GESTOR_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(instant);
+  return calendarDayFormat.format(instant);
 }
 
 export function dueTone(iso: string, now = new Date()): "overdue" | "today" | "later" {

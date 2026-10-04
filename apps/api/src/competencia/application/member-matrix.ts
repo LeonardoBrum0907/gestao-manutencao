@@ -17,6 +17,11 @@ export class MemberMatrix {
 
   async show(memberId: string): Promise<MemberMatrixDto> {
     await this.assertMember(memberId);
+    return this.build(memberId);
+  }
+
+  // Quem já checou o colaborador não precisa checar de novo para devolver a matriz.
+  private async build(memberId: string): Promise<MemberMatrixDto> {
     const [{ equipments, entries }, catalog] = await Promise.all([this.matrix.load(memberId), this.catalog.load()]);
     return { memberId, entries, ...buildMatrix(catalog, equipments, entries) };
   }
@@ -25,16 +30,17 @@ export class MemberMatrix {
     assertMatrixEditable(await this.assertMember(memberId));
     const [{ equipments: current }, catalog] = await Promise.all([this.matrix.load(memberId), this.catalog.load()]);
     await this.matrix.replaceEquipments(memberId, requireEquipments(parseEquipments(body), catalog, current));
-    return this.show(memberId);
+    return this.build(memberId);
   }
 
   async setSkill(memberId: string, skillId: string, body: unknown): Promise<MemberMatrixDto> {
-    assertMatrixEditable(await this.assertMember(memberId));
-    const skill = requireSkill(skillId, await this.catalog.load());
+    const [position, catalog] = await Promise.all([this.assertMember(memberId), this.catalog.load()]);
+    assertMatrixEditable(position);
+    const skill = requireSkill(skillId, catalog);
     const entry = normalizeEntry(skill.id, parseEntry(body));
     if (entry) await this.matrix.saveSkill(memberId, entry);
     else await this.matrix.clearSkill(memberId, skill.id);
-    return this.show(memberId);
+    return this.build(memberId);
   }
 
   private async assertMember(id: string): Promise<MemberPosition> {

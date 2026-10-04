@@ -16,10 +16,10 @@ import {
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useCaptureRecord } from "../../registro/data/records";
+import { flattenPages, useCaptureRecord } from "../../registro/data/records";
 import { formatWhen, fromLocalInput, nowLocalInput, toneChipClass, toneLabel, toneOptions } from "../../registro/model/record";
 import { useBehavior, useSaveBehavior, type BehaviorWrite } from "../data/behavior";
-import { useMemberRecords } from "../data/member-records";
+import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
 
 function writable({ punctuality, productivity, collaboration, tags }: MemberBehaviorDto): BehaviorWrite {
   return { punctuality, productivity, collaboration, tags };
@@ -164,14 +164,15 @@ function NewObservation({ memberId, onDone }: { memberId: string; onDone: () => 
 }
 
 function History({ member }: { member: MemberDto }) {
-  const records = useMemberRecords(member.id);
+  const records = useMemberRecordList(member.id, "feedback");
+  const summary = useMemberRecordSummary(member.id);
   const [adding, setAdding] = useState(false);
-  const feedbacks = records.data?.records.filter((record) => record.type === "feedback") ?? [];
+  const feedbacks = flattenPages(records.data?.pages);
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <h2 className="text-sm font-semibold text-app">
-          Histórico de observações <span className="font-normal text-muted">({feedbacks.length})</span>
+          Histórico de observações <span className="font-normal text-muted">({summary.data?.feedbacks ?? feedbacks.length})</span>
         </h2>
         {!adding ? (
           <Button tone="ghost" className="px-3 py-1.5" onClick={() => setAdding(true)}>
@@ -181,7 +182,7 @@ function History({ member }: { member: MemberDto }) {
       </div>
       {adding ? <NewObservation memberId={member.id} onDone={() => setAdding(false)} /> : null}
       {records.isError ? <Notice>{errorMessage(records.error)}</Notice> : null}
-      {records.data && feedbacks.length === 0 && !adding ? (
+      {records.isSuccess && feedbacks.length === 0 && !adding ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">
           Nenhuma observação ainda. Os feedbacks registrados com {member.name} como alvo aparecem aqui.
         </p>
@@ -200,6 +201,13 @@ function History({ member }: { member: MemberDto }) {
           </li>
         ))}
       </ul>
+      {records.hasNextPage ? (
+        <div className="flex justify-center border-t border-t-line px-4 py-3">
+          <Button tone="ghost" onClick={() => void records.fetchNextPage()} disabled={records.isFetchingNextPage}>
+            {records.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

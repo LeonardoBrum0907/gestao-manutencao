@@ -1,6 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -248,10 +249,12 @@ model Record {
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
-  @@index([type, status])
-  @@index([dueAt])
+  @@index([type, status, dueAt])
   @@index([origin])
   @@index([memberId])
+  @@index([machineId])
+  @@index([occurredAt, id])
+  @@index([createdAt])
 }
 
 model RecordMember {

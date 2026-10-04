@@ -69,8 +69,11 @@ export const priorityOptions = RECORD_PRIORITIES.map((priority) => ({
   label: RECORD_PRIORITY_LABELS[priority],
 }));
 
+// Um formatador pronto custa ~100× menos que criar um por linha desenhada.
+const whenFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
 export function formatWhen(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+  return whenFormat.format(new Date(iso));
 }
 
 export function toLocalInput(iso: string): string {

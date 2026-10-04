@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FactoryDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto, TeamDto } from "@manutencao/shared";
+import { removeById, REFERENCE_DATA, upsertByName } from "../../../app/cache";
 import { api } from "../../../app/http";
 
 export function useFactories() {
   return useQuery({
     queryKey: ["factories"],
+    ...REFERENCE_DATA,
     queryFn: () => api<FactoryDto[]>("/api/factories"),
   });
 }
@@ -19,7 +21,7 @@ export function useSaveFactory() {
             body: JSON.stringify({ name: input.name }),
           })
         : api<FactoryDto>("/api/factories", { method: "POST", body: JSON.stringify({ name: input.name }) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["factories"] }),
+    onSuccess: (factory) => upsertByName(client, ["factories"], factory),
   });
 }
 
@@ -27,13 +29,14 @@ export function useDeleteFactory() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/factories/${id}`, { method: "DELETE" }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["factories"] }),
+    onSuccess: (_result, id) => removeById<FactoryDto>(client, ["factories"], id),
   });
 }
 
 export function useMachines() {
   return useQuery({
     queryKey: ["machines"],
+    ...REFERENCE_DATA,
     queryFn: () => api<MachineDto[]>("/api/machines"),
   });
 }
@@ -45,7 +48,7 @@ export function useSaveMachine() {
       input.id
         ? api<MachineDto>(`/api/machines/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
         : api<MachineDto>("/api/machines", { method: "POST", body: JSON.stringify(input.body) }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["machines"] }),
+    onSuccess: (machine) => upsertByName(client, ["machines"], machine),
   });
 }
 
@@ -53,13 +56,14 @@ export function useDeleteMachine() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/machines/${id}`, { method: "DELETE" }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["machines"] }),
+    onSuccess: (_result, id) => removeById<MachineDto>(client, ["machines"], id),
   });
 }
 
 export function useRoles() {
   return useQuery({
     queryKey: ["roles"],
+    ...REFERENCE_DATA,
     queryFn: () => api<MemberRoleDto[]>("/api/member-roles"),
   });
 }
@@ -87,6 +91,7 @@ export function useSaveRole() {
 export function useGrades() {
   return useQuery({
     queryKey: ["grades"],
+    ...REFERENCE_DATA,
     queryFn: () => api<MemberGradeDto[]>("/api/member-grades"),
   });
 }
@@ -115,7 +120,7 @@ export function useDeleteGrade() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/member-grades/${id}`, { method: "DELETE" }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["grades"] }),
+    onSuccess: (_result, id) => removeById<MemberGradeDto>(client, ["grades"], id),
   });
 }
 
@@ -150,7 +155,14 @@ export function useSaveMember() {
             body: JSON.stringify(input.body),
           })
         : api<MemberDto>("/api/members", { method: "POST", body: JSON.stringify(input.body) }),
-    onSuccess: () => invalidatePeople(client),
+    onSuccess: (member) => {
+      // A equipe só mostra o colaborador por id, nome do supervisor e membros: mexeu em algo disso, recarrega.
+      const before = client.getQueryData<MemberDto[]>(["members"])?.find((item) => item.id === member.id);
+      upsertByName(client, ["members"], member);
+      if (!before || before.teamId !== member.teamId || before.name !== member.name || before.position !== member.position) {
+        void client.invalidateQueries({ queryKey: ["teams"] });
+      }
+    },
   });
 }
 
@@ -158,7 +170,11 @@ export function useDeleteMember() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/members/${id}`, { method: "DELETE" }),
-    onSuccess: () => invalidatePeople(client),
+    onSuccess: (_result, id) => {
+      const before = client.getQueryData<MemberDto[]>(["members"])?.find((item) => item.id === id);
+      removeById<MemberDto>(client, ["members"], id);
+      if (!before || before.teamId) void client.invalidateQueries({ queryKey: ["teams"] });
+    },
   });
 }
 
@@ -188,7 +204,12 @@ export function useSaveTeam() {
       input.id
         ? api<TeamDto>(`/api/teams/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
         : api<TeamDto>("/api/teams", { method: "POST", body: JSON.stringify(input.body) }),
-    onSuccess: () => invalidatePeople(client),
+    onSuccess: (team) => {
+      const before = client.getQueryData<TeamDto[]>(["teams"])?.find((item) => item.id === team.id);
+      upsertByName(client, ["teams"], team);
+      // O colaborador mostra o nome da equipe: só recarrega se o nome mudou.
+      if (before && before.name !== team.name) void client.invalidateQueries({ queryKey: ["members"] });
+    },
   });
 }
 
@@ -196,7 +217,8 @@ export function useDeleteTeam() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api(`/api/teams/${id}`, { method: "DELETE" }),
-    onSuccess: () => invalidatePeople(client),
+    // Só se apaga equipe sem membros, então nenhum colaborador muda.
+    onSuccess: (_result, id) => removeById<TeamDto>(client, ["teams"], id),
   });
 }
 

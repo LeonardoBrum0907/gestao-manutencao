@@ -4,7 +4,7 @@ import type { MachineDto, MemberDto, MemberPdiDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Notice, TextInput, controlClass } from "../../../design/ui/controls";
 import { useFactories, useMachines } from "../../cadastro/data/cadastro";
-import { useRecords } from "../../registro/data/records";
+import { flattenPages, useOpenRecordsOfMachines } from "../../registro/data/records";
 import { recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
 import { useAddPdiFile, usePdi, useRemovePdiFile, useSetPdiMachines } from "../data/pdi";
 
@@ -92,15 +92,14 @@ function MachinePicker({
 }
 
 function SponsoredOpen({ machineIds, machineName }: { machineIds: string[]; machineName: Map<string, string> }) {
-  const records = useRecords();
-  const open = (records.data ?? []).filter(
-    (record) => record.machineId !== null && machineIds.includes(record.machineId) && record.status !== "done",
-  );
+  const records = useOpenRecordsOfMachines(machineIds);
+  const open = flattenPages(records.data?.pages);
   if (!machineIds.length) return null;
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <h2 className="px-4 py-3 text-sm font-semibold text-app">
-        Em aberto nas máquinas que apadrinha <span className="font-normal text-muted">({open.length})</span>
+        Em aberto nas máquinas que apadrinha{" "}
+        <span className="font-normal text-muted">({records.hasNextPage ? `${open.length}+` : open.length})</span>
       </h2>
       {open.length === 0 ? <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Nada em aberto nessas máquinas.</p> : null}
       <ul>
@@ -121,6 +120,13 @@ function SponsoredOpen({ machineIds, machineName }: { machineIds: string[]; mach
           </li>
         ))}
       </ul>
+      {records.hasNextPage ? (
+        <div className="flex justify-center border-t border-t-line px-4 py-3">
+          <Button tone="ghost" onClick={() => void records.fetchNextPage()} disabled={records.isFetchingNextPage}>
+            {records.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

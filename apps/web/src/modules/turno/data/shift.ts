@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { api } from "../../../app/http";
+import { invalidateRecords } from "../../registro/data/records";
 
 export type ChamadoBody = {
   dayNumber: number;
@@ -30,8 +31,7 @@ export function useSaveChamado(id?: string) {
         : api<RecordDto>("/api/turno/chamados", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: (record) => {
       client.setQueryData(["records", record.id], record);
-      void client.invalidateQueries({ queryKey: ["records"] });
-      void client.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateRecords(client, record.id);
     },
   });
 }
@@ -45,8 +45,7 @@ export function useSaveOcorrencia(id?: string) {
         : api<RecordDto>("/api/turno/ocorrencias", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: (record) => {
       client.setQueryData(["records", record.id], record);
-      void client.invalidateQueries({ queryKey: ["records"] });
-      void client.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateRecords(client, record.id);
     },
   });
 }

@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import {
   isFeedbackTone,
   isRecordOrigin,
@@ -6,10 +7,15 @@ import {
   isRecordStatus,
   isRecordType,
   type AttachmentDto,
+  type MemberRecordSummaryDto,
   type RecordDto,
+  type RecordListItemDto,
+  type RecordPageDto,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
+import { dueRange } from "../domain/follow-up";
+import type { RecordListFilter } from "../domain/record-list";
 import type { RecordState } from "../domain/record-state";
 
 const include = {
@@ -118,6 +124,73 @@ function scalars(state: RecordState) {
   };
 }
 
+const listSelect = {
+  id: true,
+  type: true,
+  body: true,
+  occurredAt: true,
+  status: true,
+  origin: true,
+  priority: true,
+  tone: true,
+  dueAt: true,
+  machineId: true,
+} as const;
+
+function toListItem(row: {
+  id: string;
+  type: string;
+  body: string;
+  occurredAt: Date;
+  status: string;
+  origin: string;
+  priority: string | null;
+  tone: string | null;
+  dueAt: Date | null;
+  machineId: string | null;
+}): RecordListItemDto {
+  if (!isRecordType(row.type) || !isRecordStatus(row.status) || !isRecordOrigin(row.origin)) {
+    throw new DomainError("invalid", 500, "Registro gravado está inválido.");
+  }
+  if (row.priority !== null && !isRecordPriority(row.priority)) {
+    throw new DomainError("invalid", 500, "Prioridade gravada está inválida.");
+  }
+  if (row.tone !== null && !isFeedbackTone(row.tone)) {
+    throw new DomainError("invalid", 500, "Tom gravado está inválido.");
+  }
+  return {
+    id: row.id,
+    type: row.type,
+    body: row.body,
+    occurredAt: row.occurredAt.toISOString(),
+    status: row.status,
+    origin: row.origin,
+    priority: row.priority,
+    tone: row.tone,
+    dueAt: row.dueAt ? row.dueAt.toISOString() : null,
+    machineId: row.machineId,
+  };
+}
+
+// O registro envolve a pessoa como responsável/alvo ou entre os técnicos do chamado.
+function involving(memberId: string): Prisma.RecordWhereInput {
+  return { OR: [{ memberId }, { members: { some: { memberId } } }] };
+}
+
+// Os filtros vão para o banco: antes a API trazia todos os registros e filtrava no Node.
+function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput {
+  const and: Prisma.RecordWhereInput[] = [];
+  if (filter.types) and.push({ type: { in: filter.types } });
+  if (filter.statuses) and.push({ status: { in: filter.statuses } });
+  if (filter.machineIds) and.push({ machineId: { in: filter.machineIds } });
+  if (filter.memberId) and.push(involving(filter.memberId));
+  if (filter.due) {
+    // Prazo é de tarefa ainda por fazer: concluída não vence nem vence hoje.
+    and.push({ type: "task", status: { not: "done" }, dueAt: dueRange(filter.due, now) });
+  }
+  return { AND: and };
+}
+
 function memberRows(ids: string[]) {
   return ids.map((memberId, position) => ({ memberId, position }));
 }
@@ -126,12 +199,35 @@ function memberRows(ids: string[]) {
 export class RecordRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(): Promise<RecordDto[]> {
+  async listPage(filter: RecordListFilter, now: Date): Promise<RecordPageDto> {
     const rows = await this.prisma.record.findMany({
-      include,
-      orderBy: { occurredAt: "desc" },
+      where: listWhere(filter, now),
+      select: listSelect,
+      orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+      take: filter.limit + 1,
+      ...(filter.cursor ? { cursor: { id: filter.cursor }, skip: 1 } : {}),
     });
-    return rows.map(toDto);
+    const items = rows.slice(0, filter.limit);
+    return {
+      items: items.map(toListItem),
+      nextCursor: rows.length > filter.limit ? items[items.length - 1].id : null,
+    };
+  }
+
+  // Os cinco números da ficha, contados no banco em vez de somar a lista inteira da pessoa.
+  async memberSummary(memberId: string, now: Date): Promise<MemberRecordSummaryDto> {
+    const mine = involving(memberId);
+    const pending = { type: { not: "feedback" } } as const;
+    const [open, overdue, done, chamados, feedbacks] = await Promise.all([
+      this.prisma.record.count({ where: { AND: [mine, pending, { status: { not: "done" } }] } }),
+      this.prisma.record.count({
+        where: { AND: [mine, { type: "task", status: { not: "done" }, dueAt: dueRange("overdue", now) }] },
+      }),
+      this.prisma.record.count({ where: { AND: [mine, pending, { status: "done" }] } }),
+      this.prisma.record.count({ where: { AND: [mine, { origin: "chamado" }] } }),
+      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }] } }),
+    ]);
+    return { open, overdue, done, chamados, feedbacks };
   }
 
   async find(id: string): Promise<RecordDto | null> {
@@ -147,12 +243,15 @@ export class RecordRepository {
     return toDto(row);
   }
 
-  async update(id: string, state: RecordState): Promise<RecordDto> {
+  // Com os mesmos técnicos de antes, só o registro muda: um UPDATE, sem transação para refazer os vínculos.
+  async update(id: string, state: RecordState, previousMemberIds: string[]): Promise<RecordDto> {
+    const sameMembers =
+      previousMemberIds.length === state.memberIds.length && previousMemberIds.every((memberId, index) => memberId === state.memberIds[index]);
     const row = await this.prisma.record.update({
       where: { id },
       data: {
         ...scalars(state),
-        members: { deleteMany: {}, create: memberRows(state.memberIds) },
+        ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
       },
       include,
     });

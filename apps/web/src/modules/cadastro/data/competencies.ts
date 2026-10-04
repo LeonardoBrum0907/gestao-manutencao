@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PerformanceCompetencyDto } from "@manutencao/shared";
+import { REFERENCE_DATA } from "../../../app/cache";
 import { api } from "../../../app/http";
 
 // A avaliação na ficha mostra estas linhas: mudou o cadastro, recarrega as duas.
@@ -11,6 +12,7 @@ function invalidate(client: ReturnType<typeof useQueryClient>) {
 export function usePerformanceCompetencies() {
   return useQuery({
     queryKey: ["performance-competencies"],
+    ...REFERENCE_DATA,
     queryFn: () => api<PerformanceCompetencyDto[]>("/api/performance-competencies"),
   });
 }

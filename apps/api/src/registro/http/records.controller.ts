@@ -14,20 +14,20 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { FollowUpList } from "../application/follow-up-list";
-import { parseFollowUpQuery } from "../application/parse-follow-up";
+import { parseRecordList, type RecordListQuery } from "../application/parse-record-list";
 import { Records } from "../application/records";
+import { RecordsList } from "../application/records-list";
 
 @Controller("api/records")
 export class RecordsController {
   constructor(
     private readonly records: Records,
-    private readonly followUp: FollowUpList,
+    private readonly list: RecordsList,
   ) {}
 
   @Get()
-  list(@Query("type") type?: unknown, @Query("status") status?: unknown, @Query("due") due?: unknown) {
-    return this.followUp.execute(parseFollowUpQuery({ type, status, due }));
+  page(@Query() query: RecordListQuery) {
+    return this.list.page(parseRecordList(query));
   }
 
   @Get(":id")

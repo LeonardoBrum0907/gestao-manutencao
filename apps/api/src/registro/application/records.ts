@@ -59,22 +59,20 @@ export class Records {
     const state = dtoToState(current);
     if (current.type === "task") {
       const input = parseTaskSheet(body);
-      await this.assertMember(input.memberId);
-      await this.assertFactory(input.factoryId);
-      return this.records.update(id, applyTaskSheet(state, input));
+      await Promise.all([this.assertMember(input.memberId), this.assertFactory(input.factoryId)]);
+      return this.records.update(id, applyTaskSheet(state, input), current.memberIds);
     }
     if (current.type === "feedback") {
       const input = parseFeedbackSheet(body);
       await this.assertMember(input.memberId);
-      return this.records.update(id, applyFeedbackSheet(state, input));
+      return this.records.update(id, applyFeedbackSheet(state, input), current.memberIds);
     }
     if (current.origin !== "inbox") {
       throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado ou pela ocorrência.");
     }
     const input = parseProblemSheet(body);
-    await this.assertMember(input.memberId);
-    await this.assertMachine(input.machineId);
-    return this.records.update(id, applyProblemSheet(state, input));
+    await Promise.all([this.assertMember(input.memberId), this.assertMachine(input.machineId)]);
+    return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
   }
 
   async addAttachment(id: string, file: Express.Multer.File | undefined): Promise<AttachmentDto> {

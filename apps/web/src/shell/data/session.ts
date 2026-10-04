@@ -5,6 +5,8 @@ import { api } from "../../app/http";
 export function useSession() {
   return useQuery({
     queryKey: ["session"],
+    // A sessão só muda no login e no logout, que já gravam no cache; 5 min cobre a expiração por inatividade.
+    staleTime: 5 * 60_000,
     queryFn: async () => {
       const response = await fetch("/api/session", { credentials: "include" });
       if (response.status === 401) return null;

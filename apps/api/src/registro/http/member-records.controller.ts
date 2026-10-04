@@ -1,12 +1,12 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { MemberRecords } from "../application/member-records";
+import { RecordsList } from "../application/records-list";
 
 @Controller("api/members/:memberId/records")
 export class MemberRecordsController {
-  constructor(private readonly memberRecords: MemberRecords) {}
+  constructor(private readonly records: RecordsList) {}
 
-  @Get()
-  list(@Param("memberId") memberId: string) {
-    return this.memberRecords.execute(memberId);
+  @Get("summary")
+  summary(@Param("memberId") memberId: string) {
+    return this.records.memberSummary(memberId);
   }
 }
