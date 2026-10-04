@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  PERFORMANCE_COMPETENCIES,
   PERFORMANCE_SCORE_LABELS,
   PERFORMANCE_SCORES,
   QUARTERS,
@@ -11,7 +11,7 @@ import {
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, SelectInput, Stat } from "../../../design/ui/controls";
 import { usePerformance, useSetScore, type ScoreWrite } from "../data/performance";
-import { competencyLabel, formatScore, rankedAverages, thisYear, yearOptions } from "../model/performance";
+import { formatScore, rankedAverages, thisYear, yearOptions } from "../model/performance";
 
 function ScoreTable({
   performance,
@@ -22,8 +22,8 @@ function ScoreTable({
   onChange: (write: ScoreWrite) => void;
   disabled: boolean;
 }) {
-  const score = (competency: string, quarter: number) =>
-    performance.entries.find((entry) => entry.competency === competency && entry.quarter === quarter)?.score ?? null;
+  const score = (competencyId: string, quarter: number) =>
+    performance.entries.find((entry) => entry.competencyId === competencyId && entry.quarter === quarter)?.score ?? null;
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
@@ -39,22 +39,25 @@ function ScoreTable({
           </tr>
         </thead>
         <tbody>
-          {PERFORMANCE_COMPETENCIES.map((competency) => {
-            const row = performance.competencyAverages.find((item) => item.competency === competency.key);
+          {performance.competencies.map((competency) => {
+            const row = performance.competencyAverages.find((item) => item.competencyId === competency.id);
             return (
-              <tr key={competency.key} className="border-t border-t-line">
-                <td className="py-2 pr-3 text-app">{competency.label}</td>
+              <tr key={competency.id} className="border-t border-t-line">
+                <td className="py-2 pr-3 text-app">
+                  {competency.name}
+                  {competency.archived ? <span className="ml-2 text-xs text-muted">arquivada</span> : null}
+                </td>
                 {QUARTERS.map((quarter) => (
                   <td key={quarter} className="px-2 py-1.5">
                     <SelectInput
-                      aria-label={`${competency.label}, ${quarter}º trimestre`}
+                      aria-label={`${competency.name}, ${quarter}º trimestre`}
                       className="py-1.5 tabular-nums"
-                      value={score(competency.key, quarter) ?? ""}
+                      value={score(competency.id, quarter) ?? ""}
                       disabled={disabled}
                       onChange={(event) =>
                         onChange({
                           quarter,
-                          competency: competency.key,
+                          competencyId: competency.id,
                           score: event.target.value ? (Number(event.target.value) as PerformanceScore) : null,
                         })
                       }
@@ -96,18 +99,18 @@ function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
     <ol className="flex flex-col gap-2">
       {rows.map((row) => {
         const quarters = QUARTERS.map((quarter) => {
-          const entry = performance.entries.find((item) => item.competency === row.competency && item.quarter === quarter);
+          const entry = performance.entries.find((item) => item.competencyId === row.competencyId && item.quarter === quarter);
           return `${quarter}º tri ${entry ? entry.score : "—"}`;
         });
-        const label = competencyLabel(row.competency);
+        const label = row.name;
         return (
           <li
-            key={row.competency}
+            key={row.competencyId}
             tabIndex={0}
             aria-label={`${label}: média ${formatScore(row.average)} em ${row.quarters} trimestre(s)`}
-            onPointerEnter={() => setActive(row.competency)}
+            onPointerEnter={() => setActive(row.competencyId)}
             onPointerLeave={() => setActive(null)}
-            onFocus={() => setActive(row.competency)}
+            onFocus={() => setActive(row.competencyId)}
             onBlur={() => setActive(null)}
             className="relative grid grid-cols-1 gap-1 rounded-control px-1 py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-accent sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-center sm:gap-3"
           >
@@ -116,7 +119,7 @@ function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
             <span className="block border-l border-l-line pr-10">
               <span className="relative block h-3.5">
                 <span
-                  className={`block h-full rounded-r-[4px] bg-chart transition-opacity ${active === row.competency ? "opacity-75" : ""}`}
+                  className={`block h-full rounded-r-[4px] bg-chart transition-opacity ${active === row.competencyId ? "opacity-75" : ""}`}
                   style={{ width: `${(row.average / 10) * 100}%` }}
                 />
                 <span
@@ -127,7 +130,7 @@ function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
                 </span>
               </span>
             </span>
-            {active === row.competency ? (
+            {active === row.competencyId ? (
               <span
                 role="tooltip"
                 className="absolute right-0 top-full z-10 mt-1 rounded-control border border-line bg-surface px-3 py-2 text-xs shadow-card"
@@ -164,9 +167,14 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
             </SelectInput>
           </Field>
         </div>
-        <p className="text-xs text-muted">
-          {PERFORMANCE_SCORES.map((value) => `${value} ${PERFORMANCE_SCORE_LABELS[value]}`).join(" · ")} · grava ao escolher
-        </p>
+        <div className="flex flex-col items-start gap-1 sm:items-end">
+          <p className="text-xs text-muted">
+            {PERFORMANCE_SCORES.map((value) => `${value} ${PERFORMANCE_SCORE_LABELS[value]}`).join(" · ")} · grava ao escolher
+          </p>
+          <Link to="/cadastro/competencias" className="text-sm font-medium text-accent hover:underline">
+            Editar competências
+          </Link>
+        </div>
       </div>
       {performance.isError ? <Notice>{errorMessage(performance.error)}</Notice> : null}
       {!data && performance.isFetching ? <p className="text-sm text-muted">Carregando…</p> : null}

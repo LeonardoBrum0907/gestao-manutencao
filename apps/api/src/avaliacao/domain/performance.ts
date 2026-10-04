@@ -1,11 +1,8 @@
 import {
   GESTOR_TIME_ZONE,
-  isPerformanceCompetency,
   isPerformanceScore,
-  PERFORMANCE_COMPETENCIES,
   QUARTERS,
   type MemberPosition,
-  type PerformanceCompetency,
   type PerformanceEntryDto,
   type PerformanceScore,
   type Quarter,
@@ -21,11 +18,6 @@ export function requireQuarter(value: number): Quarter {
   const quarter = QUARTERS.find((item) => item === value);
   if (quarter === undefined) throw new DomainError("invalid", 400, "Trimestre inválido.");
   return quarter;
-}
-
-export function requireCompetency(value: string): PerformanceCompetency {
-  if (!isPerformanceCompetency(value)) throw new DomainError("invalid", 400, "Competência inválida.");
-  return value;
 }
 
 export function requireScore(value: unknown): PerformanceScore | null {
@@ -52,14 +44,14 @@ function average(values: number[]): number | null {
 }
 
 // Como no SIGEM: média de cada trimestre, média de cada competência nos trimestres avaliados,
-// e a do ano é a média dos trimestres que têm nota.
-export function summarizePerformance(entries: PerformanceEntryDto[]) {
+// e a do ano é a média dos trimestres que têm nota. Uma média por linha do ano, na ordem recebida.
+export function summarizePerformance(entries: PerformanceEntryDto[], competencyIds: string[]) {
   const quarterAverages = QUARTERS.map((quarter) =>
     average(entries.filter((entry) => entry.quarter === quarter).map((entry) => entry.score)),
   );
-  const competencyAverages = PERFORMANCE_COMPETENCIES.map(({ key }) => {
-    const scores = entries.filter((entry) => entry.competency === key).map((entry) => entry.score);
-    return { competency: key, average: average(scores), quarters: scores.length };
+  const competencyAverages = competencyIds.map((competencyId) => {
+    const scores = entries.filter((entry) => entry.competencyId === competencyId).map((entry) => entry.score);
+    return { competencyId, average: average(scores), quarters: scores.length };
   });
   const rated = quarterAverages.filter((value): value is number => value !== null);
   return { quarterAverages, competencyAverages, average: average(rated) };

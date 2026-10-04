@@ -3,15 +3,16 @@ import type { MemberPerformanceDto, MemberPosition } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject } from "../../kernel/parse";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
+import { assertScorable, rowsForYear } from "../domain/competency-catalog";
 import {
   assertPerformanceEditable,
   currentYear,
-  requireCompetency,
   requireQuarter,
   requireScore,
   requireYear,
   summarizePerformance,
 } from "../domain/performance";
+import { CompetencyRepository } from "../infra/competency.repository";
 import { PerformanceRepository } from "../infra/performance.repository";
 
 function yearFrom(value: string | undefined, now: Date): number {
@@ -23,6 +24,7 @@ function yearFrom(value: string | undefined, now: Date): number {
 export class MemberPerformance {
   constructor(
     private readonly performance: PerformanceRepository,
+    private readonly competencies: CompetencyRepository,
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
 
@@ -31,22 +33,27 @@ export class MemberPerformance {
     return this.build(memberId, yearFrom(year, now));
   }
 
-  async setScore(memberId: string, year: string, quarter: string, competency: string, body: unknown): Promise<MemberPerformanceDto> {
+  async setScore(memberId: string, year: string, quarter: string, competencyId: string, body: unknown): Promise<MemberPerformanceDto> {
     assertPerformanceEditable(await this.position(memberId));
-    const target = {
-      year: requireYear(Number(year)),
-      quarter: requireQuarter(Number(quarter)),
-      competency: requireCompetency(competency),
-    };
+    const competency = await this.competencies.find(competencyId);
+    if (!competency) throw new DomainError("invalid", 400, "Competência não encontrada.");
+    const target = { year: requireYear(Number(year)), quarter: requireQuarter(Number(quarter)) };
     const score = requireScore(readObject(body).score ?? null);
-    if (score === null) await this.performance.clear(memberId, target.year, target.quarter, target.competency);
-    else await this.performance.save(memberId, target.year, { quarter: target.quarter, competency: target.competency, score });
+    assertScorable(competency, score);
+    if (score === null) await this.performance.clear(memberId, target.year, target.quarter, competency.id);
+    else await this.performance.save(memberId, target.year, { quarter: target.quarter, competencyId: competency.id, score });
     return this.build(memberId, target.year);
   }
 
   private async build(memberId: string, year: number): Promise<MemberPerformanceDto> {
-    const [entries, years] = await Promise.all([this.performance.load(memberId, year), this.performance.years(memberId)]);
-    return { memberId, year, entries, years, ...summarizePerformance(entries) };
+    const [entries, years, all] = await Promise.all([
+      this.performance.load(memberId, year),
+      this.performance.years(memberId),
+      this.competencies.listOrdered(),
+    ]);
+    const competencies = rowsForYear(all, entries);
+    const summary = summarizePerformance(entries, competencies.map((competency) => competency.id));
+    return { memberId, year, competencies, entries, years, ...summary };
   }
 
   private async position(memberId: string): Promise<MemberPosition> {

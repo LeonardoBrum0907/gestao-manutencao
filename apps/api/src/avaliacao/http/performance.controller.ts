@@ -10,14 +10,14 @@ export class PerformanceController {
     return this.performance.show(memberId, year);
   }
 
-  @Put(":year/:quarter/:competency")
+  @Put(":year/:quarter/:competencyId")
   setScore(
     @Param("memberId") memberId: string,
     @Param("year") year: string,
     @Param("quarter") quarter: string,
-    @Param("competency") competency: string,
+    @Param("competencyId") competencyId: string,
     @Body() body: unknown,
   ) {
-    return this.performance.setScore(memberId, year, quarter, competency, body);
+    return this.performance.setScore(memberId, year, quarter, competencyId, body);
   }
 }
