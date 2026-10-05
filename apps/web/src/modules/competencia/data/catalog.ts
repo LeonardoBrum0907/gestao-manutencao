@@ -19,16 +19,17 @@ function useCatalogMutation<TInput, TResult>(mutationFn: (input: TInput) => Prom
     onSettled: () => {
       client.invalidateQueries({ queryKey: ["matrix-catalog"] });
       client.invalidateQueries({ queryKey: ["matrix"] });
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
     },
   });
 }
 
 export function useSaveEquipment() {
-  return useCatalogMutation((input: { id?: string; name: string; archived: boolean }) =>
+  return useCatalogMutation((input: { id?: string; name: string; archived: boolean; minQualified?: number }) =>
     input.id
       ? api<MatrixEquipmentDto>(`/api/matrix-catalog/equipments/${input.id}`, {
           method: "PATCH",
-          body: JSON.stringify({ name: input.name, archived: input.archived }),
+          body: JSON.stringify({ name: input.name, archived: input.archived, minQualified: input.minQualified }),
         })
       : api<MatrixEquipmentDto>("/api/matrix-catalog/equipments", { method: "POST", body: JSON.stringify({ name: input.name }) }),
   );

@@ -8,6 +8,7 @@ import {
   assertEquipmentNameAvailable,
   assertSkillCanBeRemoved,
   requireLevel,
+  requireMinQualified,
   requireText,
 } from "../domain/catalog";
 import { CatalogRepository, type SkillWrite } from "../infra/catalog.repository";
@@ -33,7 +34,11 @@ export class MatrixCatalog {
     const source = readObject(body);
     const name = requireText(requiredString(source, "name", EQUIPMENT_MESSAGE), EQUIPMENT_MESSAGE);
     assertEquipmentNameAvailable((await this.catalog.findEquipmentByName(name))?.id ?? null, id);
-    return this.catalog.updateEquipment(id, { name, archived: requiredBoolean(source, "archived") });
+    return this.catalog.updateEquipment(id, {
+      name,
+      archived: requiredBoolean(source, "archived"),
+      ...("minQualified" in source ? { minQualified: requireMinQualified(source.minQualified) } : {}),
+    });
   }
 
   async removeEquipment(id: string): Promise<void> {

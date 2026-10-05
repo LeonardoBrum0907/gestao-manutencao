@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyScore, MemberMatrixDto } from "@manutencao/shared";
+import type { CompetencyScore, MemberMatrixDto, TeamMatrixDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export type SkillWrite = {
@@ -17,6 +17,13 @@ export function useMatrix(memberId: string | undefined) {
   });
 }
 
+export function useTeamMatrix() {
+  return useQuery({
+    queryKey: ["team-matrix"],
+    queryFn: () => api<TeamMatrixDto>("/api/team-matrix"),
+  });
+}
+
 export function useSetMatrixEquipments(memberId: string) {
   const client = useQueryClient();
   return useMutation({
@@ -25,7 +32,10 @@ export function useSetMatrixEquipments(memberId: string) {
         method: "PUT",
         body: JSON.stringify({ equipments }),
       }),
-    onSuccess: (matrix) => client.setQueryData(["matrix", memberId], matrix),
+    onSuccess: (matrix) => {
+      client.setQueryData(["matrix", memberId], matrix);
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
   });
 }
 
@@ -54,6 +64,9 @@ export function useSetSkill(memberId: string) {
     onError: (_error, _write, context) => {
       if (context?.previous) client.setQueryData(["matrix", memberId], context.previous);
     },
-    onSuccess: (matrix) => client.setQueryData(["matrix", memberId], matrix),
+    onSuccess: (matrix) => {
+      client.setQueryData(["matrix", memberId], matrix);
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
   });
 }

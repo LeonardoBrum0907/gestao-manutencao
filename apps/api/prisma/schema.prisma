@@ -205,12 +205,14 @@ model MemberPdiItem {
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
 // Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
 model MatrixEquipment {
-  id       String                  @id @default(cuid())
-  name     String                  @unique
-  position Int
-  archived Boolean                 @default(false)
-  skills   MatrixSkill[]
-  members  MemberMatrixEquipment[]
+  id           String                  @id @default(cuid())
+  name         String                  @unique
+  position     Int
+  archived     Boolean                 @default(false)
+  // Quantos técnicos qualificados o equipamento precisa ter; 0 = sem mínimo.
+  minQualified Int                     @default(0)
+  skills       MatrixSkill[]
+  members      MemberMatrixEquipment[]
 }
 
 model MatrixSkill {

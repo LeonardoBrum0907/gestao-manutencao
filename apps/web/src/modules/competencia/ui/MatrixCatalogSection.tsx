@@ -92,6 +92,7 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
   const reorder = useReorderEquipments();
   const [editing, setEditing] = useState<MatrixEquipmentDto | null | undefined>(undefined);
   const [name, setName] = useState("");
+  const [minQualified, setMinQualified] = useState("0");
   const ids = catalog.equipments.map((equipment) => equipment.id);
   const activeSkills = (id: string) => catalog.skills.filter((skill) => skill.equipmentId === id && !skill.archived).length;
 
@@ -99,11 +100,15 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
     save.reset();
     setEditing(equipment);
     setName(equipment?.name ?? "");
+    setMinQualified(String(equipment?.minQualified ?? 0));
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    save.mutate({ id: editing?.id, name, archived: editing?.archived ?? false }, { onSuccess: () => setEditing(undefined) });
+    save.mutate(
+      { id: editing?.id, name, archived: editing?.archived ?? false, minQualified: Math.max(0, Math.floor(Number(minQualified) || 0)) },
+      { onSuccess: () => setEditing(undefined) },
+    );
   }
 
   const error = (editing === undefined ? save.error : null) ?? remove.error ?? reorder.error;
@@ -137,7 +142,10 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
               >
                 {equipment.name}
               </button>
-              <span className="shrink-0 text-xs text-muted">{activeSkills(equipment.id)} habilidades</span>
+              <span className="shrink-0 text-xs text-muted">
+                {activeSkills(equipment.id)} habilidades
+                {equipment.minQualified ? ` · mínimo ${equipment.minQualified} qualificado(s)` : ""}
+              </span>
               {equipment.archived ? <ArchivedChip /> : null}
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
@@ -166,6 +174,11 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
           <Field label="Nome">
             <TextInput value={name} onChange={(event) => setName(event.target.value)} />
           </Field>
+          {editing ? (
+            <Field label="Mínimo de técnicos qualificados (0 = sem mínimo)">
+              <TextInput type="number" min={0} max={99} value={minQualified} onChange={(event) => setMinQualified(event.target.value)} />
+            </Field>
+          ) : null}
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={save.isPending}>

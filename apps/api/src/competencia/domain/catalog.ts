@@ -41,3 +41,10 @@ export function assertSkillCanBeRemoved(scoreCount: number): void {
     );
   }
 }
+
+export function requireMinQualified(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 99) {
+    throw new DomainError("invalid", 400, "O mínimo de qualificados vai de 0 a 99.");
+  }
+  return value;
+}

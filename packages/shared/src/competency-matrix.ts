@@ -26,6 +26,8 @@ export type MatrixEquipmentDto = {
   id: string;
   name: string;
   archived: boolean;
+  // Quantos técnicos qualificados o equipamento precisa ter (0 = sem mínimo definido).
+  minQualified: number;
 };
 
 export type MatrixSkillDto = {
@@ -41,4 +43,36 @@ export type MatrixSkillDto = {
 export type MatrixCatalogDto = {
   equipments: MatrixEquipmentDto[];
   skills: MatrixSkillDto[];
+};
+
+// Qualificado no equipamento: aderência da matriz do técnico a partir deste percentual.
+export const QUALIFIED_ADHERENCE = 80;
+
+export type TeamCoverageStatus = "ok" | "single" | "short" | "none";
+
+export type TeamEquipmentDto = {
+  id: string;
+  name: string;
+  minQualified: number;
+  qualified: number;
+  // Qualificados por turno (só os turnos com técnico no equipamento).
+  qualifiedByShift: Record<string, number>;
+  // none: ninguém qualificado; short: abaixo do mínimo; single: só um qualificado (ponto único).
+  status: TeamCoverageStatus;
+};
+
+export type TeamMemberDto = {
+  id: string;
+  name: string;
+  shift: string;
+  teamId: string | null;
+  // Itens do PDI em aberto com prazo vencido.
+  pdiOverdue: number;
+  // Só os equipamentos marcados na matriz do técnico.
+  cells: { equipmentId: string; adherence: number | null; scored: number; applicable: number; below: number }[];
+};
+
+export type TeamMatrixDto = {
+  equipments: TeamEquipmentDto[];
+  members: TeamMemberDto[];
 };

@@ -26,6 +26,7 @@ const groups: { title?: string; items: Entry[] }[] = [
     items: [
       { to: "/cadastro/colaboradores", label: "Colaboradores", icon: "user" },
       { to: "/cadastro/equipes", label: "Equipes", icon: "users" },
+      { to: "/competencias", label: "Matriz da equipe", icon: "matrix" },
     ],
   },
 ];

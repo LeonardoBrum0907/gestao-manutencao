@@ -1,6 +1,19 @@
 // Ícones de traço, no tamanho do texto do menu. Desenho próprio, sem biblioteca.
 const paths = {
   plus: <path d="M12 5v14M5 12h14" />,
+  matrix: (
+    <>
+      <rect x="3" y="3" width="5" height="5" rx="1" />
+      <rect x="10" y="3" width="5" height="5" rx="1" />
+      <rect x="17" y="3" width="4" height="5" rx="1" />
+      <rect x="3" y="10" width="5" height="5" rx="1" />
+      <rect x="10" y="10" width="5" height="5" rx="1" />
+      <rect x="17" y="10" width="4" height="5" rx="1" />
+      <rect x="3" y="17" width="5" height="4" rx="1" />
+      <rect x="10" y="17" width="5" height="4" rx="1" />
+      <rect x="17" y="17" width="4" height="4" rx="1" />
+    </>
+  ),
   dashboard: (
     <>
       <rect x="3" y="3" width="7" height="9" rx="1.5" />
