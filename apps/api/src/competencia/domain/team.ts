@@ -1,5 +1,4 @@
 import {
-  QUALIFIED_ADHERENCE,
   type MatrixCatalogDto,
   type TeamCoverageStatus,
   type TeamEquipmentDto,
@@ -25,8 +24,8 @@ export function coverageStatus(qualified: number, minQualified: number): TeamCov
 }
 
 // Visão da equipe: para cada equipamento ativo, quantos técnicos o têm na matriz e quantos estão qualificados
-// (aderência >= 80%). Equipamento e habilidade arquivados ficam fora, como na matriz de cada técnico.
-export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly TeamMemberInput[]): TeamMatrixDto {
+// (aderência a partir do corte configurado, 80% por padrão). Equipamento e habilidade arquivados ficam fora, como na matriz de cada técnico.
+export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly TeamMemberInput[], qualifiedAdherence: number): TeamMatrixDto {
   const equipments = catalog.equipments.filter((equipment) => !equipment.archived);
   const skillsOf = (id: string) => catalog.skills.filter((skill) => !skill.archived && skill.equipmentId === id);
   const qualified = new Map<string, string[]>(equipments.map((equipment) => [equipment.id, []]));
@@ -37,13 +36,14 @@ export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly Tea
       .filter((equipment) => member.equipments.includes(equipment.id))
       .map((equipment) => {
         const summary = summarize(skillsOf(equipment.id), byId);
-        if (summary.adherence !== null && summary.adherence >= QUALIFIED_ADHERENCE) qualified.get(equipment.id)?.push(member.shift);
+        if (summary.adherence !== null && summary.adherence >= qualifiedAdherence) qualified.get(equipment.id)?.push(member.shift);
         return { equipmentId: equipment.id, adherence: summary.adherence, scored: summary.scored, applicable: summary.applicable, below: summary.below };
       });
     return { id: member.id, name: member.name, shift: member.shift, teamId: member.teamId, pdiOverdue: member.pdiOverdue, cells };
   });
 
   return {
+    qualifiedAdherence,
     equipments: equipments.map((equipment): TeamEquipmentDto => {
       const shifts = qualified.get(equipment.id) ?? [];
       const qualifiedByShift: Record<string, number> = {};

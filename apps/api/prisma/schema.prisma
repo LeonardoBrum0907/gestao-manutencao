@@ -202,6 +202,12 @@ model MemberPdiItem {
   @@index([responsibleId])
 }
 
+// Ajustes da matriz (uma linha só, id "default"): hoje, a aderência mínima para contar como qualificado.
+model MatrixSetting {
+  id                 String @id @default("default")
+  qualifiedAdherence Int    @default(80)
+}
+
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
 // Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
 model MatrixEquipment {

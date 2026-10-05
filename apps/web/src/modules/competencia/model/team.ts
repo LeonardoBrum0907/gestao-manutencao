@@ -1,5 +1,4 @@
 import type { TeamEquipmentDto, TeamMatrixDto, TeamMemberDto } from "@manutencao/shared";
-import { QUALIFIED_ADHERENCE } from "@manutencao/shared";
 
 export const coverageLabel: Record<TeamEquipmentDto["status"], string> = {
   ok: "Coberto",
@@ -15,17 +14,17 @@ export function alertsOf(team: TeamMatrixDto): TeamEquipmentDto[] {
   return team.equipments.filter((equipment) => equipment.status !== "ok").sort((a, b) => severity[a.status] - severity[b.status]);
 }
 
-export function isQualified(adherence: number | null): boolean {
-  return adherence !== null && adherence >= QUALIFIED_ADHERENCE;
+export function isQualified(adherence: number | null, threshold: number): boolean {
+  return adherence !== null && adherence >= threshold;
 }
 
 export function qualifiedMembers(team: TeamMatrixDto, equipmentId: string): TeamMemberDto[] {
-  return team.members.filter((member) => member.cells.some((cell) => cell.equipmentId === equipmentId && isQualified(cell.adherence)));
+  return team.members.filter((member) => member.cells.some((cell) => cell.equipmentId === equipmentId && isQualified(cell.adherence, team.qualifiedAdherence)));
 }
 
-export function cellClass(adherence: number | null, scored: number): string {
+export function cellClass(adherence: number | null, scored: number, threshold: number): string {
   if (scored === 0) return "bg-chip text-muted";
-  return isQualified(adherence) ? "bg-accent-soft text-accent" : "bg-danger-soft text-danger";
+  return isQualified(adherence, threshold) ? "bg-accent-soft text-accent" : "bg-danger-soft text-danger";
 }
 
 export function statusChipClass(status: TeamEquipmentDto["status"]): string {

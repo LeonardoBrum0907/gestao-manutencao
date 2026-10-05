@@ -48,3 +48,10 @@ export function requireMinQualified(value: unknown): number {
   }
   return value;
 }
+
+export function requireQualifiedAdherence(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 100) {
+    throw new DomainError("invalid", 400, "A aderência para qualificar vai de 1 a 100.");
+  }
+  return value;
+}

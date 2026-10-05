@@ -15,7 +15,9 @@ import {
   useMatrixCatalog,
   useReorderEquipments,
   useReorderSkills,
+  useMatrixSettings,
   useSaveEquipment,
+  useSaveMatrixSettings,
   useSaveSkill,
   type SkillInput,
 } from "../data/catalog";
@@ -365,6 +367,48 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
   );
 }
 
+function QualifiedAdherence() {
+  const settings = useMatrixSettings();
+  const save = useSaveMatrixSettings();
+  const [value, setValue] = useState<string | null>(null);
+  const current = settings.data?.qualifiedAdherence;
+  const shown = value ?? String(current ?? "");
+  const number = Number(shown);
+  const valid = Number.isInteger(number) && number >= 1 && number <= 100;
+
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold text-app">Quando o técnico conta como qualificado</h3>
+      <p className="mt-1 text-sm text-muted">
+        Aderência mínima da matriz do técnico em um equipamento para ele contar como qualificado na Matriz da equipe (cobertura e alertas). Vale para todos os
+        equipamentos; o mínimo de qualificados é definido em cada equipamento, abaixo.
+      </p>
+      {settings.isError ? <Notice>{errorMessage(settings.error)}</Notice> : null}
+      <form
+        className="mt-3 flex flex-wrap items-end gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (valid) save.mutate({ qualifiedAdherence: number }, { onSuccess: () => setValue(null) });
+        }}
+      >
+        <div className="w-40">
+          <Field label="Aderência mínima (%)">
+            <TextInput type="number" min={1} max={100} value={shown} disabled={settings.isPending} onChange={(event) => setValue(event.target.value)} />
+          </Field>
+        </div>
+        <Button type="submit" disabled={!valid || save.isPending || number === current}>
+          Gravar
+        </Button>
+      </form>
+      {save.isError ? (
+        <div className="mt-3">
+          <Notice>{errorMessage(save.error)}</Notice>
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
 export function MatrixCatalogSection() {
   const catalog = useMatrixCatalog();
   return (
@@ -377,6 +421,7 @@ export function MatrixCatalogSection() {
       {catalog.isError ? <Notice>{errorMessage(catalog.error)}</Notice> : null}
       {catalog.data ? (
         <div className="flex flex-col gap-6">
+          <QualifiedAdherence />
           <Equipments catalog={catalog.data} />
           <Skills catalog={catalog.data} />
         </div>

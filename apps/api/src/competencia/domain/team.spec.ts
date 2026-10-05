@@ -31,7 +31,7 @@ describe("visão da equipe", () => {
       member("a", "first", ["e1"], [meets("s1"), meets("s2")]),
       member("b", "second", ["e1"], [meets("s1"), below("s2")]),
       member("c", "first", ["e1", "e2"], [meets("s1"), meets("s2"), meets("s3")]),
-    ]);
+    ], 80);
     const blister = team.equipments.find((item) => item.id === "e1");
     assert.equal(blister?.qualified, 2);
     assert.deepEqual(blister?.qualifiedByShift, { first: 2 });
@@ -39,10 +39,18 @@ describe("visão da equipe", () => {
   });
 
   it("deixa equipamento arquivado de fora e só mostra o que o técnico marcou", () => {
-    const team = buildTeamMatrix(catalog, [member("a", "first", ["e1", "e3"], [meets("s1")])]);
+    const team = buildTeamMatrix(catalog, [member("a", "first", ["e1", "e3"], [meets("s1")])], 80);
     assert.deepEqual(team.equipments.map((item) => item.id), ["e1", "e2"]);
     assert.deepEqual(team.members[0]?.cells.map((cell) => cell.equipmentId), ["e1"]);
     assert.equal(team.members[0]?.cells[0]?.adherence, 50);
+  });
+
+  it("usa o corte de aderência configurado", () => {
+    const people = [member("a", "first", ["e1"], [meets("s1"), below("s2")])];
+    assert.equal(buildTeamMatrix(catalog, people, 80).equipments[0]?.qualified, 0);
+    const lenient = buildTeamMatrix(catalog, people, 50);
+    assert.equal(lenient.equipments[0]?.qualified, 1);
+    assert.equal(lenient.qualifiedAdherence, 50);
   });
 
   it("classifica a cobertura", () => {

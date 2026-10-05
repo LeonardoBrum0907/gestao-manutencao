@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MEMBER_SHIFTS, MEMBER_SHIFT_LABELS, QUALIFIED_ADHERENCE, type MemberShift, type TeamMatrixDto } from "@manutencao/shared";
+import { MEMBER_SHIFTS, MEMBER_SHIFT_LABELS, type MemberShift, type TeamMatrixDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { useTeamMatrix } from "../data/matrix";
@@ -76,7 +76,7 @@ function Heatmap({ team, shift }: { team: TeamMatrixDto; shift: string }) {
                     <td key={equipment.id} className="px-1 py-1 text-center">
                       {cell ? (
                         <span
-                          className={`block rounded-control px-2 py-1.5 font-semibold tabular-nums ${cellClass(cell.adherence, cell.scored)}`}
+                          className={`block rounded-control px-2 py-1.5 font-semibold tabular-nums ${cellClass(cell.adherence, cell.scored, team.qualifiedAdherence)}`}
                           title={`${cell.scored} de ${cell.applicable} avaliadas, ${cell.below} abaixo do esperado`}
                         >
                           {cell.adherence === null ? "—" : `${cell.adherence}%`}
@@ -126,18 +126,23 @@ export function TeamMatrixPage() {
       <PageTitle
         eyebrow="Equipe"
         title="Matriz da equipe"
-        text={`Aderência de cada técnico por equipamento. Qualificado é aderência de ${QUALIFIED_ADHERENCE}% ou mais. O mínimo por equipamento se define em Configurações.`}
+        text={`Aderência de cada técnico por equipamento. Qualificado é aderência de ${team.data?.qualifiedAdherence ?? 80}% ou mais.`}
         action={
-          <Field label="Turno">
-            <SelectInput value={shift} onChange={(event) => setShift(event.target.value)}>
-              <option value="">Todos</option>
-              {MEMBER_SHIFTS.map((item) => (
-                <option key={item} value={item}>
-                  {MEMBER_SHIFT_LABELS[item]}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
+          <div className="flex flex-wrap items-end gap-3">
+            <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
+              Ajustar o corte e o mínimo por equipamento (Configurações › Avaliação)
+            </Link>
+            <Field label="Turno">
+              <SelectInput value={shift} onChange={(event) => setShift(event.target.value)}>
+                <option value="">Todos</option>
+                {MEMBER_SHIFTS.map((item) => (
+                  <option key={item} value={item}>
+                    {MEMBER_SHIFT_LABELS[item]}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
+          </div>
         }
       />
       {team.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}

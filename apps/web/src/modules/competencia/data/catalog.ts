@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSkillDto } from "@manutencao/shared";
+import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSettingsDto, MatrixSkillDto } from "@manutencao/shared";
 import { REFERENCE_DATA } from "../../../app/cache";
 import { api } from "../../../app/http";
 
@@ -66,4 +66,23 @@ export function useReorderSkills() {
       body: JSON.stringify({ ids }),
     }),
   );
+}
+
+export function useMatrixSettings() {
+  return useQuery({
+    queryKey: ["matrix-settings"],
+    queryFn: () => api<MatrixSettingsDto>("/api/matrix-settings"),
+  });
+}
+
+export function useSaveMatrixSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (settings: MatrixSettingsDto) =>
+      api<MatrixSettingsDto>("/api/matrix-settings", { method: "PUT", body: JSON.stringify(settings) }),
+    onSuccess: (settings) => {
+      client.setQueryData(["matrix-settings"], settings);
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
+  });
 }

@@ -45,8 +45,12 @@ export type MatrixCatalogDto = {
   skills: MatrixSkillDto[];
 };
 
-// Qualificado no equipamento: aderência da matriz do técnico a partir deste percentual.
-export const QUALIFIED_ADHERENCE = 80;
+// Qualificado no equipamento: aderência da matriz do técnico a partir deste percentual (o coordenador ajusta em Configurações).
+export const DEFAULT_QUALIFIED_ADHERENCE = 80;
+
+export type MatrixSettingsDto = {
+  qualifiedAdherence: number;
+};
 
 export type TeamCoverageStatus = "ok" | "single" | "short" | "none";
 
@@ -73,6 +77,8 @@ export type TeamMemberDto = {
 };
 
 export type TeamMatrixDto = {
+  // Aderência mínima para contar como qualificado.
+  qualifiedAdherence: number;
   equipments: TeamEquipmentDto[];
   members: TeamMemberDto[];
 };
