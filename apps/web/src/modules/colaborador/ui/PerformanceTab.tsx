@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  DEFAULT_PERFORMANCE_TARGET,
   PERFORMANCE_SCORE_LABELS,
   PERFORMANCE_SCORES,
   QUARTERS,
@@ -10,8 +11,9 @@ import {
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Field, Notice, SelectInput, Stat } from "../../../design/ui/controls";
+import { useMatrixSettings } from "../../competencia/data/catalog";
 import { usePerformance, useSetScore, type ScoreWrite } from "../data/performance";
-import { formatScore, PERFORMANCE_TARGET, rankedAverages, scoreBand, thisYear, yearOptions } from "../model/performance";
+import { formatScore, rankedAverages, scoreBand, thisYear, yearOptions } from "../model/performance";
 
 function ScoreTable({
   performance,
@@ -115,7 +117,7 @@ function Delta({ value }: { value: number | null }) {
 }
 
 // Uma linha por competência: barra da média (com a meta marcada), um ponto por trimestre e a variação do último.
-function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
+function RankedChart({ performance, target }: { performance: MemberPerformanceDto; target: number }) {
   const rows = rankedAverages(performance);
   if (!rows.length) return <p className="text-sm text-muted">O gráfico aparece quando houver nota.</p>;
   const best = rows[0]!.competencyId;
@@ -131,7 +133,7 @@ function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
         ))}
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-0.5 bg-muted" />
-          meta {PERFORMANCE_TARGET}
+          meta {target}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full border border-dashed border-muted" />
@@ -168,7 +170,7 @@ function RankedChart({ performance }: { performance: MemberPerformanceDto }) {
                 <span className="block h-full rounded-full bg-chart opacity-70" style={{ width: `${(row.average / 10) * 100}%` }} />
                 <span
                   className="absolute -top-1 -bottom-1 w-0.5 bg-muted"
-                  style={{ left: `${PERFORMANCE_TARGET * 10}%` }}
+                  style={{ left: `${target * 10}%` }}
                   aria-hidden
                 />
               </span>
@@ -202,6 +204,7 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
   const current = thisYear();
   const [year, setYear] = useState(current);
   const performance = usePerformance(member.id, year);
+  const settings = useMatrixSettings();
   const setScore = useSetScore(member.id, year);
   const data = performance.data?.year === year ? performance.data : undefined;
   return (
@@ -252,7 +255,7 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
             <h2 className="text-sm font-semibold text-app">Média por competência em {year}</h2>
             <p className="mt-1 text-sm text-muted">Da maior para a menor média, na escala de 0 a 10, com a nota de cada trimestre e a variação do último trimestre com nota.</p>
             <div className="mt-4">
-              <RankedChart performance={data} />
+              <RankedChart performance={data} target={settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET} />
             </div>
           </Card>
         </>

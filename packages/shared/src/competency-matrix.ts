@@ -48,8 +48,12 @@ export type MatrixCatalogDto = {
 // Qualificado no equipamento: aderência da matriz do técnico a partir deste percentual (o coordenador ajusta em Configurações).
 export const DEFAULT_QUALIFIED_ADHERENCE = 80;
 
+// Meta das notas de desempenho (10/8/6/4/2): o gráfico por competência marca esta nota.
+export const DEFAULT_PERFORMANCE_TARGET = 8;
+
 export type MatrixSettingsDto = {
   qualifiedAdherence: number;
+  performanceTarget: number;
 };
 
 export type TeamCoverageStatus = "ok" | "single" | "short" | "none";

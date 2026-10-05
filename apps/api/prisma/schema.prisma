@@ -202,10 +202,11 @@ model MemberPdiItem {
   @@index([responsibleId])
 }
 
-// Ajustes da matriz (uma linha só, id "default"): hoje, a aderência mínima para contar como qualificado.
+// Ajustes de matriz e desempenho (uma linha só, id "default"): aderência mínima para contar como qualificado e meta das notas do gráfico de desempenho.
 model MatrixSetting {
   id                 String @id @default("default")
   qualifiedAdherence Int    @default(80)
+  performanceTarget  Int    @default(8)
 }
 
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).

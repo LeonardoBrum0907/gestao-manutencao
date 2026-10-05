@@ -78,7 +78,7 @@ export function useMatrixSettings() {
 export function useSaveMatrixSettings() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (settings: MatrixSettingsDto) =>
+    mutationFn: (settings: Partial<MatrixSettingsDto>) =>
       api<MatrixSettingsDto>("/api/matrix-settings", { method: "PUT", body: JSON.stringify(settings) }),
     onSuccess: (settings) => {
       client.setQueryData(["matrix-settings"], settings);

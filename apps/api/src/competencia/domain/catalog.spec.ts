@@ -7,6 +7,7 @@ import {
   assertSkillCanBeRemoved,
   requireLevel,
   requireMinQualified,
+  requirePerformanceTarget,
   requireQualifiedAdherence,
   requireText,
 } from "./catalog";
@@ -63,5 +64,13 @@ describe("cadastro da matriz", () => {
     fails(() => requireQualifiedAdherence(101), "invalid", 400);
     fails(() => requireQualifiedAdherence(79.5), "invalid", 400);
     fails(() => requireQualifiedAdherence(undefined), "invalid", 400);
+  });
+
+  it("aceita como meta de desempenho só uma das notas da escala", () => {
+    assert.equal(requirePerformanceTarget(8), 8);
+    assert.equal(requirePerformanceTarget(10), 10);
+    fails(() => requirePerformanceTarget(7), "invalid", 400);
+    fails(() => requirePerformanceTarget("8"), "invalid", 400);
+    fails(() => requirePerformanceTarget(undefined), "invalid", 400);
   });
 });

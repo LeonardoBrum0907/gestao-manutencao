@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DEFAULT_QUALIFIED_ADHERENCE, type MatrixSettingsDto } from "@manutencao/shared";
+import { DEFAULT_PERFORMANCE_TARGET, DEFAULT_QUALIFIED_ADHERENCE, type MatrixSettingsDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 
 const ROW = "default";
@@ -10,15 +10,18 @@ export class SettingsRepository {
 
   async load(): Promise<MatrixSettingsDto> {
     const row = await this.prisma.matrixSetting.findUnique({ where: { id: ROW } });
-    return { qualifiedAdherence: row?.qualifiedAdherence ?? DEFAULT_QUALIFIED_ADHERENCE };
+    return {
+      qualifiedAdherence: row?.qualifiedAdherence ?? DEFAULT_QUALIFIED_ADHERENCE,
+      performanceTarget: row?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET,
+    };
   }
 
   async save(settings: MatrixSettingsDto): Promise<MatrixSettingsDto> {
     const row = await this.prisma.matrixSetting.upsert({
       where: { id: ROW },
-      create: { id: ROW, qualifiedAdherence: settings.qualifiedAdherence },
-      update: { qualifiedAdherence: settings.qualifiedAdherence },
+      create: { id: ROW, ...settings },
+      update: settings,
     });
-    return { qualifiedAdherence: row.qualifiedAdherence };
+    return { qualifiedAdherence: row.qualifiedAdherence, performanceTarget: row.performanceTarget };
   }
 }

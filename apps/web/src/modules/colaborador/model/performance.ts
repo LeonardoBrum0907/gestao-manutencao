@@ -15,9 +15,6 @@ export function yearOptions(performance: MemberPerformanceDto | undefined, curre
   return [...new Set([current, current - 1, ...(performance?.years ?? [])])].sort((a, b) => b - a);
 }
 
-// Meta de referência do gráfico (nota 8 = "Bom" na escala 10/8/6/4/2).
-export const PERFORMANCE_TARGET = 8;
-
 // Faixa de cor do ponto: 9 a 10, 7 a 8, 5 a 6 e até 4.
 export function scoreBand(score: number): "high" | "good" | "mid" | "low" {
   return score >= 9 ? "high" : score >= 7 ? "good" : score >= 5 ? "mid" : "low";
