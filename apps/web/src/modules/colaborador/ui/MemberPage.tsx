@@ -49,9 +49,17 @@ export function MemberPage() {
         title={member.name}
         text={subtitle}
         action={
-          <Button tone="ghost" onClick={() => setEditing(true)}>
-            Editar
-          </Button>
+          <div className="flex gap-2">
+            <Link
+              to={`/cadastro/colaboradores/${member.id}/relatorio`}
+              className="inline-flex items-center justify-center rounded-control border border-line bg-chip px-4 py-2.5 text-sm font-semibold text-app transition hover:bg-accent-soft"
+            >
+              Relatório PDF
+            </Link>
+            <Button tone="ghost" onClick={() => setEditing(true)}>
+              Editar
+            </Button>
+          </div>
         }
       />
       <nav aria-label="Abas da ficha" className="mb-6 flex gap-1 overflow-x-auto border-b border-line">

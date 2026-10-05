@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
 import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
 import { MemberPage } from "../modules/colaborador/ui/MemberPage";
+import { ReportPage } from "../modules/colaborador/ui/ReportPage";
 import { SettingsPage } from "../modules/configuracoes/ui/SettingsPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
@@ -41,6 +42,7 @@ export function AppRouter() {
         <Route path="/registros" element={<Navigate to="/acompanhamento" replace />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
+        <Route path="/cadastro/colaboradores/:memberId/relatorio" element={<ReportPage />} />
         <Route path="/cadastro/colaboradores/:memberId/:tab?" element={<MemberPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/cadastro/equipes" element={<TeamsPage />} />
