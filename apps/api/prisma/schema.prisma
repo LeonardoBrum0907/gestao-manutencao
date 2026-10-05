@@ -1,6 +1,6 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
   previewFeatures = ["relationJoins"]
 }
 
@@ -51,6 +51,7 @@ model Machine {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   memberLinks  MemberMachine[]
+  pdiItems     MemberPdiItem[]
 
   @@index([factoryId])
 }
@@ -109,6 +110,8 @@ model Member {
   evaluations      MemberEvaluation[]
   machines         MemberMachine[]
   pdiAttachments   MemberAttachment[]
+  pdiItems         MemberPdiItem[]         @relation("PdiItemMember")
+  pdiResponsible   MemberPdiItem[]         @relation("PdiItemResponsible")
 
   @@index([roleId])
   @@index([gradeId])
@@ -173,6 +176,32 @@ model MemberAttachment {
   @@index([memberId])
 }
 
+// Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz e/ou máquina), com prazo, responsável e status.
+// Habilidade, máquina e responsável são opcionais e viram nulos se forem excluídos.
+model MemberPdiItem {
+  id            String       @id @default(cuid())
+  memberId      String
+  member        Member       @relation("PdiItemMember", fields: [memberId], references: [id], onDelete: Cascade)
+  title         String
+  skillId       String?
+  skill         MatrixSkill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  machineId     String?
+  machine       Machine?     @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  responsibleId String?
+  responsible   Member?      @relation("PdiItemResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  dueDate       DateTime?    @db.Date
+  status        String       @default("planned")
+  notes         String?
+  completedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([memberId])
+  @@index([skillId])
+  @@index([machineId])
+  @@index([responsibleId])
+}
+
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
 // Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
 model MatrixEquipment {
@@ -194,6 +223,7 @@ model MatrixSkill {
   position    Int
   archived    Boolean         @default(false)
   scores      MemberSkill[]
+  pdiItems    MemberPdiItem[]
 
   @@index([equipmentId])
 }

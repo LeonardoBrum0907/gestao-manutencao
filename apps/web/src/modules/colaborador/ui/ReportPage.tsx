@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import {
   BEHAVIOR_RATING_LABELS,
+  PDI_ITEM_STATUS_LABELS,
   BEHAVIOR_TAG_GROUPS,
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_SCORE_LABELS,
@@ -20,6 +21,8 @@ import { formatWhen, toneLabel } from "../../registro/model/record";
 import { useBehavior } from "../data/behavior";
 import { useMemberRecordList } from "../data/member-records";
 import { usePdi } from "../data/pdi";
+import { usePdiItems } from "../data/pdi-items";
+import { formatDay, isOverdue, sortItems, todayIso } from "../model/pdi-items";
 import { usePerformance } from "../data/performance";
 import { formatScore, thisYear } from "../model/performance";
 import { performanceBand, quartersEvaluated } from "../model/report";
@@ -264,10 +267,15 @@ function Matrix({ memberId }: { memberId: string }) {
 
 function Pdi({ memberId }: { memberId: string }) {
   const pdi = usePdi(memberId);
+  const pdiItems = usePdiItems(memberId);
+  const members = useMembers();
   const machines = useMachines();
   const name = new Map((machines.data ?? []).map((machine) => [machine.id, machine.name]));
   const data = pdi.data;
   if (!data) return null;
+  const today = todayIso();
+  const planned = sortItems(pdiItems.data ?? []);
+  const person = new Map((members.data ?? []).map((item) => [item.id, item.name]));
   const list = (ids: string[]) => (ids.length ? ids.map((id) => name.get(id) ?? id).join(", ") : "—");
   const images = data.attachments.filter((item) => item.mimeType.startsWith("image/"));
   const files = data.attachments.filter((item) => !item.mimeType.startsWith("image/"));
@@ -284,6 +292,34 @@ function Pdi({ memberId }: { memberId: string }) {
           {list(data.developmentMachineIds)}
         </div>
       </div>
+      <h3>Plano de ação</h3>
+      {planned.length === 0 ? (
+        <p className="muted">Nenhum item no plano.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Ação</th>
+              <th>Responsável</th>
+              <th className="n">Prazo</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {planned.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  {item.title}
+                  {item.notes ? <span className="muted"> — {item.notes}</span> : null}
+                </td>
+                <td>{item.responsibleId ? (person.get(item.responsibleId) ?? "—") : "—"}</td>
+                <td className={`n ${isOverdue(item, today) ? "bad" : ""}`}>{formatDay(item.dueDate)}</td>
+                <td className={item.status === "done" ? "ok" : ""}>{PDI_ITEM_STATUS_LABELS[item.status]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       {files.length ? (
         <>
           <h3>Anexos</h3>
