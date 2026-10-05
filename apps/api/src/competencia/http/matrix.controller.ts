@@ -15,6 +15,11 @@ export class MatrixController {
     return this.matrix.setEquipments(memberId, body);
   }
 
+  @Put("skills")
+  setSkills(@Param("memberId") memberId: string, @Body() body: unknown) {
+    return this.matrix.setSkills(memberId, body);
+  }
+
   @Put("skills/:skillId")
   setSkill(@Param("memberId") memberId: string, @Param("skillId") skillId: string, @Body() body: unknown) {
     return this.matrix.setSkill(memberId, skillId, body);

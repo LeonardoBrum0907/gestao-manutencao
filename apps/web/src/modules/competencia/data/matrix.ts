@@ -39,34 +39,60 @@ export function useSetMatrixEquipments(memberId: string) {
   });
 }
 
-export function useSetSkill(memberId: string) {
+// As notas do técnico saem em fila (uma por vez, na ordem em que foram marcadas): marcar rápido, pelo teclado,
+// não deixa uma resposta antiga sobrescrever uma mais nova. A tela já mostra a nota na hora.
+const skillScope = (memberId: string) => ({ id: `matrix-skills-${memberId}` });
+const skillKey = (memberId: string) => ["matrix-skill-write", memberId];
+
+function applyOptimistic(client: ReturnType<typeof useQueryClient>, memberId: string, writes: SkillWrite[]) {
+  client.setQueryData<MemberMatrixDto>(["matrix", memberId], (previous) => {
+    if (!previous) return previous;
+    const changed = new Set(writes.map((write) => write.skillId));
+    const kept = writes
+      .filter((write) => write.score !== null || write.notApplicable || write.expected !== null)
+      .map(({ skillId, score, notApplicable, expected }) => ({ skillId, score, notApplicable, expected }));
+    return { ...previous, entries: [...previous.entries.filter((entry) => !changed.has(entry.skillId)), ...kept] };
+  });
+}
+
+function useSkillWrite<TInput>(memberId: string, request: (input: TInput) => Promise<MemberMatrixDto>, optimistic: (input: TInput) => SkillWrite[]) {
   const client = useQueryClient();
-  return useMutation({
-    mutationFn: ({ skillId, ...body }: SkillWrite) =>
-      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills/${skillId}`, {
-        method: "PUT",
-        body: JSON.stringify(body),
-      }),
-    // Marca na hora (os totais chegam com a resposta); se a API recusar, volta ao que estava.
-    onMutate: async ({ skillId, ...body }) => {
-      await client.cancelQueries({ queryKey: ["matrix", memberId] });
-      const previous = client.getQueryData<MemberMatrixDto>(["matrix", memberId]);
-      if (previous) {
-        const others = previous.entries.filter((entry) => entry.skillId !== skillId);
-        const kept = body.score !== null || body.notApplicable || body.expected !== null;
-        client.setQueryData<MemberMatrixDto>(["matrix", memberId], {
-          ...previous,
-          entries: kept ? [...others, { skillId, ...body }] : others,
-        });
-      }
-      return { previous };
-    },
-    onError: (_error, _write, context) => {
-      if (context?.previous) client.setQueryData(["matrix", memberId], context.previous);
-    },
+  const mutation = useMutation({
+    mutationKey: skillKey(memberId),
+    scope: skillScope(memberId),
+    mutationFn: request,
+    // Falhou: volta ao que o servidor tem.
+    onError: () => client.invalidateQueries({ queryKey: ["matrix", memberId] }),
     onSuccess: (matrix) => {
+      // Só a última resposta da fila vale (as anteriores já estão desatualizadas na tela).
+      if (client.isMutating({ mutationKey: skillKey(memberId) }) > 1) return;
       client.setQueryData(["matrix", memberId], matrix);
       client.invalidateQueries({ queryKey: ["team-matrix"] });
     },
   });
+  return {
+    ...mutation,
+    mutate: (input: TInput) => {
+      applyOptimistic(client, memberId, optimistic(input));
+      mutation.mutate(input);
+    },
+  };
+}
+
+export function useSetSkill(memberId: string) {
+  return useSkillWrite<SkillWrite>(
+    memberId,
+    ({ skillId, ...body }) =>
+      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills/${skillId}`, { method: "PUT", body: JSON.stringify(body) }),
+    (write) => [write],
+  );
+}
+
+// Vários de uma vez (marcar um subconjunto ou o equipamento inteiro como "atende o esperado").
+export function useSetSkills(memberId: string) {
+  return useSkillWrite<SkillWrite[]>(
+    memberId,
+    (entries) => api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills`, { method: "PUT", body: JSON.stringify({ entries }) }),
+    (writes) => writes,
+  );
 }

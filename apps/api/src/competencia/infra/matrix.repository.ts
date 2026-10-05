@@ -51,6 +51,21 @@ export class MatrixRepository {
     });
   }
 
+  // Tudo ou nada: ou entram todas as notas, ou nenhuma.
+  async saveSkills(memberId: string, entries: MatrixEntry[], clear: string[]): Promise<void> {
+    await this.prisma.$transaction([
+      ...entries.map((entry) => {
+        const data = { score: entry.score, notApplicable: entry.notApplicable, expected: entry.expected };
+        return this.prisma.memberSkill.upsert({
+          where: { memberId_skillId: { memberId, skillId: entry.skillId } },
+          create: { memberId, skillId: entry.skillId, ...data },
+          update: data,
+        });
+      }),
+      this.prisma.memberSkill.deleteMany({ where: { memberId, skillId: { in: clear } } }),
+    ]);
+  }
+
   async clearSkill(memberId: string, skillId: string): Promise<void> {
     await this.prisma.memberSkill.deleteMany({ where: { memberId, skillId } });
   }

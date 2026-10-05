@@ -2,10 +2,10 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { MemberMatrixDto, MemberPosition } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
-import { assertMatrixEditable, buildMatrix, normalizeEntry, requireEquipments, requireSkill } from "../domain/matrix";
+import { assertMatrixEditable, buildMatrix, normalizeEntry, requireEquipments, requireSkill, type MatrixEntry } from "../domain/matrix";
 import { CatalogRepository } from "../infra/catalog.repository";
 import { MatrixRepository } from "../infra/matrix.repository";
-import { parseEntry, parseEquipments } from "./parse-matrix";
+import { parseBulk, parseEntry, parseEquipments } from "./parse-matrix";
 
 @Injectable()
 export class MemberMatrix {
@@ -40,6 +40,20 @@ export class MemberMatrix {
     const entry = normalizeEntry(skill.id, parseEntry(body));
     if (entry) await this.matrix.saveSkill(memberId, entry);
     else await this.matrix.clearSkill(memberId, skill.id);
+    return this.build(memberId);
+  }
+
+  async setSkills(memberId: string, body: unknown): Promise<MemberMatrixDto> {
+    const [position, catalog] = await Promise.all([this.assertMember(memberId), this.catalog.load()]);
+    assertMatrixEditable(position);
+    const save: MatrixEntry[] = [];
+    const clear: string[] = [];
+    for (const { skillId, input } of parseBulk(body)) {
+      const entry = normalizeEntry(requireSkill(skillId, catalog).id, input);
+      if (entry) save.push(entry);
+      else clear.push(skillId);
+    }
+    await this.matrix.saveSkills(memberId, save, clear);
     return this.build(memberId);
   }
 
