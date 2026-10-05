@@ -7,6 +7,9 @@ import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
 import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
+import { RpEditPage } from "../modules/rp/ui/RpEditPage";
+import { RpListPage } from "../modules/rp/ui/RpListPage";
+import { RpPastePage } from "../modules/rp/ui/RpPastePage";
 import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
 import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
 import { AppShell } from "../shell/ui/AppShell";
@@ -38,6 +41,9 @@ export function AppRouter() {
         <Route path="/acompanhamento" element={<FollowUpPage />} />
         <Route path="/turno/chamado" element={<ChamadoPage />} />
         <Route path="/turno/ocorrencia" element={<OcorrenciaPage />} />
+        <Route path="/rp" element={<RpListPage />} />
+        <Route path="/rp/novo" element={<RpPastePage />} />
+        <Route path="/rp/:id" element={<RpEditPage />} />
         <Route path="/registros" element={<Navigate to="/acompanhamento" replace />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />

@@ -1,0 +1,59 @@
+*RELATÓRIO PADRÃO – MANUTENÇÃO*
+
+*DATA:* 04/10/2026
+*LINHA* :  blisterflex ONC
+*TAG:* EBS-ONC-02
+
+*PROBLEMA (o que ocorreu?):* 
+
+ • Deformação de bolhas durante corte da faca.
+
+*DESCRIÇÃO DO PROBLEMA (o que foi observado?):*
+
+• As bolhas vinham íntegras até a faca, porém sofriam deformação durante o corte.
+
+
+*FALHA REPETIDA?*  
+(X) Não  
+(  ) Sim → Quantas vezes? 
+Período aproximado:
+
+*4M – POSSÍVEIS CAUSAS*  
+
+
+- *MATERIAL:*
+
+- *MÁQUINA:* X (FERRAMENTAL)
+
+- *MÉTODO:* 
+
+- *MÃO DE OBRA:*  
+
+*CAUSA RAIZ (por que aconteceu?):*
+
+• Identificado avanço excessivo das hastes das ventosas em relação a posição de corte.
+
+• Falta de possibilidade de ajuste de uma das hastes das ventosas do conjunto( faca 2, total 4 hastes no porta ventosas).
+
+*CONTRAMEDIDA CORRETIVA (o que foi feito agora?):*  
+
+• Feito ajuste de recuo de 3 hastes do porta ventosas.
+
+• Feita substituição de uma das hastes. (Retirado de uma faca 3 disponível no oncológico)
+
+
+*CONTRAMEDIDA PREVENTIVA (como evitar).*
+
+• Informado preparador do ferramental sobre a ocorrência e as tratativas tomadas para resolução imediata e a necessidade de atuação nas facas, conferência das hastes das ventosas, roscas de fixação das ventosas, etc.
+
+• Orientado operação a realizar ajuste de temperatura do forno, afim de obter melhor qualidade da bolha. Nesse caso se aplica a diminuição da temperatura para obtenção de uma bolha mais rígida. Dificultando amassados durante processo.
+
+
+*STATUS:*  
+( ) Em analise 
+(X)  Corrigido  
+(  ) Em monitoramento  
+(  ) Produzindo 
+
+*TÉCNICO:* 
+Douglas

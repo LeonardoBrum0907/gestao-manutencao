@@ -1,0 +1,52 @@
+*RELATÓRIO PADRÃO – MANUTENÇÃO*
+
+*DATA:* 04/10/2026
+*LINHA:* Cam 08
+*TAG:* EBS-BLI-31
+*ORDEM:* 
+
+*PROBLEMA (o que ocorreu?):*
+- Alarme de controle de posição de produtos na esteira.
+
+*DESCRIÇÃO DO PROBLEMA (o que foi observado?):*
+- Equipamento parava de modo intermitente gerando falhas de controle produtos.
+- ⁠esteira de transporte de blister para o magazine estava com pequenos travamentos.
+
+
+*FALHA REPETIDA?*  
+(X) Não  
+() Sim → Quantas vezes? 
+Período aproximado: 
+
+*4M – POSSÍVEIS CAUSAS*  
+
+- *MATERIAL:* 
+
+- *MÁQUINA:* 
+
+- *MÉTODO:*
+
+- *MÃO DE OBRA:*
+
+*CAUSA RAIZ (por que aconteceu?):*
+- Parâmetros de entrega do porta ventosas desajustados.
+
+*CONTRAMEDIDA CORRETIVA (o que foi feito agora?):*
+- Realizado a desmontagem parcial da esteira para análise dos travamentos, nenhuma anomalia encontrada.
+- ⁠esticado a esteira e correia do motor, eliminando os travamentos porém a falha persistiu após a montagem da esteira.
+- ⁠ajustes nos parâmetros de entrega do porta ventosas .
+
+*CONTRAMEDIDA PREVENTIVA (como evitar repetir?):*
+- Verificar plano de inspeção se contempla a verificação da tensão da correia do mó e esteira de blister.
+- ⁠padronização dos parâmetros operacionais, para que todos tenham a mesma condição para executar a atividade.
+
+*STATUS:*  
+( ) Em análise  
+(X) Corrigido  
+( ) Em monitoramento  
+
+
+*TÉCNICO:* Rogério B
+
+
+*IMPACTO EM CONDIÇÃO BÁSICA?*

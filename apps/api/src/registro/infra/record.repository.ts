@@ -258,6 +258,13 @@ export class RecordRepository {
     return toDto(row);
   }
 
+  // Apaga o registro e devolve as chaves dos anexos, para quem chamou limpar os arquivos do disco.
+  async remove(id: string): Promise<string[]> {
+    const files = await this.prisma.recordAttachment.findMany({ where: { recordId: id }, select: { storageKey: true } });
+    await this.prisma.record.delete({ where: { id } });
+    return files.map((file) => file.storageKey);
+  }
+
   async addAttachment(
     recordId: string,
     file: { fileName: string; mimeType: string; storageKey: string },

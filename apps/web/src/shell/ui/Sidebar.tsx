@@ -19,6 +19,7 @@ const groups: { title?: string; items: Entry[] }[] = [
     items: [
       { to: "/turno/chamado", label: "Chamado", icon: "wrench" },
       { to: "/turno/ocorrencia", label: "Ocorrência", icon: "alert" },
+      { to: "/rp", label: "RP", icon: "file" },
     ],
   },
   {

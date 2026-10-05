@@ -1,0 +1,44 @@
+RELATÓRIO PADRÃO – MANUTENÇÃO
+
+DATA:04/10/2026
+LINHA: cam01
+TAG: EBS-BLI-20
+
+*PROBLEMA*: (o que ocorreu?):
+Esteira do magazine de blister não tracionando.
+
+*DESCRIÇÃO DO PROBLEMA*: (o que foi observado?):
+-Observado que motor da esteira não tinha força de tração suficiente para girar as polias dos cordões.
+
+FALHA REPETIDA?
+ ( x)Não
+ ( ) Sim → Quantas vezes? 
+
+4M – POSSÍVEIS CAUSAS
+ (Preencher somente o que se aplica)
+
+•MATERIAL:na
+.MÁQUINA: na
+•MÉTODO:na
+•MÃO DE OBRA:sim
+
+*CAUSA RAIZ*: (por que aconteceu?):
+-motor com baixa tensão regulada no potenciômetro na primária. Paulo mediu a tensão estava em 3v, sendo que o motor é de 24v, Operador não sabia o correto lugar onde se alterava a velocidade.
+
+*CONTRAMEDIDA CORRETIVA*: (o que foi feito agora?):
+- Realizado verificação do conjunto mecânico 
+- ⁠Realizado a abertura do motor e verificado escovas
+- ⁠Realizado a medição da tensão do motor 3v, onde identificamos que o potenciômetro do painel estava no mínimo, quando foi alterado o motor funcionou normalmente.
+
+*CONTRAMEDIDA PREVENTIVA*:(como evitar repetir?):
+* Foi instruído operador quanto ao local correto de ajuste da velocidade do motor da esteira no painel da máquina.
+
+*STATUS*:
+ ( ) Em análise
+ (x) Corrigido
+ ( ) Em monitoramento
+
+IMPACTO EM CONDIÇÃO BÁSICA? (Necessidade de qualificação?):
+N/A
+
+*EXECUTANTES*: Willian Jonh / Paulo Paniguel

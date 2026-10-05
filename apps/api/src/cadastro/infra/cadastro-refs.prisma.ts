@@ -38,4 +38,13 @@ export class PrismaCadastroRefs implements CadastroRefs {
     const row = await this.prisma.member.findUnique({ where: { id }, select: { position: true } });
     return row && isMemberPosition(row.position) ? row.position : null;
   }
+
+  async memberDirectory() {
+    const rows = await this.prisma.member.findMany({ select: { id: true, name: true, status: true } });
+    return rows.map((row) => ({ id: row.id, name: row.name, active: row.status === "active" }));
+  }
+
+  async machineDirectory() {
+    return this.prisma.machine.findMany({ select: { id: true, name: true, internalCode: true, factoryId: true } });
+  }
 }
