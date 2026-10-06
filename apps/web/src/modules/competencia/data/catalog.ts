@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSkillDto } from "@manutencao/shared";
+import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSettingsDto, MatrixSkillDto } from "@manutencao/shared";
 import { REFERENCE_DATA } from "../../../app/cache";
 import { api } from "../../../app/http";
 
@@ -19,16 +19,17 @@ function useCatalogMutation<TInput, TResult>(mutationFn: (input: TInput) => Prom
     onSettled: () => {
       client.invalidateQueries({ queryKey: ["matrix-catalog"] });
       client.invalidateQueries({ queryKey: ["matrix"] });
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
     },
   });
 }
 
 export function useSaveEquipment() {
-  return useCatalogMutation((input: { id?: string; name: string; archived: boolean }) =>
+  return useCatalogMutation((input: { id?: string; name: string; archived: boolean; minQualified?: number }) =>
     input.id
       ? api<MatrixEquipmentDto>(`/api/matrix-catalog/equipments/${input.id}`, {
           method: "PATCH",
-          body: JSON.stringify({ name: input.name, archived: input.archived }),
+          body: JSON.stringify({ name: input.name, archived: input.archived, minQualified: input.minQualified }),
         })
       : api<MatrixEquipmentDto>("/api/matrix-catalog/equipments", { method: "POST", body: JSON.stringify({ name: input.name }) }),
   );
@@ -65,4 +66,23 @@ export function useReorderSkills() {
       body: JSON.stringify({ ids }),
     }),
   );
+}
+
+export function useMatrixSettings() {
+  return useQuery({
+    queryKey: ["matrix-settings"],
+    queryFn: () => api<MatrixSettingsDto>("/api/matrix-settings"),
+  });
+}
+
+export function useSaveMatrixSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (settings: Partial<MatrixSettingsDto>) =>
+      api<MatrixSettingsDto>("/api/matrix-settings", { method: "PUT", body: JSON.stringify(settings) }),
+    onSuccess: (settings) => {
+      client.setQueryData(["matrix-settings"], settings);
+      client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
+  });
 }

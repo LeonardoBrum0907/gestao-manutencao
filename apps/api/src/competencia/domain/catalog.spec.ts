@@ -6,6 +6,9 @@ import {
   assertEquipmentNameAvailable,
   assertSkillCanBeRemoved,
   requireLevel,
+  requireMinQualified,
+  requirePerformanceTarget,
+  requireQualifiedAdherence,
   requireText,
 } from "./catalog";
 
@@ -43,5 +46,31 @@ describe("cadastro da matriz", () => {
   it("só exclui habilidade nunca avaliada", () => {
     fails(() => assertSkillCanBeRemoved(2), "skill_in_use", 409);
     assert.doesNotThrow(() => assertSkillCanBeRemoved(0));
+  });
+
+  it("aceita o mínimo de qualificados de 0 a 99, inteiro", () => {
+    assert.equal(requireMinQualified(0), 0);
+    assert.equal(requireMinQualified(3), 3);
+    fails(() => requireMinQualified(-1), "invalid", 400);
+    fails(() => requireMinQualified(100), "invalid", 400);
+    fails(() => requireMinQualified(1.5), "invalid", 400);
+    fails(() => requireMinQualified("2"), "invalid", 400);
+  });
+
+  it("aceita a aderência para qualificar de 1 a 100, inteira", () => {
+    assert.equal(requireQualifiedAdherence(80), 80);
+    assert.equal(requireQualifiedAdherence(100), 100);
+    fails(() => requireQualifiedAdherence(0), "invalid", 400);
+    fails(() => requireQualifiedAdherence(101), "invalid", 400);
+    fails(() => requireQualifiedAdherence(79.5), "invalid", 400);
+    fails(() => requireQualifiedAdherence(undefined), "invalid", 400);
+  });
+
+  it("aceita como meta de desempenho só uma das notas da escala", () => {
+    assert.equal(requirePerformanceTarget(8), 8);
+    assert.equal(requirePerformanceTarget(10), 10);
+    fails(() => requirePerformanceTarget(7), "invalid", 400);
+    fails(() => requirePerformanceTarget("8"), "invalid", 400);
+    fails(() => requirePerformanceTarget(undefined), "invalid", 400);
   });
 });

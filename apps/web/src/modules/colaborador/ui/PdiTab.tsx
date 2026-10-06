@@ -7,6 +7,7 @@ import { useFactories, useMachines } from "../../cadastro/data/cadastro";
 import { flattenPages, useOpenRecordsOfMachines } from "../../registro/data/records";
 import { recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
 import { useAddPdiFile, usePdi, useRemovePdiFile, useSetPdiMachines } from "../data/pdi";
+import { PdiItems } from "./PdiItems";
 
 type Kind = "sponsor" | "development";
 
@@ -197,6 +198,7 @@ export function PdiTab({ member }: { member: MemberDto }) {
   if (pdi.isError) return <Notice>{errorMessage(pdi.error)}</Notice>;
   return (
     <div className="flex flex-col gap-6">
+      <PdiItems member={member} />
       <Card>
         <h2 className="text-sm font-semibold text-app">Máquinas</h2>
         <p className="mt-1 text-sm text-muted">Grava ao marcar. A mesma máquina não fica nas duas listas.</p>

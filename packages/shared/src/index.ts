@@ -574,3 +574,33 @@ export type RpDuplicateDto = {
 };
 
 export type RpMemberSummaryDto = { count: number; items: RpListItemDto[] };
+
+// Itens do PDI formal: ação para fechar uma lacuna da matriz, com prazo, responsável e status.
+export const PDI_ITEM_STATUSES = ["planned", "in_progress", "done", "cancelled"] as const;
+export type PdiItemStatus = (typeof PDI_ITEM_STATUSES)[number];
+
+export const PDI_ITEM_STATUS_LABELS: Record<PdiItemStatus, string> = {
+  planned: "Planejado",
+  in_progress: "Em andamento",
+  done: "Concluído",
+  cancelled: "Cancelado",
+};
+
+export function isPdiItemStatus(value: string): value is PdiItemStatus {
+  return (PDI_ITEM_STATUSES as readonly string[]).includes(value);
+}
+
+export type PdiItemDto = {
+  id: string;
+  memberId: string;
+  title: string;
+  skillId: string | null;
+  machineId: string | null;
+  responsibleId: string | null;
+  // Dia no formato AAAA-MM-DD.
+  dueDate: string | null;
+  status: PdiItemStatus;
+  notes: string | null;
+  completedAt: string | null;
+  createdAt: string;
+};

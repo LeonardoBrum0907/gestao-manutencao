@@ -67,3 +67,8 @@ export function adherenceTone(value: number | null): string {
   if (value >= 80) return "bg-accent";
   return "bg-danger";
 }
+
+// Habilidades ainda sem nota e que se aplicam: as que o "atende o esperado" preenche.
+export function pendingExpected(skills: MatrixSkillDto[], entries: ReadonlyMap<string, CompetencyEntryDto>): MatrixSkillDto[] {
+  return skills.filter((skill) => skillState(skill, entries.get(skill.id)) === "unscored");
+}

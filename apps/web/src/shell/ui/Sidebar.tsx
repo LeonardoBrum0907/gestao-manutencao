@@ -27,6 +27,7 @@ const groups: { title?: string; items: Entry[] }[] = [
     items: [
       { to: "/cadastro/colaboradores", label: "Colaboradores", icon: "user" },
       { to: "/cadastro/equipes", label: "Equipes", icon: "users" },
+      { to: "/competencias", label: "Matriz da equipe", icon: "matrix" },
     ],
   },
 ];
@@ -63,7 +64,7 @@ export function Sidebar({
         <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={onClose} />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[248px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-3 py-4 text-sidebar-text transition lg:static lg:translate-x-0 ${
+        className={`app-chrome fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[248px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-3 py-4 text-sidebar-text transition lg:static lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >

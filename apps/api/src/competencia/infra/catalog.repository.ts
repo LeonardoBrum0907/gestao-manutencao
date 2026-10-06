@@ -10,8 +10,8 @@ function toSkill(row: SkillRow): MatrixSkillDto {
   return { id: row.id, equipmentId: row.equipmentId, subgroup: row.subgroup, text: row.text, level: row.level, archived: row.archived };
 }
 
-function toEquipment(row: { id: string; name: string; archived: boolean }): MatrixEquipmentDto {
-  return { id: row.id, name: row.name, archived: row.archived };
+function toEquipment(row: { id: string; name: string; archived: boolean; minQualified: number }): MatrixEquipmentDto {
+  return { id: row.id, name: row.name, archived: row.archived, minQualified: row.minQualified };
 }
 
 export type SkillWrite = { equipmentId: string; subgroup: string; text: string; level: string };
@@ -70,7 +70,7 @@ export class CatalogRepository {
     });
   }
 
-  async updateEquipment(id: string, input: { name: string; archived: boolean }): Promise<MatrixEquipmentDto> {
+  async updateEquipment(id: string, input: { name: string; archived: boolean; minQualified?: number }): Promise<MatrixEquipmentDto> {
     return this.changing(async () => {
       return toEquipment(await this.prisma.matrixEquipment.update({ where: { id }, data: input }));
     });
