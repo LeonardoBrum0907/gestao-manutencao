@@ -55,9 +55,11 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 
 12. Matriz de competências na aba Matriz da ficha (`/competencias/:id` antigo redireciona): checklist de conhecimento mecânico por equipamento (os 9 equipamentos e as 222 habilidades do SIGEM de partida, cadastrados pelo coordenador em Configurações › Avaliação: criar, editar texto, subconjunto e nível, mover entre equipamentos, reordenar, arquivar e reativar; excluir só o que não foi avaliado nem marcado), nota de 0 a 4 ou “não se aplica”, esperado pelo nível da habilidade (ajustável por técnico) e aderência só nos equipamentos marcados para o técnico. Supervisor não tem matriz.
 
+13. RP (Relatório Padrão de Manutenção) em Turno › RP (`/rp`). **Colar RP** (`/rp/novo`): cole o texto do WhatsApp (um ou vários relatórios, separados por `----` ou pelo título), o sistema lê os rótulos (DATA, LINHA, TAG, ORDEM, PROBLEMA, DESCRIÇÃO, FALHA REPETIDA, os 4M, CAUSA RAIZ, as duas CONTRAMEDIDAS, STATUS, TÉCNICO ou EXECUTANTES, IMPACTO) com ou sem asteriscos e em qualquer ordem, casa técnicos e máquina com o cadastro e abre a ficha para você conferir. O que não casa fica como texto (técnicos fora do cadastro, linha e TAG sem máquina). Status: em análise, em monitoramento, corrigido ou produzindo. RP parecido (mesma ordem, ou mesmo problema no mesmo dia e lugar) mostra um aviso, mas deixa salvar. Cada RP gera um Problema de origem RP nas Pendências, que acompanha a ficha (editar o RP atualiza o Problema; excluir o RP exclui o Problema). A lista filtra por período, fábrica, máquina, linha, TAG, status, técnico, falha repetida e texto. A ficha do colaborador lista os RPs em que ele aparece. O leitor do texto é uma função pura (`apps/api/src/rp/domain/rp-text.ts`), testada com relatórios reais.
+
 ## Fora desta versão
 
-Relatório do dia, PDF, Ishikawa, relatório de turno, gerar pendência e PWA.
+Relatório do dia, PDF, Ishikawa, relatório de turno, gerar pendência e PWA. Do RP ainda ficam de fora: preventiva virar Tarefa, RPs na avaliação do técnico, Dashboard, Pareto de causas e reincidência.
 
 ## Planejamento
 

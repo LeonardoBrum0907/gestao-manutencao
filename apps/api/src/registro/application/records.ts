@@ -68,7 +68,7 @@ export class Records {
       return this.records.update(id, applyFeedbackSheet(state, input), current.memberIds);
     }
     if (current.origin !== "inbox") {
-      throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado ou pela ocorrência.");
+      throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado, pela ocorrência ou pelo RP.");
     }
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertMachine(input.machineId)]);

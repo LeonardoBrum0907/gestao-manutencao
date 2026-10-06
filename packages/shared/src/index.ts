@@ -20,7 +20,7 @@ export function isFeedbackTone(value: string): value is FeedbackTone {
 export const RECORD_PRIORITIES = ["low", "medium", "high"] as const;
 export type RecordPriority = (typeof RECORD_PRIORITIES)[number];
 
-export const RECORD_ORIGINS = ["inbox", "chamado", "ocorrencia"] as const;
+export const RECORD_ORIGINS = ["inbox", "chamado", "ocorrencia", "rp"] as const;
 export type RecordOrigin = (typeof RECORD_ORIGINS)[number];
 
 export const MACHINE_STATUSES = [
@@ -68,6 +68,7 @@ export const RECORD_ORIGIN_LABELS: Record<RecordOrigin, string> = {
   inbox: "Captura",
   chamado: "Chamado",
   ocorrencia: "Ocorrência",
+  rp: "RP",
 };
 
 export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
@@ -463,6 +464,116 @@ export type MemberMatrixDto = {
   summary: CompetencySummaryDto;
   byEquipment: (CompetencySummaryDto & { equipment: string })[];
 };
+
+// RP (Relatório Padrão de Manutenção): ficha própria, espelhada num Problema de origem "rp".
+export const RP_STATUSES = ["analysis", "monitoring", "corrected", "producing"] as const;
+export type RpStatus = (typeof RP_STATUSES)[number];
+
+export const RP_STATUS_LABELS: Record<RpStatus, string> = {
+  analysis: "Em análise",
+  monitoring: "Em monitoramento",
+  corrected: "Corrigido",
+  producing: "Produzindo",
+};
+
+export function isRpStatus(value: string): value is RpStatus {
+  return (RP_STATUSES as readonly string[]).includes(value);
+}
+
+export const RP_FOUR_M = ["material", "machine", "method", "labor"] as const;
+export type RpFourM = (typeof RP_FOUR_M)[number];
+
+export const RP_FOUR_M_LABELS: Record<RpFourM, string> = {
+  material: "Material",
+  machine: "Máquina",
+  method: "Método",
+  labor: "Mão de obra",
+};
+
+// Um dos 4M: marcado quando o relatório aponta a causa, com o texto que veio junto.
+export type RpCauseDto = { marked: boolean; text: string | null };
+
+// Campos que o gestor revisa e grava. A mesma forma serve de entrada (POST/PUT) e de saída.
+export type RpFields = {
+  occurredAt: string;
+  orderNumber: string | null;
+  factoryId: string;
+  machineId: string | null;
+  line: string | null;
+  tag: string | null;
+  problem: string;
+  description: string | null;
+  repeatedFailure: boolean;
+  repeatedTimes: string | null;
+  repeatedPeriod: string | null;
+  causes: Record<RpFourM, RpCauseDto>;
+  rootCause: string | null;
+  corrective: string | null;
+  preventive: string | null;
+  status: RpStatus;
+  basicConditionImpact: string | null;
+  memberIds: string[];
+  unmatchedTechnicians: string | null;
+};
+
+export type RpDto = RpFields & {
+  id: string;
+  problemRecordId: string | null;
+  rawText: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RpListItemDto = {
+  id: string;
+  occurredAt: string;
+  line: string | null;
+  tag: string | null;
+  machineId: string | null;
+  problem: string;
+  status: RpStatus;
+  repeatedFailure: boolean;
+  memberIds: string[];
+  unmatchedTechnicians: string | null;
+};
+
+export type RpPageDto = { items: RpListItemDto[]; nextCursor: string | null };
+
+// Resposta de /rp/parse: o que o texto colado trouxe, já com técnicos e máquina casados com o cadastro.
+export type RpDraftDto = {
+  occurredAt: string | null;
+  orderNumber: string | null;
+  factoryId: string | null;
+  machineId: string | null;
+  line: string | null;
+  tag: string | null;
+  problem: string;
+  description: string | null;
+  repeatedFailure: boolean;
+  repeatedTimes: string | null;
+  repeatedPeriod: string | null;
+  causes: Record<RpFourM, RpCauseDto>;
+  rootCause: string | null;
+  corrective: string | null;
+  preventive: string | null;
+  status: RpStatus;
+  basicConditionImpact: string | null;
+  memberIds: string[];
+  unmatchedTechnicians: string | null;
+  rawText: string;
+  warnings: string[];
+};
+
+export type RpDuplicateDto = {
+  id: string;
+  occurredAt: string;
+  line: string | null;
+  tag: string | null;
+  problem: string;
+  reason: "order" | "same_problem";
+};
+
+export type RpMemberSummaryDto = { count: number; items: RpListItemDto[] };
 
 // Itens do PDI formal: ação para fechar uma lacuna da matriz, com prazo, responsável e status.
 export const PDI_ITEM_STATUSES = ["planned", "in_progress", "done", "cancelled"] as const;

@@ -8,6 +8,8 @@ import { teamsOf } from "../../cadastro/model/team";
 import { flattenPages } from "../../registro/data/records";
 import { formatWhen, originLabel, recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
 import { DueMark } from "../../registro/ui/RecordMarks";
+import { useMemberRp } from "../../rp/data/rp";
+import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
@@ -126,6 +128,51 @@ function RecordList({
   );
 }
 
+function MemberRpList({ memberId }: { memberId: string }) {
+  const rps = useMemberRp(memberId);
+  const shown = rps.data?.items.length ?? 0;
+  return (
+    <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
+      <h2 className="px-4 py-3 text-sm font-semibold text-app">
+        RPs <span className="font-normal text-muted">({rps.data?.count ?? 0})</span>
+      </h2>
+      {rps.isError ? <Notice>{errorMessage(rps.error)}</Notice> : null}
+      {rps.isPending ? <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Carregando…</p> : null}
+      {rps.isSuccess && shown === 0 ? (
+        <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Nenhum RP com esta pessoa.</p>
+      ) : null}
+      <ul>
+        {rps.data?.items.map((rp) => (
+          <li key={rp.id}>
+            <Link
+              to={`/rp/${rp.id}`}
+              className="flex items-start justify-between gap-3 border-t border-t-line px-4 py-3 transition hover:bg-accent-soft"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                  {formatRpDay(rp.occurredAt)}
+                  {[rp.line, rp.tag].filter(Boolean).length ? ` · ${[rp.line, rp.tag].filter(Boolean).join(" · ")}` : ""}
+                </p>
+                <p className="mt-1 line-clamp-2 text-sm text-app" title={rp.problem}>
+                  {rp.problem}
+                </p>
+              </div>
+              <span className={`shrink-0 ${rpStatusChipClass(rp.status)}`}>{rpStatusLabel(rp.status)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {rps.data && rps.data.count > rps.data.items.length ? (
+        <div className="flex justify-center border-t border-t-line px-4 py-3">
+          <Link to={`/rp?memberId=${memberId}`} className="text-sm font-semibold text-accent">
+            Ver os {rps.data.count} RPs
+          </Link>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export function ProfileTab({ member, members, teams }: { member: MemberDto; members: MemberDto[]; teams: TeamDto[] }) {
   const summary = useMemberRecordSummary(member.id);
   const open = useMemberRecordList(member.id, "open");
@@ -169,6 +216,7 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
             <Stat label="Feedbacks" value={summary.data.feedbacks} />
           </div>
           <RecordList title="Em aberto" total={summary.data.open} query={open} empty="Nada em aberto com esta pessoa." />
+          <MemberRpList memberId={member.id} />
           <details className="group" onToggle={(event) => event.currentTarget.open && setShowDone(true)}>
             <summary className="cursor-pointer text-sm font-semibold text-app">
               Concluídos <span className="font-normal text-muted">({summary.data.done})</span>

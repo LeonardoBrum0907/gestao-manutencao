@@ -105,6 +105,7 @@ model Member {
   skills           MemberSkill[]
   records          Record[]
   recordLinks      RecordMember[]
+  rpLinks          RpMember[]
   supervisedTeams  Team[]                  @relation("TeamSupervisor")
   behavior         MemberBehavior?
   evaluations      MemberEvaluation[]
@@ -285,6 +286,7 @@ model Record {
   durationMin  Int?
   members      RecordMember[]
   attachments  RecordAttachment[]
+  rp           Rp?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
@@ -317,4 +319,59 @@ model RecordAttachment {
   createdAt  DateTime @default(now())
 
   @@index([recordId])
+}
+
+// RP (Relatório Padrão de Manutenção): ficha própria, com um Problema de origem "rp" como espelho nas listas.
+model Rp {
+  id                   String     @id @default(cuid())
+  occurredAt           DateTime
+  orderNumber          String?
+  orderKey             String?
+  factoryId            String
+  machineId            String?
+  line                 String?
+  tag                  String?
+  problem              String
+  problemKey           String
+  description          String?
+  repeatedFailure      Boolean    @default(false)
+  repeatedTimes        String?
+  repeatedPeriod       String?
+  causeMaterial        Boolean    @default(false)
+  materialText         String?
+  causeMachine         Boolean    @default(false)
+  machineText          String?
+  causeMethod          Boolean    @default(false)
+  methodText           String?
+  causeLabor           Boolean    @default(false)
+  laborText            String?
+  rootCause            String?
+  corrective           String?
+  preventive           String?
+  status               String
+  basicConditionImpact String?
+  unmatchedTechnicians String?
+  rawText              String
+  problemRecordId      String?    @unique
+  problemRecord        Record?    @relation(fields: [problemRecordId], references: [id], onDelete: SetNull)
+  members              RpMember[]
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  @@index([occurredAt, id])
+  @@index([machineId])
+  @@index([status])
+  @@index([orderKey])
+  @@index([tag])
+}
+
+model RpMember {
+  rpId     String
+  memberId String
+  position Int
+  rp       Rp     @relation(fields: [rpId], references: [id], onDelete: Cascade)
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Restrict)
+
+  @@id([rpId, memberId])
+  @@index([memberId])
 }
