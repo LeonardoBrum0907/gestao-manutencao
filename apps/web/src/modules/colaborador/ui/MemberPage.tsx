@@ -10,6 +10,7 @@ import { resolveTab, tabsFor } from "../model/tabs";
 import { BehaviorTab } from "./BehaviorTab";
 import { PdiTab } from "./PdiTab";
 import { PerformanceTab } from "./PerformanceTab";
+import { ReportOptionsModal } from "./ReportOptionsModal";
 import { ProfileTab } from "./ProfileTab";
 
 export function MemberPage() {
@@ -17,6 +18,7 @@ export function MemberPage() {
   const members = useMembers();
   const teams = useTeams();
   const [editing, setEditing] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const member = members.data?.find((item) => item.id === memberId);
 
   const back = (
@@ -50,12 +52,9 @@ export function MemberPage() {
         text={subtitle}
         action={
           <div className="flex gap-2">
-            <Link
-              to={`/cadastro/colaboradores/${member.id}/relatorio`}
-              className="inline-flex items-center justify-center rounded-control border border-line bg-chip px-4 py-2.5 text-sm font-semibold text-app transition hover:bg-accent-soft"
-            >
+            <Button tone="ghost" onClick={() => setReporting(true)}>
               Relatório PDF
-            </Link>
+            </Button>
             <Button tone="ghost" onClick={() => setEditing(true)}>
               Editar
             </Button>
@@ -81,6 +80,9 @@ export function MemberPage() {
       {current === "desempenho" ? <PerformanceTab member={member} /> : null}
       {current === "matriz" ? <MatrixPanel memberId={member.id} /> : null}
       {current === "pdi" ? <PdiTab member={member} /> : null}
+      {reporting ? (
+        <ReportOptionsModal memberId={member.id} isTechnician={member.position === "technician"} onClose={() => setReporting(false)} />
+      ) : null}
       {editing ? <MemberFormModal member={member} onClose={() => setEditing(false)} /> : null}
     </div>
   );
