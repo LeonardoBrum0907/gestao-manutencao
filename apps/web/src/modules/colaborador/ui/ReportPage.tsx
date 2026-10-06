@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   DEFAULT_PERFORMANCE_TARGET,
@@ -27,7 +27,7 @@ import { usePdiItems } from "../data/pdi-items";
 import { formatDay, isOverdue, sortItems, todayIso } from "../model/pdi-items";
 import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
-import { performanceBand, quartersEvaluated } from "../model/report";
+import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
 import { RankedChart } from "./RankedChart";
 import "./report.css";
 
@@ -436,6 +436,7 @@ function usePreviewZoom() {
 
 export function ReportPage() {
   const { memberId = "" } = useParams();
+  const [search] = useSearchParams();
   const preview = usePreviewZoom();
   const members = useMembers();
   const teams = useTeams();
@@ -445,6 +446,12 @@ export function ReportPage() {
   if (members.isPending) return <p className="text-sm text-muted">Carregando…</p>;
   if (!member) return <Card>Colaborador não encontrado.</Card>;
   const isTechnician = member.position === "technician";
+  const sections = parseReportSections(search.get("secoes"), isTechnician);
+  const partial = sections.length < reportSectionsFor(isTechnician).length;
+  const has = (key: (typeof sections)[number]) => sections.includes(key);
+  const partialLabel = REPORT_SECTIONS.filter((section) => sections.includes(section.key))
+    .map((section) => section.label)
+    .join(" · ");
 
   return (
     <div>
@@ -486,17 +493,27 @@ export function ReportPage() {
                 </div>
                 <div className="meta">
                   <b>Ano {year}</b>
+                  {partial ? (
+                    <>
+                      {partialLabel}
+                      <br />
+                    </>
+                  ) : null}
                   Gerado em {dateFormat.format(new Date())}
                 </div>
               </header>
               <div className="stripe" />
               <div className="content">
-                <h2>Perfil</h2>
-                <Profile member={member} teamLine={teamText(member, teams.data ?? []) ?? ""} />
-                <Behavior memberId={member.id} />
-                {isTechnician ? <Performance memberId={member.id} year={year} /> : null}
-                {isTechnician ? <Matrix memberId={member.id} /> : null}
-                <Pdi memberId={member.id} />
+                {has("perfil") ? (
+                  <>
+                    <h2>Perfil</h2>
+                    <Profile member={member} teamLine={teamText(member, teams.data ?? []) ?? ""} />
+                  </>
+                ) : null}
+                {has("comportamento") ? <Behavior memberId={member.id} /> : null}
+                {isTechnician && has("desempenho") ? <Performance memberId={member.id} year={year} /> : null}
+                {isTechnician && has("matriz") ? <Matrix memberId={member.id} /> : null}
+                {has("pdi") ? <Pdi memberId={member.id} /> : null}
               </div>
               <footer>
                 <span>Gestão de Manutenção · {member.name}</span>
