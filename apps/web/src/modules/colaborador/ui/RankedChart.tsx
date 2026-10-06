@@ -26,7 +26,15 @@ function Delta({ value }: { value: number | null }) {
 }
 
 // Uma linha por competência: barra da média (com a meta marcada), um ponto por trimestre e a variação do último.
-export function RankedChart({ performance, target }: { performance: MemberPerformanceDto; target: number }) {
+export function RankedChart({
+  performance,
+  target,
+  fixed = false,
+}: {
+  performance: MemberPerformanceDto;
+  target: number;
+  fixed?: boolean;
+}) {
   const rows = rankedAverages(performance);
   if (!rows.length) return <p className="text-sm text-muted">O gráfico aparece quando houver nota.</p>;
   const best = rows[0]!.competencyId;
@@ -49,7 +57,9 @@ export function RankedChart({ performance, target }: { performance: MemberPerfor
           sem nota
         </span>
       </div>
-      <div className="hidden grid-cols-[11rem_minmax(0,1fr)_9.5rem_3rem_3.5rem] items-end gap-3 border-b border-b-line pb-1 text-xs text-muted sm:grid">
+      <div
+        className={`grid-cols-[11rem_minmax(0,1fr)_9.5rem_3rem_3.5rem] items-end gap-3 border-b border-b-line pb-1 text-xs text-muted ${fixed ? "grid" : "hidden sm:grid"}`}
+      >
         <span>Competência</span>
         <span>Média</span>
         <span className="grid grid-cols-4 text-center">
@@ -69,25 +79,27 @@ export function RankedChart({ performance, target }: { performance: MemberPerfor
               key={row.competencyId}
               tabIndex={0}
               aria-label={`${row.name}: média ${formatScore(row.average)}. ${summary}.`}
-              className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-b-line px-1 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent sm:grid-cols-[11rem_minmax(0,1fr)_9.5rem_3rem_3.5rem] ${tone}`}
+              className={`grid items-center gap-x-3 gap-y-1 border-b border-b-line px-1 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent ${fixed ? "grid-cols-[11rem_minmax(0,1fr)_9.5rem_3rem_3.5rem]" : "grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[11rem_minmax(0,1fr)_9.5rem_3rem_3.5rem]"} ${tone}`}
             >
               <span className="truncate text-sm text-app">{row.name}</span>
-              <span className="order-2 text-right text-sm font-semibold tabular-nums text-app sm:hidden">
+              <span className={`order-2 text-right text-sm font-semibold tabular-nums text-app sm:hidden ${fixed ? "!hidden" : ""}`}>
                 {formatScore(row.average)}
               </span>
-              <span className="relative order-3 col-span-2 block h-2 rounded-full bg-line sm:order-none sm:col-span-1">
+              <span className={`relative block h-2 rounded-full bg-line ${fixed ? "" : "order-3 col-span-2 sm:order-none sm:col-span-1"}`}>
                 <span className="block h-full rounded-full bg-chart opacity-70" style={{ width: `${(row.average / 10) * 100}%` }} />
-                <span
-                  className="absolute -top-1 -bottom-1 w-0.5 bg-muted"
-                  style={{ left: `${target * 10}%` }}
-                  aria-hidden
-                />
+                <span className="absolute -top-1 -bottom-1 w-0.5 bg-muted" style={{ left: `${target * 10}%` }} aria-hidden />
               </span>
-              <span className="relative order-4 col-span-2 grid h-5 grid-cols-4 items-center justify-items-center sm:order-none sm:col-span-1">
+              <span
+                className={`relative grid h-5 grid-cols-4 items-center justify-items-center ${fixed ? "" : "order-4 col-span-2 sm:order-none sm:col-span-1"}`}
+              >
                 <span className="absolute inset-x-[12.5%] top-1/2 h-0.5 -translate-y-1/2 bg-line" aria-hidden />
                 {row.scores.map((value, i) =>
                   value === null ? (
-                    <span key={i} title={`${QUARTERS[i]}º tri: sem nota`} className="relative h-3 w-3 rounded-full border border-dashed border-muted bg-surface" />
+                    <span
+                      key={i}
+                      title={`${QUARTERS[i]}º tri: sem nota`}
+                      className="relative h-3 w-3 rounded-full border border-dashed border-muted bg-surface"
+                    />
                   ) : (
                     <span
                       key={i}
@@ -97,8 +109,10 @@ export function RankedChart({ performance, target }: { performance: MemberPerfor
                   ),
                 )}
               </span>
-              <span className="hidden text-right text-sm font-semibold tabular-nums text-app sm:block">{formatScore(row.average)}</span>
-              <span className="hidden text-right text-xs tabular-nums sm:block">
+              <span className={`text-right text-sm font-semibold tabular-nums text-app ${fixed ? "block" : "hidden sm:block"}`}>
+                {formatScore(row.average)}
+              </span>
+              <span className={`text-right text-xs tabular-nums ${fixed ? "block" : "hidden sm:block"}`}>
                 <Delta value={row.delta} />
               </span>
             </li>

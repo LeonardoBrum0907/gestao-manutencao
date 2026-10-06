@@ -1,11 +1,12 @@
 /* Relatório do colaborador: usa os tokens do app (o artigo fixa data-theme="light", então o papel é sempre claro). */
+.report-frame { overflow: auto; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--bg); touch-action: pan-x pan-y pinch-zoom; }
+.report-sheet { width: 190mm; margin: 0 auto; }
 .report {
   background: var(--surface);
   color: var(--text);
   font-size: 12.5px;
   line-height: 1.45;
-  max-width: 820px;
-  margin: 0 auto;
+  width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   overflow: hidden;
@@ -25,6 +26,7 @@
 .report h2::before { content: ""; width: 4px; height: 15px; border-radius: 2px; background: var(--accent); }
 .report h3 { margin: 12px 0 6px; font-size: 12px; break-after: avoid; }
 .report .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.report .grid.five { grid-template-columns: repeat(5, 1fr); }
 .report .grid.three { grid-template-columns: repeat(3, 1fr); }
 .report .grid.two { grid-template-columns: repeat(2, 1fr); }
 .report .cell small, .report .q small { display: block; margin-bottom: 2px; font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
@@ -56,5 +58,8 @@
   .app-chrome, .no-print { display: none !important; }
   .app-main { overflow: visible !important; }
   .app-page { max-width: none !important; padding: 0 !important; }
-  .report { border: 0; border-radius: 0; max-width: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-frame { overflow: visible; padding: 0; border: 0; background: none; }
+  .report-zoom { zoom: 1 !important; }
+  .report-sheet { width: auto; }
+  .report { border: 0; border-radius: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

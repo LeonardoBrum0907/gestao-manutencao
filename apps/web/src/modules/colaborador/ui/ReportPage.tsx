@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   DEFAULT_PERFORMANCE_TARGET,
   BEHAVIOR_RATING_LABELS,
@@ -42,10 +42,15 @@ const PILL_TONES = {
 type PillTone = keyof typeof PILL_TONES;
 
 function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
-  return <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${PILL_TONES[tone]}`}>{children}</span>;
+  return (
+    <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${PILL_TONES[tone]}`}>
+      {children}
+    </span>
+  );
 }
 
-const ratingTone = (rating: string): PillTone => (rating === "excellent" || rating === "good" ? "ok" : rating === "regular" ? "warn" : "bad");
+const ratingTone = (rating: string): PillTone =>
+  rating === "excellent" || rating === "good" ? "ok" : rating === "regular" ? "warn" : "bad";
 const productivityTone = (level: string): PillTone => (level === "high" ? "ok" : level === "medium" ? "warn" : "bad");
 
 const BAND_TEXT = { high: "text-green-600", good: "text-lime-500", mid: "text-amber-500", low: "text-red-600" } as const;
@@ -70,7 +75,12 @@ function ScoreRing({ value }: { value: number | null }) {
   const circumference = 2 * Math.PI * radius;
   const filled = value === null ? 0 : (Math.max(0, Math.min(10, value)) / 10) * circumference;
   return (
-    <svg viewBox="0 0 100 100" className={`h-24 w-24 ${value === null ? "text-muted" : BAND_TEXT[scoreBand(value)]}`} role="img" aria-label={`Média geral ${formatScore(value)} de 10`}>
+    <svg
+      viewBox="0 0 100 100"
+      className={`h-24 w-24 ${value === null ? "text-muted" : BAND_TEXT[scoreBand(value)]}`}
+      role="img"
+      aria-label={`Média geral ${formatScore(value)} de 10`}
+    >
       <circle cx="50" cy="50" r={radius} fill="none" stroke="var(--border)" strokeWidth="9" />
       <circle
         cx="50"
@@ -93,7 +103,6 @@ function ScoreRing({ value }: { value: number | null }) {
   );
 }
 
-
 function Profile({ member, teamLine }: { member: MemberDto; teamLine: string }) {
   const cells: [string, string][] = [
     ["Matrícula", member.registration ?? "—"],
@@ -103,7 +112,7 @@ function Profile({ member, teamLine }: { member: MemberDto; teamLine: string }) 
     ["Área", member.area ?? "—"],
   ];
   return (
-    <div className="grid">
+    <div className="grid five">
       {cells.map(([label, value]) => (
         <Cell key={label} label={label}>
           {value}
@@ -127,7 +136,11 @@ function Behavior({ memberId }: { memberId: string }) {
           {data?.punctuality ? <Pill tone={ratingTone(data.punctuality)}>{BEHAVIOR_RATING_LABELS[data.punctuality]}</Pill> : "—"}
         </Cell>
         <Cell label="Produtividade">
-          {data?.productivity ? <Pill tone={productivityTone(data.productivity)}>{PRODUCTIVITY_LEVEL_LABELS[data.productivity]}</Pill> : "—"}
+          {data?.productivity ? (
+            <Pill tone={productivityTone(data.productivity)}>{PRODUCTIVITY_LEVEL_LABELS[data.productivity]}</Pill>
+          ) : (
+            "—"
+          )}
         </Cell>
         <Cell label="Colaboração">
           {data?.collaboration ? <Pill tone={ratingTone(data.collaboration)}>{BEHAVIOR_RATING_LABELS[data.collaboration]}</Pill> : "—"}
@@ -151,7 +164,15 @@ function Behavior({ memberId }: { memberId: string }) {
             {items.map((record) => (
               <tr key={record.id}>
                 <td className="n muted">{formatWhen(record.occurredAt)}</td>
-                <td className="n">{record.tone ? <Pill tone={record.tone === "positive" ? "ok" : record.tone === "negative" ? "bad" : "neutral"}>{toneLabel(record.tone)}</Pill> : "—"}</td>
+                <td className="n">
+                  {record.tone ? (
+                    <Pill tone={record.tone === "positive" ? "ok" : record.tone === "negative" ? "bad" : "neutral"}>
+                      {toneLabel(record.tone)}
+                    </Pill>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td>{record.body}</td>
               </tr>
             ))}
@@ -181,7 +202,9 @@ function Performance({ memberId, year }: { memberId: string; year: number }) {
             {QUARTERS.map((quarter) => (
               <div key={quarter} className="q rounded-control border border-line px-3 py-2">
                 <small>{quarter}º tri</small>
-                <b className={data.quarterAverages[quarter - 1] == null ? "text-muted" : ""}>{formatScore(data.quarterAverages[quarter - 1] ?? null)}</b>
+                <b className={data.quarterAverages[quarter - 1] == null ? "text-muted" : ""}>
+                  {formatScore(data.quarterAverages[quarter - 1] ?? null)}
+                </b>
               </div>
             ))}
           </div>
@@ -190,7 +213,7 @@ function Performance({ memberId, year }: { memberId: string; year: number }) {
           </p>
         </div>
       </div>
-      <RankedChart performance={data} target={settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET} />
+      <RankedChart performance={data} target={settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET} fixed />
     </>
   );
 }
@@ -344,7 +367,17 @@ function Pdi({ memberId }: { memberId: string }) {
                   {isOverdue(item, today) ? (
                     <Pill tone="bad">Atrasado</Pill>
                   ) : (
-                    <Pill tone={item.status === "done" ? "ok" : item.status === "in_progress" ? "neutral" : item.status === "cancelled" ? "bad" : "warn"}>
+                    <Pill
+                      tone={
+                        item.status === "done"
+                          ? "ok"
+                          : item.status === "in_progress"
+                            ? "neutral"
+                            : item.status === "cancelled"
+                              ? "bad"
+                              : "warn"
+                      }
+                    >
                       {PDI_ITEM_STATUS_LABELS[item.status]}
                     </Pill>
                   )}
@@ -381,8 +414,29 @@ function Pdi({ memberId }: { memberId: string }) {
   );
 }
 
+const ZOOM_MIN = 0.3;
+const ZOOM_MAX = 2;
+
+// A folha tem sempre a largura da página impressa; na tela o usuário só aproxima, afasta e rola.
+function usePreviewZoom() {
+  const frame = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const fit = useCallback(() => {
+    const available = (frame.current?.clientWidth ?? 0) - 24;
+    const width = sheet.current?.offsetWidth ?? 0;
+    if (available > 0 && width > 0) setZoom(Math.min(1, Math.max(ZOOM_MIN, available / width)));
+  }, []);
+  useEffect(() => {
+    fit();
+  }, [fit]);
+  const step = (factor: number) => setZoom((value) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value * factor)));
+  return { frame, sheet, zoom, fit, zoomIn: () => step(1.25), zoomOut: () => step(0.8) };
+}
+
 export function ReportPage() {
   const { memberId = "" } = useParams();
+  const preview = usePreviewZoom();
   const members = useMembers();
   const teams = useTeams();
   const member = members.data?.find((item) => item.id === memberId);
@@ -398,39 +452,60 @@ export function ReportPage() {
         <Link to={`/cadastro/colaboradores/${member.id}`} className="text-sm font-medium text-accent hover:underline">
           ← Voltar à ficha
         </Link>
-        <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>
-      </div>
-      <p className="no-print mb-3 text-xs text-muted">Na janela de impressão, escolha “Salvar como PDF” e deixe os planos de fundo ligados.</p>
-      {members.isError ? <Notice>Não foi possível carregar.</Notice> : null}
-      <article className="report" data-theme="light">
-        <header className="hero">
-          <div className="avatar" aria-hidden>
-            {initials(member.name)}
-          </div>
-          <div>
-            <p className="brand">Gestão de Manutenção · Avaliação de colaborador</p>
-            <h1>{member.name}</h1>
-            <p className="sub">{member.roleName ?? positionLabel(member.position)}</p>
-          </div>
-          <div className="meta">
-            <b>Ano {year}</b>
-            Gerado em {dateFormat.format(new Date())}
-          </div>
-        </header>
-        <div className="stripe" />
-        <div className="content">
-          <h2>Perfil</h2>
-          <Profile member={member} teamLine={teamText(member, teams.data ?? []) ?? ""} />
-          <Behavior memberId={member.id} />
-          {isTechnician ? <Performance memberId={member.id} year={year} /> : null}
-          {isTechnician ? <Matrix memberId={member.id} /> : null}
-          <Pdi memberId={member.id} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button tone="ghost" aria-label="Afastar" onClick={preview.zoomOut}>
+            −
+          </Button>
+          <span className="w-12 text-center text-sm tabular-nums text-muted">{Math.round(preview.zoom * 100)}%</span>
+          <Button tone="ghost" aria-label="Aproximar" onClick={preview.zoomIn}>
+            +
+          </Button>
+          <Button tone="ghost" onClick={preview.fit}>
+            Ajustar
+          </Button>
+          <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>
         </div>
-        <footer>
-          <span>Gestão de Manutenção · {member.name}</span>
-          <span>Gerado em {dateFormat.format(new Date())}</span>
-        </footer>
-      </article>
+      </div>
+      <p className="no-print mb-3 text-xs text-muted">
+        Esta é a folha A4 como sai no PDF: aproxime, afaste e role para conferir. Na janela de impressão, escolha “Salvar como PDF” e deixe
+        os planos de fundo ligados.
+      </p>
+      {members.isError ? <Notice>Não foi possível carregar.</Notice> : null}
+      <div ref={preview.frame} className="report-frame">
+        <div className="report-zoom" style={{ zoom: preview.zoom }}>
+          <div ref={preview.sheet} className="report-sheet">
+            <article className="report" data-theme="light">
+              <header className="hero">
+                <div className="avatar" aria-hidden>
+                  {initials(member.name)}
+                </div>
+                <div>
+                  <p className="brand">Gestão de Manutenção · Avaliação de colaborador</p>
+                  <h1>{member.name}</h1>
+                  <p className="sub">{member.roleName ?? positionLabel(member.position)}</p>
+                </div>
+                <div className="meta">
+                  <b>Ano {year}</b>
+                  Gerado em {dateFormat.format(new Date())}
+                </div>
+              </header>
+              <div className="stripe" />
+              <div className="content">
+                <h2>Perfil</h2>
+                <Profile member={member} teamLine={teamText(member, teams.data ?? []) ?? ""} />
+                <Behavior memberId={member.id} />
+                {isTechnician ? <Performance memberId={member.id} year={year} /> : null}
+                {isTechnician ? <Matrix memberId={member.id} /> : null}
+                <Pdi memberId={member.id} />
+              </div>
+              <footer>
+                <span>Gestão de Manutenção · {member.name}</span>
+                <span>Gerado em {dateFormat.format(new Date())}</span>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
