@@ -25,9 +25,9 @@ const skills: MatrixSkillDto[] = [
 
 const catalog: MatrixCatalogDto = {
   equipments: [
-    { id: "blistadeira-cam", name: "Blistadeira CAM", archived: false },
-    { id: "encaixotadora-cam", name: "Encaixotadora CAM", archived: false },
-    { id: "prensa-antiga", name: "Prensa antiga", archived: true },
+    { id: "blistadeira-cam", name: "Blistadeira CAM", archived: false, minQualified: 0 },
+    { id: "encaixotadora-cam", name: "Encaixotadora CAM", archived: false, minQualified: 0 },
+    { id: "prensa-antiga", name: "Prensa antiga", archived: true, minQualified: 0 },
   ],
   skills: [
     ...skills,

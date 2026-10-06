@@ -1,5 +1,5 @@
 import { DomainError } from "../../kernel/domain-error";
-import { readObject } from "../../kernel/parse";
+import { readObject, requiredString } from "../../kernel/parse";
 import type { EntryInput } from "../domain/matrix";
 
 function optionalNumber(source: Record<string, unknown>, key: string, message: string): number | null {
@@ -22,4 +22,22 @@ export function parseEntry(body: unknown): EntryInput {
 
 export function parseEquipments(body: unknown): unknown {
   return readObject(body).equipments;
+}
+
+export const MAX_BULK_ENTRIES = 500;
+
+// Várias notas de uma vez (marcar um subconjunto ou um equipamento inteiro): a mesma regra de cada nota.
+export function parseBulk(body: unknown): { skillId: string; input: EntryInput }[] {
+  const entries = readObject(body).entries;
+  if (!Array.isArray(entries) || entries.length === 0 || entries.length > MAX_BULK_ENTRIES) {
+    throw new DomainError("invalid", 400, `Envie de 1 a ${MAX_BULK_ENTRIES} habilidades.`);
+  }
+  const parsed = entries.map((item) => ({
+    skillId: requiredString(readObject(item), "skillId", "Habilidade inválida."),
+    input: parseEntry(item),
+  }));
+  if (new Set(parsed.map((item) => item.skillId)).size !== parsed.length) {
+    throw new DomainError("invalid", 400, "Habilidade repetida.");
+  }
+  return parsed;
 }

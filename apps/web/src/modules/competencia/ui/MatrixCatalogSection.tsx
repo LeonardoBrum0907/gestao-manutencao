@@ -15,7 +15,9 @@ import {
   useMatrixCatalog,
   useReorderEquipments,
   useReorderSkills,
+  useMatrixSettings,
   useSaveEquipment,
+  useSaveMatrixSettings,
   useSaveSkill,
   type SkillInput,
 } from "../data/catalog";
@@ -92,6 +94,7 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
   const reorder = useReorderEquipments();
   const [editing, setEditing] = useState<MatrixEquipmentDto | null | undefined>(undefined);
   const [name, setName] = useState("");
+  const [minQualified, setMinQualified] = useState("0");
   const ids = catalog.equipments.map((equipment) => equipment.id);
   const activeSkills = (id: string) => catalog.skills.filter((skill) => skill.equipmentId === id && !skill.archived).length;
 
@@ -99,11 +102,15 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
     save.reset();
     setEditing(equipment);
     setName(equipment?.name ?? "");
+    setMinQualified(String(equipment?.minQualified ?? 0));
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    save.mutate({ id: editing?.id, name, archived: editing?.archived ?? false }, { onSuccess: () => setEditing(undefined) });
+    save.mutate(
+      { id: editing?.id, name, archived: editing?.archived ?? false, minQualified: Math.max(0, Math.floor(Number(minQualified) || 0)) },
+      { onSuccess: () => setEditing(undefined) },
+    );
   }
 
   const error = (editing === undefined ? save.error : null) ?? remove.error ?? reorder.error;
@@ -137,7 +144,10 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
               >
                 {equipment.name}
               </button>
-              <span className="shrink-0 text-xs text-muted">{activeSkills(equipment.id)} habilidades</span>
+              <span className="shrink-0 text-xs text-muted">
+                {activeSkills(equipment.id)} habilidades
+                {equipment.minQualified ? ` · mínimo ${equipment.minQualified} qualificado(s)` : ""}
+              </span>
               {equipment.archived ? <ArchivedChip /> : null}
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
@@ -166,6 +176,11 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
           <Field label="Nome">
             <TextInput value={name} onChange={(event) => setName(event.target.value)} />
           </Field>
+          {editing ? (
+            <Field label="Mínimo de técnicos qualificados (0 = sem mínimo)">
+              <TextInput type="number" min={0} max={99} value={minQualified} onChange={(event) => setMinQualified(event.target.value)} />
+            </Field>
+          ) : null}
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={save.isPending}>
@@ -352,6 +367,48 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
   );
 }
 
+function QualifiedAdherence() {
+  const settings = useMatrixSettings();
+  const save = useSaveMatrixSettings();
+  const [value, setValue] = useState<string | null>(null);
+  const current = settings.data?.qualifiedAdherence;
+  const shown = value ?? String(current ?? "");
+  const number = Number(shown);
+  const valid = Number.isInteger(number) && number >= 1 && number <= 100;
+
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold text-app">Quando o técnico conta como qualificado</h3>
+      <p className="mt-1 text-sm text-muted">
+        Aderência mínima da matriz do técnico em um equipamento para ele contar como qualificado na Matriz da equipe (cobertura e alertas). Vale para todos os
+        equipamentos; o mínimo de qualificados é definido em cada equipamento, abaixo.
+      </p>
+      {settings.isError ? <Notice>{errorMessage(settings.error)}</Notice> : null}
+      <form
+        className="mt-3 flex flex-wrap items-end gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (valid) save.mutate({ qualifiedAdherence: number }, { onSuccess: () => setValue(null) });
+        }}
+      >
+        <div className="w-40">
+          <Field label="Aderência mínima (%)">
+            <TextInput type="number" min={1} max={100} value={shown} disabled={settings.isPending} onChange={(event) => setValue(event.target.value)} />
+          </Field>
+        </div>
+        <Button type="submit" disabled={!valid || save.isPending || number === current}>
+          Gravar
+        </Button>
+      </form>
+      {save.isError ? (
+        <div className="mt-3">
+          <Notice>{errorMessage(save.error)}</Notice>
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
 export function MatrixCatalogSection() {
   const catalog = useMatrixCatalog();
   return (
@@ -364,6 +421,7 @@ export function MatrixCatalogSection() {
       {catalog.isError ? <Notice>{errorMessage(catalog.error)}</Notice> : null}
       {catalog.data ? (
         <div className="flex flex-col gap-6">
+          <QualifiedAdherence />
           <Equipments catalog={catalog.data} />
           <Skills catalog={catalog.data} />
         </div>

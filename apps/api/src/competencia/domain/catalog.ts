@@ -1,4 +1,4 @@
-import { isCompetencyLevel, type CompetencyLevel } from "@manutencao/shared";
+import { isCompetencyLevel, PERFORMANCE_SCORES, type CompetencyLevel } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
 export function requireLevel(value: string): CompetencyLevel {
@@ -40,4 +40,25 @@ export function assertSkillCanBeRemoved(scoreCount: number): void {
       "Esta habilidade já foi avaliada. Arquive para tirá-la da matriz sem perder as notas.",
     );
   }
+}
+
+export function requireMinQualified(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 99) {
+    throw new DomainError("invalid", 400, "O mínimo de qualificados vai de 0 a 99.");
+  }
+  return value;
+}
+
+export function requirePerformanceTarget(value: unknown): number {
+  if (typeof value !== "number" || !(PERFORMANCE_SCORES as readonly number[]).includes(value)) {
+    throw new DomainError("invalid", 400, `A meta de desempenho é uma das notas: ${PERFORMANCE_SCORES.join(", ")}.`);
+  }
+  return value;
+}
+
+export function requireQualifiedAdherence(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 100) {
+    throw new DomainError("invalid", 400, "A aderência para qualificar vai de 1 a 100.");
+  }
+  return value;
 }

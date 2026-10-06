@@ -1,13 +1,19 @@
 import { useState } from "react";
-import type { PerformanceCompetencyDto } from "@manutencao/shared";
+import {
+  DEFAULT_PERFORMANCE_TARGET,
+  PERFORMANCE_SCORE_LABELS,
+  PERFORMANCE_SCORES,
+  type PerformanceCompetencyDto,
+} from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import {
   useDeleteCompetency,
   usePerformanceCompetencies,
   useReorderCompetencies,
   useSaveCompetency,
 } from "../data/competencies";
+import { useMatrixSettings, useSaveMatrixSettings } from "../../competencia/data/catalog";
 
 function moved(ids: string[], index: number, step: -1 | 1): string[] {
   const next = [...ids];
@@ -16,6 +22,40 @@ function moved(ids: string[], index: number, step: -1 | 1): string[] {
 }
 
 const small = "px-3 py-1.5";
+
+function PerformanceTarget() {
+  const settings = useMatrixSettings();
+  const save = useSaveMatrixSettings();
+  const current = settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET;
+  return (
+    <Card className="mb-4">
+      <h3 className="text-sm font-semibold text-app">Meta das notas</h3>
+      <p className="mt-1 text-sm text-muted">
+        A nota que o gráfico "Média por competência", na aba Desempenho, marca como meta. Grava ao escolher.
+      </p>
+      <div className="mt-3 w-56">
+        <Field label="Meta">
+          <SelectInput
+            value={current}
+            disabled={settings.isPending || save.isPending}
+            onChange={(event) => save.mutate({ performanceTarget: Number(event.target.value) })}
+          >
+            {PERFORMANCE_SCORES.map((value) => (
+              <option key={value} value={value}>
+                {value} {PERFORMANCE_SCORE_LABELS[value]}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+      </div>
+      {settings.isError || save.isError ? (
+        <div className="mt-3">
+          <Notice>{errorMessage(settings.error ?? save.error)}</Notice>
+        </div>
+      ) : null}
+    </Card>
+  );
+}
 
 export function CompetenciesSection() {
   const competencies = usePerformanceCompetencies();
@@ -51,6 +91,7 @@ export function CompetenciesSection() {
         text="As competências da avaliação de desempenho, na aba Desempenho da ficha do técnico. A ordem daqui é a ordem da avaliação. Com nota lançada, arquive em vez de excluir: a nota antiga continua valendo."
         action={<Button onClick={() => edit(null)}>Nova competência</Button>}
       />
+      <PerformanceTarget />
       {competencies.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       <ol className="flex flex-col gap-2">
         {list.length === 0 && competencies.data ? <Card>Nenhuma competência ainda.</Card> : null}

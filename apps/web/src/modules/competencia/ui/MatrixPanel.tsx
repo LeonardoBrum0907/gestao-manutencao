@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   COMPETENCY_LEVEL_EXPECTED,
@@ -14,9 +14,9 @@ import {
   type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Field, Notice, Stat, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, Stat, TextInput } from "../../../design/ui/controls";
 import { useMatrixCatalog } from "../data/catalog";
-import { useMatrix, useSetMatrixEquipments, useSetSkill, type SkillWrite } from "../data/matrix";
+import { useMatrix, useSetMatrixEquipments, useSetSkill, useSetSkills, type SkillWrite } from "../data/matrix";
 import {
   adherenceTone,
   average,
@@ -25,11 +25,13 @@ import {
   equipmentName,
   expectedOf,
   matchesSearch,
+  pendingExpected,
   percent,
   skillsOf,
   skillState,
   stateRowClass,
 } from "../model/matrix";
+import { SkillScore, type ScoreValue } from "./SkillScore";
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
   return (
@@ -56,19 +58,19 @@ function Bar({ value }: { value: number | null }) {
   );
 }
 
-const scoreButton =
-  "h-9 min-w-9 rounded-control border px-2 text-sm font-semibold tabular-nums transition";
+function focusSibling(row: HTMLElement, step: 1 | -1) {
+  const rows = [...(row.closest("[data-matrix]")?.querySelectorAll<HTMLElement>("[data-skill-row]") ?? [])];
+  rows[rows.indexOf(row) + step]?.focus();
+}
 
 function SkillRow({
   skill,
   entry,
   onChange,
-  disabled,
 }: {
   skill: MatrixSkillDto;
   entry: CompetencyEntryDto | undefined;
   onChange: (write: SkillWrite) => void;
-  disabled: boolean;
 }) {
   const state = skillState(skill, entry);
   const expected = expectedOf(skill, entry);
@@ -78,9 +80,37 @@ function SkillRow({
     notApplicable: entry?.notApplicable ?? false,
     expected: entry?.expected ?? null,
   };
+  const set = (next: ScoreValue) => onChange({ ...base, ...next });
+
+  // Teclado com a linha (ou o seletor dela) em foco: 0 a 4 = nota, N = não se aplica, E = atende o esperado,
+  // Del = limpar. Depois de marcar, o foco desce para a próxima habilidade.
+  function onKeyDown(event: KeyboardEvent<HTMLLIElement>) {
+    const target = event.target as HTMLElement;
+    if (target !== event.currentTarget && !target.hasAttribute("data-skill-pill")) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if (/^[0-4]$/.test(key)) set({ score: Number(key) as CompetencyScore, notApplicable: false });
+    else if (key === "n") set({ score: null, notApplicable: true });
+    else if (key === "e") set({ score: expected as CompetencyScore, notApplicable: false });
+    else if (key === "delete" || key === "backspace") {
+      event.preventDefault();
+      set({ score: null, notApplicable: false });
+      return;
+    } else if (key === "arrowdown" || key === "arrowup") {
+      event.preventDefault();
+      focusSibling(event.currentTarget, key === "arrowdown" ? 1 : -1);
+      return;
+    } else return;
+    event.preventDefault();
+    focusSibling(event.currentTarget, 1);
+  }
+
   return (
     <li
-      className={`flex flex-col gap-3 border-l-4 border-t border-t-line bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between ${stateRowClass[state]}`}
+      data-skill-row
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      className={`flex flex-col gap-3 border-l-4 border-t border-t-line bg-card px-3 py-3 outline-none focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:flex-row sm:items-center sm:justify-between ${stateRowClass[state]}`}
     >
       <div className="min-w-0">
         <p className="text-sm text-app">{skill.text}</p>
@@ -90,7 +120,6 @@ function SkillRow({
             aria-label={`Esperado em ${skill.text}`}
             className="rounded-control border border-line bg-surface px-1 py-0.5 text-xs text-app"
             value={entry?.expected ?? ""}
-            disabled={disabled}
             onChange={(event) =>
               onChange({ ...base, expected: event.target.value ? (Number(event.target.value) as CompetencyScore) : null })
             }
@@ -104,42 +133,12 @@ function SkillRow({
           </select>
         </p>
       </div>
-      <div role="group" aria-label={`Nota em ${skill.text}`} className="flex shrink-0 flex-wrap gap-1">
-        {COMPETENCY_SCORES.map((score) => {
-          const pressed = !base.notApplicable && base.score === score;
-          return (
-            <button
-              key={score}
-              type="button"
-              aria-pressed={pressed}
-              title={`${score} · ${COMPETENCY_SCORE_LABELS[score].label}`}
-              disabled={disabled}
-              onClick={() => onChange({ ...base, notApplicable: false, score: pressed ? null : score })}
-              className={`${scoreButton} ${
-                pressed
-                  ? score >= expected
-                    ? "border-accent bg-accent text-accent-contrast"
-                    : "border-danger bg-danger text-canvas"
-                  : "border-line bg-surface text-app hover:bg-chip"
-              }`}
-            >
-              {score}
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          aria-pressed={base.notApplicable}
-          title="Não se aplica"
-          disabled={disabled}
-          onClick={() => onChange({ ...base, score: null, notApplicable: !base.notApplicable })}
-          className={`${scoreButton} ${
-            base.notApplicable ? "border-muted bg-chip text-app" : "border-line bg-surface text-muted hover:bg-chip"
-          }`}
-        >
-          N/A
-        </button>
-      </div>
+      <SkillScore
+        skillText={skill.text}
+        state={state}
+        value={{ score: base.score, notApplicable: base.notApplicable }}
+        onPick={set}
+      />
     </li>
   );
 }
@@ -152,7 +151,8 @@ function Equipment({
   onToggle,
   query,
   onChange,
-  disabled,
+  onBulk,
+  bulkPending,
 }: {
   catalog: MatrixCatalogDto;
   matrix: MemberMatrixDto;
@@ -161,13 +161,24 @@ function Equipment({
   onToggle: () => void;
   query: string;
   onChange: (write: SkillWrite) => void;
-  disabled: boolean;
+  onBulk: (writes: SkillWrite[]) => void;
+  bulkPending: boolean;
 }) {
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
   const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
   if (query && skills.length === 0) return null;
   const expanded = open || Boolean(query);
+  // "Atende o esperado": só o que ainda está sem nota (e não é "não se aplica"); o que já tem nota não muda.
+  const fill = (list: MatrixSkillDto[]) => () =>
+    onBulk(
+      pendingExpected(list, entries).map((skill) => ({
+        skillId: skill.id,
+        score: expectedOf(skill, entries.get(skill.id)) as CompetencyScore,
+        notApplicable: false,
+        expected: entries.get(skill.id)?.expected ?? null,
+      })),
+    );
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <button
@@ -189,11 +200,29 @@ function Equipment({
       </button>
       {expanded ? (
         <div className="border-t border-line">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-5">
+            <p className="text-xs text-muted">
+              Clique na nota para escolher. Com a linha em foco: <kbd className="rounded border border-line px-1">0</kbd> a{" "}
+              <kbd className="rounded border border-line px-1">4</kbd>, <kbd className="rounded border border-line px-1">N</kbd> não se aplica,{" "}
+              <kbd className="rounded border border-line px-1">E</kbd> atende o esperado, <kbd className="rounded border border-line px-1">Del</kbd> limpa.
+            </p>
+            <Button tone="ghost" className="px-3 py-1.5" disabled={bulkPending || pendingExpected(skills, entries).length === 0} onClick={fill(skills)}>
+              Atende o esperado em tudo sem nota
+            </Button>
+          </div>
           {bySubgroup(skills).map((group) => (
             <div key={group.subgroup}>
-              <p className="bg-chip px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted sm:px-5">
-                {group.subgroup}
-              </p>
+              <div className="flex items-center justify-between gap-2 bg-chip px-4 py-2 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.subgroup}</p>
+                <Button
+                  tone="ghost"
+                  className="px-2.5 py-1 text-xs"
+                  disabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
+                  onClick={fill(group.skills)}
+                >
+                  Atende o esperado
+                </Button>
+              </div>
               <ul>
                 {group.skills.map((skill) => (
                   <SkillRow
@@ -201,7 +230,6 @@ function Equipment({
                     skill={skill}
                     entry={entries.get(skill.id)}
                     onChange={onChange}
-                    disabled={disabled}
                   />
                 ))}
               </ul>
@@ -216,6 +244,7 @@ function Equipment({
 function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: MemberMatrixDto }) {
   const setEquipments = useSetMatrixEquipments(matrix.memberId);
   const setSkill = useSetSkill(matrix.memberId);
+  const setSkills = useSetSkills(matrix.memberId);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | null>(matrix.equipments[0] ?? null);
 
@@ -226,9 +255,9 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
     setEquipments.mutate(next);
   }
 
-  const error = setEquipments.error ?? setSkill.error;
+  const error = setEquipments.error ?? setSkill.error ?? setSkills.error;
   return (
-    <div className="flex flex-col gap-6">
+    <div data-matrix className="flex flex-col gap-6">
       <Summary summary={matrix.summary} />
       <Card>
         <h2 className="text-sm font-semibold text-app">Equipamentos que se aplicam</h2>
@@ -265,7 +294,7 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
               </Field>
             </div>
             <p className="text-xs text-muted">
-              {COMPETENCY_SCORES.map((score) => `${score} ${COMPETENCY_SCORE_LABELS[score].label}`).join(" · ")} · N/A não se aplica
+              {COMPETENCY_SCORES.map((score) => `${score} ${COMPETENCY_SCORE_LABELS[score].label}`).join(" · ")}
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -279,7 +308,8 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
                 onToggle={() => setOpen(open === equipment ? null : equipment)}
                 query={query}
                 onChange={(write) => setSkill.mutate(write)}
-                disabled={setSkill.isPending}
+                onBulk={(writes) => writes.length && setSkills.mutate(writes)}
+                bulkPending={setSkills.isPending}
               />
             ))}
           </div>
