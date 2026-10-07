@@ -31,17 +31,25 @@ export class Machines {
 
   async remove(id: string): Promise<void> {
     if (!(await this.machines.find(id))) throw new DomainError("not_found", 404, "Máquina não encontrada.");
+    if (await this.machines.countPostPreventives(id)) {
+      throw new DomainError("machine_in_use", 409, "Esta máquina tem fichas pós-preventiva. Exclua as fichas antes.");
+    }
     await this.machines.remove(id);
   }
 
   private async write(body: unknown, id: string | null): Promise<MachineDto> {
-    if (id && !(await this.machines.find(id))) throw new DomainError("not_found", 404, "Máquina não encontrada.");
+    const current = id ? await this.machines.find(id) : null;
+    if (id && !current) throw new DomainError("not_found", 404, "Máquina não encontrada.");
     const source = readObject(body);
     const lineId = requiredString(source, "lineId", "Escolha a linha.");
     if (!(await this.lines.find(lineId))) throw new DomainError("line", 400, "Linha não encontrada.");
     const equipmentId = optionalString(source, "equipmentId");
     if (equipmentId && !(await this.subassemblies.equipmentExists(equipmentId))) {
       throw new DomainError("equipment", 400, "Modelo de equipamento não encontrado.");
+    }
+    // Os subconjuntos das fichas vêm do modelo: trocar o modelo deixaria fichas apontando para outro equipamento.
+    if (id && current && current.equipmentId !== equipmentId && (await this.machines.countPostPreventives(id))) {
+      throw new DomainError("machine_model_locked", 409, "Esta máquina tem fichas pós-preventiva; o modelo de equipamento não pode mudar.");
     }
     const input = {
       lineId,

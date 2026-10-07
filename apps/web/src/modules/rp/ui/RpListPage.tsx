@@ -107,7 +107,7 @@ export function RpListPage() {
               ))}
             </SelectInput>
           </Field>
-          <Field label="Linha">
+          <Field label="Linha do texto">
             <TextInput value={params.get("line") ?? ""} onChange={(event) => setFilter("line", event.target.value)} />
           </Field>
           <Field label="TAG">
