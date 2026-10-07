@@ -158,3 +158,17 @@ export function useRemoveAttachment(id: string) {
     },
   });
 }
+
+// Excluir pode levar junto o RP de quem o registro é espelho: refaz também RPs e pós-preventivas.
+export function useDeleteRecord() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/records/${id}`, { method: "DELETE" }),
+    onSuccess: (_result, id) => {
+      client.removeQueries({ queryKey: ["records", id], exact: true });
+      invalidateRecords(client, id);
+      void client.invalidateQueries({ queryKey: ["rp"] });
+      void client.invalidateQueries({ queryKey: ["post-preventives"] });
+    },
+  });
+}

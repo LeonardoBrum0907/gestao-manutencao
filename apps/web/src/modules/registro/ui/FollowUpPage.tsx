@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { DueWindow, RecordType } from "@manutencao/shared";
+import type { DueWindow, RecordListItemDto, RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
+import { RowMenu, type RowMenuItem } from "../../../design/ui/row-menu";
 import { flattenPages, useFollowUp, usePrefetchRecord } from "../data/records";
 import {
   dueChoices,
@@ -11,6 +13,7 @@ import {
   type FollowUpQuery,
 } from "../model/follow-up";
 import { originLabel, recordShortName, statusChipClass, statusLabel, statusOptions, typeChoices } from "../model/record";
+import { RecordRemoveDialog } from "./RecordRemoveDialog";
 import { DueMark, PriorityMark } from "./RecordMarks";
 
 export function FollowUpPage() {
@@ -21,6 +24,14 @@ export function FollowUpPage() {
   const records = flattenPages(list.data?.pages);
   const prefetch = usePrefetchRecord();
   const dueEnabled = prazoApplies(filter.type);
+  const [removing, setRemoving] = useState<RecordListItemDto | null>(null);
+
+  function menu(record: RecordListItemDto): RowMenuItem[] {
+    return [
+      { label: "Abrir ficha", onSelect: () => navigate(`/registros/${record.id}`) },
+      { label: "Excluir…", danger: true, onSelect: () => setRemoving(record) },
+    ];
+  }
 
   function apply(next: FollowUpQuery) {
     setParams(followUpSearch(next), { replace: true });
@@ -116,6 +127,7 @@ export function FollowUpPage() {
                 onFocus={() => prefetch.start(record.id)}
                 onBlur={prefetch.cancel}
                 onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     navigate(`/registros/${record.id}`);
@@ -130,7 +142,10 @@ export function FollowUpPage() {
                       <p className="text-xs text-muted">{originLabel(record.origin)}</p>
                     ) : null}
                   </div>
-                  <span className={statusChipClass(record.status)}>{statusLabel(record.status)}</span>
+                  <div className="-mr-2 -mt-1 flex items-center gap-1">
+                    <span className={statusChipClass(record.status)}>{statusLabel(record.status)}</span>
+                    <RowMenu label="Mais ações do registro" items={menu(record)} />
+                  </div>
                 </div>
                 <div className="mt-2">
                   <DueMark record={record} />
@@ -150,6 +165,9 @@ export function FollowUpPage() {
                   <th className="px-4 py-3 font-semibold">Registro</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Prazo</th>
+                  <th className="w-14 px-2 py-3">
+                    <span className="sr-only">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -165,6 +183,7 @@ export function FollowUpPage() {
                     onFocus={() => prefetch.start(record.id)}
                     onBlur={prefetch.cancel}
                     onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return;
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         navigate(`/registros/${record.id}`);
@@ -190,6 +209,9 @@ export function FollowUpPage() {
                     <td className="px-4 py-3">
                       <DueMark record={record} />
                     </td>
+                    <td className="px-2 py-1.5">
+                      <RowMenu label="Mais ações do registro" items={menu(record)} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -204,6 +226,7 @@ export function FollowUpPage() {
           ) : null}
         </>
       ) : null}
+      {removing ? <RecordRemoveDialog record={removing} onCancel={() => setRemoving(null)} onDeleted={() => setRemoving(null)} /> : null}
     </div>
   );
 }

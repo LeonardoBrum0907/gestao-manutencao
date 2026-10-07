@@ -89,3 +89,9 @@ export function fromLocalInput(value: string): string {
 export function nowLocalInput(): string {
   return toLocalInput(new Date().toISOString());
 }
+
+// Nome curto do registro para perguntas e avisos: o texto inteiro pode ter um parágrafo.
+export function recordCaption(body: string): string {
+  const flat = body.replace(/\s+/g, " ").trim();
+  return flat.length > 60 ? `${flat.slice(0, 57).trimEnd()}…` : flat;
+}

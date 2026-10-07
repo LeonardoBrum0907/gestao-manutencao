@@ -16,6 +16,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import { dueRange } from "../domain/follow-up";
 import type { RecordListFilter } from "../domain/record-list";
+import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
 
 const include = {
@@ -256,6 +257,36 @@ export class RecordRepository {
       include,
     });
     return toDto(row);
+  }
+
+  async links(id: string): Promise<RecordLinks | null> {
+    const row = await this.prisma.record.findUnique({
+      where: { id },
+      select: {
+        member: { select: { name: true } },
+        members: { orderBy: { position: "asc" }, select: { member: { select: { name: true } } } },
+        rp: { select: { orderNumber: true, _count: { select: { postPreventives: true } } } },
+        _count: { select: { attachments: true } },
+      },
+    });
+    if (!row) return null;
+    const memberNames = [row.member?.name, ...row.members.map((link) => link.member.name)].filter((name): name is string => Boolean(name));
+    return {
+      rp: row.rp ? { orderNumber: row.rp.orderNumber, postPreventives: row.rp._count.postPreventives } : null,
+      attachments: row._count.attachments,
+      memberNames: [...new Set(memberNames)],
+    };
+  }
+
+  // Excluir pela lista de Pendências: o RP de quem o registro é espelho sai junto (sem o espelho o RP
+  // some das listas). Pós-preventivas ligadas ao RP só perdem a ligação (SetNull no banco).
+  async removeWithRp(id: string): Promise<string[]> {
+    const files = await this.prisma.recordAttachment.findMany({ where: { recordId: id }, select: { storageKey: true } });
+    await this.prisma.$transaction([
+      this.prisma.rp.deleteMany({ where: { problemRecordId: id } }),
+      this.prisma.record.delete({ where: { id } }),
+    ]);
+    return files.map((file) => file.storageKey);
   }
 
   // Apaga o registro e devolve as chaves dos anexos, para quem chamou limpar os arquivos do disco.

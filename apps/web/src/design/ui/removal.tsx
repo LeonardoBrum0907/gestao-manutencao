@@ -54,6 +54,13 @@ export function RemovalPrompt({ path, name, onConfirm, onCancel, removing, error
   return (
     <div className={`flex flex-col gap-3 ${box}`} role="alert">
       <p className="text-sm font-semibold text-app">{blocked ? `Não dá para excluir “${name}”` : `Excluir “${name}”?`}</p>
+      {!blocked && check.data.warnings.length > 0 ? (
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-app">
+          {check.data.warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
+      ) : null}
       <p className="text-sm text-app">{blocked ? check.data.reason : "Não dá para desfazer."}</p>
       {error ? <Notice>{errorMessage(error)}</Notice> : null}
       <div className="flex flex-wrap gap-2">

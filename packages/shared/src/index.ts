@@ -161,6 +161,8 @@ export type FactoryDto = {
 export type RemovalCheckDto = {
   canRemove: boolean;
   reason: string | null;
+  // O que vai junto ou perde a ligação quando dá para excluir; a tela mostra antes de confirmar.
+  warnings: string[];
 };
 
 export type LineDto = {

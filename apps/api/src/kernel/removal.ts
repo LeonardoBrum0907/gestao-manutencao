@@ -5,9 +5,9 @@ import { DomainError } from "./domain-error";
 export async function removalCheck(check: () => Promise<void>): Promise<RemovalCheckDto> {
   try {
     await check();
-    return { canRemove: true, reason: null };
+    return { canRemove: true, reason: null, warnings: [] };
   } catch (error) {
-    if (error instanceof DomainError && error.statusCode === 409) return { canRemove: false, reason: error.message };
+    if (error instanceof DomainError && error.statusCode === 409) return { canRemove: false, reason: error.message, warnings: [] };
     throw error;
   }
 }
