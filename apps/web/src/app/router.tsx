@@ -8,6 +8,7 @@ import { SettingsPage } from "../modules/configuracoes/ui/SettingsPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { AttentionSheetPage } from "../modules/maquina/ui/AttentionSheetPage";
 import { MachinePage } from "../modules/maquina/ui/MachinePage";
+import { MachinesPage } from "../modules/maquina/ui/MachinesPage";
 import { PostPreventiveListPage } from "../modules/pos-preventiva/ui/PostPreventiveListPage";
 import { NewPostPreventivePage, PostPreventivePage } from "../modules/pos-preventiva/ui/PostPreventivePage";
 import { CapturePage } from "../modules/registro/ui/CapturePage";
@@ -53,6 +54,7 @@ export function AppRouter() {
         <Route path="/pos-preventiva" element={<PostPreventiveListPage />} />
         <Route path="/pos-preventiva/nova" element={<NewPostPreventivePage />} />
         <Route path="/pos-preventiva/:id" element={<PostPreventivePage />} />
+        <Route path="/maquinas" element={<MachinesPage />} />
         <Route path="/maquinas/:id" element={<MachinePage />} />
         <Route path="/maquinas/:id/folha" element={<AttentionSheetPage />} />
         <Route path="/registros" element={<Navigate to="/acompanhamento" replace />} />

@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { PostPreventiveDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useLines, useMachines, useMembers, useSaveSubassembly, useSubassemblies } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
@@ -98,10 +98,6 @@ export function PostPreventiveForm({
   function pickMachine(machineId: string) {
     setValues((current) => ({ ...current, machineId, subassemblyId: "" }));
     setSaved(false);
-  }
-
-  function toggleMember(memberId: string) {
-    set("memberIds", values.memberIds.includes(memberId) ? values.memberIds.filter((item) => item !== memberId) : [...values.memberIds, memberId]);
   }
 
   function submit(event: FormEvent) {
@@ -206,18 +202,14 @@ export function PostPreventiveForm({
         </Section>
 
         <Section title="Técnicos da preventiva">
-          <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-control border border-line bg-surface p-3">
-            {members.data?.length ? (
-              members.data.map((member) => (
-                <label key={member.id} className="flex items-center gap-2 text-sm text-app">
-                  <input type="checkbox" checked={values.memberIds.includes(member.id)} onChange={() => toggleMember(member.id)} />
-                  {memberOptionLabel(member)}
-                </label>
-              ))
-            ) : (
-              <p className="text-sm text-muted">Nenhum colaborador cadastrado.</p>
-            )}
-          </div>
+          <MultiSelect
+            label="Técnicos"
+            placeholder="Selecione os técnicos"
+            emptyText="Nenhum colaborador cadastrado."
+            options={(members.data ?? []).map((member) => ({ value: member.id, label: memberOptionLabel(member) }))}
+            value={values.memberIds}
+            onChange={(memberIds) => set("memberIds", memberIds)}
+          />
         </Section>
 
         <Section title="RP ligado (opcional)">

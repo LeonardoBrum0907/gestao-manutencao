@@ -90,8 +90,8 @@ export function MachinePage() {
         }
       />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm">
-        <Link to="/configuracoes/fabricas" className="font-semibold text-accent">
-          ← Linhas e máquinas
+        <Link to="/maquinas" className="font-semibold text-accent">
+          ← Máquinas
         </Link>
         <span>
           Status: <span className={machineStatusClass(machine.status) || "text-app"}>{machineStatusLabel(machine.status)}</span>
@@ -165,7 +165,7 @@ export function MachinePage() {
         </Card>
       </div>
       {editing ? (
-        <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/configuracoes/fabricas")} />
+        <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/maquinas")} />
       ) : null}
     </div>
   );

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
@@ -38,10 +38,6 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
   const [lineLabel, setLineLabel] = useState(record?.lineLabel ?? "");
   const [status, setStatus] = useState<RecordStatus>(record?.status ?? "open");
   const [notes, setNotes] = useState(record?.notes ?? "");
-
-  function toggleMember(id: string) {
-    setMemberIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  }
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -90,25 +86,14 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
             onChange={(event) => setDurationMin(event.target.value)}
           />
         </Field>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium text-app">Técnicos</legend>
-          <div className="flex max-h-40 flex-col gap-2 overflow-y-auto rounded-control border border-line bg-surface p-3">
-            {members.data?.length ? (
-              members.data.map((member) => (
-                <label key={member.id} className="flex items-center gap-2 text-sm text-app">
-                  <input
-                    type="checkbox"
-                    checked={memberIds.includes(member.id)}
-                    onChange={() => toggleMember(member.id)}
-                  />
-                  {memberOptionLabel(member)}
-                </label>
-              ))
-            ) : (
-              <p className="text-sm text-muted">Nenhum técnico cadastrado.</p>
-            )}
-          </div>
-        </fieldset>
+        <MultiSelect
+          label="Técnicos"
+          placeholder="Selecione os técnicos"
+          emptyText="Nenhum técnico cadastrado."
+          options={(members.data ?? []).map((member) => ({ value: member.id, label: memberOptionLabel(member) }))}
+          value={memberIds}
+          onChange={setMemberIds}
+        />
         <div className="grid gap-2 sm:grid-cols-2">
           <button
             type="button"
