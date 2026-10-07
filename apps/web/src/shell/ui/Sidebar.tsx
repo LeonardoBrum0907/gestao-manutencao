@@ -17,8 +17,7 @@ const groups: { title?: string; items: Entry[] }[] = [
   {
     title: "Turno",
     items: [
-      { to: "/turno/chamado", label: "Chamado", icon: "wrench" },
-      { to: "/turno/ocorrencia", label: "Ocorrência", icon: "alert" },
+      { to: "/turno/chamados", label: "Chamados", icon: "wrench" },
       { to: "/rp", label: "RP", icon: "file" },
       { to: "/pos-preventiva", label: "Pós-preventiva", icon: "shield" },
       { to: "/maquinas", label: "Máquinas", icon: "machine" },

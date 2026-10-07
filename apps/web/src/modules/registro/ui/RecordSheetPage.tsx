@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
-import { ChamadoForm } from "../../turno/ui/ChamadoForm";
+import { chamadoHref, dayOf } from "../../turno/model/chamado";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
 import { useRpOfProblem } from "../../rp/data/rp";
 import { useRecord } from "../data/records";
@@ -38,6 +38,8 @@ export function RecordSheetPage() {
   if (record.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!record.data) return <p className="text-sm text-danger">Registro não encontrado.</p>;
   const data = record.data;
+  // Chamado tem tela própria: abre a lista do dia dele, com o painel aberto.
+  if (data.origin === "chamado") return <Navigate to={chamadoHref({ id: data.id, day: dayOf(new Date(data.occurredAt)) })} replace />;
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle
@@ -49,7 +51,6 @@ export function RecordSheetPage() {
       </Link>
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
-      {data.type === "problem" && data.origin === "chamado" ? <ChamadoForm record={data} /> : null}
       {data.type === "problem" && data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
       {data.type === "problem" && data.origin === "rp" ? <RpMirror recordId={data.id} /> : null}
       {data.type === "problem" && data.origin === "inbox" ? <ProblemSheet record={data} /> : null}

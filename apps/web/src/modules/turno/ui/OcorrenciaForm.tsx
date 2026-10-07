@@ -1,29 +1,21 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useFactories } from "../../cadastro/data/cadastro";
 import { useSaveOcorrencia } from "../data/shift";
 
-export function OcorrenciaForm({ record }: { record?: RecordDto }) {
-  const navigate = useNavigate();
+// Só para as ocorrências antigas: a tela de criar saiu do menu (anotar rápido é Registrar; análise é o RP).
+export function OcorrenciaForm({ record }: { record: RecordDto }) {
   const factories = useFactories();
-  const save = useSaveOcorrencia(record?.id);
-  const [factoryId, setFactoryId] = useState(record?.factoryId ?? "");
-  const [line, setLine] = useState(record?.line ?? "");
-  const [body, setBody] = useState(record?.body ?? "");
+  const save = useSaveOcorrencia(record.id);
+  const [factoryId, setFactoryId] = useState(record.factoryId ?? "");
+  const [line, setLine] = useState(record.line ?? "");
+  const [body, setBody] = useState(record.body ?? "");
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    save.mutate(
-      { factoryId, line, body },
-      {
-        onSuccess: (saved) => {
-          if (!record) navigate(`/registros/${saved.id}`);
-        },
-      },
-    );
+    save.mutate({ factoryId, line, body });
   }
 
   return (
@@ -46,9 +38,9 @@ export function OcorrenciaForm({ record }: { record?: RecordDto }) {
           <TextArea value={body} onChange={(event) => setBody(event.target.value)} />
         </Field>
         {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-        {record && save.isSuccess ? <p className="text-sm font-medium text-accent">Ocorrência gravada.</p> : null}
+        {save.isSuccess ? <p className="text-sm font-medium text-accent">Ocorrência gravada.</p> : null}
         <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? "Gravando…" : record ? "Gravar ocorrência" : "Anotar ocorrência"}
+          {save.isPending ? "Gravando…" : "Gravar ocorrência"}
         </Button>
       </form>
     </Card>

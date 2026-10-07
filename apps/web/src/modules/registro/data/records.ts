@@ -83,6 +83,8 @@ export function invalidateRecords(client: QueryClient, savedId?: string) {
     predicate: (query) => query.queryKey[1] !== savedId,
   });
   void client.invalidateQueries({ queryKey: ["dashboard"] });
+  // Chamado é registro: excluir ou mexer numa pendência dele muda a tela de Chamados.
+  void client.invalidateQueries({ queryKey: ["chamados"] });
 }
 
 export function useCaptureRecord() {

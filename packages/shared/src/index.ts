@@ -264,6 +264,8 @@ export type RecordDto = {
   closedAt: string | null;
   durationMin: number | null;
   memberIds: string[];
+  // Tarefa gerada de um chamado: aponta para ele.
+  chamadoId: string | null;
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentDto[];
@@ -547,6 +549,8 @@ export type RpFields = {
 export type RpDto = RpFields & {
   id: string;
   problemRecordId: string | null;
+  // Chamado de onde o RP foi escrito.
+  chamadoId: string | null;
   rawText: string;
   createdAt: string;
   updatedAt: string;
@@ -654,4 +658,69 @@ export type PostPreventiveDto = PostPreventiveFields & {
   lineId: string;
   createdAt: string;
   updatedAt: string;
+};
+
+// Chamados do turno. O chamado continua sendo um registro de origem "chamado", mas fica fora de Pendências:
+// o que precisar de ação depois vira uma Tarefa ligada a ele.
+export const CHAMADO_SHIFTS = ["first", "second", "third"] as const;
+export type ChamadoShift = (typeof CHAMADO_SHIFTS)[number];
+
+export function isChamadoShift(value: string): value is ChamadoShift {
+  return (CHAMADO_SHIFTS as readonly string[]).includes(value);
+}
+
+// Mesmo status do registro, com os nomes do SIGEM.
+export const CHAMADO_STATUS_LABELS: Record<RecordStatus, string> = {
+  done: "Liberado",
+  open: "Pendente",
+  in_progress: "Em andamento",
+};
+
+export type ChamadoTaskDto = {
+  id: string;
+  body: string;
+  status: RecordStatus;
+  dueAt: string | null;
+  memberId: string | null;
+};
+
+export type ChamadoDto = {
+  id: string;
+  dayNumber: number | null;
+  // Dia do chamado (AAAA-MM-DD, fuso do gestor), pela abertura.
+  day: string;
+  shift: ChamadoShift | null;
+  occurredAt: string;
+  openedAt: string | null;
+  closedAt: string | null;
+  durationMin: number | null;
+  body: string;
+  notes: string | null;
+  status: RecordStatus;
+  lineId: string | null;
+  lineLabel: string | null;
+  machineId: string | null;
+  memberIds: string[];
+  tasks: ChamadoTaskDto[];
+  rp: { id: string; status: RpStatus } | null;
+};
+
+export type ChamadoBody = {
+  body: string;
+  openedAt: string;
+  closedAt: string | null;
+  shift: ChamadoShift | null;
+  memberIds: string[];
+  lineId: string | null;
+  lineLabel: string | null;
+  machineId: string | null;
+  status: RecordStatus;
+  notes: string | null;
+};
+
+export type ChamadoTaskBody = {
+  body: string;
+  dueAt: string;
+  memberId: string | null;
+  priority: RecordPriority | null;
 };

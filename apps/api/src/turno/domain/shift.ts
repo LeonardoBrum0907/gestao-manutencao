@@ -1,16 +1,32 @@
-import type { RecordStatus } from "@manutencao/shared";
+import type { ChamadoShift, RecordPriority, RecordStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import type { ProblemWrite } from "../../ports/problem-log";
 
 export type ChamadoInput = {
-  dayNumber: number;
   body: string;
-  openedAt: Date | null;
+  openedAt: Date;
   closedAt: Date | null;
-  durationMin: number | null;
+  shift: ChamadoShift | null;
   memberIds: string[];
   lineId: string | null;
   lineLabel: string | null;
+  machineId: string | null;
+  status: RecordStatus;
+  notes: string | null;
+};
+
+// O que vai para o banco. O número do dia é dado na gravação, pelo dia da abertura.
+export type ChamadoWrite = {
+  body: string;
+  occurredAt: Date;
+  openedAt: Date;
+  closedAt: Date | null;
+  durationMin: number | null;
+  shift: ChamadoShift | null;
+  memberIds: string[];
+  lineId: string | null;
+  lineLabel: string | null;
+  machineId: string | null;
   status: RecordStatus;
   notes: string | null;
 };
@@ -37,20 +53,12 @@ function place(lineId: string | null, lineLabel: string | null): { lineId: strin
   return { lineId: hasLine ? lineId : null, lineLabel: hasLabel ? label : null };
 }
 
-function durationOf(openedAt: Date | null, closedAt: Date | null, durationMin: number | null): number | null {
-  if (openedAt && closedAt && closedAt.getTime() < openedAt.getTime()) {
+function durationOf(openedAt: Date, closedAt: Date | null): number | null {
+  if (!closedAt) return null;
+  if (closedAt.getTime() < openedAt.getTime()) {
     throw new DomainError("hours", 400, "O fechamento não pode ser antes da abertura.");
   }
-  if (durationMin !== null) {
-    if (!Number.isInteger(durationMin) || durationMin < 0) {
-      throw new DomainError("duration", 400, "Duração inválida.");
-    }
-    return durationMin;
-  }
-  if (openedAt && closedAt) {
-    return Math.round((closedAt.getTime() - openedAt.getTime()) / 60000);
-  }
-  return null;
+  return Math.round((closedAt.getTime() - openedAt.getTime()) / 60000);
 }
 
 function people(ids: string[]): string[] {
@@ -65,28 +73,41 @@ function people(ids: string[]): string[] {
   return unique;
 }
 
-export function openChamado(input: ChamadoInput, now: Date): ProblemWrite {
-  if (!Number.isInteger(input.dayNumber) || input.dayNumber < 1) {
-    throw new DomainError("day_number", 400, "Informe o número do dia.");
-  }
+export function openChamado(input: ChamadoInput): ChamadoWrite {
   const spot = place(input.lineId, input.lineLabel);
-  const openedAt = input.openedAt;
+  if (input.machineId && !spot.lineId) {
+    throw new DomainError("machine", 400, "Escolha a linha da máquina.");
+  }
   return {
-    origin: "chamado",
-    body: text(input.body, "Escreva a descrição do chamado."),
-    occurredAt: openedAt ?? now,
-    status: input.status,
+    body: text(input.body, "Escreva o que aconteceu."),
+    occurredAt: input.openedAt,
+    openedAt: input.openedAt,
+    closedAt: input.closedAt,
+    durationMin: durationOf(input.openedAt, input.closedAt),
+    shift: input.shift,
     memberIds: people(input.memberIds),
-    factoryId: null,
     lineId: spot.lineId,
     lineLabel: spot.lineLabel,
-    line: null,
+    machineId: input.machineId,
+    status: input.status,
     notes: input.notes?.trim() || null,
-    dayNumber: input.dayNumber,
-    openedAt,
-    closedAt: input.closedAt,
-    durationMin: durationOf(openedAt, input.closedAt, input.durationMin),
   };
+}
+
+// Número do chamado no dia: o seguinte ao maior já usado (os antigos foram digitados à mão).
+export function nextDayNumber(used: (number | null)[]): number {
+  return used.reduce<number>((max, value) => (value !== null && value > max ? value : max), 0) + 1;
+}
+
+export type ChamadoTaskInput = {
+  body: string;
+  dueAt: Date;
+  memberId: string | null;
+  priority: RecordPriority | null;
+};
+
+export function chamadoTask(input: ChamadoTaskInput): ChamadoTaskInput {
+  return { ...input, body: text(input.body, "Escreva o que falta fazer.") };
 }
 
 export function noteOcorrencia(input: OcorrenciaInput, occurredAt: Date): ProblemWrite {

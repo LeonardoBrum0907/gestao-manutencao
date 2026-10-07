@@ -50,6 +50,7 @@ function toDto(row: Row): RpDto {
     memberIds: row.members.map((link) => link.memberId),
     unmatchedTechnicians: row.unmatchedTechnicians,
     problemRecordId: row.problemRecordId,
+    chamadoId: row.chamadoId,
     rawText: row.rawText,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -161,14 +162,25 @@ export class RpRepository {
     return row ? toDto(row) : null;
   }
 
+  // Chamado que pode receber o RP: existe e ainda não tem RP.
+  async chamadoFree(chamadoId: string): Promise<"missing" | "taken" | "free"> {
+    const row = await this.prisma.record.findFirst({
+      where: { id: chamadoId, origin: "chamado" },
+      select: { rpOfChamado: { select: { id: true } } },
+    });
+    if (!row) return "missing";
+    return row.rpOfChamado ? "taken" : "free";
+  }
+
   async idByProblem(problemRecordId: string): Promise<string | null> {
     const row = await this.prisma.rp.findUnique({ where: { problemRecordId }, select: { id: true } });
     return row ? row.id : null;
   }
 
-  async insert(write: RpWrite): Promise<RpDto> {
+  // O chamado de origem só se liga na criação ("Escrever RP" no chamado); editar o RP não mexe nele.
+  async insert(write: RpWrite, chamadoId: string | null = null): Promise<RpDto> {
     const row = await this.prisma.rp.create({
-      data: { ...scalars(write), members: { create: memberRows(write.fields.memberIds) } },
+      data: { ...scalars(write), chamadoId, members: { create: memberRows(write.fields.memberIds) } },
       include,
     });
     return toDto(row);

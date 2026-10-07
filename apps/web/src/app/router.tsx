@@ -17,8 +17,7 @@ import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
 import { RpEditPage } from "../modules/rp/ui/RpEditPage";
 import { RpListPage } from "../modules/rp/ui/RpListPage";
 import { RpPastePage } from "../modules/rp/ui/RpPastePage";
-import { ChamadoPage } from "../modules/turno/ui/ChamadoPage";
-import { OcorrenciaPage } from "../modules/turno/ui/OcorrenciaPage";
+import { ChamadosPage } from "../modules/turno/ui/ChamadosPage";
 import { AppShell } from "../shell/ui/AppShell";
 import { LoginPage } from "../shell/ui/LoginPage";
 
@@ -46,8 +45,10 @@ export function AppRouter() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/captura" element={<CapturePage />} />
         <Route path="/acompanhamento" element={<FollowUpPage />} />
-        <Route path="/turno/chamado" element={<ChamadoPage />} />
-        <Route path="/turno/ocorrencia" element={<OcorrenciaPage />} />
+        <Route path="/turno/chamados" element={<ChamadosPage />} />
+        <Route path="/turno/chamado" element={<Navigate to="/turno/chamados?abrir=novo" replace />} />
+        {/* Ocorrência saiu do menu: anotar um problema rápido é Registrar. */}
+        <Route path="/turno/ocorrencia" element={<Navigate to="/captura" replace />} />
         <Route path="/rp" element={<RpListPage />} />
         <Route path="/rp/novo" element={<RpPastePage />} />
         <Route path="/rp/:id" element={<RpEditPage />} />

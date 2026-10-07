@@ -45,6 +45,7 @@ type Row = {
   openedAt: Date | null;
   closedAt: Date | null;
   durationMin: number | null;
+  chamadoId: string | null;
   createdAt: Date;
   updatedAt: Date;
   members: { memberId: string; position: number }[];
@@ -88,6 +89,7 @@ function toDto(row: Row): RecordDto {
     closedAt: row.closedAt ? row.closedAt.toISOString() : null,
     durationMin: row.durationMin,
     memberIds: row.members.map((person) => person.memberId),
+    chamadoId: row.chamadoId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     attachments: row.attachments.map(
@@ -179,8 +181,11 @@ function involving(memberId: string): Prisma.RecordWhereInput {
 }
 
 // Os filtros vão para o banco: antes a API trazia todos os registros e filtrava no Node.
+// Chamado tem tela própria (Turno › Chamados) e fica fora de Pendências; o que sobra dele vira Tarefa.
+export const notChamado = { origin: { not: "chamado" } } as const;
+
 function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput {
-  const and: Prisma.RecordWhereInput[] = [];
+  const and: Prisma.RecordWhereInput[] = [notChamado];
   if (filter.types) and.push({ type: { in: filter.types } });
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
   if (filter.lineIds) and.push({ lineId: { in: filter.lineIds } });
@@ -218,7 +223,7 @@ export class RecordRepository {
   // Os cinco números da ficha, contados no banco em vez de somar a lista inteira da pessoa.
   async memberSummary(memberId: string, now: Date): Promise<MemberRecordSummaryDto> {
     const mine = involving(memberId);
-    const pending = { type: { not: "feedback" } } as const;
+    const pending = { type: { not: "feedback" }, ...notChamado } as const;
     const [open, overdue, done, chamados, feedbacks] = await Promise.all([
       this.prisma.record.count({ where: { AND: [mine, pending, { status: { not: "done" } }] } }),
       this.prisma.record.count({
@@ -266,7 +271,8 @@ export class RecordRepository {
         member: { select: { name: true } },
         members: { orderBy: { position: "asc" }, select: { member: { select: { name: true } } } },
         rp: { select: { orderNumber: true, _count: { select: { postPreventives: true } } } },
-        _count: { select: { attachments: true } },
+        rpOfChamado: { select: { id: true } },
+        _count: { select: { attachments: true, tasks: true } },
       },
     });
     if (!row) return null;
@@ -274,6 +280,8 @@ export class RecordRepository {
     return {
       rp: row.rp ? { orderNumber: row.rp.orderNumber, postPreventives: row.rp._count.postPreventives } : null,
       attachments: row._count.attachments,
+      chamadoTasks: row._count.tasks,
+      chamadoRp: Boolean(row.rpOfChamado),
       memberNames: [...new Set(memberNames)],
     };
   }

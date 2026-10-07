@@ -12,6 +12,8 @@ import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
 import { AttentionChip } from "../../pos-preventiva/ui/PostPreventiveListPage";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
+import { useChamadosOfLine } from "../../turno/data/shift";
+import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, shortDay } from "../../turno/model/chamado";
 
 const linkButton =
   "inline-flex items-center justify-center rounded-control px-4 py-2.5 text-sm font-semibold transition";
@@ -32,6 +34,34 @@ function RecentRps({ lineId }: { lineId: string }) {
               <span className="mt-0.5 line-clamp-2 block text-app">{rp.problem}</span>
             </span>
             <span className={`${rpStatusChipClass(rp.status)} shrink-0`}>{rpStatusLabel(rp.status)}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const RECENT_CHAMADOS = 8;
+
+// Chamados da linha; os desta máquina aparecem com o nome dela.
+function RecentChamados({ lineId, machineId }: { lineId: string; machineId: string }) {
+  const chamados = useChamadosOfLine(lineId, RECENT_CHAMADOS);
+  const items = chamados.data ?? [];
+  if (chamados.isPending) return <p className="text-sm text-muted">Carregando chamados…</p>;
+  if (!items.length) return <p className="text-sm text-muted">Nenhum chamado nesta linha.</p>;
+  return (
+    <ul className="flex flex-col">
+      {items.map((item) => (
+        <li key={item.id} className="border-t border-t-line first:border-t-0">
+          <Link to={chamadoHref(item)} className="flex items-start justify-between gap-3 py-2 text-sm transition hover:text-accent">
+            <span className="min-w-0">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                {shortDay(item.day)}
+                {item.machineId === machineId ? " · esta máquina" : ""}
+              </span>
+              <span className="mt-0.5 line-clamp-2 block text-app">{item.body}</span>
+            </span>
+            <span className={`${chamadoStatusChipClass(item.status)} shrink-0`}>{chamadoStatusLabel(item.status)}</span>
           </Link>
         </li>
       ))}
@@ -162,6 +192,17 @@ export function MachinePage() {
             }
           />
           <RecentRps lineId={line.id} />
+          <div className="mt-6">
+            <SectionTitle
+              title={`Chamados da linha ${line.name}`}
+              action={
+                <Link to={`/turno/chamados?linha=${line.id}`} className="text-sm font-semibold text-accent hover:underline">
+                  Abrir Chamados
+                </Link>
+              }
+            />
+            <RecentChamados lineId={line.id} machineId={machine.id} />
+          </div>
         </Card>
       </div>
       {editing ? (
