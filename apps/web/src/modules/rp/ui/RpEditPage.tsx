@@ -3,9 +3,21 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Notice, PageTitle } from "../../../design/ui/controls";
 import { errorMessage } from "../../../app/http";
 import { RpAttentionBox } from "../../pos-preventiva/ui/RpAttentionBox";
+import { useChamado } from "../../turno/data/shift";
+import { chamadoHref, shortDay } from "../../turno/model/chamado";
 import { useDeleteRp, useRp } from "../data/rp";
 import { valuesFromRp } from "../model/rp";
 import { RpForm } from "./RpForm";
+
+function ChamadoLink({ chamadoId }: { chamadoId: string }) {
+  const chamado = useChamado(chamadoId);
+  if (!chamado.data) return null;
+  return (
+    <Link to={chamadoHref(chamado.data)} className="text-accent">
+      Ver o chamado{chamado.data.dayNumber ? ` nº ${chamado.data.dayNumber}` : ""} de {shortDay(chamado.data.day)}
+    </Link>
+  );
+}
 
 export function RpEditPage() {
   const { id = "" } = useParams();
@@ -30,6 +42,7 @@ export function RpEditPage() {
             Ver o Problema nas Pendências
           </Link>
         ) : null}
+        {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
       <RpAttentionBox rpId={data.id} lineId={data.lineId} />
       <RpForm

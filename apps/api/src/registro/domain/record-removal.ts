@@ -3,6 +3,9 @@
 export type RecordLinks = {
   rp: { orderNumber: string | null; postPreventives: number } | null;
   attachments: number;
+  // Chamado: tarefas geradas dele e o RP escrito a partir dele continuam, só sem a ligação.
+  chamadoTasks: number;
+  chamadoRp: boolean;
   memberNames: string[];
 };
 
@@ -23,6 +26,12 @@ export function recordRemovalWarnings(links: RecordLinks): string[] {
     if (links.rp.postPreventives > 0) {
       warnings.push(`${plural(links.rp.postPreventives, "pós-preventiva perde", "pós-preventivas perdem")} a ligação com esse RP.`);
     }
+  }
+  if (links.chamadoTasks > 0) {
+    warnings.push(`${plural(links.chamadoTasks, "pendência gerada dele continua", "pendências geradas dele continuam")}, sem a ligação com o chamado.`);
+  }
+  if (links.chamadoRp) {
+    warnings.push("O RP escrito a partir dele continua, sem a ligação com o chamado.");
   }
   if (links.attachments > 0) {
     warnings.push(`${plural(links.attachments, "anexo é apagado", "anexos são apagados")} junto.`);

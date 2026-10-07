@@ -13,12 +13,6 @@ export class NoteOcorrencia {
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
 
-  async execute(body: unknown, now: Date = new Date()): Promise<RecordDto> {
-    const write = noteOcorrencia(parseOcorrencia(body), now);
-    await this.assertFactory(write.factoryId);
-    return this.problems.save(write);
-  }
-
   async replace(id: string, body: unknown): Promise<RecordDto> {
     const input = parseOcorrencia(body);
     return this.problems.replace(id, async (current) => {

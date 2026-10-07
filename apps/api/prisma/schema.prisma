@@ -74,6 +74,7 @@ model Machine {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   postPreventives PostPreventive[]
+  chamados        Record[]
 
   @@index([lineId])
   @@index([equipmentId])
@@ -326,9 +327,19 @@ model Record {
   openedAt    DateTime?
   closedAt    DateTime?
   durationMin Int?
+  // Chamado: turno (first, second, third) e máquina da linha, se souber.
+  shift       String?
+  machineId   String?
+  machine     Machine?           @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  // Tarefa gerada a partir de um chamado ("gerar pendência").
+  chamadoId   String?
+  chamado     Record?            @relation("ChamadoTasks", fields: [chamadoId], references: [id], onDelete: SetNull)
+  tasks       Record[]           @relation("ChamadoTasks")
   members     RecordMember[]
   attachments RecordAttachment[]
-  rp          Rp?
+  rp          Rp?                @relation("RpMirror")
+  // RP escrito a partir deste chamado.
+  rpOfChamado Rp?                @relation("RpChamado")
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
@@ -338,6 +349,8 @@ model Record {
   @@index([lineId])
   @@index([occurredAt, id])
   @@index([createdAt])
+  @@index([machineId])
+  @@index([chamadoId])
 }
 
 model RecordMember {
@@ -395,7 +408,9 @@ model Rp {
   unmatchedTechnicians String?
   rawText              String
   problemRecordId      String?          @unique
-  problemRecord        Record?          @relation(fields: [problemRecordId], references: [id], onDelete: SetNull)
+  problemRecord        Record?          @relation("RpMirror", fields: [problemRecordId], references: [id], onDelete: SetNull)
+  chamadoId            String?          @unique
+  chamado              Record?          @relation("RpChamado", fields: [chamadoId], references: [id], onDelete: SetNull)
   members              RpMember[]
   postPreventives      PostPreventive[]
   createdAt            DateTime         @default(now())

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import type { RecordDto, RecordPriority, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput, controlClass } from "../../../design/ui/controls";
@@ -6,6 +7,23 @@ import { useFactories, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useAddAttachment, useRemoveAttachment, useUpdateRecord } from "../data/records";
 import { fromLocalInput, priorityOptions, statusOptions, toLocalInput } from "../model/record";
+import { useChamado } from "../../turno/data/shift";
+import { chamadoHref, shortDay } from "../../turno/model/chamado";
+
+// Tarefa criada por "Gerar pendência" num chamado: mostra de onde veio.
+function FromChamado({ chamadoId }: { chamadoId: string }) {
+  const chamado = useChamado(chamadoId);
+  if (!chamado.data) return null;
+  const data = chamado.data;
+  return (
+    <Link to={chamadoHref(data)} className="rounded-card border border-line bg-card px-4 py-3 text-sm shadow-card transition hover:bg-accent-soft">
+      <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+        Gerada do chamado{data.dayNumber ? ` nº ${data.dayNumber}` : ""} de {shortDay(data.day)}
+      </span>
+      <span className="mt-1 line-clamp-2 block text-app">{data.body}</span>
+    </Link>
+  );
+}
 
 export function TaskSheet({ record }: { record: RecordDto }) {
   const factories = useFactories();
@@ -43,6 +61,7 @@ export function TaskSheet({ record }: { record: RecordDto }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {record.chamadoId ? <FromChamado chamadoId={record.chamadoId} /> : null}
       <Card>
         <form className="flex flex-col gap-6" noValidate onSubmit={submit}>
           <div className="flex flex-col gap-4">

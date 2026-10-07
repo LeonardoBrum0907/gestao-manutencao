@@ -5,7 +5,8 @@ import { invalidateRecords } from "../../registro/data/records";
 
 const PAGE_SIZE = 50;
 
-export type RpBody = RpFields & { rawText: string; excludeId?: string };
+// chamadoId só na criação: o RP escrito a partir de um chamado fica ligado a ele.
+export type RpBody = RpFields & { rawText: string; excludeId?: string; chamadoId?: string };
 
 export function useRpPages(params: URLSearchParams) {
   const search = params.toString();

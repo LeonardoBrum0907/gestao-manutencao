@@ -54,8 +54,10 @@ export function RpForm({
   onSaved,
   onSkip,
   extraActions,
+  chamadoId,
 }: {
   id?: string;
+  chamadoId?: string;
   initial: RpFormValues;
   rawText: string;
   warnings?: string[];
@@ -90,7 +92,7 @@ export function RpForm({
   }
 
   function persist() {
-    save.mutate(bodyFromValues(values, rawText), {
+    save.mutate({ ...bodyFromValues(values, rawText), ...(chamadoId ? { chamadoId } : {}) }, {
       onSuccess: () => {
         setSaved(true);
         onSaved();

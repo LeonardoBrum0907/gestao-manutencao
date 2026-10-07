@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { noteOcorrencia, openChamado, type ChamadoInput } from "./shift";
+import { chamadoTask, nextDayNumber, noteOcorrencia, openChamado, type ChamadoInput } from "./shift";
 
 const now = new Date("2026-10-01T18:00:00.000Z");
 const opened = new Date("2026-10-01T12:00:00.000Z");
@@ -9,14 +9,14 @@ const closed = new Date("2026-10-01T13:30:00.000Z");
 
 function chamado(partial: Partial<ChamadoInput> = {}): ChamadoInput {
   return {
-    dayNumber: 3,
     body: "Esteira parada",
     openedAt: opened,
     closedAt: closed,
-    durationMin: null,
+    shift: "first",
     memberIds: ["a", "a", " b "],
     lineId: null,
     lineLabel: "Esteira 4",
+    machineId: null,
     status: "in_progress",
     notes: "  ",
     ...partial,
@@ -24,42 +24,52 @@ function chamado(partial: Partial<ChamadoInput> = {}): ChamadoInput {
 }
 
 describe("chamado", () => {
-  it("abre um problema de origem chamado e calcula a duração", () => {
-    const write = openChamado(chamado(), now);
-    assert.equal(write.origin, "chamado");
+  it("abre pela hora de abertura e calcula a duração", () => {
+    const write = openChamado(chamado());
     assert.equal(write.body, "Esteira parada");
-    assert.equal(write.dayNumber, 3);
     assert.equal(write.durationMin, 90);
     assert.equal(write.occurredAt, opened);
+    assert.equal(write.shift, "first");
     assert.deepEqual(write.memberIds, ["a", "b"]);
     assert.equal(write.lineLabel, "Esteira 4");
     assert.equal(write.notes, null);
     assert.equal(write.status, "in_progress");
   });
 
-  it("guarda a duração informada", () => {
-    const write = openChamado(chamado({ durationMin: 40 }), now);
-    assert.equal(write.durationMin, 40);
+  it("sem fechamento fica sem duração", () => {
+    assert.equal(openChamado(chamado({ closedAt: null })).durationMin, null);
   });
 
   it("recusa fechamento antes da abertura", () => {
     assert.throws(
-      () => openChamado(chamado({ openedAt: closed, closedAt: opened }), now),
+      () => openChamado(chamado({ openedAt: closed, closedAt: opened })),
       (error: unknown) => error instanceof DomainError && error.code === "hours",
     );
   });
 
   it("recusa linha e outra juntas", () => {
     assert.throws(
-      () => openChamado(chamado({ lineId: "maq", lineLabel: "outra" }), now),
+      () => openChamado(chamado({ lineId: "maq", lineLabel: "outra" })),
       (error: unknown) => error instanceof DomainError && error.code === "line_conflict",
     );
   });
 
-  it("recusa número do dia vazio", () => {
+  it("recusa máquina sem linha", () => {
     assert.throws(
-      () => openChamado(chamado({ dayNumber: 0 }), now),
-      (error: unknown) => error instanceof DomainError && error.code === "day_number",
+      () => openChamado(chamado({ machineId: "m1" })),
+      (error: unknown) => error instanceof DomainError && error.code === "machine",
+    );
+  });
+
+  it("numera o dia depois do maior número já usado", () => {
+    assert.equal(nextDayNumber([]), 1);
+    assert.equal(nextDayNumber([1, null, 4, 2]), 5);
+  });
+
+  it("a pendência gerada precisa de texto", () => {
+    assert.throws(
+      () => chamadoTask({ body: "  ", dueAt: now, memberId: null, priority: null }),
+      (error: unknown) => error instanceof DomainError && error.code === "empty_body",
     );
   });
 });

@@ -3,7 +3,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
 import { RP_TEXT_MAX_LENGTH } from "../domain/rp-text";
 
-export type RpInput = { fields: RpFields; occurredAt: Date; rawText: string };
+export type RpInput = { fields: RpFields; occurredAt: Date; rawText: string; chamadoId: string | null };
 
 function flag(source: Record<string, unknown>, key: string): boolean {
   const value = source[key];
@@ -67,7 +67,7 @@ export function parseRp(body: unknown): RpInput {
     memberIds: stringList(source, "memberIds"),
     unmatchedTechnicians: optionalString(source, "unmatchedTechnicians"),
   };
-  return { fields, occurredAt, rawText };
+  return { fields, occurredAt, rawText, chamadoId: optionalString(source, "chamadoId") };
 }
 
 export function parseRpText(body: unknown): string {

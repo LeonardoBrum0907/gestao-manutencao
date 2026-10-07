@@ -38,9 +38,10 @@ export class Rps {
   async create(body: unknown): Promise<RpDto> {
     const input = parseRp(body);
     await this.assertRefs(input);
+    if (input.chamadoId) await this.assertChamado(input.chamadoId);
     const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
     try {
-      return await this.rps.insert(this.write(input, problem.id));
+      return await this.rps.insert(this.write(input, problem.id), input.chamadoId);
     } catch (error) {
       await this.problems.remove(problem.id);
       throw error;
@@ -100,6 +101,12 @@ export class Rps {
 
   private write(input: RpInput, problemRecordId: string): RpWrite {
     return { fields: input.fields, occurredAt: input.occurredAt, rawText: input.rawText, problemRecordId };
+  }
+
+  private async assertChamado(chamadoId: string): Promise<void> {
+    const state = await this.rps.chamadoFree(chamadoId);
+    if (state === "missing") throw new DomainError("chamado", 400, "Chamado não encontrado.");
+    if (state === "taken") throw new DomainError("chamado", 409, "Este chamado já tem RP.");
   }
 
   private async assertRefs(input: RpInput): Promise<void> {
