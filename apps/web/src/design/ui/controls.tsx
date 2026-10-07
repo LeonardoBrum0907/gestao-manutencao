@@ -1,5 +1,8 @@
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
+import { FieldLabelContext } from "./select";
+
+export { MultiSelect, SelectInput, type MultiOption } from "./select";
 
 const tones = {
   primary: "bg-accent text-accent-contrast transition hover:brightness-90",
@@ -26,10 +29,13 @@ export const controlClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app transition hover:border-accent";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
+  const labelId = useId();
   return (
     <label className="flex flex-col gap-1.5 text-sm text-app">
-      <span className="font-medium">{label}</span>
-      {children}
+      <span id={labelId} className="font-medium">
+        {label}
+      </span>
+      <FieldLabelContext.Provider value={{ id: labelId, text: label }}>{children}</FieldLabelContext.Provider>
     </label>
   );
 }
@@ -40,10 +46,6 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
 
 export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea {...props} className={`${controlClass} min-h-32 ${props.className ?? ""}`} />;
-}
-
-export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`${controlClass} ${props.className ?? ""}`} />;
 }
 
 export function Card({
@@ -135,11 +137,13 @@ export function Modal({
     const root = document.getElementById("root");
     root?.setAttribute("inert", "");
     const panel = panelRef.current;
-    const field = panel?.querySelector<HTMLElement>("input, select, textarea");
+    const field = panel?.querySelector<HTMLElement>("input, select, textarea, [role=combobox]");
     field?.focus();
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        // Um select aberto dentro do modal já usou o Esc para fechar a lista.
+        if (event.defaultPrevented) return;
         event.preventDefault();
         onCloseRef.current();
         return;

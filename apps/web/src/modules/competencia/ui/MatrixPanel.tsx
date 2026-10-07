@@ -14,7 +14,7 @@ import {
   type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, Stat, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, SelectInput, Stat, TextInput } from "../../../design/ui/controls";
 import { useMatrixCatalog } from "../data/catalog";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, useSetSkills, type SkillWrite } from "../data/matrix";
 import {
@@ -116,9 +116,9 @@ function SkillRow({
         <p className="text-sm text-app">{skill.text}</p>
         <p className="mt-1 text-xs text-muted">
           {COMPETENCY_LEVEL_LABELS[skill.level]} · esperado{" "}
-          <select
+          <SelectInput
             aria-label={`Esperado em ${skill.text}`}
-            className="rounded-control border border-line bg-surface px-1 py-0.5 text-xs text-app"
+            className="!inline-flex !w-auto !gap-1 !px-1.5 !py-0.5 !text-xs"
             value={entry?.expected ?? ""}
             onChange={(event) =>
               onChange({ ...base, expected: event.target.value ? (Number(event.target.value) as CompetencyScore) : null })
@@ -130,7 +130,7 @@ function SkillRow({
                 {value}
               </option>
             ))}
-          </select>
+          </SelectInput>
         </p>
       </div>
       <SkillScore

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { Link } from "react-router-dom";
 import { RP_FOUR_M, RP_FOUR_M_LABELS, type RpDuplicateDto, type RpFourM } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useCheckDuplicate, useSaveRp } from "../data/rp";
@@ -87,10 +87,6 @@ export function RpForm({
     const line = lines.data?.find((item) => item.id === lineId);
     setValues((current) => ({ ...current, lineId, factoryId: line ? line.factoryId : current.factoryId }));
     setDuplicates([]);
-  }
-
-  function toggleMember(memberId: string) {
-    set("memberIds", values.memberIds.includes(memberId) ? values.memberIds.filter((item) => item !== memberId) : [...values.memberIds, memberId]);
   }
 
   function persist() {
@@ -249,18 +245,14 @@ export function RpForm({
         </Section>
 
         <Section title="Técnicos">
-          <div className="flex max-h-44 flex-col gap-2 overflow-y-auto rounded-control border border-line bg-surface p-3">
-            {members.data?.length ? (
-              members.data.map((member) => (
-                <label key={member.id} className="flex items-center gap-2 text-sm text-app">
-                  <input type="checkbox" checked={values.memberIds.includes(member.id)} onChange={() => toggleMember(member.id)} />
-                  {memberOptionLabel(member)}
-                </label>
-              ))
-            ) : (
-              <p className="text-sm text-muted">Nenhum colaborador cadastrado.</p>
-            )}
-          </div>
+          <MultiSelect
+            label="Técnicos do cadastro"
+            placeholder="Selecione os técnicos"
+            emptyText="Nenhum colaborador cadastrado."
+            options={(members.data ?? []).map((member) => ({ value: member.id, label: memberOptionLabel(member) }))}
+            value={values.memberIds}
+            onChange={(memberIds) => set("memberIds", memberIds)}
+          />
           <Field label={unmatched ? "Não encontrados no cadastro (texto do relatório)" : "Outros nomes (fora do cadastro)"}>
             <TextInput value={values.unmatchedTechnicians} onChange={(event) => set("unmatchedTechnicians", event.target.value)} />
           </Field>

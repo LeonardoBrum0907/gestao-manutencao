@@ -23,3 +23,11 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Select aberto ou focado pelo teclado: borda e halo na cor de destaque do tema. */
+.control-open,
+.control-focus:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
