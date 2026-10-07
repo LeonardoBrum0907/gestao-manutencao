@@ -1,0 +1,19 @@
+# PC como servidor: banco local, API e um túnel público da Cloudflare.
+# Vai por cima do docker-compose.yml. Quem sobe tudo é scripts/servidor-pc.ps1.
+services:
+  db:
+    restart: unless-stopped
+
+  api:
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://manutencao:manutencao@db:5432/manutencao?schema=public
+      COOKIE_SECURE: "true"
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://api:3000
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy

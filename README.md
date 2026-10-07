@@ -27,6 +27,18 @@ Só com o profile `local-db`. Nesse caso o `DATABASE_URL` do `.env` aponta para 
 docker compose --profile local-db up --build
 ```
 
+### PC como servidor
+
+Banco local restaurado do backup, API e um túnel público da Cloudflare (`docker-compose.servidor.yml`). No PowerShell, na raiz do repositório:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\servidor-pc.ps1
+```
+
+Com o banco local vazio, o script tira um dump novo da VPS (o `DATABASE_URL` do `.env`) em `backup-local\` e restaura. Se a VPS não responder, usa o dump mais recente que estiver lá. `-Restaurar` apaga o banco local e restaura de novo. No fim ele mostra o endereço `https://….trycloudflare.com` e o grava em `backup-local\tunnel-url.txt`. Esse endereço muda quando o túnel reinicia, e o `vercel.json` precisa apontar para ele.
+
+Parar sem perder dados: `docker compose -f docker-compose.yml -f docker-compose.servidor.yml --profile local-db stop`.
+
 ### Desenvolvimento
 
 Recarrega ao salvar: a API recompila com `tsc --watch` e reinicia, e o `web` roda o Vite. O `docker-compose.dev.yml` vai por cima do principal e monta `apps/api/src`, `apps/web/src` e `apps/web/index.html` no container. O `web` continua na frente da API.
