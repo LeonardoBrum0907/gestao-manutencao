@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
 import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
+import { EquipmentModelsSection } from "../../cadastro/ui/EquipmentModelsSection";
 import { FactoriesSection } from "../../cadastro/ui/FactoriesSection";
 import { GradesSection } from "../../cadastro/ui/GradesSection";
 import { LinesSection } from "../../cadastro/ui/LinesSection";
@@ -45,6 +46,7 @@ export function SettingsPage() {
           <>
             <FactoriesSection />
             <LinesSection />
+            <EquipmentModelsSection />
             <SubassembliesSection />
           </>
         ) : null}

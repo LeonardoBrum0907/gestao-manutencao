@@ -37,11 +37,12 @@ describe("cadastro da matriz", () => {
     assert.doesNotThrow(() => assertEquipmentNameAvailable("este", "este"));
   });
 
-  it("só exclui equipamento sem habilidade, técnico marcado ou subconjunto", () => {
-    fails(() => assertEquipmentCanBeRemoved({ skills: 3, members: 0, subassemblies: 0 }), "equipment_in_use", 409);
-    fails(() => assertEquipmentCanBeRemoved({ skills: 0, members: 1, subassemblies: 0 }), "equipment_in_use", 409);
-    fails(() => assertEquipmentCanBeRemoved({ skills: 0, members: 0, subassemblies: 2 }), "equipment_in_use", 409);
-    assert.doesNotThrow(() => assertEquipmentCanBeRemoved({ skills: 0, members: 0, subassemblies: 0 }));
+  it("só exclui equipamento sem habilidade, técnico marcado, subconjunto ou máquina", () => {
+    fails(() => assertEquipmentCanBeRemoved({ skills: 3, members: 0, subassemblies: 0, machines: 0 }), "equipment_in_use", 409);
+    fails(() => assertEquipmentCanBeRemoved({ skills: 0, members: 1, subassemblies: 0, machines: 0 }), "equipment_in_use", 409);
+    fails(() => assertEquipmentCanBeRemoved({ skills: 0, members: 0, subassemblies: 2, machines: 0 }), "equipment_in_use", 409);
+    fails(() => assertEquipmentCanBeRemoved({ skills: 0, members: 0, subassemblies: 0, machines: 1 }), "equipment_in_use", 409);
+    assert.doesNotThrow(() => assertEquipmentCanBeRemoved({ skills: 0, members: 0, subassemblies: 0, machines: 0 }));
   });
 
   it("só exclui habilidade nunca avaliada", () => {

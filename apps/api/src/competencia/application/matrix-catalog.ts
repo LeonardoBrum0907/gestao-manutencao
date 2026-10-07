@@ -41,9 +41,13 @@ export class MatrixCatalog {
     });
   }
 
-  async removeEquipment(id: string): Promise<void> {
+  async checkEquipmentRemoval(id: string): Promise<void> {
     await this.requireEquipment(id);
     assertEquipmentCanBeRemoved(await this.catalog.equipmentUsage(id));
+  }
+
+  async removeEquipment(id: string): Promise<void> {
+    await this.checkEquipmentRemoval(id);
     await this.catalog.removeEquipment(id);
   }
 
