@@ -4,7 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { assertFactoryCanBeRemoved } from "./factory-removal";
 
 describe("exclusão de fábrica", () => {
-  it("recusa quando existe máquina", () => {
+  it("recusa quando existe linha", () => {
     assert.throws(() => assertFactoryCanBeRemoved(1), (error: unknown) => {
       assert.ok(error instanceof DomainError);
       assert.equal(error.statusCode, 409);
@@ -12,7 +12,7 @@ describe("exclusão de fábrica", () => {
     });
   });
 
-  it("permite quando não há máquina", () => {
+  it("permite quando não há linha", () => {
     assert.doesNotThrow(() => assertFactoryCanBeRemoved(0));
   });
 });

@@ -157,7 +157,7 @@ export type FactoryDto = {
   name: string;
 };
 
-export type MachineDto = {
+export type LineDto = {
   id: string;
   name: string;
   factoryId: string;
@@ -168,6 +168,26 @@ export type MachineDto = {
   notes: string | null;
   isDailyLine: boolean;
   isCritical: boolean;
+};
+
+// Máquina (equipamento) de uma linha. O modelo é um equipamento do catálogo da matriz.
+export type MachineDto = {
+  id: string;
+  lineId: string;
+  equipmentId: string | null;
+  name: string;
+  tag: string | null;
+  manufacturer: string | null;
+  status: MachineOperationalStatus;
+  notes: string | null;
+};
+
+// Subconjunto de um modelo de equipamento (vale para todas as máquinas desse modelo).
+export type SubassemblyDto = {
+  id: string;
+  equipmentId: string;
+  name: string;
+  archived: boolean;
 };
 
 export type MemberRoleDto = {
@@ -222,8 +242,8 @@ export type RecordDto = {
   status: RecordStatus;
   memberId: string | null;
   factoryId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   tag: string | null;
   line: string | null;
   priority: RecordPriority | null;
@@ -366,8 +386,8 @@ export type MemberPerformanceDto = {
 
 export type MemberPdiDto = {
   memberId: string;
-  sponsorMachineIds: string[];
-  developmentMachineIds: string[];
+  sponsorLineIds: string[];
+  developmentLineIds: string[];
   attachments: AttachmentDto[];
 };
 
@@ -382,7 +402,7 @@ export type MemberRecordSummaryDto = {
 // O que a lista precisa para desenhar a linha: sem anexos, observações e técnicos do chamado.
 export type RecordListItemDto = Pick<
   RecordDto,
-  "id" | "type" | "body" | "occurredAt" | "status" | "origin" | "priority" | "tone" | "dueAt" | "machineId"
+  "id" | "type" | "body" | "occurredAt" | "status" | "origin" | "priority" | "tone" | "dueAt" | "lineId"
 >;
 
 // Lista paginada por cursor: nextCursor vem nulo na última página.
@@ -419,10 +439,10 @@ export type DashboardDto = {
   overdueCount: number;
   dueTodayCount: number;
   doneCount: number;
-  machineCount: number;
+  lineCount: number;
   activeMemberCount: number;
   recent: DashboardRecentDto[];
-  machineRanking: DashboardRankDto[];
+  lineRanking: DashboardRankDto[];
   memberRanking: DashboardRankDto[];
 };
 
@@ -498,7 +518,7 @@ export type RpFields = {
   occurredAt: string;
   orderNumber: string | null;
   factoryId: string;
-  machineId: string | null;
+  lineId: string | null;
   line: string | null;
   tag: string | null;
   problem: string;
@@ -529,7 +549,7 @@ export type RpListItemDto = {
   occurredAt: string;
   line: string | null;
   tag: string | null;
-  machineId: string | null;
+  lineId: string | null;
   problem: string;
   status: RpStatus;
   repeatedFailure: boolean;
@@ -539,12 +559,12 @@ export type RpListItemDto = {
 
 export type RpPageDto = { items: RpListItemDto[]; nextCursor: string | null };
 
-// Resposta de /rp/parse: o que o texto colado trouxe, já com técnicos e máquina casados com o cadastro.
+// Resposta de /rp/parse: o que o texto colado trouxe, já com técnicos e linha casados com o cadastro.
 export type RpDraftDto = {
   occurredAt: string | null;
   orderNumber: string | null;
   factoryId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   line: string | null;
   tag: string | null;
   problem: string;
@@ -595,7 +615,7 @@ export type PdiItemDto = {
   memberId: string;
   title: string;
   skillId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   responsibleId: string | null;
   // Dia no formato AAAA-MM-DD.
   dueDate: string | null;

@@ -29,20 +29,22 @@ model Session {
 }
 
 model Factory {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   name      String
-  machines  Machine[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  lines     Line[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Machine {
+// Linha de produção (CAM 08, MED 02). Até a migração de 2026-10-07 se chamava Machine.
+model Line {
   id           String          @id @default(cuid())
   name         String
   factoryId    String
   factory      Factory         @relation(fields: [factoryId], references: [id], onDelete: Restrict)
   sector       String?
   manufacturer String?
+  // TAG da linha (ex.: EBS-BLI-31). Fica na linha até se saber se é de um equipamento.
   internalCode String?
   status       String
   notes        String?
@@ -50,10 +52,45 @@ model Machine {
   isCritical   Boolean         @default(false)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
-  memberLinks  MemberMachine[]
+  machines     Machine[]
+  memberLinks  MemberLine[]
   pdiItems     MemberPdiItem[]
 
   @@index([factoryId])
+}
+
+// Máquina (equipamento) de uma linha: a Encartuchadeira da CAM 05. O modelo é o equipamento do catálogo da matriz.
+model Machine {
+  id           String           @id @default(cuid())
+  lineId       String
+  line         Line             @relation(fields: [lineId], references: [id], onDelete: Restrict)
+  equipmentId  String?
+  equipment    MatrixEquipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  name         String
+  tag          String?
+  manufacturer String?
+  status       String
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([lineId])
+  @@index([equipmentId])
+}
+
+// Subconjunto de um modelo de equipamento (Válvulas roletes da Encartuchadeira CAM). Vale para todas as máquinas do modelo.
+// Arquivado sai das listas de escolha, mas o que já aponta para ele fica.
+model Subassembly {
+  id          String          @id @default(cuid())
+  equipmentId String
+  equipment   MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  name        String
+  position    Int
+  archived    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([equipmentId, name])
 }
 
 model MemberRole {
@@ -109,7 +146,7 @@ model Member {
   supervisedTeams  Team[]                  @relation("TeamSupervisor")
   behavior         MemberBehavior?
   evaluations      MemberEvaluation[]
-  machines         MemberMachine[]
+  lines            MemberLine[]
   pdiAttachments   MemberAttachment[]
   pdiItems         MemberPdiItem[]         @relation("PdiItemMember")
   pdiResponsible   MemberPdiItem[]         @relation("PdiItemResponsible")
@@ -152,16 +189,16 @@ model MemberEvaluation {
   @@index([competencyId])
 }
 
-// Máquinas do PDI: "sponsor" (padrinho, responsável) ou "development" (aprendendo).
-model MemberMachine {
-  memberId  String
-  machineId String
-  kind      String
-  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+// Linhas do PDI: "sponsor" (padrinho, responsável) ou "development" (aprendendo).
+model MemberLine {
+  memberId String
+  lineId   String
+  kind     String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  line     Line   @relation(fields: [lineId], references: [id], onDelete: Cascade)
 
-  @@id([memberId, machineId, kind])
-  @@index([machineId])
+  @@id([memberId, lineId, kind])
+  @@index([lineId])
 }
 
 // Arquivos do PDI. Restrict: excluir o colaborador apagaria a linha e deixaria o arquivo no disco.
@@ -177,8 +214,8 @@ model MemberAttachment {
   @@index([memberId])
 }
 
-// Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz e/ou máquina), com prazo, responsável e status.
-// Habilidade, máquina e responsável são opcionais e viram nulos se forem excluídos.
+// Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz e/ou linha), com prazo, responsável e status.
+// Habilidade, linha e responsável são opcionais e viram nulos se forem excluídos.
 model MemberPdiItem {
   id            String       @id @default(cuid())
   memberId      String
@@ -186,8 +223,8 @@ model MemberPdiItem {
   title         String
   skillId       String?
   skill         MatrixSkill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
-  machineId     String?
-  machine       Machine?     @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  lineId        String?
+  line          Line?        @relation(fields: [lineId], references: [id], onDelete: SetNull)
   responsibleId String?
   responsible   Member?      @relation("PdiItemResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
   dueDate       DateTime?    @db.Date
@@ -199,7 +236,7 @@ model MemberPdiItem {
 
   @@index([memberId])
   @@index([skillId])
-  @@index([machineId])
+  @@index([lineId])
   @@index([responsibleId])
 }
 
@@ -213,14 +250,16 @@ model MatrixSetting {
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
 // Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
 model MatrixEquipment {
-  id           String                  @id @default(cuid())
-  name         String                  @unique
-  position     Int
-  archived     Boolean                 @default(false)
+  id            String                  @id @default(cuid())
+  name          String                  @unique
+  position      Int
+  archived      Boolean                 @default(false)
   // Quantos técnicos qualificados o equipamento precisa ter; 0 = sem mínimo.
-  minQualified Int                     @default(0)
-  skills       MatrixSkill[]
-  members      MemberMatrixEquipment[]
+  minQualified  Int                     @default(0)
+  skills        MatrixSkill[]
+  members       MemberMatrixEquipment[]
+  machines      Machine[]
+  subassemblies Subassembly[]
 }
 
 model MatrixSkill {
@@ -263,37 +302,37 @@ model MemberSkill {
 }
 
 model Record {
-  id           String             @id @default(cuid())
-  type         String
-  body         String
-  occurredAt   DateTime
-  status       String
-  memberId     String?
-  member       Member?            @relation(fields: [memberId], references: [id], onDelete: Restrict)
-  factoryId    String?
-  machineId    String?
-  machineLabel String?
-  tag          String?
-  line         String?
-  priority     String?
-  tone         String?
-  dueAt        DateTime?
-  notes        String?
-  origin       String
-  dayNumber    Int?
-  openedAt     DateTime?
-  closedAt     DateTime?
-  durationMin  Int?
-  members      RecordMember[]
-  attachments  RecordAttachment[]
-  rp           Rp?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id          String             @id @default(cuid())
+  type        String
+  body        String
+  occurredAt  DateTime
+  status      String
+  memberId    String?
+  member      Member?            @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  factoryId   String?
+  lineId      String?
+  lineLabel   String?
+  tag         String?
+  line        String?
+  priority    String?
+  tone        String?
+  dueAt       DateTime?
+  notes       String?
+  origin      String
+  dayNumber   Int?
+  openedAt    DateTime?
+  closedAt    DateTime?
+  durationMin Int?
+  members     RecordMember[]
+  attachments RecordAttachment[]
+  rp          Rp?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   @@index([type, status, dueAt])
   @@index([origin])
   @@index([memberId])
-  @@index([machineId])
+  @@index([lineId])
   @@index([occurredAt, id])
   @@index([createdAt])
 }
@@ -328,7 +367,7 @@ model Rp {
   orderNumber          String?
   orderKey             String?
   factoryId            String
-  machineId            String?
+  lineId               String?
   line                 String?
   tag                  String?
   problem              String
@@ -359,7 +398,7 @@ model Rp {
   updatedAt            DateTime   @updatedAt
 
   @@index([occurredAt, id])
-  @@index([machineId])
+  @@index([lineId])
   @@index([status])
   @@index([orderKey])
   @@index([tag])

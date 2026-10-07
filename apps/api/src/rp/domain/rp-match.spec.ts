@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { matchMachine, matchMembers, type MachineRef, type MemberRef } from "./rp-match";
+import { matchLine, matchMembers, type LineRef, type MemberRef } from "./rp-match";
 
 const members: MemberRef[] = [
   { id: "m1", name: "Rogério Barbosa", active: true },
@@ -38,25 +38,25 @@ describe("matchMembers", () => {
   });
 });
 
-const machines: MachineRef[] = [
+const lines: LineRef[] = [
   { id: "a", name: "CAM 08", internalCode: "EBS-BLI-31", factoryId: "f" },
   { id: "b", name: "Blisterflex ONC", internalCode: null, factoryId: "f" },
   { id: "c", name: "CAM 01", internalCode: null, factoryId: "g" },
 ];
 
-describe("matchMachine", () => {
+describe("matchLine", () => {
   it("acha pela TAG igual ao código interno", () => {
-    assert.equal(matchMachine("qualquer", "ebs bli 31", machines)?.id, "a");
+    assert.equal(matchLine("qualquer", "ebs bli 31", lines)?.id, "a");
   });
 
   it("acha pela linha igual ao nome, sem espaço nem caixa", () => {
-    assert.equal(matchMachine("cam01", "EBS-BLI-20", machines)?.id, "c");
-    assert.equal(matchMachine("blisterflex onc", null, machines)?.id, "b");
+    assert.equal(matchLine("cam01", "EBS-BLI-20", lines)?.id, "c");
+    assert.equal(matchLine("blisterflex onc", null, lines)?.id, "b");
   });
 
   it("não adivinha quando não há resposta única", () => {
-    assert.equal(matchMachine("cam", "x", machines), null);
-    assert.equal(matchMachine(null, null, machines), null);
-    assert.equal(matchMachine("CAM 08", null, [...machines, { id: "d", name: "Cam08", internalCode: null, factoryId: "f" }]), null);
+    assert.equal(matchLine("cam", "x", lines), null);
+    assert.equal(matchLine(null, null, lines), null);
+    assert.equal(matchLine("CAM 08", null, [...lines, { id: "d", name: "Cam08", internalCode: null, factoryId: "f" }]), null);
   });
 });

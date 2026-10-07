@@ -7,8 +7,8 @@ export type ProblemWrite = {
   status: RecordStatus;
   memberIds: string[];
   factoryId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   line: string | null;
   notes: string | null;
   dayNumber: number | null;

@@ -42,10 +42,10 @@ export function useFollowUp(query: FollowUpQuery) {
   return useRecordPages("follow-up", followUpSearch(query));
 }
 
-// Em aberto nas máquinas que o técnico apadrinha (aba PDI).
-export function useOpenRecordsOfMachines(machineIds: string[]) {
-  const params = new URLSearchParams({ machineIds: [...machineIds].sort().join(","), status: "open,in_progress" });
-  return useRecordPages("machines", params, { enabled: machineIds.length > 0 });
+// Em aberto nas linhas que o técnico apadrinha (aba PDI).
+export function useOpenRecordsOfLines(lineIds: string[]) {
+  const params = new URLSearchParams({ lineIds: [...lineIds].sort().join(","), status: "open,in_progress" });
+  return useRecordPages("lines", params, { enabled: lineIds.length > 0 });
 }
 
 const fetchRecord = (id: string) => api<RecordDto>(`/api/records/${id}`);
@@ -118,8 +118,8 @@ export type ProblemSheetBody = {
   body: string;
   occurredAt: string;
   memberId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   notes: string | null;
 };
 

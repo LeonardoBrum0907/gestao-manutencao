@@ -3,13 +3,14 @@ import { PageTitle } from "../../../design/ui/controls";
 import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
 import { FactoriesSection } from "../../cadastro/ui/FactoriesSection";
 import { GradesSection } from "../../cadastro/ui/GradesSection";
-import { MachinesSection } from "../../cadastro/ui/MachinesSection";
+import { LinesSection } from "../../cadastro/ui/LinesSection";
 import { RolesSection } from "../../cadastro/ui/RolesSection";
+import { SubassembliesSection } from "../../cadastro/ui/SubassembliesSection";
 import { MatrixCatalogSection } from "../../competencia/ui/MatrixCatalogSection";
 
 // Cadastros que se arrumam uma vez e pouco mudam: ficam fora do menu, numa página com abas (como no SIGEM).
 export const SETTINGS_TABS = [
-  { key: "fabricas", label: "Fábricas e máquinas" },
+  { key: "fabricas", label: "Fábricas, linhas e máquinas" },
   { key: "funcoes", label: "Funções e graus" },
   { key: "avaliacao", label: "Avaliação" },
 ] as const;
@@ -43,7 +44,8 @@ export function SettingsPage() {
         {current === "fabricas" ? (
           <>
             <FactoriesSection />
-            <MachinesSection />
+            <LinesSection />
+            <SubassembliesSection />
           </>
         ) : null}
         {current === "funcoes" ? (

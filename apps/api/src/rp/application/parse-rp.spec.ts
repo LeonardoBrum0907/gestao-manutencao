@@ -51,7 +51,7 @@ describe("parseRpList", () => {
     assert.equal(filter.repeated, true);
     assert.equal(filter.from, "2026-10-01");
     assert.equal(filter.q, "motor");
-    assert.equal(filter.machineId, null);
+    assert.equal(filter.lineId, null);
   });
 
   it("recusa filtro inválido", () => {

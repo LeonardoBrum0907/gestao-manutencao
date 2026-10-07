@@ -3,7 +3,7 @@ import { GESTOR_TIME_ZONE, type PdiItemDto, type PdiItemStatus } from "@manutenc
 export type PdiItemWrite = {
   title: string;
   skillId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   responsibleId: string | null;
   dueDate: string | null;
   status: PdiItemStatus;

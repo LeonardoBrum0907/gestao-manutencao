@@ -19,7 +19,7 @@ export class ShowDashboard {
       overdueCount: snapshot.overdueCount,
       dueTodayCount: snapshot.dueTodayCount,
       doneCount: snapshot.doneCount,
-      machineCount: snapshot.machines.length,
+      lineCount: snapshot.lines.length,
       activeMemberCount: snapshot.members.filter((member) => member.status === "active").length,
       recent: snapshot.recent.map((record) => {
         if (!isRecordType(record.type) || !isRecordStatus(record.status)) {
@@ -33,7 +33,7 @@ export class ShowDashboard {
           status: record.status,
         };
       }),
-      machineRanking: rankOpen(snapshot.openByMachine, new Map(snapshot.machines.map((machine) => [machine.id, machine.name]))),
+      lineRanking: rankOpen(snapshot.openByLine, new Map(snapshot.lines.map((line) => [line.id, line.name]))),
       memberRanking: rankOpen(snapshot.openByMember, new Map(snapshot.members.map((member) => [member.id, member.name]))),
     };
   }

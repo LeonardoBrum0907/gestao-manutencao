@@ -2,22 +2,22 @@ import { useState, type FormEvent } from "react";
 import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
 
 export function ProblemSheet({ record }: { record: RecordDto }) {
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const update = useUpdateRecord(record.id);
-  const initialMode = record.machineLabel ? "other" : "machine";
+  const initialMode = record.lineLabel ? "other" : "line";
   const [body, setBody] = useState(record.body);
   const [when, setWhen] = useState(toLocalInput(record.occurredAt));
   const [memberId, setMemberId] = useState(record.memberId ?? "");
-  const [mode, setMode] = useState<"machine" | "other">(initialMode);
-  const [machineId, setMachineId] = useState(record.machineId ?? "");
-  const [machineLabel, setMachineLabel] = useState(record.machineLabel ?? "");
+  const [mode, setMode] = useState<"line" | "other">(initialMode);
+  const [lineId, setLineId] = useState(record.lineId ?? "");
+  const [lineLabel, setLineLabel] = useState(record.lineLabel ?? "");
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -25,8 +25,8 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
       body,
       occurredAt: fromLocalInput(when),
       memberId: memberId || null,
-      machineId: mode === "machine" ? machineId || null : null,
-      machineLabel: mode === "other" ? machineLabel || null : null,
+      lineId: mode === "line" ? lineId || null : null,
+      lineLabel: mode === "other" ? lineLabel || null : null,
       notes: record.notes,
     });
   }
@@ -53,11 +53,11 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
         <div className="grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            aria-pressed={mode === "machine"}
-            onClick={() => setMode("machine")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
+            aria-pressed={mode === "line"}
+            onClick={() => setMode("line")}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "line" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
-            Máquina cadastrada
+            Linha cadastrada
           </button>
           <button
             type="button"
@@ -68,13 +68,13 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
             Outra
           </button>
         </div>
-        {mode === "machine" ? (
-          <Field label="Máquina">
-            <SelectInput value={machineId} onChange={(event) => setMachineId(event.target.value)}>
+        {mode === "line" ? (
+          <Field label="Linha">
+            <SelectInput value={lineId} onChange={(event) => setLineId(event.target.value)}>
               <option value="">Escolha</option>
-              {machines.data?.map((machine) => (
-                <option key={machine.id} value={machine.id}>
-                  {machine.name}
+              {lines.data?.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.name}
                 </option>
               ))}
             </SelectInput>
@@ -82,9 +82,9 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
         ) : (
           <Field label="Outra">
             <TextInput
-              value={machineLabel}
+              value={lineLabel}
               placeholder="Descreva o equipamento"
-              onChange={(event) => setMachineLabel(event.target.value)}
+              onChange={(event) => setLineLabel(event.target.value)}
             />
           </Field>
         )}

@@ -35,7 +35,7 @@ function Ranking({
   linkTo,
 }: {
   title: string;
-  rows: DashboardDto["machineRanking"];
+  rows: DashboardDto["lineRanking"];
   linkTo?: (id: string) => string;
 }) {
   return (
@@ -77,7 +77,7 @@ export function DashboardPage() {
             <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <CountLink to="/configuracoes/fabricas" label="Máquinas" count={data.machineCount} />
+            <CountLink to="/configuracoes/fabricas" label="Linhas" count={data.lineCount} />
             <CountLink to="/cadastro/colaboradores" label="Colaboradores ativos" count={data.activeMemberCount} />
           </div>
           <section>
@@ -99,7 +99,7 @@ export function DashboardPage() {
             </div>
           </section>
           <div className="grid gap-3 lg:grid-cols-2">
-            <Ranking title="Máquinas com mais abertos" rows={data.machineRanking} />
+            <Ranking title="Linhas com mais abertos" rows={data.lineRanking} />
             <Ranking
               title="Colaboradores com mais abertos"
               rows={data.memberRanking}

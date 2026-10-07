@@ -17,8 +17,8 @@ function dtoToState(dto: RecordDto): RecordState {
     status: dto.status,
     memberId: dto.memberId,
     factoryId: dto.factoryId,
-    machineId: dto.machineId,
-    machineLabel: dto.machineLabel,
+    lineId: dto.lineId,
+    lineLabel: dto.lineLabel,
     tag: dto.tag,
     line: dto.line,
     priority: dto.priority,
@@ -71,7 +71,7 @@ export class Records {
       throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado, pela ocorrência ou pelo RP.");
     }
     const input = parseProblemSheet(body);
-    await Promise.all([this.assertMember(input.memberId), this.assertMachine(input.machineId)]);
+    await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
     return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
   }
 
@@ -114,10 +114,10 @@ export class Records {
     }
   }
 
-  private async assertMachine(id: string | null): Promise<void> {
+  private async assertLine(id: string | null): Promise<void> {
     if (!id) return;
-    if (!(await this.refs.machineExists(id))) {
-      throw new DomainError("machine", 400, "Máquina não encontrada.");
+    if (!(await this.refs.lineExists(id))) {
+      throw new DomainError("line", 400, "Linha não encontrada.");
     }
   }
 }

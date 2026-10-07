@@ -8,7 +8,7 @@ import {
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useMatrix } from "../../competencia/data/matrix";
 import { entriesById, equipmentName, skillState } from "../../competencia/model/matrix";
@@ -18,7 +18,7 @@ import { formatDay, isOverdue, itemCounts, sortItems, todayIso, type PdiItemWrit
 const emptyWrite: PdiItemWrite = {
   title: "",
   skillId: null,
-  machineId: null,
+  lineId: null,
   responsibleId: null,
   dueDate: null,
   status: "planned",
@@ -26,8 +26,8 @@ const emptyWrite: PdiItemWrite = {
 };
 
 function toWrite(item: PdiItemDto): PdiItemWrite {
-  const { title, skillId, machineId, responsibleId, dueDate, status, notes } = item;
-  return { title, skillId, machineId, responsibleId, dueDate, status, notes };
+  const { title, skillId, lineId, responsibleId, dueDate, status, notes } = item;
+  return { title, skillId, lineId, responsibleId, dueDate, status, notes };
 }
 
 type SkillOption = { id: string; label: string };
@@ -56,7 +56,7 @@ function ItemForm({
 }) {
   const save = useSavePdiItem(member.id);
   const catalog = useMatrixCatalog();
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const [form, setForm] = useState(initial);
   const skills = useGapOptions(member.id, catalog.data, initial.skillId);
@@ -83,12 +83,12 @@ function ItemForm({
             ))}
           </SelectInput>
         </Field>
-        <Field label="Máquina (opcional)">
-          <SelectInput value={form.machineId ?? ""} onChange={(event) => set("machineId", event.target.value || null)}>
+        <Field label="Linha (opcional)">
+          <SelectInput value={form.lineId ?? ""} onChange={(event) => set("lineId", event.target.value || null)}>
             <option value="">—</option>
-            {(machines.data ?? []).map((machine) => (
-              <option key={machine.id} value={machine.id}>
-                {machine.name}
+            {(lines.data ?? []).map((line) => (
+              <option key={line.id} value={line.id}>
+                {line.name}
               </option>
             ))}
           </SelectInput>
@@ -137,7 +137,7 @@ function ItemForm({
 export function PdiItems({ member }: { member: MemberDto }) {
   const items = usePdiItems(member.id);
   const catalog = useMatrixCatalog();
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const save = useSavePdiItem(member.id);
   const remove = useRemovePdiItem(member.id);
@@ -146,7 +146,7 @@ export function PdiItems({ member }: { member: MemberDto }) {
   const list = sortItems(items.data ?? []);
   const counts = itemCounts(list, today);
   const skillText = new Map((catalog.data?.skills ?? []).map((skill) => [skill.id, skill.text]));
-  const machineName = new Map((machines.data ?? []).map((machine) => [machine.id, machine.name]));
+  const lineName = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
   const memberName = new Map((members.data ?? []).map((item) => [item.id, item.name]));
 
   return (
@@ -202,7 +202,7 @@ export function PdiItems({ member }: { member: MemberDto }) {
                   {isOverdue(item, today) ? " (atrasado)" : ""}
                 </span>
                 {item.responsibleId ? ` · Responsável ${memberName.get(item.responsibleId) ?? ""}` : ""}
-                {item.machineId ? ` · ${machineName.get(item.machineId) ?? ""}` : ""}
+                {item.lineId ? ` · ${lineName.get(item.lineId) ?? ""}` : ""}
                 {item.skillId ? ` · Lacuna: ${skillText.get(item.skillId) ?? ""}` : ""}
                 {item.completedAt ? ` · Concluído em ${formatDay(item.completedAt.slice(0, 10))}` : ""}
               </p>

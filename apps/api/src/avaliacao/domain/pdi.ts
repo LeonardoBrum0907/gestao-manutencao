@@ -1,13 +1,13 @@
 import { DomainError } from "../../kernel/domain-error";
 
-export type PdiMachines = { sponsor: string[]; development: string[] };
+export type PdiLines = { sponsor: string[]; development: string[] };
 
-// Padrinho é quem responde pela máquina; desenvolvimento é quem ainda está aprendendo. Não dá para ser os dois.
-export function normalizePdiMachines(input: PdiMachines): PdiMachines {
+// Padrinho é quem responde pela linha; desenvolvimento é quem ainda está aprendendo. Não dá para ser os dois.
+export function normalizePdiLines(input: PdiLines): PdiLines {
   const sponsor = [...new Set(input.sponsor)];
   const development = [...new Set(input.development)];
   if (sponsor.some((id) => development.includes(id))) {
-    throw new DomainError("pdi_overlap", 400, "A mesma máquina não pode ser de padrinho e de desenvolvimento.");
+    throw new DomainError("pdi_overlap", 400, "A mesma linha não pode ser de padrinho e de desenvolvimento.");
   }
   return { sponsor, development };
 }

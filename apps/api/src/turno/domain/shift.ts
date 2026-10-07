@@ -9,8 +9,8 @@ export type ChamadoInput = {
   closedAt: Date | null;
   durationMin: number | null;
   memberIds: string[];
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   status: RecordStatus;
   notes: string | null;
 };
@@ -27,14 +27,14 @@ function text(value: string, message: string): string {
   return trimmed;
 }
 
-function place(machineId: string | null, machineLabel: string | null): { machineId: string | null; machineLabel: string | null } {
-  const label = machineLabel?.trim() ?? "";
-  const hasMachine = Boolean(machineId);
+function place(lineId: string | null, lineLabel: string | null): { lineId: string | null; lineLabel: string | null } {
+  const label = lineLabel?.trim() ?? "";
+  const hasLine = Boolean(lineId);
   const hasLabel = label.length > 0;
-  if (hasMachine && hasLabel) {
-    throw new DomainError("machine_conflict", 400, "Escolha a máquina cadastrada ou descreva outra, não as duas.");
+  if (hasLine && hasLabel) {
+    throw new DomainError("line_conflict", 400, "Escolha a linha cadastrada ou descreva outra, não as duas.");
   }
-  return { machineId: hasMachine ? machineId : null, machineLabel: hasLabel ? label : null };
+  return { lineId: hasLine ? lineId : null, lineLabel: hasLabel ? label : null };
 }
 
 function durationOf(openedAt: Date | null, closedAt: Date | null, durationMin: number | null): number | null {
@@ -69,7 +69,7 @@ export function openChamado(input: ChamadoInput, now: Date): ProblemWrite {
   if (!Number.isInteger(input.dayNumber) || input.dayNumber < 1) {
     throw new DomainError("day_number", 400, "Informe o número do dia.");
   }
-  const spot = place(input.machineId, input.machineLabel);
+  const spot = place(input.lineId, input.lineLabel);
   const openedAt = input.openedAt;
   return {
     origin: "chamado",
@@ -78,8 +78,8 @@ export function openChamado(input: ChamadoInput, now: Date): ProblemWrite {
     status: input.status,
     memberIds: people(input.memberIds),
     factoryId: null,
-    machineId: spot.machineId,
-    machineLabel: spot.machineLabel,
+    lineId: spot.lineId,
+    lineLabel: spot.lineLabel,
     line: null,
     notes: input.notes?.trim() || null,
     dayNumber: input.dayNumber,
@@ -99,8 +99,8 @@ export function noteOcorrencia(input: OcorrenciaInput, occurredAt: Date): Proble
     status: "open",
     memberIds: [],
     factoryId,
-    machineId: null,
-    machineLabel: null,
+    lineId: null,
+    lineLabel: null,
     line: text(input.line, "Informe a linha."),
     notes: null,
     dayNumber: null,

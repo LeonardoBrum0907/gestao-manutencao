@@ -7,7 +7,7 @@ export function ChamadoPage() {
       <PageTitle
         eyebrow="Turno"
         title="Chamado"
-        text="Número do dia, descrição, horários, duração, técnicos, máquina ou outra, status e observação. Grava um Problema."
+        text="Número do dia, descrição, horários, duração, técnicos, linha ou outra, status e observação. Grava um Problema."
       />
       <ChamadoForm />
     </div>

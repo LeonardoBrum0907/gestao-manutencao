@@ -8,7 +8,7 @@ type Row = {
   memberId: string;
   title: string;
   skillId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   responsibleId: string | null;
   dueDate: Date | null;
   status: string;
@@ -23,7 +23,7 @@ function toDto(row: Row): PdiItemDto {
     memberId: row.memberId,
     title: row.title,
     skillId: row.skillId,
-    machineId: row.machineId,
+    lineId: row.lineId,
     responsibleId: row.responsibleId,
     dueDate: row.dueDate ? row.dueDate.toISOString().slice(0, 10) : null,
     status: row.status as PdiItemStatus,

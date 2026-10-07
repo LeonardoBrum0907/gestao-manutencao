@@ -4,7 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 export type PdiItemFields = {
   title: string;
   skillId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   responsibleId: string | null;
   dueDate: string | null;
   status: PdiItemStatus;
@@ -46,7 +46,7 @@ export function readPdiItem(source: Record<string, unknown>, partial: boolean): 
     fields.title = title;
   }
   if ("skillId" in source) fields.skillId = reference(source.skillId);
-  if ("machineId" in source) fields.machineId = reference(source.machineId);
+  if ("lineId" in source) fields.lineId = reference(source.lineId);
   if ("responsibleId" in source) fields.responsibleId = reference(source.responsibleId);
   if ("dueDate" in source) fields.dueDate = parseDueDate(source.dueDate);
   if ("notes" in source) fields.notes = text(source.notes, NOTES_MAX, "Observação inválida (até 1000 caracteres).");

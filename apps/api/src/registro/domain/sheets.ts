@@ -32,8 +32,8 @@ export function applyTaskSheet(state: RecordState, input: TaskSheetInput): Recor
     priority: input.priority,
     dueAt: input.dueAt,
     notes: input.notes,
-    machineId: null,
-    machineLabel: null,
+    lineId: null,
+    lineLabel: null,
   };
 }
 
@@ -45,8 +45,8 @@ export function applyFeedbackSheet(state: RecordState, input: FeedbackSheetInput
     occurredAt: input.occurredAt,
     memberId: input.memberId,
     factoryId: null,
-    machineId: null,
-    machineLabel: null,
+    lineId: null,
+    lineLabel: null,
     tag: null,
     line: null,
     priority: null,
@@ -58,14 +58,14 @@ export function applyFeedbackSheet(state: RecordState, input: FeedbackSheetInput
 
 export function applyProblemSheet(state: RecordState, input: ProblemSheetInput): RecordState {
   assertType(state, "problem");
-  const label = input.machineLabel?.trim() ?? "";
-  const hasMachine = Boolean(input.machineId);
+  const label = input.lineLabel?.trim() ?? "";
+  const hasLine = Boolean(input.lineId);
   const hasLabel = label.length > 0;
-  if (hasMachine && hasLabel) {
+  if (hasLine && hasLabel) {
     throw new DomainError(
-      "machine_conflict",
+      "line_conflict",
       400,
-      "Escolha a máquina cadastrada ou descreva outra, não as duas.",
+      "Escolha a linha cadastrada ou descreva outra, não as duas.",
     );
   }
   return {
@@ -73,8 +73,8 @@ export function applyProblemSheet(state: RecordState, input: ProblemSheetInput):
     body: requireBody(input.body),
     occurredAt: input.occurredAt,
     memberId: input.memberId,
-    machineId: hasMachine ? input.machineId : null,
-    machineLabel: hasLabel ? label : null,
+    lineId: hasLine ? input.lineId : null,
+    lineLabel: hasLabel ? label : null,
     notes: input.notes,
     factoryId: null,
     tag: null,

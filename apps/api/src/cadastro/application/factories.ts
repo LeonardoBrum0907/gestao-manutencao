@@ -29,8 +29,8 @@ export class Factories {
   async remove(id: string): Promise<void> {
     const current = await this.factories.find(id);
     if (!current) throw new DomainError("not_found", 404, "Fábrica não encontrada.");
-    const machines = await this.factories.countMachines(id);
-    assertFactoryCanBeRemoved(machines);
+    const lines = await this.factories.countLines(id);
+    assertFactoryCanBeRemoved(lines);
     await this.factories.remove(id);
   }
 }

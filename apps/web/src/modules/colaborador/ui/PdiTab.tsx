@@ -1,51 +1,51 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { MachineDto, MemberDto, MemberPdiDto } from "@manutencao/shared";
+import type { LineDto, MemberDto, MemberPdiDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Notice, TextInput, controlClass } from "../../../design/ui/controls";
-import { useFactories, useMachines } from "../../cadastro/data/cadastro";
-import { flattenPages, useOpenRecordsOfMachines } from "../../registro/data/records";
+import { useFactories, useLines } from "../../cadastro/data/cadastro";
+import { flattenPages, useOpenRecordsOfLines } from "../../registro/data/records";
 import { recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
-import { useAddPdiFile, usePdi, useRemovePdiFile, useSetPdiMachines } from "../data/pdi";
+import { useAddPdiFile, usePdi, useRemovePdiFile, useSetPdiLines } from "../data/pdi";
 import { PdiItems } from "./PdiItems";
 
 type Kind = "sponsor" | "development";
 
 const columns: { kind: Kind; title: string; text: string; other: string }[] = [
-  { kind: "sponsor", title: "Padrinho de", text: "Máquinas pelas quais responde.", other: "em desenvolvimento" },
-  { kind: "development", title: "Em desenvolvimento", text: "Máquinas que está aprendendo no PDI.", other: "de padrinho" },
+  { kind: "sponsor", title: "Padrinho de", text: "Linhas pelas quais responde.", other: "em desenvolvimento" },
+  { kind: "development", title: "Em desenvolvimento", text: "Linhas que está aprendendo no PDI.", other: "de padrinho" },
 ];
 
 function fold(text: string): string {
   return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-function MachinePicker({
+function LinePicker({
   pdi,
-  machines,
+  lines,
   factoryName,
   onChange,
   disabled,
 }: {
   pdi: MemberPdiDto;
-  machines: MachineDto[];
+  lines: LineDto[];
   factoryName: Map<string, string>;
   onChange: (next: { sponsor: string[]; development: string[] }) => void;
   disabled: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const chosen: Record<Kind, string[]> = { sponsor: pdi.sponsorMachineIds, development: pdi.developmentMachineIds };
-  const visible = machines.filter((machine) => fold(machine.name).includes(fold(query.trim())));
+  const chosen: Record<Kind, string[]> = { sponsor: pdi.sponsorLineIds, development: pdi.developmentLineIds };
+  const visible = lines.filter((line) => fold(line.name).includes(fold(query.trim())));
 
-  function toggle(kind: Kind, machineId: string) {
-    const list = chosen[kind].includes(machineId) ? chosen[kind].filter((id) => id !== machineId) : [...chosen[kind], machineId];
+  function toggle(kind: Kind, lineId: string) {
+    const list = chosen[kind].includes(lineId) ? chosen[kind].filter((id) => id !== lineId) : [...chosen[kind], lineId];
     onChange({ ...chosen, [kind]: list });
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {machines.length > 8 ? (
-        <TextInput aria-label="Buscar máquina" placeholder="Buscar máquina" value={query} onChange={(event) => setQuery(event.target.value)} />
+      {lines.length > 8 ? (
+        <TextInput aria-label="Buscar linha" placeholder="Buscar linha" value={query} onChange={(event) => setQuery(event.target.value)} />
       ) : null}
       <div className="grid gap-4 md:grid-cols-2">
         {columns.map((column) => {
@@ -57,11 +57,11 @@ function MachinePicker({
               </legend>
               <p className="mt-1 text-xs text-muted">{column.text}</p>
               <ul className="mt-2 max-h-72 overflow-y-auto rounded-control border border-line bg-surface p-1">
-                {visible.length === 0 ? <li className="px-2 py-2 text-sm text-muted">Nenhuma máquina.</li> : null}
-                {visible.map((machine) => {
-                  const taken = chosen[otherKind].includes(machine.id);
+                {visible.length === 0 ? <li className="px-2 py-2 text-sm text-muted">Nenhuma linha.</li> : null}
+                {visible.map((line) => {
+                  const taken = chosen[otherKind].includes(line.id);
                   return (
-                    <li key={machine.id}>
+                    <li key={line.id}>
                       <label
                         className={`flex items-center gap-2 rounded-control px-2 py-1.5 text-sm ${
                           taken ? "text-muted" : "cursor-pointer text-app hover:bg-chip"
@@ -70,13 +70,13 @@ function MachinePicker({
                         <input
                           type="checkbox"
                           className="h-4 w-4 accent-[var(--accent)]"
-                          checked={chosen[column.kind].includes(machine.id)}
+                          checked={chosen[column.kind].includes(line.id)}
                           disabled={disabled || taken}
-                          onChange={() => toggle(column.kind, machine.id)}
+                          onChange={() => toggle(column.kind, line.id)}
                         />
                         <span className="min-w-0 truncate">
-                          {machine.name}
-                          <span className="text-muted"> · {factoryName.get(machine.factoryId) ?? "—"}</span>
+                          {line.name}
+                          <span className="text-muted"> · {factoryName.get(line.factoryId) ?? "—"}</span>
                           {taken ? <span className="text-muted"> · {column.other}</span> : null}
                         </span>
                       </label>
@@ -92,17 +92,17 @@ function MachinePicker({
   );
 }
 
-function SponsoredOpen({ machineIds, machineName }: { machineIds: string[]; machineName: Map<string, string> }) {
-  const records = useOpenRecordsOfMachines(machineIds);
+function SponsoredOpen({ lineIds, lineName }: { lineIds: string[]; lineName: Map<string, string> }) {
+  const records = useOpenRecordsOfLines(lineIds);
   const open = flattenPages(records.data?.pages);
-  if (!machineIds.length) return null;
+  if (!lineIds.length) return null;
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <h2 className="px-4 py-3 text-sm font-semibold text-app">
-        Em aberto nas máquinas que apadrinha{" "}
+        Em aberto nas linhas que apadrinha{" "}
         <span className="font-normal text-muted">({records.hasNextPage ? `${open.length}+` : open.length})</span>
       </h2>
-      {open.length === 0 ? <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Nada em aberto nessas máquinas.</p> : null}
+      {open.length === 0 ? <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Nada em aberto nessas linhas.</p> : null}
       <ul>
         {open.map((record) => (
           <li key={record.id}>
@@ -112,7 +112,7 @@ function SponsoredOpen({ machineIds, machineName }: { machineIds: string[]; mach
             >
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                  {recordShortName(record.type)} · {record.machineId ? machineName.get(record.machineId) : ""}
+                  {recordShortName(record.type)} · {record.lineId ? lineName.get(record.lineId) : ""}
                 </p>
                 <p className="mt-1 line-clamp-2 text-sm text-app">{record.body}</p>
               </div>
@@ -189,44 +189,44 @@ function Files({ member, pdi }: { member: MemberDto; pdi: MemberPdiDto }) {
 
 export function PdiTab({ member }: { member: MemberDto }) {
   const pdi = usePdi(member.id);
-  const setMachines = useSetPdiMachines(member.id);
-  const machines = useMachines();
+  const setLines = useSetPdiLines(member.id);
+  const lines = useLines();
   const factories = useFactories();
   const factoryName = new Map((factories.data ?? []).map((factory) => [factory.id, factory.name]));
-  const machineName = new Map((machines.data ?? []).map((machine) => [machine.id, machine.name]));
-  if (pdi.isPending || machines.isPending) return <p className="text-sm text-muted">Carregando…</p>;
+  const lineName = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
+  if (pdi.isPending || lines.isPending) return <p className="text-sm text-muted">Carregando…</p>;
   if (pdi.isError) return <Notice>{errorMessage(pdi.error)}</Notice>;
   return (
     <div className="flex flex-col gap-6">
       <PdiItems member={member} />
       <Card>
-        <h2 className="text-sm font-semibold text-app">Máquinas</h2>
-        <p className="mt-1 text-sm text-muted">Grava ao marcar. A mesma máquina não fica nas duas listas.</p>
+        <h2 className="text-sm font-semibold text-app">Linhas</h2>
+        <p className="mt-1 text-sm text-muted">Grava ao marcar. A mesma linha não fica nas duas listas.</p>
         <div className="mt-4">
-          {machines.data?.length ? (
-            <MachinePicker
+          {lines.data?.length ? (
+            <LinePicker
               pdi={pdi.data}
-              machines={machines.data}
+              lines={lines.data}
               factoryName={factoryName}
-              onChange={(next) => setMachines.mutate(next)}
-              disabled={setMachines.isPending}
+              onChange={(next) => setLines.mutate(next)}
+              disabled={setLines.isPending}
             />
           ) : (
             <p className="text-sm text-muted">
-              Nenhuma máquina cadastrada.{" "}
+              Nenhuma linha cadastrada.{" "}
               <Link to="/configuracoes/fabricas" className="font-medium text-accent hover:underline">
-                Cadastrar máquinas
+                Cadastrar linhas
               </Link>
             </p>
           )}
         </div>
-        {setMachines.isError ? (
+        {setLines.isError ? (
           <div className="mt-3">
-            <Notice>{errorMessage(setMachines.error)}</Notice>
+            <Notice>{errorMessage(setLines.error)}</Notice>
           </div>
         ) : null}
       </Card>
-      <SponsoredOpen machineIds={pdi.data.sponsorMachineIds} machineName={machineName} />
+      <SponsoredOpen lineIds={pdi.data.sponsorLineIds} lineName={lineName} />
       <Files member={member} pdi={pdi.data} />
     </div>
   );

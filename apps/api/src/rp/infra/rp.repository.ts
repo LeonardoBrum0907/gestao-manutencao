@@ -28,7 +28,7 @@ function toDto(row: Row): RpDto {
     occurredAt: row.occurredAt.toISOString(),
     orderNumber: row.orderNumber,
     factoryId: row.factoryId,
-    machineId: row.machineId,
+    lineId: row.lineId,
     line: row.line,
     tag: row.tag,
     problem: row.problem,
@@ -61,7 +61,7 @@ const listSelect = {
   occurredAt: true,
   line: true,
   tag: true,
-  machineId: true,
+  lineId: true,
   problem: true,
   status: true,
   repeatedFailure: true,
@@ -75,7 +75,7 @@ function toListItem(row: Prisma.RpGetPayload<{ select: typeof listSelect }>): Rp
     occurredAt: row.occurredAt.toISOString(),
     line: row.line,
     tag: row.tag,
-    machineId: row.machineId,
+    lineId: row.lineId,
     problem: row.problem,
     status: status(row.status),
     repeatedFailure: row.repeatedFailure,
@@ -98,7 +98,7 @@ function scalars(write: RpWrite) {
     orderNumber: fields.orderNumber,
     orderKey: normalizeOrder(fields.orderNumber),
     factoryId: fields.factoryId,
-    machineId: fields.machineId,
+    lineId: fields.lineId,
     line: fields.line,
     tag: fields.tag,
     problem: fields.problem,
@@ -139,7 +139,7 @@ function listWhere(filter: RpListFilter): Prisma.RpWhereInput {
   if (filter.from) and.push({ occurredAt: { gte: dayStart(filter.from) } });
   if (filter.to) and.push({ occurredAt: { lt: new Date(dayStart(filter.to).getTime() + 24 * 60 * 60 * 1000) } });
   if (filter.factoryId) and.push({ factoryId: filter.factoryId });
-  if (filter.machineId) and.push({ machineId: filter.machineId });
+  if (filter.lineId) and.push({ lineId: filter.lineId });
   if (filter.line) and.push({ line: { contains: filter.line, mode: "insensitive" } });
   if (filter.tag) and.push({ tag: { contains: filter.tag, mode: "insensitive" } });
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
@@ -211,7 +211,7 @@ export class RpRepository {
     return { count, items: rows.map(toListItem) };
   }
 
-  // Mesma ordem, ou mesmo problema no mesmo dia na mesma máquina (ou mesma TAG, sem máquina).
+  // Mesma ordem, ou mesmo problema no mesmo dia na mesma linha (ou mesma TAG, sem linha cadastrada).
   async duplicates(fields: RpFields, occurredAt: Date, excludeId: string | null): Promise<RpDuplicateDto[]> {
     const orderKey = normalizeOrder(fields.orderNumber);
     const problemKey = normalizeProblem(fields.problem);
@@ -219,7 +219,7 @@ export class RpRepository {
     const dayTo = new Date(dayFrom.getTime() + 24 * 60 * 60 * 1000);
     const where: Prisma.RpWhereInput[] = [];
     if (orderKey) where.push({ orderKey });
-    const place = fields.machineId ? { machineId: fields.machineId } : fields.tag ? { tag: { equals: fields.tag, mode: "insensitive" as const } } : null;
+    const place = fields.lineId ? { lineId: fields.lineId } : fields.tag ? { tag: { equals: fields.tag, mode: "insensitive" as const } } : null;
     if (problemKey && place) where.push({ problemKey, occurredAt: { gte: dayFrom, lt: dayTo }, ...place });
     if (!where.length) return [];
     const rows = await this.prisma.rp.findMany({

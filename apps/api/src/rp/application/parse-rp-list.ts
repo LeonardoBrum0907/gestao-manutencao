@@ -21,7 +21,7 @@ export type RpListQuery = {
   from?: unknown;
   to?: unknown;
   factoryId?: unknown;
-  machineId?: unknown;
+  lineId?: unknown;
   line?: unknown;
   tag?: unknown;
   status?: unknown;
@@ -49,7 +49,7 @@ export function parseRpList(query: RpListQuery): RpListFilter {
     from: day(query.from),
     to: day(query.to),
     factoryId: single(query.factoryId) || null,
-    machineId: single(query.machineId) || null,
+    lineId: single(query.lineId) || null,
     line: single(query.line)?.trim() || null,
     tag: single(query.tag)?.trim() || null,
     statuses: statuses.length ? (statuses as RpStatus[]) : null,

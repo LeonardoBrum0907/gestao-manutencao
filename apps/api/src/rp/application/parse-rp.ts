@@ -50,7 +50,7 @@ export function parseRp(body: unknown): RpInput {
     occurredAt: occurredAt.toISOString(),
     orderNumber: optionalString(source, "orderNumber"),
     factoryId: requiredString(source, "factoryId", "Escolha a fábrica."),
-    machineId: optionalString(source, "machineId"),
+    lineId: optionalString(source, "lineId"),
     line: optionalString(source, "line"),
     tag: optionalString(source, "tag"),
     problem: requiredString(source, "problem", "Descreva o problema."),

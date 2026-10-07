@@ -35,7 +35,7 @@ export function FactoriesSection() {
     <div>
       <SectionTitle
         title="Fábricas"
-        text="Onde a máquina e a tarefa se penduram."
+        text="Onde a linha e a tarefa se penduram."
         action={<Button onClick={create}>Nova fábrica</Button>}
       />
       {factories.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}

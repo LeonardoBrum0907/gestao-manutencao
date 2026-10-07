@@ -4,7 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
 import { mirrorProblem } from "../domain/rp";
-import { matchMachine, matchMembers } from "../domain/rp-match";
+import { matchLine, matchMembers } from "../domain/rp-match";
 import { parseRpText as readReports, type ParsedRp } from "../domain/rp-text";
 import { RpRepository, type RpWrite } from "../infra/rp.repository";
 import { parseRp, parseRpText, type RpInput } from "./parse-rp";
@@ -20,18 +20,18 @@ export class Rps {
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
 
-  // Lê o texto colado e já sugere máquina, fábrica e técnicos do cadastro. Não grava nada.
+  // Lê o texto colado e já sugere linha, fábrica e técnicos do cadastro. Não grava nada.
   async parse(body: unknown): Promise<RpDraftDto[]> {
     const text = parseRpText(body);
     const reports = readReports(text);
-    const [members, machines] = await Promise.all([this.refs.memberDirectory(), this.refs.machineDirectory()]);
+    const [members, lines] = await Promise.all([this.refs.memberDirectory(), this.refs.lineDirectory()]);
     return reports.map((report) => {
-      const machine = matchMachine(report.line, report.tag, machines);
+      const line = matchLine(report.line, report.tag, lines);
       const match = matchMembers(report.technicians, members);
       const warnings = [...report.warnings];
       if (match.unmatched.length) warnings.push(`Técnico não encontrado no cadastro: ${match.unmatched.join(", ")}.`);
-      if (!machine) warnings.push("Máquina não encontrada no cadastro: ficou só com a linha e a TAG do texto. Escolha a fábrica antes de salvar.");
-      return draft(report, machine?.id ?? null, machine?.factoryId ?? null, match.memberIds, match.unmatched, warnings);
+      if (!line) warnings.push("Linha não encontrada no cadastro: ficou só com a linha e a TAG do texto. Escolha a fábrica antes de salvar.");
+      return draft(report, line?.id ?? null, line?.factoryId ?? null, match.memberIds, match.unmatched, warnings);
     });
   }
 
@@ -107,8 +107,8 @@ export class Rps {
     if (!(await this.refs.factoryExists(fields.factoryId))) {
       throw new DomainError("factory", 400, "Fábrica não encontrada.");
     }
-    if (fields.machineId && !(await this.refs.machineExists(fields.machineId))) {
-      throw new DomainError("machine", 400, "Máquina não encontrada.");
+    if (fields.lineId && !(await this.refs.lineExists(fields.lineId))) {
+      throw new DomainError("line", 400, "Linha não encontrada.");
     }
     if (!(await this.refs.membersExist(fields.memberIds))) {
       throw new DomainError("member", 400, "Colaborador não encontrado.");
@@ -118,7 +118,7 @@ export class Rps {
 
 function draft(
   report: ParsedRp,
-  machineId: string | null,
+  lineId: string | null,
   factoryId: string | null,
   memberIds: string[],
   unmatched: string[],
@@ -128,7 +128,7 @@ function draft(
     occurredAt: report.date,
     orderNumber: report.orderNumber,
     factoryId,
-    machineId,
+    lineId,
     line: report.line,
     tag: report.tag,
     problem: report.problem,

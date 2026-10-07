@@ -12,8 +12,8 @@ export class PrismaCadastroRefs implements CadastroRefs {
     return Boolean(row);
   }
 
-  async machineExists(id: string): Promise<boolean> {
-    const row = await this.prisma.machine.findUnique({ where: { id }, select: { id: true } });
+  async lineExists(id: string): Promise<boolean> {
+    const row = await this.prisma.line.findUnique({ where: { id }, select: { id: true } });
     return Boolean(row);
   }
 
@@ -22,10 +22,10 @@ export class PrismaCadastroRefs implements CadastroRefs {
     return Boolean(row);
   }
 
-  async machinesExist(ids: string[]): Promise<boolean> {
+  async linesExist(ids: string[]): Promise<boolean> {
     const unique = [...new Set(ids)];
     if (!unique.length) return true;
-    return (await this.prisma.machine.count({ where: { id: { in: unique } } })) === unique.length;
+    return (await this.prisma.line.count({ where: { id: { in: unique } } })) === unique.length;
   }
 
   async membersExist(ids: string[]): Promise<boolean> {
@@ -44,7 +44,7 @@ export class PrismaCadastroRefs implements CadastroRefs {
     return rows.map((row) => ({ id: row.id, name: row.name, active: row.status === "active" }));
   }
 
-  async machineDirectory() {
-    return this.prisma.machine.findMany({ select: { id: true, name: true, internalCode: true, factoryId: true } });
+  async lineDirectory() {
+    return this.prisma.line.findMany({ select: { id: true, name: true, internalCode: true, factoryId: true } });
   }
 }

@@ -4,13 +4,13 @@ import { DomainError } from "../../kernel/domain-error";
 import { readObject } from "../../kernel/parse";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { AttachmentStorage } from "../../registro/infra/attachment.storage";
-import { normalizePdiMachines } from "../domain/pdi";
+import { normalizePdiLines } from "../domain/pdi";
 import { PdiRepository } from "../infra/pdi.repository";
 
 function idList(source: Record<string, unknown>, key: string): string[] {
   const value = source[key] ?? [];
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-    throw new DomainError("invalid", 400, "Máquinas inválidas.");
+    throw new DomainError("invalid", 400, "Linhas inválidas.");
   }
   return value;
 }
@@ -29,18 +29,18 @@ export class MemberPdi {
   }
 
   private async read(memberId: string): Promise<MemberPdiDto> {
-    const [machines, attachments] = await Promise.all([this.pdi.machines(memberId), this.pdi.attachments(memberId)]);
-    return { memberId, sponsorMachineIds: machines.sponsor, developmentMachineIds: machines.development, attachments };
+    const [lines, attachments] = await Promise.all([this.pdi.lines(memberId), this.pdi.attachments(memberId)]);
+    return { memberId, sponsorLineIds: lines.sponsor, developmentLineIds: lines.development, attachments };
   }
 
-  async setMachines(memberId: string, body: unknown): Promise<MemberPdiDto> {
+  async setLines(memberId: string, body: unknown): Promise<MemberPdiDto> {
     await this.assertMember(memberId);
     const source = readObject(body);
-    const machines = normalizePdiMachines({ sponsor: idList(source, "sponsor"), development: idList(source, "development") });
-    if (!(await this.refs.machinesExist([...machines.sponsor, ...machines.development]))) {
-      throw new DomainError("machine", 400, "Máquina não encontrada.");
+    const lines = normalizePdiLines({ sponsor: idList(source, "sponsor"), development: idList(source, "development") });
+    if (!(await this.refs.linesExist([...lines.sponsor, ...lines.development]))) {
+      throw new DomainError("line", 400, "Linha não encontrada.");
     }
-    await this.pdi.replaceMachines(memberId, machines);
+    await this.pdi.replaceLines(memberId, lines);
     return this.read(memberId);
   }
 

@@ -31,8 +31,8 @@ type Row = {
   status: string;
   memberId: string | null;
   factoryId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   tag: string | null;
   line: string | null;
   priority: string | null;
@@ -73,8 +73,8 @@ function toDto(row: Row): RecordDto {
     status: row.status,
     memberId: row.memberId,
     factoryId: row.factoryId,
-    machineId: row.machineId,
-    machineLabel: row.machineLabel,
+    lineId: row.lineId,
+    lineLabel: row.lineLabel,
     tag: row.tag,
     line: row.line,
     priority: row.priority,
@@ -108,8 +108,8 @@ function scalars(state: RecordState) {
     status: state.status,
     memberId: state.memberId,
     factoryId: state.factoryId,
-    machineId: state.machineId,
-    machineLabel: state.machineLabel,
+    lineId: state.lineId,
+    lineLabel: state.lineLabel,
     tag: state.tag,
     line: state.line,
     priority: state.priority,
@@ -134,7 +134,7 @@ const listSelect = {
   priority: true,
   tone: true,
   dueAt: true,
-  machineId: true,
+  lineId: true,
 } as const;
 
 function toListItem(row: {
@@ -147,7 +147,7 @@ function toListItem(row: {
   priority: string | null;
   tone: string | null;
   dueAt: Date | null;
-  machineId: string | null;
+  lineId: string | null;
 }): RecordListItemDto {
   if (!isRecordType(row.type) || !isRecordStatus(row.status) || !isRecordOrigin(row.origin)) {
     throw new DomainError("invalid", 500, "Registro gravado está inválido.");
@@ -168,7 +168,7 @@ function toListItem(row: {
     priority: row.priority,
     tone: row.tone,
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
-    machineId: row.machineId,
+    lineId: row.lineId,
   };
 }
 
@@ -182,7 +182,7 @@ function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput
   const and: Prisma.RecordWhereInput[] = [];
   if (filter.types) and.push({ type: { in: filter.types } });
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
-  if (filter.machineIds) and.push({ machineId: { in: filter.machineIds } });
+  if (filter.lineIds) and.push({ lineId: { in: filter.lineIds } });
   if (filter.memberId) and.push(involving(filter.memberId));
   if (filter.due) {
     // Prazo é de tarefa ainda por fazer: concluída não vence nem vence hoje.
