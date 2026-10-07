@@ -31,7 +31,8 @@ export class Members {
     return this.write(body, id);
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     const current = await this.members.find(id);
     if (!current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
     const [records, ledTeams, pdiFiles] = await Promise.all([
@@ -40,6 +41,10 @@ export class Members {
       this.members.countPdiFiles(id),
     ]);
     assertMemberCanBeRemoved(records, ledTeams, pdiFiles);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.members.remove(id);
   }
 

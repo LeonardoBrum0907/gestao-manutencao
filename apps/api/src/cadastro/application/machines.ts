@@ -29,11 +29,16 @@ export class Machines {
     return this.write(body, id);
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     if (!(await this.machines.find(id))) throw new DomainError("not_found", 404, "Máquina não encontrada.");
     if (await this.machines.countPostPreventives(id)) {
       throw new DomainError("machine_in_use", 409, "Esta máquina tem fichas pós-preventiva. Exclua as fichas antes.");
     }
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.machines.remove(id);
   }
 

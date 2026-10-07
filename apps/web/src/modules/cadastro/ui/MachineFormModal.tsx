@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { LineDto, MachineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, Modal, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { RemovalPrompt } from "../../../design/ui/removal";
+import { useToast } from "../../../design/ui/toast";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useDeleteMachine, useSaveMachine } from "../data/cadastro";
 import { machineStatusOptions } from "../model/labels";
@@ -48,6 +50,7 @@ export function MachineFormModal({
   const remove = useDeleteMachine();
   const [draft, setDraft] = useState<Draft>(() => draftOf(line, machine));
   const [asking, setAsking] = useState(false);
+  const toast = useToast();
   const equipments = catalog.data?.equipments ?? [];
   const choices = equipments.filter((equipment) => !equipment.archived || equipment.id === draft.equipmentId);
 
@@ -108,24 +111,41 @@ export function MachineFormModal({
           <TextArea value={draft.notes ?? ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} />
         </Field>
         {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-        {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
-        <div className="flex flex-wrap gap-2">
+        {machine && asking ? (
+          <RemovalPrompt
+            path={`/api/machines/${machine.id}`}
+            name={machine.name}
+            removing={remove.isPending}
+            error={remove.error}
+            onCancel={() => {
+              setAsking(false);
+              remove.reset();
+            }}
+            onConfirm={() =>
+              remove.mutate(machine.id, {
+                onSuccess: () => {
+                  toast({ text: `${machine.name} excluída.` });
+                  (onDeleted ?? onClose)();
+                },
+              })
+            }
+          />
+        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" disabled={save.isPending}>
             Gravar
           </Button>
           <Button tone="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          {machine ? (
-            asking ? (
-              <Button tone="danger" className="sm:ml-auto" disabled={remove.isPending} onClick={() => remove.mutate(machine.id, { onSuccess: onDeleted ?? onClose })}>
-                Confirmar exclusão
-              </Button>
-            ) : (
-              <Button tone="ghost" className="sm:ml-auto" onClick={() => setAsking(true)}>
-                Excluir
-              </Button>
-            )
+          {machine && !asking ? (
+            <button
+              type="button"
+              onClick={() => setAsking(true)}
+              className="ml-auto rounded-control px-2 py-2 text-sm font-semibold text-danger transition hover:bg-danger-soft"
+            >
+              Excluir…
+            </button>
           ) : null}
         </div>
       </form>

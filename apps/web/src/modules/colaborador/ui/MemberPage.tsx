@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, PageTitle } from "../../../design/ui/controls";
 import { useMembers, useTeams } from "../../cadastro/data/cadastro";
 import { positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamText } from "../../cadastro/model/team";
-import { MemberFormModal } from "../../cadastro/ui/MemberFormModal";
+import { MemberPanel } from "../../cadastro/ui/MemberPanel";
 import { MatrixPanel } from "../../competencia/ui/MatrixPanel";
 import { resolveTab, tabsFor } from "../model/tabs";
 import { BehaviorTab } from "./BehaviorTab";
@@ -15,6 +15,7 @@ import { ProfileTab } from "./ProfileTab";
 
 export function MemberPage() {
   const { memberId = "", tab } = useParams();
+  const navigate = useNavigate();
   const members = useMembers();
   const teams = useTeams();
   const [editing, setEditing] = useState(false);
@@ -83,7 +84,7 @@ export function MemberPage() {
       {reporting ? (
         <ReportOptionsModal memberId={member.id} isTechnician={member.position === "technician"} onClose={() => setReporting(false)} />
       ) : null}
-      {editing ? <MemberFormModal member={member} onClose={() => setEditing(false)} /> : null}
+      {editing ? <MemberPanel member={member} showProfileLink={false} onClose={() => setEditing(false)} onDeleted={() => navigate("/cadastro/colaboradores")} /> : null}
     </div>
   );
 }

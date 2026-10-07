@@ -1,78 +1,36 @@
-import { useState } from "react";
 import type { MemberRoleDto } from "@manutencao/shared";
-import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
-import { useRoles, useSaveRole } from "../data/cadastro";
+import { SectionTitle } from "../../../design/ui/controls";
+import { InlineNameList } from "../../../design/ui/inline-list";
+import { useToast } from "../../../design/ui/toast";
+import { useDeleteRole, useMembers, useRoles, useSaveRole } from "../data/cadastro";
+import { usageText } from "../model/usage";
 
 export function RolesSection() {
   const roles = useRoles();
+  const members = useMembers();
   const save = useSaveRole();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<MemberRoleDto | null>(null);
-  const [name, setName] = useState("");
-
-  function close() {
-    setOpen(false);
-    setEditing(null);
-    setName("");
-  }
-
-  function create() {
-    setEditing(null);
-    setName("");
-    setOpen(true);
-  }
-
-  function edit(role: MemberRoleDto) {
-    setEditing(role);
-    setName(role.name);
-    setOpen(true);
-  }
+  const remove = useDeleteRole();
+  const toast = useToast();
 
   return (
     <div>
-      <SectionTitle
-        title="Funções"
-        text="As funções do colaborador. As seis do SIGEM já estão na lista."
-        action={<Button onClick={create}>Nova função</Button>}
-      />
+      <SectionTitle title="Funções" text="As funções do colaborador. As seis do SIGEM já estão na lista e não saem; dá para renomear." />
       {roles.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      <div className="flex flex-col gap-2">
-        {roles.data?.length === 0 ? <Card>Nenhuma função ainda.</Card> : null}
-        {roles.data?.map((role) => (
-          <Card key={role.id} compact>
-            <button
-              type="button"
-              className="text-left font-medium text-app transition hover:text-accent hover:underline"
-              onClick={() => edit(role)}
-            >
-              {role.name}
-            </button>
-          </Card>
-        ))}
-      </div>
-      <Modal open={open} title={editing ? "Editar função" : "Nova função"} onClose={close}>
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            save.mutate({ id: editing?.id, name }, { onSuccess: close });
+      {roles.data ? (
+        <InlineNameList<MemberRoleDto & { meta: string }>
+          items={roles.data.map((role) => ({ ...role, meta: usageText(members.data?.filter((member) => member.roleId === role.id).length) }))}
+          emptyText="Nenhuma função ainda."
+          addLabel="Adicionar função"
+          placeholder="Ex.: Caldeireiro"
+          onAdd={(name) => save.mutateAsync({ name })}
+          onRename={(role, name) => save.mutateAsync({ id: role.id, name })}
+          removalPath={(role) => `/api/member-roles/${role.id}`}
+          onRemove={async (role) => {
+            await remove.mutateAsync(role.id);
+            toast({ text: `Função ${role.name} excluída.` });
           }}
-        >
-          <Field label="Nome">
-            <TextInput value={name} onChange={(event) => setName(event.target.value)} />
-          </Field>
-          {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={save.isPending}>
-              Gravar
-            </Button>
-            <Button tone="ghost" onClick={close}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        />
+      ) : null}
     </div>
   );
 }

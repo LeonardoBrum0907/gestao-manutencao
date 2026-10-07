@@ -157,6 +157,12 @@ export type FactoryDto = {
   name: string;
 };
 
+// Pergunta antes de excluir: se não dá, o motivo vem pronto para mostrar (o mesmo que a exclusão daria).
+export type RemovalCheckDto = {
+  canRemove: boolean;
+  reason: string | null;
+};
+
 export type LineDto = {
   id: string;
   name: string;

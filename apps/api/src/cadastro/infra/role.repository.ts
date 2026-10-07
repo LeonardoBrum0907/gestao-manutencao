@@ -41,4 +41,12 @@ export class RoleRepository {
     const row = await this.prisma.memberRole.update({ where: { id }, data: { name } });
     return { id: row.id, name: row.name };
   }
+
+  countMembers(id: string) {
+    return this.prisma.member.count({ where: { roleId: id } });
+  }
+
+  remove(id: string) {
+    return this.prisma.memberRole.delete({ where: { id } });
+  }
 }

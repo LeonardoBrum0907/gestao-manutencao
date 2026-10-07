@@ -31,10 +31,15 @@ export class Grades {
     return this.grades.rename(id, name);
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     const current = await this.grades.find(id);
     if (!current) throw new DomainError("not_found", 404, "Grau não encontrado.");
     assertGradeCanBeRemoved(await this.grades.countMembers(id));
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.grades.remove(id);
   }
 }

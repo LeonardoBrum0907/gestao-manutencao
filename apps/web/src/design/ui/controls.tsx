@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
+import { useId, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
+import { useDialogFocus } from "./dialog";
 import { FieldLabelContext } from "./select";
 
 export { MultiSelect, SelectInput, type MultiOption } from "./select";
@@ -112,9 +113,6 @@ export function SectionTitle({ title, text, action }: { title: string; text?: st
   );
 }
 
-const focusable =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export function Modal({
   open,
   title,
@@ -128,47 +126,7 @@ export function Modal({
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!open) return;
-    const previously = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const root = document.getElementById("root");
-    root?.setAttribute("inert", "");
-    const panel = panelRef.current;
-    const field = panel?.querySelector<HTMLElement>("input, select, textarea, [role=combobox]");
-    field?.focus();
-
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        // Um select aberto dentro do modal já usou o Esc para fechar a lista.
-        if (event.defaultPrevented) return;
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== "Tab" || !panel) return;
-      const nodes = [...panel.querySelectorAll<HTMLElement>(focusable)];
-      if (nodes.length === 0) return;
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      root?.removeAttribute("inert");
-      previously?.focus();
-    };
-  }, [open]);
+  useDialogFocus(open, onClose, panelRef);
 
   if (!open) return null;
 
@@ -180,6 +138,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
         className="relative z-10 max-h-[min(40rem,calc(100vh-2rem))] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-card p-4 shadow-card sm:p-5"
       >
         <div className="mb-4 flex items-start justify-between gap-3">

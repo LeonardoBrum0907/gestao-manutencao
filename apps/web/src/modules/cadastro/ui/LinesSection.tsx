@@ -1,220 +1,99 @@
 import { useState } from "react";
-import type { LineDto, MachineOperationalStatus } from "@manutencao/shared";
-import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useDeleteLine, useFactories, useLines, useSaveLine } from "../data/cadastro";
-import { machineStatusClass, machineStatusLabel, machineStatusOptions } from "../model/labels";
-import { LineMachines } from "./LineMachines";
+import type { LineDto } from "@manutencao/shared";
+import { Button, Card, SectionTitle } from "../../../design/ui/controls";
+import { Icon } from "../../../design/ui/icons";
+import { RemoveDialog } from "../../../design/ui/removal";
+import { RowMenu } from "../../../design/ui/row-menu";
+import { useToast } from "../../../design/ui/toast";
+import { useDeleteLine, useFactories, useLines, useMachines } from "../data/cadastro";
+import { machineStatusClass, machineStatusLabel } from "../model/labels";
+import { LinePanel } from "./LinePanel";
+import { MachineFormModal } from "./MachineFormModal";
 
-type Draft = Omit<LineDto, "id">;
-
-const empty: Draft = {
-  name: "",
-  factoryId: "",
-  sector: "",
-  manufacturer: "",
-  internalCode: "",
-  status: "implanting",
-  notes: "",
-  isDailyLine: false,
-  isCritical: false,
-};
-
-function toDraft(line: LineDto): Draft {
-  return {
-    name: line.name,
-    factoryId: line.factoryId,
-    sector: line.sector ?? "",
-    manufacturer: line.manufacturer ?? "",
-    internalCode: line.internalCode ?? "",
-    status: line.status,
-    notes: line.notes ?? "",
-    isDailyLine: line.isDailyLine,
-    isCritical: line.isCritical,
-  };
-}
-
-function toBody(draft: Draft): Draft {
-  return {
-    ...draft,
-    sector: draft.sector || null,
-    manufacturer: draft.manufacturer || null,
-    internalCode: draft.internalCode || null,
-    notes: draft.notes || null,
-  };
-}
+// undefined: fechado; null: nova; linha: aberta.
+type Open = { line: LineDto | null; removing?: boolean } | undefined;
 
 export function LinesSection() {
   const lines = useLines();
   const factories = useFactories();
-  const save = useSaveLine();
+  const machines = useMachines();
   const remove = useDeleteLine();
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>(empty);
-  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const toast = useToast();
+  const [open, setOpen] = useState<Open>(undefined);
+  const [removing, setRemoving] = useState<LineDto | null>(null);
+  const [addingMachineTo, setAddingMachineTo] = useState<LineDto | null>(null);
   const factoryName = new Map(factories.data?.map((factory) => [factory.id, factory.name]));
-
-  function close() {
-    setOpen(false);
-    setEditingId(null);
-    setDraft(empty);
-  }
-
-  function create() {
-    setEditingId(null);
-    setDraft(empty);
-    setOpen(true);
-  }
-
-  function edit(line: LineDto) {
-    setEditingId(line.id);
-    setDraft(toDraft(line));
-    setOpen(true);
-  }
+  const machineCount = new Map<string, number>();
+  for (const machine of machines.data ?? []) machineCount.set(machine.lineId, (machineCount.get(machine.lineId) ?? 0) + 1);
 
   return (
     <div>
       <SectionTitle
         title="Linhas"
-        text="Nome, fábrica, TAG e as duas marcas: linha de GD e apadrinhada. Embaixo de cada linha ficam as máquinas dela."
-        action={<Button onClick={create}>Nova linha</Button>}
+        text="Clique numa linha para ver e editar tudo dela, inclusive as máquinas."
+        action={<Button onClick={() => setOpen({ line: null })}>Nova linha</Button>}
       />
       {lines.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      <div className="flex flex-col gap-2">
-        {lines.data?.length === 0 ? <Card>Nenhuma linha ainda.</Card> : null}
-        {lines.data?.map((line) => (
-          <Card key={line.id} compact className="flex flex-col gap-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <button type="button" className="min-w-0 text-left" onClick={() => edit(line)}>
-                <p className="font-medium text-app transition hover:text-accent hover:underline">{line.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {factoryName.get(line.factoryId) ?? "Fábrica"} ·{" "}
-                  <span className={machineStatusClass(line.status)}>{machineStatusLabel(line.status)}</span>
-                  {line.isDailyLine ? " · Linha de GD" : ""}
-                  {line.isCritical ? " · Apadrinhada" : ""}
-                  {line.internalCode ? ` · TAG ${line.internalCode}` : ""}
-                </p>
-              </button>
-              <div className="flex shrink-0 justify-end gap-2">
-                {pendingDelete === line.id ? (
-                  <>
-                    <Button
-                      tone="danger"
-                      onClick={() =>
-                        remove.mutate(line.id, {
-                          onSuccess: () => {
-                            setPendingDelete(null);
-                            if (editingId === line.id) close();
-                          },
-                        })
-                      }
-                    >
-                      Confirmar
-                    </Button>
-                    <Button tone="ghost" onClick={() => setPendingDelete(null)}>
-                      Cancelar
-                    </Button>
-                  </>
-                ) : (
-                  <Button tone="ghost" onClick={() => setPendingDelete(line.id)}>
-                    Excluir
-                  </Button>
-                )}
-              </div>
-            </div>
-            <LineMachines line={line} />
-          </Card>
-        ))}
-        {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
-      </div>
-      <Modal open={open} title={editingId ? "Editar linha" : "Nova linha"} onClose={close}>
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(event) => {
-            event.preventDefault();
-            save.mutate({ id: editingId ?? undefined, body: toBody(draft) }, { onSuccess: close });
+      {lines.data?.length === 0 ? <Card>Nenhuma linha ainda.</Card> : null}
+      {lines.data?.length ? (
+        <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-card">
+          {lines.data.map((line) => {
+            const count = machineCount.get(line.id) ?? 0;
+            const marks = [line.internalCode ? `TAG ${line.internalCode}` : null, line.isDailyLine ? "Linha de GD" : null, line.isCritical ? "Apadrinhada" : null];
+            return (
+              <li key={line.id} className={`flex items-center gap-1 pr-2 ${open?.line?.id === line.id ? "bg-accent-soft" : ""}`}>
+                <button
+                  type="button"
+                  onClick={() => setOpen({ line })}
+                  className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3 text-left transition hover:bg-accent-soft"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-app">{line.name}</span>
+                    <span className="mt-0.5 block text-sm text-muted">
+                      {[factoryName.get(line.factoryId) ?? "Fábrica", ...marks].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                  <span className="hidden w-28 shrink-0 text-sm text-app sm:block">
+                    {count ? `${count} ${count === 1 ? "máquina" : "máquinas"}` : "Sem máquinas"}
+                  </span>
+                  <span className={`hidden w-32 shrink-0 text-sm sm:block ${machineStatusClass(line.status) || "text-app"}`}>{machineStatusLabel(line.status)}</span>
+                  <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
+                </button>
+                <RowMenu
+                  label={`Mais ações de ${line.name}`}
+                  items={[
+                    { label: "Editar", onSelect: () => setOpen({ line }) },
+                    { label: "+ Máquina nesta linha", onSelect: () => setAddingMachineTo(line) },
+                    { label: "Excluir…", danger: true, onSelect: () => setRemoving(line) },
+                  ]}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {open ? <LinePanel key={open.line?.id ?? "nova"} line={open.line} onClose={() => setOpen(undefined)} /> : null}
+      {addingMachineTo ? <MachineFormModal line={addingMachineTo} machine={null} onClose={() => setAddingMachineTo(null)} /> : null}
+      {removing ? (
+        <RemoveDialog
+          path={`/api/lines/${removing.id}`}
+          name={removing.name}
+          removing={remove.isPending}
+          error={remove.error}
+          onCancel={() => {
+            setRemoving(null);
+            remove.reset();
           }}
-        >
-          <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-app">Identificação</h3>
-            <Field label="Nome">
-              <TextInput value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-            </Field>
-            <Field label="Fábrica">
-              <SelectInput
-                value={draft.factoryId}
-                onChange={(event) => setDraft({ ...draft, factoryId: event.target.value })}
-              >
-                <option value="">Escolha</option>
-                {factories.data?.map((factory) => (
-                  <option key={factory.id} value={factory.id}>
-                    {factory.name}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-            <Field label="Setor">
-              <TextInput value={draft.sector ?? ""} onChange={(event) => setDraft({ ...draft, sector: event.target.value })} />
-            </Field>
-            <Field label="Fabricante">
-              <TextInput
-                value={draft.manufacturer ?? ""}
-                onChange={(event) => setDraft({ ...draft, manufacturer: event.target.value })}
-              />
-            </Field>
-            <Field label="TAG">
-              <TextInput
-                value={draft.internalCode ?? ""}
-                onChange={(event) => setDraft({ ...draft, internalCode: event.target.value })}
-              />
-            </Field>
-            <Field label="Status">
-              <SelectInput
-                value={draft.status}
-                onChange={(event) => setDraft({ ...draft, status: event.target.value as MachineOperationalStatus })}
-              >
-                {machineStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-          </div>
-          <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-app">Marcas e observação</h3>
-            <Field label="Observações">
-              <TextArea value={draft.notes ?? ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} />
-            </Field>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={draft.isDailyLine}
-                onChange={(event) => setDraft({ ...draft, isDailyLine: event.target.checked })}
-              />
-              Linha de Gerenciamento Diário
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={draft.isCritical}
-                onChange={(event) => setDraft({ ...draft, isCritical: event.target.checked })}
-              />
-              Apadrinhada
-            </label>
-          </div>
-          {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={save.isPending}>
-              Gravar
-            </Button>
-            <Button tone="ghost" onClick={close}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </Modal>
+          onConfirm={() =>
+            remove.mutate(removing.id, {
+              onSuccess: () => {
+                toast({ text: `${removing.name} excluída.` });
+                setRemoving(null);
+              },
+            })
+          }
+        />
+      ) : null}
     </div>
   );
 }

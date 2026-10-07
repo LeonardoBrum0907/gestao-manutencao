@@ -1,119 +1,36 @@
-import { useState } from "react";
 import type { MemberGradeDto } from "@manutencao/shared";
-import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Modal, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
-import { useDeleteGrade, useGrades, useSaveGrade } from "../data/cadastro";
+import { SectionTitle } from "../../../design/ui/controls";
+import { InlineNameList } from "../../../design/ui/inline-list";
+import { useToast } from "../../../design/ui/toast";
+import { useDeleteGrade, useGrades, useMembers, useSaveGrade } from "../data/cadastro";
+import { usageText } from "../model/usage";
 
 export function GradesSection() {
   const grades = useGrades();
+  const members = useMembers();
   const save = useSaveGrade();
   const remove = useDeleteGrade();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<MemberGradeDto | null>(null);
-  const [name, setName] = useState("");
-  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
-
-  function close() {
-    setOpen(false);
-    setEditing(null);
-    setName("");
-  }
-
-  function create() {
-    setEditing(null);
-    setName("");
-    setOpen(true);
-  }
-
-  function edit(grade: MemberGradeDto) {
-    setEditing(grade);
-    setName(grade.name);
-    setOpen(true);
-  }
+  const toast = useToast();
 
   return (
     <div>
-      <SectionTitle
-        title="Graus"
-        text="A senioridade do colaborador. Grau em uso não sai da lista."
-        action={<Button onClick={create}>Novo grau</Button>}
-      />
+      <SectionTitle title="Graus" text="A senioridade do colaborador. Grau em uso não sai da lista." />
       {grades.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      <div className="flex flex-col gap-2">
-        {grades.data?.length === 0 ? <Card>Nenhum grau ainda.</Card> : null}
-        {grades.data?.map((grade) => (
-          <Card key={grade.id} compact className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              className="text-left font-medium text-app transition hover:text-accent hover:underline"
-              onClick={() => edit(grade)}
-            >
-              {grade.name}
-            </button>
-            <div className="flex justify-end gap-2">
-              {pendingDelete === grade.id ? (
-                <>
-                  <Button
-                    tone="danger"
-                    onClick={() =>
-                      remove.mutate(grade.id, {
-                        onSuccess: () => {
-                          setPendingDelete(null);
-                          if (editing?.id === grade.id) close();
-                        },
-                      })
-                    }
-                  >
-                    Confirmar
-                  </Button>
-                  <Button
-                    tone="ghost"
-                    onClick={() => {
-                      setPendingDelete(null);
-                      remove.reset();
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  tone="ghost"
-                  onClick={() => {
-                    remove.reset();
-                    setPendingDelete(grade.id);
-                  }}
-                >
-                  Excluir
-                </Button>
-              )}
-            </div>
-          </Card>
-        ))}
-        {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
-      </div>
-      <Modal open={open} title={editing ? "Editar grau" : "Novo grau"} onClose={close}>
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            save.mutate({ id: editing?.id, name }, { onSuccess: close });
+      {grades.data ? (
+        <InlineNameList<MemberGradeDto & { meta: string }>
+          items={grades.data.map((grade) => ({ ...grade, meta: usageText(members.data?.filter((member) => member.gradeId === grade.id).length) }))}
+          emptyText="Nenhum grau ainda."
+          addLabel="Adicionar grau"
+          placeholder="Ex.: Grau IV"
+          onAdd={(name) => save.mutateAsync({ name })}
+          onRename={(grade, name) => save.mutateAsync({ id: grade.id, name })}
+          removalPath={(grade) => `/api/member-grades/${grade.id}`}
+          onRemove={async (grade) => {
+            await remove.mutateAsync(grade.id);
+            toast({ text: `Grau ${grade.name} excluído.` });
           }}
-        >
-          <Field label="Nome">
-            <TextInput value={name} onChange={(event) => setName(event.target.value)} />
-          </Field>
-          {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={save.isPending}>
-              Gravar
-            </Button>
-            <Button tone="ghost" onClick={close}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        />
+      ) : null}
     </div>
   );
 }

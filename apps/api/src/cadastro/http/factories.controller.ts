@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { Factories } from "../application/factories";
+import { removalCheck } from "../../kernel/removal";
 
 @Controller("api/factories")
 export class FactoriesController {
@@ -18,6 +19,11 @@ export class FactoriesController {
   @Patch(":id")
   rename(@Param("id") id: string, @Body() body: unknown) {
     return this.factories.rename(id, body);
+  }
+
+  @Get(":id/removal")
+  removal(@Param("id") id: string) {
+    return removalCheck(() => this.factories.checkRemoval(id));
   }
 
   @Delete(":id")

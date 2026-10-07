@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { Competencies } from "../application/competencies";
+import { removalCheck } from "../../kernel/removal";
 
 @Controller("api/performance-competencies")
 export class CompetenciesController {
@@ -23,6 +24,11 @@ export class CompetenciesController {
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.competencies.update(id, body);
+  }
+
+  @Get(":id/removal")
+  removal(@Param("id") id: string) {
+    return removalCheck(() => this.competencies.checkRemoval(id));
   }
 
   @Delete(":id")
