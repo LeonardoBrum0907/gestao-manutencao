@@ -19,7 +19,11 @@ export function assertEquipmentNameAvailable(ownerId: string | null, currentId: 
 }
 
 // Excluir só o que não deixa nada órfão; o resto se arquiva.
-export function assertEquipmentCanBeRemoved(usage: { skills: number; members: number; subassemblies: number }): void {
+export function assertEquipmentCanBeRemoved(usage: { skills: number; members: number; subassemblies: number; machines: number }): void {
+  // Sem esta trava, o banco apagaria o modelo das máquinas em silêncio.
+  if (usage.machines > 0) {
+    throw new DomainError("equipment_in_use", 409, "Há máquinas deste modelo. Arquive em vez de excluir.");
+  }
   if (usage.skills > 0) {
     throw new DomainError(
       "equipment_in_use",

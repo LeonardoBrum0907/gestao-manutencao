@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_LEVELS,
@@ -10,10 +11,8 @@ import {
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import {
-  useDeleteEquipment,
   useDeleteSkill,
   useMatrixCatalog,
-  useReorderEquipments,
   useReorderSkills,
   useMatrixSettings,
   useSaveEquipment,
@@ -88,110 +87,61 @@ function OrderButtons({
   );
 }
 
+// Criar, renomear e arquivar modelos fica em Fábricas, linhas e máquinas; aqui só o que é da matriz.
 function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
   const save = useSaveEquipment();
-  const remove = useDeleteEquipment();
-  const reorder = useReorderEquipments();
-  const [editing, setEditing] = useState<MatrixEquipmentDto | null | undefined>(undefined);
-  const [name, setName] = useState("");
-  const [minQualified, setMinQualified] = useState("0");
-  const ids = catalog.equipments.map((equipment) => equipment.id);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const active = catalog.equipments.filter((equipment) => !equipment.archived);
   const activeSkills = (id: string) => catalog.skills.filter((skill) => skill.equipmentId === id && !skill.archived).length;
 
-  function open(equipment: MatrixEquipmentDto | null) {
-    save.reset();
-    setEditing(equipment);
-    setName(equipment?.name ?? "");
-    setMinQualified(String(equipment?.minQualified ?? 0));
+  function commit(equipment: MatrixEquipmentDto) {
+    const draft = drafts[equipment.id];
+    if (draft === undefined) return;
+    const value = Math.max(0, Math.min(99, Math.floor(Number(draft) || 0)));
+    setDrafts(({ [equipment.id]: _, ...rest }) => rest);
+    if (value !== equipment.minQualified) save.mutate({ id: equipment.id, name: equipment.name, archived: equipment.archived, minQualified: value });
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    save.mutate(
-      { id: editing?.id, name, archived: editing?.archived ?? false, minQualified: Math.max(0, Math.floor(Number(minQualified) || 0)) },
-      { onSuccess: () => setEditing(undefined) },
-    );
-  }
-
-  const error = (editing === undefined ? save.error : null) ?? remove.error ?? reorder.error;
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-app">Equipamentos</h3>
-        <Button tone="ghost" className={small} onClick={() => open(null)}>
-          Novo equipamento
-        </Button>
-      </div>
-      {error ? (
+      <h3 className="text-sm font-semibold text-app">Equipamentos</h3>
+      <p className="mt-1 text-sm text-muted">
+        Os equipamentos da matriz são os modelos de equipamento das máquinas. Para criar, renomear, ordenar ou arquivar, vá em{" "}
+        <Link to="/configuracoes/fabricas" className="font-semibold text-accent hover:underline">
+          Fábricas, linhas e máquinas
+        </Link>
+        .
+      </p>
+      {save.isError ? (
         <div className="mt-3">
-          <Notice>{errorMessage(error)}</Notice>
+          <Notice>{errorMessage(save.error)}</Notice>
         </div>
       ) : null}
+      {active.length === 0 ? <p className="mt-3 text-sm text-muted">Nenhum equipamento ativo.</p> : null}
       <ol className="mt-3 flex flex-col">
-        {catalog.equipments.map((equipment, index) => (
-          <li
-            key={equipment.id}
-            className="flex flex-col gap-2 border-t border-t-line py-2 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
-          >
+        {active.map((equipment, index) => (
+          <li key={equipment.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-t-line py-2 first:border-t-0">
             <div className="flex min-w-0 items-center gap-3">
               <span className="w-6 shrink-0 text-right text-sm tabular-nums text-muted">{index + 1}</span>
-              <button
-                type="button"
-                className={`truncate text-left font-medium transition hover:text-accent hover:underline ${
-                  equipment.archived ? "text-muted" : "text-app"
-                }`}
-                onClick={() => open(equipment)}
-              >
-                {equipment.name}
-              </button>
-              <span className="shrink-0 text-xs text-muted">
-                {activeSkills(equipment.id)} habilidades
-                {equipment.minQualified ? ` · mínimo ${equipment.minQualified} qualificado(s)` : ""}
-              </span>
-              {equipment.archived ? <ArchivedChip /> : null}
+              <span className="truncate font-medium text-app">{equipment.name}</span>
+              <span className="shrink-0 text-xs text-muted">{activeSkills(equipment.id)} habilidades</span>
             </div>
-            <div className="flex shrink-0 flex-wrap justify-end gap-2">
-              <OrderButtons
-                label={equipment.name}
-                index={index}
-                count={ids.length}
-                disabled={reorder.isPending}
-                onMove={(step) => reorder.mutate(moved(ids, index, step))}
+            <label className="flex shrink-0 items-center gap-2 text-xs text-muted">
+              Mínimo de qualificados
+              <TextInput
+                type="number"
+                min={0}
+                max={99}
+                className="!w-20 !py-1.5 tabular-nums"
+                value={drafts[equipment.id] ?? String(equipment.minQualified ?? 0)}
+                onChange={(event) => setDrafts({ ...drafts, [equipment.id]: event.target.value })}
+                onBlur={() => commit(equipment)}
+                onKeyDown={(event) => (event.key === "Enter" ? commit(equipment) : null)}
               />
-              <Button
-                tone="ghost"
-                className={small}
-                disabled={save.isPending}
-                onClick={() => save.mutate({ id: equipment.id, name: equipment.name, archived: !equipment.archived })}
-              >
-                {equipment.archived ? "Reativar" : "Arquivar"}
-              </Button>
-              <DeleteButton pending={remove.isPending} onConfirm={(done) => remove.mutate(equipment.id, { onSuccess: done })} />
-            </div>
+            </label>
           </li>
         ))}
       </ol>
-      <Modal open={editing !== undefined} title={editing ? "Editar equipamento" : "Novo equipamento"} onClose={() => setEditing(undefined)}>
-        <form className="flex flex-col gap-4" onSubmit={submit}>
-          <Field label="Nome">
-            <TextInput value={name} onChange={(event) => setName(event.target.value)} />
-          </Field>
-          {editing ? (
-            <Field label="Mínimo de técnicos qualificados (0 = sem mínimo)">
-              <TextInput type="number" min={0} max={99} value={minQualified} onChange={(event) => setMinQualified(event.target.value)} />
-            </Field>
-          ) : null}
-          {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={save.isPending}>
-              Gravar
-            </Button>
-            <Button tone="ghost" onClick={() => setEditing(undefined)}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </Card>
   );
 }
@@ -415,7 +365,7 @@ export function MatrixCatalogSection() {
     <div>
       <SectionTitle
         title="Matriz de habilidades"
-        text="Os equipamentos e as habilidades da aba Matriz da ficha do técnico. Com nota ou marcação, arquive em vez de excluir: o que já foi avaliado fica guardado e volta se reativar."
+        text="As habilidades de cada equipamento na aba Matriz da ficha do técnico. Com nota ou marcação, arquive em vez de excluir: o que já foi avaliado fica guardado e volta se reativar."
       />
       {catalog.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {catalog.isError ? <Notice>{errorMessage(catalog.error)}</Notice> : null}

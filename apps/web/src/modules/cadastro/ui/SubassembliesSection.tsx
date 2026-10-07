@@ -50,7 +50,7 @@ export function SubassembliesSection() {
         text="Por modelo de equipamento, o mesmo equipamento da matriz de habilidades. Valem para todas as máquinas do modelo. Arquivado sai das listas, mas o histórico fica."
       />
       {catalog.isPending || subassemblies.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      {catalog.data && equipments.length === 0 ? <Card>Nenhum modelo ativo. Cadastre o equipamento na aba Avaliação.</Card> : null}
+      {catalog.data && equipments.length === 0 ? <Card>Nenhum modelo ativo. Cadastre o modelo em “Modelos de equipamento”, logo acima.</Card> : null}
       {equipments.length > 0 ? (
         <div className="flex flex-col gap-4">
           <div className="sm:max-w-sm">

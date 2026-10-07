@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
+import { removalCheck } from "../../kernel/removal";
 import { MatrixCatalog } from "../application/matrix-catalog";
 
 @Controller("api/matrix-catalog")
@@ -23,6 +24,11 @@ export class MatrixCatalogController {
   @Patch("equipments/:id")
   updateEquipment(@Param("id") id: string, @Body() body: unknown) {
     return this.catalog.updateEquipment(id, body);
+  }
+
+  @Get("equipments/:id/removal")
+  equipmentRemoval(@Param("id") id: string) {
+    return removalCheck(() => this.catalog.checkEquipmentRemoval(id));
   }
 
   @Delete("equipments/:id")
