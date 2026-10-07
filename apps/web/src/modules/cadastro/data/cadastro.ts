@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FactoryDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto, TeamDto } from "@manutencao/shared";
+import type { FactoryDto, LineDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto, SubassemblyDto, TeamDto } from "@manutencao/shared";
 import { removeById, REFERENCE_DATA, upsertByName } from "../../../app/cache";
 import { api } from "../../../app/http";
 
@@ -33,6 +33,33 @@ export function useDeleteFactory() {
   });
 }
 
+export function useLines() {
+  return useQuery({
+    queryKey: ["lines"],
+    ...REFERENCE_DATA,
+    queryFn: () => api<LineDto[]>("/api/lines"),
+  });
+}
+
+export function useSaveLine() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; body: Omit<LineDto, "id"> }) =>
+      input.id
+        ? api<LineDto>(`/api/lines/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
+        : api<LineDto>("/api/lines", { method: "POST", body: JSON.stringify(input.body) }),
+    onSuccess: (line) => upsertByName(client, ["lines"], line),
+  });
+}
+
+export function useDeleteLine() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/lines/${id}`, { method: "DELETE" }),
+    onSuccess: (_result, id) => removeById<LineDto>(client, ["lines"], id),
+  });
+}
+
 export function useMachines() {
   return useQuery({
     queryKey: ["machines"],
@@ -57,6 +84,45 @@ export function useDeleteMachine() {
   return useMutation({
     mutationFn: (id: string) => api(`/api/machines/${id}`, { method: "DELETE" }),
     onSuccess: (_result, id) => removeById<MachineDto>(client, ["machines"], id),
+  });
+}
+
+// Subconjuntos na ordem do cadastro dentro de cada modelo de equipamento.
+export function useSubassemblies() {
+  return useQuery({
+    queryKey: ["subassemblies"],
+    ...REFERENCE_DATA,
+    queryFn: () => api<SubassemblyDto[]>("/api/subassemblies"),
+  });
+}
+
+export function useSaveSubassembly() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; equipmentId: string; name: string; archived: boolean }) =>
+      input.id
+        ? api<SubassemblyDto>(`/api/subassemblies/${input.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ name: input.name, archived: input.archived }),
+          })
+        : api<SubassemblyDto>("/api/subassemblies", {
+            method: "POST",
+            body: JSON.stringify({ equipmentId: input.equipmentId, name: input.name }),
+          }),
+    onSuccess: (item) =>
+      client.setQueryData<SubassemblyDto[]>(["subassemblies"], (list) =>
+        list?.some((current) => current.id === item.id)
+          ? list.map((current) => (current.id === item.id ? item : current))
+          : list && [...list, item],
+      ),
+  });
+}
+
+export function useDeleteSubassembly() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/subassemblies/${id}`, { method: "DELETE" }),
+    onSuccess: (_result, id) => removeById<SubassemblyDto>(client, ["subassemblies"], id),
   });
 }
 

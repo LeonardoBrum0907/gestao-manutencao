@@ -9,11 +9,11 @@ export function usePdi(memberId: string) {
   });
 }
 
-export function useSetPdiMachines(memberId: string) {
+export function useSetPdiLines(memberId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body: { sponsor: string[]; development: string[] }) =>
-      api<MemberPdiDto>(`/api/members/${memberId}/pdi/machines`, { method: "PUT", body: JSON.stringify(body) }),
+      api<MemberPdiDto>(`/api/members/${memberId}/pdi/lines`, { method: "PUT", body: JSON.stringify(body) }),
     // Marca na hora; se a API recusar, volta ao que estava.
     onMutate: async (body) => {
       await client.cancelQueries({ queryKey: ["pdi", memberId] });
@@ -21,8 +21,8 @@ export function useSetPdiMachines(memberId: string) {
       if (previous) {
         client.setQueryData<MemberPdiDto>(["pdi", memberId], {
           ...previous,
-          sponsorMachineIds: body.sponsor,
-          developmentMachineIds: body.development,
+          sponsorLineIds: body.sponsor,
+          developmentLineIds: body.development,
         });
       }
       return { previous };

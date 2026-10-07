@@ -25,8 +25,8 @@ export class FactoryRepository {
     return { id: row.id, name: row.name };
   }
 
-  countMachines(id: string) {
-    return this.prisma.machine.count({ where: { factoryId: id } });
+  countLines(id: string) {
+    return this.prisma.line.count({ where: { factoryId: id } });
   }
 
   remove(id: string) {

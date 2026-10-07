@@ -44,8 +44,8 @@ export class MemberPdiItems {
   }
 
   private async assertReferences(fields: Partial<PdiItemFields>): Promise<void> {
-    if (fields.machineId && !(await this.refs.machineExists(fields.machineId))) {
-      throw new DomainError("machine", 400, "Máquina não encontrada.");
+    if (fields.lineId && !(await this.refs.lineExists(fields.lineId))) {
+      throw new DomainError("line", 400, "Linha não encontrada.");
     }
     if (fields.responsibleId && !(await this.refs.memberExists(fields.responsibleId))) {
       throw new DomainError("responsible", 400, "Responsável não encontrado.");

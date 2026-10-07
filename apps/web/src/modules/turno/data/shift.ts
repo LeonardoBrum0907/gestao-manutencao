@@ -10,8 +10,8 @@ export type ChamadoBody = {
   closedAt: string | null;
   durationMin: number | null;
   memberIds: string[];
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   status: RecordStatus;
   notes: string | null;
 };

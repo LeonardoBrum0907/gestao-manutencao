@@ -1,11 +1,11 @@
 import { DomainError } from "../../kernel/domain-error";
 
-export function assertFactoryCanBeRemoved(machineCount: number): void {
-  if (machineCount > 0) {
+export function assertFactoryCanBeRemoved(lineCount: number): void {
+  if (lineCount > 0) {
     throw new DomainError(
-      "factory_has_machines",
+      "factory_has_lines",
       409,
-      "Não dá para excluir a fábrica enquanto houver máquina nela.",
+      "Não dá para excluir a fábrica enquanto houver linha nela.",
     );
   }
 }

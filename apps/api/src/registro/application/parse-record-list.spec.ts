@@ -9,7 +9,7 @@ describe("filtros da lista de registros", () => {
       types: null,
       statuses: null,
       due: null,
-      machineIds: null,
+      lineIds: null,
       memberId: null,
       cursor: null,
       limit: 50,
@@ -17,10 +17,10 @@ describe("filtros da lista de registros", () => {
   });
 
   it("aceita listas separadas por vírgula", () => {
-    const filter = parseRecordList({ type: "task,problem", status: "open,in_progress", machineIds: "m1,m2", memberId: "p1", cursor: "c1", limit: "20" });
+    const filter = parseRecordList({ type: "task,problem", status: "open,in_progress", lineIds: "m1,m2", memberId: "p1", cursor: "c1", limit: "20" });
     assert.deepEqual(filter.types, ["task", "problem"]);
     assert.deepEqual(filter.statuses, ["open", "in_progress"]);
-    assert.deepEqual(filter.machineIds, ["m1", "m2"]);
+    assert.deepEqual(filter.lineIds, ["m1", "m2"]);
     assert.equal(filter.memberId, "p1");
     assert.equal(filter.cursor, "c1");
     assert.equal(filter.limit, 20);

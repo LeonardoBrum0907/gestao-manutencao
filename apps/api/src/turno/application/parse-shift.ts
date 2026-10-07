@@ -38,8 +38,8 @@ export function parseChamado(body: unknown): ChamadoInput {
     closedAt: optionalDate(source, "closedAt"),
     durationMin: optionalInt(source, "durationMin"),
     memberIds: stringList(source, "memberIds"),
-    machineId: optionalString(source, "machineId"),
-    machineLabel: optionalString(source, "machineLabel"),
+    lineId: optionalString(source, "lineId"),
+    lineLabel: optionalString(source, "lineLabel"),
     status: status as RecordStatus,
     notes: optionalString(source, "notes"),
   };

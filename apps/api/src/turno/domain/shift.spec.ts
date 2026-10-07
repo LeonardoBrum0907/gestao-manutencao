@@ -15,8 +15,8 @@ function chamado(partial: Partial<ChamadoInput> = {}): ChamadoInput {
     closedAt: closed,
     durationMin: null,
     memberIds: ["a", "a", " b "],
-    machineId: null,
-    machineLabel: "Esteira 4",
+    lineId: null,
+    lineLabel: "Esteira 4",
     status: "in_progress",
     notes: "  ",
     ...partial,
@@ -32,7 +32,7 @@ describe("chamado", () => {
     assert.equal(write.durationMin, 90);
     assert.equal(write.occurredAt, opened);
     assert.deepEqual(write.memberIds, ["a", "b"]);
-    assert.equal(write.machineLabel, "Esteira 4");
+    assert.equal(write.lineLabel, "Esteira 4");
     assert.equal(write.notes, null);
     assert.equal(write.status, "in_progress");
   });
@@ -49,10 +49,10 @@ describe("chamado", () => {
     );
   });
 
-  it("recusa máquina e outra juntas", () => {
+  it("recusa linha e outra juntas", () => {
     assert.throws(
-      () => openChamado(chamado({ machineId: "maq", machineLabel: "outra" }), now),
-      (error: unknown) => error instanceof DomainError && error.code === "machine_conflict",
+      () => openChamado(chamado({ lineId: "maq", lineLabel: "outra" }), now),
+      (error: unknown) => error instanceof DomainError && error.code === "line_conflict",
     );
   });
 

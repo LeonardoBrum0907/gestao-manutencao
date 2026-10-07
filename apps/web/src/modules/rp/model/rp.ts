@@ -43,7 +43,7 @@ export type RpFormValues = {
   occurredAt: string;
   orderNumber: string;
   factoryId: string;
-  machineId: string;
+  lineId: string;
   line: string;
   tag: string;
   problem: string;
@@ -70,7 +70,7 @@ export function emptyRpValues(): RpFormValues {
     occurredAt: todayLocal(),
     orderNumber: "",
     factoryId: "",
-    machineId: "",
+    lineId: "",
     line: "",
     tag: "",
     problem: "",
@@ -99,7 +99,7 @@ export function valuesFromRp(rp: RpDto | RpDraftDto): RpFormValues {
     occurredAt: rp.occurredAt ? dayOf(rp.occurredAt) : todayLocal(),
     orderNumber: rp.orderNumber ?? "",
     factoryId: rp.factoryId ?? "",
-    machineId: rp.machineId ?? "",
+    lineId: rp.lineId ?? "",
     line: rp.line ?? "",
     tag: rp.tag ?? "",
     problem: rp.problem,
@@ -127,7 +127,7 @@ export function bodyFromValues(values: RpFormValues, rawText: string): RpBody {
     occurredAt: values.occurredAt,
     orderNumber: blank(values.orderNumber),
     factoryId: values.factoryId,
-    machineId: blank(values.machineId),
+    lineId: blank(values.lineId),
     line: blank(values.line),
     tag: blank(values.tag),
     problem: values.problem,

@@ -3,13 +3,13 @@ import type { RpListItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
-import { useFactories, useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { flattenRp, useRpPages } from "../data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel, rpStatusOptions } from "../model/rp";
 
-// Nome da máquina cadastrada (ou a linha do texto) e a TAG, sem repetir o mesmo nome duas vezes.
-function place(rp: RpListItemDto, machineNames: Map<string, string>): string[] {
-  const first = (rp.machineId && machineNames.get(rp.machineId)) || rp.line;
+// Nome da linha cadastrada (ou a linha do texto) e a TAG, sem repetir o mesmo nome duas vezes.
+function place(rp: RpListItemDto, lineNames: Map<string, string>): string[] {
+  const first = (rp.lineId && lineNames.get(rp.lineId)) || rp.line;
   const parts = [first, rp.tag].filter((part): part is string => Boolean(part));
   const seen = new Set<string>();
   return parts.filter((part) => {
@@ -20,17 +20,17 @@ function place(rp: RpListItemDto, machineNames: Map<string, string>): string[] {
   });
 }
 
-const FILTERS = ["q", "status", "factoryId", "machineId", "memberId", "line", "tag", "repeated", "from", "to"] as const;
+const FILTERS = ["q", "status", "factoryId", "lineId", "memberId", "line", "tag", "repeated", "from", "to"] as const;
 
 export function RpListPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const list = useRpPages(params);
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const factories = useFactories();
   const items = flattenRp(list.data?.pages);
-  const machineNames = new Map(machines.data?.map((machine) => [machine.id, machine.name]));
+  const lineNames = new Map(lines.data?.map((line) => [line.id, line.name]));
   const memberNames = new Map(members.data?.map((member) => [member.id, member.name]));
   const filtered = FILTERS.some((key) => params.get(key));
 
@@ -87,12 +87,12 @@ export function RpListPage() {
               ))}
             </SelectInput>
           </Field>
-          <Field label="Máquina">
-            <SelectInput value={params.get("machineId") ?? ""} onChange={(event) => setFilter("machineId", event.target.value)}>
+          <Field label="Linha">
+            <SelectInput value={params.get("lineId") ?? ""} onChange={(event) => setFilter("lineId", event.target.value)}>
               <option value="">Todas</option>
-              {machines.data?.map((machine) => (
-                <option key={machine.id} value={machine.id}>
-                  {machine.name}
+              {lines.data?.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.name}
                 </option>
               ))}
             </SelectInput>
@@ -155,7 +155,7 @@ export function RpListPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
                       {formatRpDay(rp.occurredAt)}
-                      {place(rp, machineNames).map((part) => ` · ${part}`)}
+                      {place(rp, lineNames).map((part) => ` · ${part}`)}
                     </p>
                     <p className="mt-1 line-clamp-2 text-sm text-app" title={rp.problem}>
                       {rp.problem}

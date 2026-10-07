@@ -7,7 +7,7 @@ export type RecordListFilter = {
   types: RecordType[] | null;
   statuses: RecordStatus[] | null;
   due: DueWindow | null;
-  machineIds: string[] | null;
+  lineIds: string[] | null;
   memberId: string | null;
   cursor: string | null;
   limit: number;

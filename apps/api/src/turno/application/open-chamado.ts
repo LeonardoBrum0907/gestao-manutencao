@@ -29,11 +29,11 @@ export class OpenChamado {
   }
 
   private async assertRefs(write: ProblemWrite): Promise<void> {
-    const [machineOk, membersOk] = await Promise.all([
-      write.machineId ? this.refs.machineExists(write.machineId) : true,
+    const [lineOk, membersOk] = await Promise.all([
+      write.lineId ? this.refs.lineExists(write.lineId) : true,
       this.refs.membersExist(write.memberIds),
     ]);
-    if (!machineOk) throw new DomainError("machine", 400, "Máquina não encontrada.");
+    if (!lineOk) throw new DomainError("line", 400, "Linha não encontrada.");
     if (!membersOk) throw new DomainError("member", 400, "Colaborador não encontrado.");
   }
 }

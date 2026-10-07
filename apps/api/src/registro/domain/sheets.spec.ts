@@ -7,7 +7,7 @@ import { applyProblemSheet, applyTaskSheet } from "./sheets";
 const when = new Date("2026-09-30T12:00:00.000Z");
 
 describe("ficha", () => {
-  it("problema recusa máquina e outra ao mesmo tempo", () => {
+  it("problema recusa linha e outra ao mesmo tempo", () => {
     const problem = captureRecord({
       type: "problem",
       body: "Vazamento",
@@ -21,11 +21,11 @@ describe("ficha", () => {
           body: "Vazamento",
           occurredAt: when,
           memberId: null,
-          machineId: "maq",
-          machineLabel: "outra linha",
+          lineId: "maq",
+          lineLabel: "outra linha",
           notes: null,
         }),
-      (error: unknown) => error instanceof DomainError && error.code === "machine_conflict",
+      (error: unknown) => error instanceof DomainError && error.code === "line_conflict",
     );
   });
 

@@ -19,7 +19,7 @@ export function assertEquipmentNameAvailable(ownerId: string | null, currentId: 
 }
 
 // Excluir só o que não deixa nada órfão; o resto se arquiva.
-export function assertEquipmentCanBeRemoved(usage: { skills: number; members: number }): void {
+export function assertEquipmentCanBeRemoved(usage: { skills: number; members: number; subassemblies: number }): void {
   if (usage.skills > 0) {
     throw new DomainError(
       "equipment_in_use",
@@ -29,6 +29,9 @@ export function assertEquipmentCanBeRemoved(usage: { skills: number; members: nu
   }
   if (usage.members > 0) {
     throw new DomainError("equipment_in_use", 409, "Há técnico com este equipamento marcado. Arquive em vez de excluir.");
+  }
+  if (usage.subassemblies > 0) {
+    throw new DomainError("equipment_in_use", 409, "Este equipamento tem subconjuntos cadastrados. Arquive em vez de excluir.");
   }
 }
 

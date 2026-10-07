@@ -1,50 +1,40 @@
 import { Injectable } from "@nestjs/common";
-import {
-  isMachineStatus,
-  type MachineDto,
-  type MachineOperationalStatus,
-} from "@manutencao/shared";
+import { isMachineStatus, type MachineDto, type MachineOperationalStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 
-type MachineWrite = {
+export type MachineWrite = {
+  lineId: string;
+  equipmentId: string | null;
   name: string;
-  factoryId: string;
-  sector: string | null;
+  tag: string | null;
   manufacturer: string | null;
-  internalCode: string | null;
   status: MachineOperationalStatus;
   notes: string | null;
-  isDailyLine: boolean;
-  isCritical: boolean;
 };
 
 function toDto(row: {
   id: string;
+  lineId: string;
+  equipmentId: string | null;
   name: string;
-  factoryId: string;
-  sector: string | null;
+  tag: string | null;
   manufacturer: string | null;
-  internalCode: string | null;
   status: string;
   notes: string | null;
-  isDailyLine: boolean;
-  isCritical: boolean;
 }): MachineDto {
   if (!isMachineStatus(row.status)) {
     throw new DomainError("invalid", 500, "Status da máquina gravado é inválido.");
   }
   return {
     id: row.id,
+    lineId: row.lineId,
+    equipmentId: row.equipmentId,
     name: row.name,
-    factoryId: row.factoryId,
-    sector: row.sector,
+    tag: row.tag,
     manufacturer: row.manufacturer,
-    internalCode: row.internalCode,
     status: row.status,
     notes: row.notes,
-    isDailyLine: row.isDailyLine,
-    isCritical: row.isCritical,
   };
 }
 
@@ -53,7 +43,7 @@ export class MachineRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(): Promise<MachineDto[]> {
-    const rows = await this.prisma.machine.findMany({ orderBy: { name: "asc" } });
+    const rows = await this.prisma.machine.findMany({ orderBy: [{ lineId: "asc" }, { name: "asc" }] });
     return rows.map(toDto);
   }
 
@@ -61,14 +51,16 @@ export class MachineRepository {
     return this.prisma.machine.findUnique({ where: { id } });
   }
 
+  countByLine(lineId: string) {
+    return this.prisma.machine.count({ where: { lineId } });
+  }
+
   async create(input: MachineWrite): Promise<MachineDto> {
-    const row = await this.prisma.machine.create({ data: input });
-    return toDto(row);
+    return toDto(await this.prisma.machine.create({ data: input }));
   }
 
   async update(id: string, input: MachineWrite): Promise<MachineDto> {
-    const row = await this.prisma.machine.update({ where: { id }, data: input });
-    return toDto(row);
+    return toDto(await this.prisma.machine.update({ where: { id }, data: input }));
   }
 
   remove(id: string) {

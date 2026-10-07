@@ -65,8 +65,8 @@ export function parseProblemSheet(body: unknown): ProblemSheetInput {
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
-    machineId: optionalString(source, "machineId"),
-    machineLabel: optionalString(source, "machineLabel"),
+    lineId: optionalString(source, "lineId"),
+    lineLabel: optionalString(source, "lineLabel"),
     notes: optionalString(source, "notes"),
   };
 }

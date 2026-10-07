@@ -9,9 +9,9 @@ export type DashboardSnapshot = {
   dueTodayCount: number;
   doneCount: number;
   recent: { id: string; type: string; body: string; occurredAt: Date; status: string }[];
-  machines: { id: string; name: string }[];
+  lines: { id: string; name: string }[];
   members: { id: string; name: string; status: string }[];
-  openByMachine: { id: string; openCount: number }[];
+  openByLine: { id: string; openCount: number }[];
   openByMember: { id: string; openCount: number }[];
 };
 
@@ -26,7 +26,7 @@ export class DashboardRead {
 
   async load(now: Date): Promise<DashboardSnapshot> {
     const notDone = { status: { not: "done" } } as const;
-    const [openCount, overdueCount, dueTodayCount, doneCount, recent, machines, members, byMachine, byMember] = await Promise.all([
+    const [openCount, overdueCount, dueTodayCount, doneCount, recent, lines, members, byLine, byMember] = await Promise.all([
       this.prisma.record.count({ where: { status: "open" } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("overdue", now) } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("today", now) } }),
@@ -36,9 +36,9 @@ export class DashboardRead {
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         take: RECENT_LIMIT,
       }),
-      this.prisma.machine.findMany({ select: { id: true, name: true } }),
+      this.prisma.line.findMany({ select: { id: true, name: true } }),
       this.prisma.member.findMany({ select: { id: true, name: true, status: true } }),
-      this.prisma.record.groupBy({ by: ["machineId"], where: { status: "open", machineId: { not: null } }, _count: { _all: true } }),
+      this.prisma.record.groupBy({ by: ["lineId"], where: { status: "open", lineId: { not: null } }, _count: { _all: true } }),
       this.prisma.record.groupBy({ by: ["memberId"], where: { status: "open", memberId: { not: null } }, _count: { _all: true } }),
     ]);
     return {
@@ -47,9 +47,9 @@ export class DashboardRead {
       dueTodayCount,
       doneCount,
       recent,
-      machines,
+      lines,
       members,
-      openByMachine: byMachine.flatMap((row) => (row.machineId ? [{ id: row.machineId, openCount: row._count._all }] : [])),
+      openByLine: byLine.flatMap((row) => (row.lineId ? [{ id: row.lineId, openCount: row._count._all }] : [])),
       openByMember: byMember.flatMap((row) => (row.memberId ? [{ id: row.memberId, openCount: row._count._all }] : [])),
     };
   }

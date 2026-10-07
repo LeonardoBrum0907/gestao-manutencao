@@ -12,7 +12,7 @@ import {
   type MemberDto,
 } from "@manutencao/shared";
 import { Button, Card, Notice } from "../../../design/ui/controls";
-import { useMachines, useMembers, useTeams } from "../../cadastro/data/cadastro";
+import { useLines, useMembers, useTeams } from "../../cadastro/data/cadastro";
 import { positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamText } from "../../cadastro/model/team";
 import { useMatrixCatalog, useMatrixSettings } from "../../competencia/data/catalog";
@@ -324,8 +324,8 @@ function Pdi({ memberId }: { memberId: string }) {
   const pdi = usePdi(memberId);
   const pdiItems = usePdiItems(memberId);
   const members = useMembers();
-  const machines = useMachines();
-  const name = new Map((machines.data ?? []).map((machine) => [machine.id, machine.name]));
+  const lines = useLines();
+  const name = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
   const data = pdi.data;
   if (!data) return null;
   const today = todayIso();
@@ -338,8 +338,8 @@ function Pdi({ memberId }: { memberId: string }) {
     <>
       <h2>PDI e feedback</h2>
       <div className="grid two">
-        <Cell label="Padrinho de">{list(data.sponsorMachineIds)}</Cell>
-        <Cell label="Em desenvolvimento">{list(data.developmentMachineIds)}</Cell>
+        <Cell label="Padrinho de">{list(data.sponsorLineIds)}</Cell>
+        <Cell label="Em desenvolvimento">{list(data.developmentLineIds)}</Cell>
       </div>
       <h3>Plano de ação</h3>
       {planned.length === 0 ? (

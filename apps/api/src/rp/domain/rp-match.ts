@@ -2,7 +2,7 @@
 // na dúvida o texto original é guardado e o gestor escolhe na revisão.
 
 export type MemberRef = { id: string; name: string; active: boolean };
-export type MachineRef = { id: string; name: string; internalCode: string | null; factoryId: string };
+export type LineRef = { id: string; name: string; internalCode: string | null; factoryId: string };
 
 export function plain(text: string): string {
   return text
@@ -53,16 +53,16 @@ export function matchMembers(names: string[], members: MemberRef[]): MemberMatch
   return { memberIds, unmatched };
 }
 
-export function matchMachine(line: string | null, tag: string | null, machines: MachineRef[]): MachineRef | null {
+export function matchLine(line: string | null, tag: string | null, lines: LineRef[]): LineRef | null {
   const byCode = (value: string | null) => {
     const wanted = value ? compact(value) : "";
     if (!wanted) return [];
-    return machines.filter((machine) => machine.internalCode && compact(machine.internalCode) === wanted);
+    return lines.filter((line) => line.internalCode && compact(line.internalCode) === wanted);
   };
   const byName = (value: string | null) => {
     const wanted = value ? compact(value) : "";
     if (!wanted) return [];
-    return machines.filter((machine) => compact(machine.name) === wanted);
+    return lines.filter((line) => compact(line.name) === wanted);
   };
   for (const found of [byCode(tag), byName(tag), byName(line), byCode(line)]) {
     if (found.length === 1) return found[0]!;

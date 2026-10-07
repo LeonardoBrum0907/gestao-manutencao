@@ -76,12 +76,13 @@ export class CatalogRepository {
     });
   }
 
-  async equipmentUsage(id: string): Promise<{ skills: number; members: number }> {
-    const [skills, members] = await Promise.all([
+  async equipmentUsage(id: string): Promise<{ skills: number; members: number; subassemblies: number }> {
+    const [skills, members, subassemblies] = await Promise.all([
       this.prisma.matrixSkill.count({ where: { equipmentId: id } }),
       this.prisma.memberMatrixEquipment.count({ where: { equipmentId: id } }),
+      this.prisma.subassembly.count({ where: { equipmentId: id } }),
     ]);
-    return { skills, members };
+    return { skills, members, subassemblies };
   }
 
   async removeEquipment(id: string): Promise<void> {

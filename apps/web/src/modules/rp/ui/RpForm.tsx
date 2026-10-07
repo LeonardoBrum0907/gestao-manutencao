@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { RP_FOUR_M, RP_FOUR_M_LABELS, type RpDuplicateDto, type RpFourM } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useFactories, useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useCheckDuplicate, useSaveRp } from "../data/rp";
 import { bodyFromValues, formatRpDay, rpStatusOptions, type RpFormValues } from "../model/rp";
@@ -65,7 +65,7 @@ export function RpForm({
   extraActions?: ReactNode;
 }) {
   const factories = useFactories();
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const save = useSaveRp(id);
   const check = useCheckDuplicate();
@@ -83,9 +83,9 @@ export function RpForm({
     set("causes", { ...values.causes, [key]: { ...values.causes[key], ...patch } });
   }
 
-  function pickMachine(machineId: string) {
-    const machine = machines.data?.find((item) => item.id === machineId);
-    setValues((current) => ({ ...current, machineId, factoryId: machine ? machine.factoryId : current.factoryId }));
+  function pickLine(lineId: string) {
+    const line = lines.data?.find((item) => item.id === lineId);
+    setValues((current) => ({ ...current, lineId, factoryId: line ? line.factoryId : current.factoryId }));
     setDuplicates([]);
   }
 
@@ -150,13 +150,13 @@ export function RpForm({
             <Field label="Ordem">
               <TextInput value={values.orderNumber} onChange={(event) => set("orderNumber", event.target.value)} />
             </Field>
-            <Field label="Máquina cadastrada">
-              <SelectInput value={values.machineId} onChange={(event) => pickMachine(event.target.value)}>
-                <option value="">Sem máquina (só linha e TAG)</option>
-                {machines.data?.map((machine) => (
-                  <option key={machine.id} value={machine.id}>
-                    {machine.name}
-                    {machine.internalCode ? ` · ${machine.internalCode}` : ""}
+            <Field label="Linha cadastrada">
+              <SelectInput value={values.lineId} onChange={(event) => pickLine(event.target.value)}>
+                <option value="">Sem cadastro (só linha e TAG do texto)</option>
+                {lines.data?.map((line) => (
+                  <option key={line.id} value={line.id}>
+                    {line.name}
+                    {line.internalCode ? ` · ${line.internalCode}` : ""}
                   </option>
                 ))}
               </SelectInput>
@@ -171,7 +171,7 @@ export function RpForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Linha">
+            <Field label="Linha do texto">
               <TextInput value={values.line} onChange={(event) => set("line", event.target.value)} />
             </Field>
             <Field label="TAG">

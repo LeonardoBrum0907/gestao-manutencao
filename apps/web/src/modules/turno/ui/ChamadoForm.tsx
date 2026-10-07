@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { RecordDto, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useMachines, useMembers } from "../../cadastro/data/cadastro";
+import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { fromLocalInput, statusOptions, toLocalInput } from "../../registro/model/record";
 import { useSaveChamado } from "../data/shift";
@@ -24,7 +24,7 @@ function intOrNull(value: string): number | null {
 
 export function ChamadoForm({ record }: { record?: RecordDto }) {
   const navigate = useNavigate();
-  const machines = useMachines();
+  const lines = useLines();
   const members = useMembers();
   const save = useSaveChamado(record?.id);
   const [dayNumber, setDayNumber] = useState(record?.dayNumber ? String(record.dayNumber) : "");
@@ -33,9 +33,9 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
   const [closedAt, setClosedAt] = useState(record?.closedAt ? toLocalInput(record.closedAt) : "");
   const [durationMin, setDurationMin] = useState(record?.durationMin === null || record?.durationMin === undefined ? "" : String(record.durationMin));
   const [memberIds, setMemberIds] = useState<string[]>(record?.memberIds ?? []);
-  const [mode, setMode] = useState<"machine" | "other">(record?.machineLabel ? "other" : "machine");
-  const [machineId, setMachineId] = useState(record?.machineId ?? "");
-  const [machineLabel, setMachineLabel] = useState(record?.machineLabel ?? "");
+  const [mode, setMode] = useState<"line" | "other">(record?.lineLabel ? "other" : "line");
+  const [lineId, setLineId] = useState(record?.lineId ?? "");
+  const [lineLabel, setLineLabel] = useState(record?.lineLabel ?? "");
   const [status, setStatus] = useState<RecordStatus>(record?.status ?? "open");
   const [notes, setNotes] = useState(record?.notes ?? "");
 
@@ -53,8 +53,8 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
         closedAt: localOrNull(closedAt),
         durationMin: intOrNull(durationMin),
         memberIds,
-        machineId: mode === "machine" ? blank(machineId) : null,
-        machineLabel: mode === "other" ? blank(machineLabel) : null,
+        lineId: mode === "line" ? blank(lineId) : null,
+        lineLabel: mode === "other" ? blank(lineLabel) : null,
         status,
         notes: blank(notes),
       },
@@ -112,11 +112,11 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
         <div className="grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            aria-pressed={mode === "machine"}
-            onClick={() => setMode("machine")}
-            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "machine" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
+            aria-pressed={mode === "line"}
+            onClick={() => setMode("line")}
+            className={`rounded-control border px-3 py-3 text-sm font-medium transition ${mode === "line" ? "border-accent bg-accent-soft" : "border-line bg-surface hover:bg-chip"}`}
           >
-            Máquina cadastrada
+            Linha cadastrada
           </button>
           <button
             type="button"
@@ -127,20 +127,20 @@ export function ChamadoForm({ record }: { record?: RecordDto }) {
             Outra
           </button>
         </div>
-        {mode === "machine" ? (
-          <Field label="Máquina">
-            <SelectInput value={machineId} onChange={(event) => setMachineId(event.target.value)}>
-              <option value="">Sem máquina</option>
-              {machines.data?.map((machine) => (
-                <option key={machine.id} value={machine.id}>
-                  {machine.name}
+        {mode === "line" ? (
+          <Field label="Linha">
+            <SelectInput value={lineId} onChange={(event) => setLineId(event.target.value)}>
+              <option value="">Sem linha</option>
+              {lines.data?.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.name}
                 </option>
               ))}
             </SelectInput>
           </Field>
         ) : (
           <Field label="Outra">
-            <TextInput value={machineLabel} placeholder="Descreva o equipamento" onChange={(event) => setMachineLabel(event.target.value)} />
+            <TextInput value={lineLabel} placeholder="Descreva o equipamento" onChange={(event) => setLineLabel(event.target.value)} />
           </Field>
         )}
         <Field label="Status">

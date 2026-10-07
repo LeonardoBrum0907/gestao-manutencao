@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { AttachmentDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
-import type { PdiMachines } from "../domain/pdi";
+import type { PdiLines } from "../domain/pdi";
 
 function toAttachment(row: { id: string; fileName: string; mimeType: string; createdAt: Date }): AttachmentDto {
   return { id: row.id, fileName: row.fileName, mimeType: row.mimeType, createdAt: row.createdAt.toISOString() };
@@ -11,21 +11,21 @@ function toAttachment(row: { id: string; fileName: string; mimeType: string; cre
 export class PdiRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async machines(memberId: string): Promise<PdiMachines> {
-    const rows = await this.prisma.memberMachine.findMany({ where: { memberId } });
+  async lines(memberId: string): Promise<PdiLines> {
+    const rows = await this.prisma.memberLine.findMany({ where: { memberId } });
     return {
-      sponsor: rows.filter((row) => row.kind === "sponsor").map((row) => row.machineId),
-      development: rows.filter((row) => row.kind === "development").map((row) => row.machineId),
+      sponsor: rows.filter((row) => row.kind === "sponsor").map((row) => row.lineId),
+      development: rows.filter((row) => row.kind === "development").map((row) => row.lineId),
     };
   }
 
-  async replaceMachines(memberId: string, machines: PdiMachines): Promise<void> {
+  async replaceLines(memberId: string, lines: PdiLines): Promise<void> {
     await this.prisma.$transaction([
-      this.prisma.memberMachine.deleteMany({ where: { memberId } }),
-      this.prisma.memberMachine.createMany({
+      this.prisma.memberLine.deleteMany({ where: { memberId } }),
+      this.prisma.memberLine.createMany({
         data: [
-          ...machines.sponsor.map((machineId) => ({ memberId, machineId, kind: "sponsor" })),
-          ...machines.development.map((machineId) => ({ memberId, machineId, kind: "development" })),
+          ...lines.sponsor.map((lineId) => ({ memberId, lineId, kind: "sponsor" })),
+          ...lines.development.map((lineId) => ({ memberId, lineId, kind: "development" })),
         ],
       }),
     ]);

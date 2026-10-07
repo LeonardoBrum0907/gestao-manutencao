@@ -8,7 +8,7 @@ function fields(partial: Partial<RpFields> = {}): RpFields {
     occurredAt: "2026-10-04T12:00:00.000Z",
     orderNumber: null,
     factoryId: "f1",
-    machineId: null,
+    lineId: null,
     line: "Cam 08",
     tag: "EBS-BLI-31",
     problem: "Alarme na esteira",
@@ -41,19 +41,19 @@ describe("problema espelho do RP", () => {
     assert.equal(problemStatus("producing"), "done");
   });
 
-  it("sem máquina cadastrada guarda linha e TAG como rótulo", () => {
+  it("sem linha cadastrada guarda linha e TAG como rótulo", () => {
     const write = mirrorProblem(fields(), new Date("2026-10-04T12:00:00.000Z"));
     assert.equal(write.origin, "rp");
     assert.equal(write.body, "Alarme na esteira");
-    assert.equal(write.machineId, null);
-    assert.equal(write.machineLabel, "Cam 08 · EBS-BLI-31");
+    assert.equal(write.lineId, null);
+    assert.equal(write.lineLabel, "Cam 08 · EBS-BLI-31");
     assert.deepEqual(write.memberIds, ["a"]);
   });
 
-  it("com máquina cadastrada não repete o rótulo", () => {
-    const write = mirrorProblem(fields({ machineId: "m1", status: "corrected" }), new Date());
-    assert.equal(write.machineId, "m1");
-    assert.equal(write.machineLabel, null);
+  it("com linha cadastrada não repete o rótulo", () => {
+    const write = mirrorProblem(fields({ lineId: "m1", status: "corrected" }), new Date());
+    assert.equal(write.lineId, "m1");
+    assert.equal(write.lineLabel, null);
     assert.equal(write.status, "done");
   });
 });

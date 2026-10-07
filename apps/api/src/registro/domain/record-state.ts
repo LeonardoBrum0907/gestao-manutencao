@@ -13,8 +13,8 @@ export type RecordState = {
   status: RecordStatus;
   memberId: string | null;
   factoryId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   tag: string | null;
   line: string | null;
   priority: RecordPriority | null;
@@ -61,7 +61,7 @@ export type ProblemSheetInput = {
   body: string;
   occurredAt: Date;
   memberId: string | null;
-  machineId: string | null;
-  machineLabel: string | null;
+  lineId: string | null;
+  lineLabel: string | null;
   notes: string | null;
 };

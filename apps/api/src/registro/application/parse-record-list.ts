@@ -26,7 +26,7 @@ export type RecordListQuery = {
   type?: unknown;
   status?: unknown;
   due?: unknown;
-  machineIds?: unknown;
+  lineIds?: unknown;
   memberId?: unknown;
   cursor?: unknown;
   limit?: unknown;
@@ -44,7 +44,7 @@ export function parseRecordList(query: RecordListQuery): RecordListFilter {
     types: choices(query.type, isRecordType),
     statuses: choices(query.status, isRecordStatus),
     due: (due as DueWindow | undefined) ?? null,
-    machineIds: list(query.machineIds),
+    lineIds: list(query.lineIds),
     memberId: single(query.memberId) || null,
     cursor: single(query.cursor) || null,
     limit,

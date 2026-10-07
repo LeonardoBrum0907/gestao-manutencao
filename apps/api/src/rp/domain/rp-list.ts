@@ -7,7 +7,7 @@ export type RpListFilter = {
   from: string | null;
   to: string | null;
   factoryId: string | null;
-  machineId: string | null;
+  lineId: string | null;
   line: string | null;
   tag: string | null;
   statuses: RpStatus[] | null;

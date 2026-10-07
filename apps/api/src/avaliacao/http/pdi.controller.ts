@@ -13,9 +13,9 @@ export class PdiController {
     return this.pdi.show(memberId);
   }
 
-  @Put("machines")
-  setMachines(@Param("memberId") memberId: string, @Body() body: unknown) {
-    return this.pdi.setMachines(memberId, body);
+  @Put("lines")
+  setLines(@Param("memberId") memberId: string, @Body() body: unknown) {
+    return this.pdi.setLines(memberId, body);
   }
 
   @Post("attachments")

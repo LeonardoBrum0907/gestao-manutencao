@@ -1,11 +1,12 @@
 import { useState } from "react";
-import type { MachineDto, MachineOperationalStatus } from "@manutencao/shared";
+import type { LineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Modal, Notice, SectionTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useDeleteMachine, useFactories, useMachines, useSaveMachine } from "../data/cadastro";
+import { useDeleteLine, useFactories, useLines, useSaveLine } from "../data/cadastro";
 import { machineStatusClass, machineStatusLabel, machineStatusOptions } from "../model/labels";
+import { LineMachines } from "./LineMachines";
 
-type Draft = Omit<MachineDto, "id">;
+type Draft = Omit<LineDto, "id">;
 
 const empty: Draft = {
   name: "",
@@ -19,17 +20,17 @@ const empty: Draft = {
   isCritical: false,
 };
 
-function toDraft(machine: MachineDto): Draft {
+function toDraft(line: LineDto): Draft {
   return {
-    name: machine.name,
-    factoryId: machine.factoryId,
-    sector: machine.sector ?? "",
-    manufacturer: machine.manufacturer ?? "",
-    internalCode: machine.internalCode ?? "",
-    status: machine.status,
-    notes: machine.notes ?? "",
-    isDailyLine: machine.isDailyLine,
-    isCritical: machine.isCritical,
+    name: line.name,
+    factoryId: line.factoryId,
+    sector: line.sector ?? "",
+    manufacturer: line.manufacturer ?? "",
+    internalCode: line.internalCode ?? "",
+    status: line.status,
+    notes: line.notes ?? "",
+    isDailyLine: line.isDailyLine,
+    isCritical: line.isCritical,
   };
 }
 
@@ -43,11 +44,11 @@ function toBody(draft: Draft): Draft {
   };
 }
 
-export function MachinesSection() {
-  const machines = useMachines();
+export function LinesSection() {
+  const lines = useLines();
   const factories = useFactories();
-  const save = useSaveMachine();
-  const remove = useDeleteMachine();
+  const save = useSaveLine();
+  const remove = useDeleteLine();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(empty);
@@ -66,64 +67,68 @@ export function MachinesSection() {
     setOpen(true);
   }
 
-  function edit(machine: MachineDto) {
-    setEditingId(machine.id);
-    setDraft(toDraft(machine));
+  function edit(line: LineDto) {
+    setEditingId(line.id);
+    setDraft(toDraft(line));
     setOpen(true);
   }
 
   return (
     <div>
       <SectionTitle
-        title="Máquinas"
-        text="Nome, fábrica e as duas marcas: linha de GD e apadrinhada."
-        action={<Button onClick={create}>Nova máquina</Button>}
+        title="Linhas"
+        text="Nome, fábrica, TAG e as duas marcas: linha de GD e apadrinhada. Embaixo de cada linha ficam as máquinas dela."
+        action={<Button onClick={create}>Nova linha</Button>}
       />
-      {machines.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      {lines.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       <div className="flex flex-col gap-2">
-        {machines.data?.length === 0 ? <Card>Nenhuma máquina ainda.</Card> : null}
-        {machines.data?.map((machine) => (
-          <Card key={machine.id} compact className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <button type="button" className="min-w-0 text-left" onClick={() => edit(machine)}>
-              <p className="font-medium text-app transition hover:text-accent hover:underline">{machine.name}</p>
-              <p className="mt-1 text-sm text-muted">
-                {factoryName.get(machine.factoryId) ?? "Fábrica"} ·{" "}
-                <span className={machineStatusClass(machine.status)}>{machineStatusLabel(machine.status)}</span>
-                {machine.isDailyLine ? " · Linha de GD" : ""}
-                {machine.isCritical ? " · Apadrinhada" : ""}
-              </p>
-            </button>
-            <div className="flex shrink-0 justify-end gap-2">
-              {pendingDelete === machine.id ? (
-                <>
-                  <Button
-                    tone="danger"
-                    onClick={() =>
-                      remove.mutate(machine.id, {
-                        onSuccess: () => {
-                          setPendingDelete(null);
-                          if (editingId === machine.id) close();
-                        },
-                      })
-                    }
-                  >
-                    Confirmar
+        {lines.data?.length === 0 ? <Card>Nenhuma linha ainda.</Card> : null}
+        {lines.data?.map((line) => (
+          <Card key={line.id} compact className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <button type="button" className="min-w-0 text-left" onClick={() => edit(line)}>
+                <p className="font-medium text-app transition hover:text-accent hover:underline">{line.name}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {factoryName.get(line.factoryId) ?? "Fábrica"} ·{" "}
+                  <span className={machineStatusClass(line.status)}>{machineStatusLabel(line.status)}</span>
+                  {line.isDailyLine ? " · Linha de GD" : ""}
+                  {line.isCritical ? " · Apadrinhada" : ""}
+                  {line.internalCode ? ` · TAG ${line.internalCode}` : ""}
+                </p>
+              </button>
+              <div className="flex shrink-0 justify-end gap-2">
+                {pendingDelete === line.id ? (
+                  <>
+                    <Button
+                      tone="danger"
+                      onClick={() =>
+                        remove.mutate(line.id, {
+                          onSuccess: () => {
+                            setPendingDelete(null);
+                            if (editingId === line.id) close();
+                          },
+                        })
+                      }
+                    >
+                      Confirmar
+                    </Button>
+                    <Button tone="ghost" onClick={() => setPendingDelete(null)}>
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  <Button tone="ghost" onClick={() => setPendingDelete(line.id)}>
+                    Excluir
                   </Button>
-                  <Button tone="ghost" onClick={() => setPendingDelete(null)}>
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button tone="ghost" onClick={() => setPendingDelete(machine.id)}>
-                  Excluir
-                </Button>
-              )}
+                )}
+              </div>
             </div>
+            <LineMachines line={line} />
           </Card>
         ))}
         {remove.isError ? <Notice>{errorMessage(remove.error)}</Notice> : null}
       </div>
-      <Modal open={open} title={editingId ? "Editar máquina" : "Nova máquina"} onClose={close}>
+      <Modal open={open} title={editingId ? "Editar linha" : "Nova linha"} onClose={close}>
         <form
           className="flex flex-col gap-6"
           onSubmit={(event) => {
@@ -158,7 +163,7 @@ export function MachinesSection() {
                 onChange={(event) => setDraft({ ...draft, manufacturer: event.target.value })}
               />
             </Field>
-            <Field label="Código interno">
+            <Field label="TAG">
               <TextInput
                 value={draft.internalCode ?? ""}
                 onChange={(event) => setDraft({ ...draft, internalCode: event.target.value })}

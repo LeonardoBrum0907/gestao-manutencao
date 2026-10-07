@@ -17,7 +17,7 @@ describe("item do PDI", () => {
   });
 
   it("limpa referências e prazo mandados como nulos", () => {
-    assert.deepEqual(readPdiItem({ machineId: null, dueDate: "" }, true), { machineId: null, dueDate: null });
+    assert.deepEqual(readPdiItem({ lineId: null, dueDate: "" }, true), { lineId: null, dueDate: null });
   });
 
   it("recusa status desconhecido e texto grande demais", () => {
