@@ -21,6 +21,7 @@ const groups: { title?: string; items: Entry[] }[] = [
       { to: "/turno/ocorrencia", label: "Ocorrência", icon: "alert" },
       { to: "/rp", label: "RP", icon: "file" },
       { to: "/pos-preventiva", label: "Pós-preventiva", icon: "shield" },
+      { to: "/maquinas", label: "Máquinas", icon: "machine" },
     ],
   },
   {
