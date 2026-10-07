@@ -36,11 +36,16 @@ export class Subassemblies {
     return this.subassemblies.update(id, { name, archived: requiredBoolean(source, "archived") });
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     if (!(await this.subassemblies.find(id))) throw new DomainError("not_found", 404, "Subconjunto não encontrado.");
     if (await this.subassemblies.countPostPreventives(id)) {
       throw new DomainError("subassembly_in_use", 409, "Este subconjunto tem fichas pós-preventiva. Arquive em vez de excluir.");
     }
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.subassemblies.remove(id);
   }
 }

@@ -40,6 +40,17 @@ export class RecordsController {
     return this.records.capture(body);
   }
 
+  @Get(":id/removal")
+  removal(@Param("id") id: string) {
+    return this.records.removalCheck(id);
+  }
+
+  @Delete(":id")
+  async delete(@Param("id") id: string) {
+    await this.records.remove(id);
+    return { ok: true };
+  }
+
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.records.updateSheet(id, body);

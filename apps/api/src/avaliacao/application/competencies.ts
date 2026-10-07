@@ -37,9 +37,14 @@ export class Competencies {
     return this.competencies.list();
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     await this.require(id);
     assertCompetencyCanBeRemoved(await this.competencies.countScores(id));
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.competencies.remove(id);
   }
 

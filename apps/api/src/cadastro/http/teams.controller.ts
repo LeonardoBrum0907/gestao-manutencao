@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { Teams } from "../application/teams";
+import { removalCheck } from "../../kernel/removal";
 
 @Controller("api/teams")
 export class TeamsController {
@@ -18,6 +19,11 @@ export class TeamsController {
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.teams.update(id, body);
+  }
+
+  @Get(":id/removal")
+  removal(@Param("id") id: string) {
+    return removalCheck(() => this.teams.checkRemoval(id));
   }
 
   @Delete(":id")

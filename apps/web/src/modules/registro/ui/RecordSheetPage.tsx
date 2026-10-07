@@ -1,4 +1,5 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
 import { ChamadoForm } from "../../turno/ui/ChamadoForm";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
@@ -6,6 +7,7 @@ import { useRpOfProblem } from "../../rp/data/rp";
 import { useRecord } from "../data/records";
 import { originLabel, recordGestorName, recordShortName } from "../model/record";
 import { FeedbackSheet } from "./FeedbackSheet";
+import { RecordRemoveDialog } from "./RecordRemoveDialog";
 import { ProblemSheet } from "./ProblemSheet";
 import { TaskSheet } from "./TaskSheet";
 
@@ -31,6 +33,8 @@ function RpMirror({ recordId }: { recordId: string }) {
 export function RecordSheetPage() {
   const { id = "" } = useParams();
   const record = useRecord(id);
+  const navigate = useNavigate();
+  const [removing, setRemoving] = useState(false);
   if (record.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!record.data) return <p className="text-sm text-danger">Registro não encontrado.</p>;
   const data = record.data;
@@ -49,6 +53,22 @@ export function RecordSheetPage() {
       {data.type === "problem" && data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
       {data.type === "problem" && data.origin === "rp" ? <RpMirror recordId={data.id} /> : null}
       {data.type === "problem" && data.origin === "inbox" ? <ProblemSheet record={data} /> : null}
+      <div className="mt-6 flex justify-end border-t border-line pt-4">
+        <button
+          type="button"
+          onClick={() => setRemoving(true)}
+          className="rounded-control px-2 py-2 text-sm font-semibold text-danger transition hover:bg-danger-soft"
+        >
+          Excluir registro…
+        </button>
+      </div>
+      {removing ? (
+        <RecordRemoveDialog
+          record={data}
+          onCancel={() => setRemoving(false)}
+          onDeleted={() => navigate("/acompanhamento", { replace: true })}
+        />
+      ) : null}
     </div>
   );
 }

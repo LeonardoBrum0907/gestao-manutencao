@@ -154,6 +154,14 @@ export function useSaveRole() {
   });
 }
 
+export function useDeleteRole() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/api/member-roles/${id}`, { method: "DELETE" }),
+    onSuccess: (_result, id) => removeById<MemberRoleDto>(client, ["roles"], id),
+  });
+}
+
 export function useGrades() {
   return useQuery({
     queryKey: ["grades"],

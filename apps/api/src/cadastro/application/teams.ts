@@ -28,9 +28,14 @@ export class Teams {
     return this.write(body, id);
   }
 
-  async remove(id: string): Promise<void> {
+  // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
+  async checkRemoval(id: string): Promise<void> {
     await this.requireTeam(id);
     assertTeamCanBeRemoved(await this.teams.countMembers(id));
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.checkRemoval(id);
     await this.teams.remove(id);
   }
 

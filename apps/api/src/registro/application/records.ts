@@ -1,8 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { AttachmentDto, RecordDto } from "@manutencao/shared";
+import type { AttachmentDto, RecordDto, RemovalCheckDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { captureRecord } from "../domain/capture";
+import { recordRemovalWarnings } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
 import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
 import { AttachmentStorage } from "../infra/attachment.storage";
@@ -73,6 +74,19 @@ export class Records {
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
     return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
+  }
+
+  // Todo registro pode ser excluído; o que tiver vínculo volta como aviso para o coordenador ler antes.
+  async removalCheck(id: string): Promise<RemovalCheckDto> {
+    const links = await this.records.links(id);
+    if (!links) throw new DomainError("not_found", 404, "Registro não encontrado.");
+    return { canRemove: true, reason: null, warnings: recordRemovalWarnings(links) };
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.get(id);
+    const keys = await this.records.removeWithRp(id);
+    await Promise.all(keys.map((key) => this.storage.remove(key)));
   }
 
   async addAttachment(id: string, file: Express.Multer.File | undefined): Promise<AttachmentDto> {
