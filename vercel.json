@@ -4,7 +4,13 @@
     "web": {
       "root": "apps/web",
       "framework": "vite",
-      "buildCommand": "pnpm --filter @manutencao/shared build && pnpm --filter @manutencao/web build"
+      "buildCommand": "pnpm --filter @manutencao/shared build && pnpm --filter @manutencao/web build",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     }
   },
   "rewrites": [
