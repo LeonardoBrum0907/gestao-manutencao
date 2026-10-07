@@ -1,5 +1,5 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   DEFAULT_PERFORMANCE_TARGET,
   BEHAVIOR_RATING_LABELS,
@@ -29,7 +29,8 @@ import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
 import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
 import { RankedChart } from "./RankedChart";
-import "./report.css";
+import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
+import "../../../design/ui/report.css";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
 
@@ -414,26 +415,6 @@ function Pdi({ memberId }: { memberId: string }) {
   );
 }
 
-const ZOOM_MIN = 0.3;
-const ZOOM_MAX = 2;
-
-// A folha tem sempre a largura da página impressa; na tela o usuário só aproxima, afasta e rola.
-function usePreviewZoom() {
-  const frame = useRef<HTMLDivElement>(null);
-  const sheet = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(1);
-  const fit = useCallback(() => {
-    const available = (frame.current?.clientWidth ?? 0) - 24;
-    const width = sheet.current?.offsetWidth ?? 0;
-    if (available > 0 && width > 0) setZoom(Math.min(1, Math.max(ZOOM_MIN, available / width)));
-  }, []);
-  useEffect(() => {
-    fit();
-  }, [fit]);
-  const step = (factor: number) => setZoom((value) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value * factor)));
-  return { frame, sheet, zoom, fit, zoomIn: () => step(1.25), zoomOut: () => step(0.8) };
-}
-
 export function ReportPage() {
   const { memberId = "" } = useParams();
   const [search] = useSearchParams();
@@ -460,16 +441,7 @@ export function ReportPage() {
           ← Voltar à ficha
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <Button tone="ghost" aria-label="Afastar" onClick={preview.zoomOut}>
-            −
-          </Button>
-          <span className="w-12 text-center text-sm tabular-nums text-muted">{Math.round(preview.zoom * 100)}%</span>
-          <Button tone="ghost" aria-label="Aproximar" onClick={preview.zoomIn}>
-            +
-          </Button>
-          <Button tone="ghost" onClick={preview.fit}>
-            Ajustar
-          </Button>
+          <ZoomControls preview={preview} />
           <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>
         </div>
       </div>

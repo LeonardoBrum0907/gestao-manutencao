@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Notice, PageTitle } from "../../../design/ui/controls";
 import { errorMessage } from "../../../app/http";
+import { RpAttentionBox } from "../../pos-preventiva/ui/RpAttentionBox";
 import { useDeleteRp, useRp } from "../data/rp";
 import { valuesFromRp } from "../model/rp";
 import { RpForm } from "./RpForm";
@@ -30,6 +31,7 @@ export function RpEditPage() {
           </Link>
         ) : null}
       </div>
+      <RpAttentionBox rpId={data.id} lineId={data.lineId} />
       <RpForm
         id={data.id}
         initial={valuesFromRp(data)}

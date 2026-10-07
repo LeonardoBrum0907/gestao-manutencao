@@ -51,6 +51,10 @@ export class MachineRepository {
     return this.prisma.machine.findUnique({ where: { id } });
   }
 
+  countPostPreventives(id: string) {
+    return this.prisma.postPreventive.count({ where: { machineId: id } });
+  }
+
   countByLine(lineId: string) {
     return this.prisma.machine.count({ where: { lineId } });
   }

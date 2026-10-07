@@ -61,18 +61,19 @@ model Line {
 
 // Máquina (equipamento) de uma linha: a Encartuchadeira da CAM 05. O modelo é o equipamento do catálogo da matriz.
 model Machine {
-  id           String           @id @default(cuid())
-  lineId       String
-  line         Line             @relation(fields: [lineId], references: [id], onDelete: Restrict)
-  equipmentId  String?
-  equipment    MatrixEquipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
-  name         String
-  tag          String?
-  manufacturer String?
-  status       String
-  notes        String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id              String           @id @default(cuid())
+  lineId          String
+  line            Line             @relation(fields: [lineId], references: [id], onDelete: Restrict)
+  equipmentId     String?
+  equipment       MatrixEquipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  name            String
+  tag             String?
+  manufacturer    String?
+  status          String
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  postPreventives PostPreventive[]
 
   @@index([lineId])
   @@index([equipmentId])
@@ -81,14 +82,15 @@ model Machine {
 // Subconjunto de um modelo de equipamento (Válvulas roletes da Encartuchadeira CAM). Vale para todas as máquinas do modelo.
 // Arquivado sai das listas de escolha, mas o que já aponta para ele fica.
 model Subassembly {
-  id          String          @id @default(cuid())
-  equipmentId String
-  equipment   MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
-  name        String
-  position    Int
-  archived    Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id              String           @id @default(cuid())
+  equipmentId     String
+  equipment       MatrixEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  name            String
+  position        Int
+  archived        Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  postPreventives PostPreventive[]
 
   @@unique([equipmentId, name])
 }
@@ -138,18 +140,19 @@ model Member {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  matrixEquipments MemberMatrixEquipment[]
-  skills           MemberSkill[]
-  records          Record[]
-  recordLinks      RecordMember[]
-  rpLinks          RpMember[]
-  supervisedTeams  Team[]                  @relation("TeamSupervisor")
-  behavior         MemberBehavior?
-  evaluations      MemberEvaluation[]
-  lines            MemberLine[]
-  pdiAttachments   MemberAttachment[]
-  pdiItems         MemberPdiItem[]         @relation("PdiItemMember")
-  pdiResponsible   MemberPdiItem[]         @relation("PdiItemResponsible")
+  matrixEquipments    MemberMatrixEquipment[]
+  skills              MemberSkill[]
+  records             Record[]
+  recordLinks         RecordMember[]
+  rpLinks             RpMember[]
+  postPreventiveLinks PostPreventiveMember[]
+  supervisedTeams     Team[]                  @relation("TeamSupervisor")
+  behavior            MemberBehavior?
+  evaluations         MemberEvaluation[]
+  lines               MemberLine[]
+  pdiAttachments      MemberAttachment[]
+  pdiItems            MemberPdiItem[]         @relation("PdiItemMember")
+  pdiResponsible      MemberPdiItem[]         @relation("PdiItemResponsible")
 
   @@index([roleId])
   @@index([gradeId])
@@ -362,7 +365,7 @@ model RecordAttachment {
 
 // RP (Relatório Padrão de Manutenção): ficha própria, com um Problema de origem "rp" como espelho nas listas.
 model Rp {
-  id                   String     @id @default(cuid())
+  id                   String           @id @default(cuid())
   occurredAt           DateTime
   orderNumber          String?
   orderKey             String?
@@ -373,16 +376,16 @@ model Rp {
   problem              String
   problemKey           String
   description          String?
-  repeatedFailure      Boolean    @default(false)
+  repeatedFailure      Boolean          @default(false)
   repeatedTimes        String?
   repeatedPeriod       String?
-  causeMaterial        Boolean    @default(false)
+  causeMaterial        Boolean          @default(false)
   materialText         String?
-  causeMachine         Boolean    @default(false)
+  causeMachine         Boolean          @default(false)
   machineText          String?
-  causeMethod          Boolean    @default(false)
+  causeMethod          Boolean          @default(false)
   methodText           String?
-  causeLabor           Boolean    @default(false)
+  causeLabor           Boolean          @default(false)
   laborText            String?
   rootCause            String?
   corrective           String?
@@ -391,11 +394,12 @@ model Rp {
   basicConditionImpact String?
   unmatchedTechnicians String?
   rawText              String
-  problemRecordId      String?    @unique
-  problemRecord        Record?    @relation(fields: [problemRecordId], references: [id], onDelete: SetNull)
+  problemRecordId      String?          @unique
+  problemRecord        Record?          @relation(fields: [problemRecordId], references: [id], onDelete: SetNull)
   members              RpMember[]
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  postPreventives      PostPreventive[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   @@index([occurredAt, id])
   @@index([lineId])
@@ -412,5 +416,44 @@ model RpMember {
   member   Member @relation(fields: [memberId], references: [id], onDelete: Restrict)
 
   @@id([rpId, memberId])
+  @@index([memberId])
+}
+
+// Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com a ação para não repetir
+// e o ponto de atenção que vai para a folha do técnico na próxima preventiva da máquina.
+model PostPreventive {
+  id               String                 @id @default(cuid())
+  preventiveDate   DateTime               @db.Date
+  occurrenceDate   DateTime?              @db.Date
+  machineId        String
+  machine          Machine                @relation(fields: [machineId], references: [id], onDelete: Restrict)
+  subassemblyId    String
+  subassembly      Subassembly            @relation(fields: [subassemblyId], references: [id], onDelete: Restrict)
+  done             String
+  occurrence       String
+  preventiveAction String
+  attentionPoint   String
+  // Desligado: o ponto sai da folha do técnico, mas a ficha continua no histórico.
+  attentionActive  Boolean                @default(true)
+  rpId             String?
+  rp               Rp?                    @relation(fields: [rpId], references: [id], onDelete: SetNull)
+  members          PostPreventiveMember[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([preventiveDate, id])
+  @@index([machineId])
+  @@index([subassemblyId])
+  @@index([rpId])
+}
+
+model PostPreventiveMember {
+  postPreventiveId String
+  memberId         String
+  position         Int
+  postPreventive   PostPreventive @relation(fields: [postPreventiveId], references: [id], onDelete: Cascade)
+  member           Member         @relation(fields: [memberId], references: [id], onDelete: Restrict)
+
+  @@id([postPreventiveId, memberId])
   @@index([memberId])
 }

@@ -97,11 +97,13 @@ export class MemberRepository {
   }
 
   async countRecords(id: string): Promise<number> {
-    const [owned, linked] = await Promise.all([
+    const counts = await Promise.all([
       this.prisma.record.count({ where: { memberId: id } }),
       this.prisma.recordMember.count({ where: { memberId: id } }),
+      this.prisma.rpMember.count({ where: { memberId: id } }),
+      this.prisma.postPreventiveMember.count({ where: { memberId: id } }),
     ]);
-    return owned + linked;
+    return counts.reduce((sum, count) => sum + count, 0);
   }
 
   countPdiFiles(id: string) {

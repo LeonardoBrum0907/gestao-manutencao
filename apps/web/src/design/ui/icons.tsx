@@ -1,6 +1,12 @@
 // Ícones de traço, no tamanho do texto do menu. Desenho próprio, sem biblioteca.
 const paths = {
   plus: <path d="M12 5v14M5 12h14" />,
+  shield: (
+    <>
+      <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </>
+  ),
   matrix: (
     <>
       <rect x="3" y="3" width="5" height="5" rx="1" />

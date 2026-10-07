@@ -37,6 +37,10 @@ export class SubassemblyRepository {
     return toDto(await this.prisma.subassembly.update({ where: { id }, data: input }));
   }
 
+  countPostPreventives(id: string) {
+    return this.prisma.postPreventive.count({ where: { subassemblyId: id } });
+  }
+
   remove(id: string) {
     return this.prisma.subassembly.delete({ where: { id } });
   }

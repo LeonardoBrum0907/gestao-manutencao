@@ -38,6 +38,9 @@ export class Subassemblies {
 
   async remove(id: string): Promise<void> {
     if (!(await this.subassemblies.find(id))) throw new DomainError("not_found", 404, "Subconjunto não encontrado.");
+    if (await this.subassemblies.countPostPreventives(id)) {
+      throw new DomainError("subassembly_in_use", 409, "Este subconjunto tem fichas pós-preventiva. Arquive em vez de excluir.");
+    }
     await this.subassemblies.remove(id);
   }
 }

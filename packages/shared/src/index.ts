@@ -624,3 +624,26 @@ export type PdiItemDto = {
   completedAt: string | null;
   createdAt: string;
 };
+
+// Pós-preventiva: ocorrência depois de uma preventiva. Datas como AAAA-MM-DD.
+export type PostPreventiveFields = {
+  preventiveDate: string;
+  occurrenceDate: string | null;
+  machineId: string;
+  subassemblyId: string;
+  memberIds: string[];
+  done: string;
+  occurrence: string;
+  preventiveAction: string;
+  attentionPoint: string;
+  attentionActive: boolean;
+  rpId: string | null;
+};
+
+// lineId vem da máquina, para filtrar e mostrar a linha sem outra consulta.
+export type PostPreventiveDto = PostPreventiveFields & {
+  id: string;
+  lineId: string;
+  createdAt: string;
+  updatedAt: string;
+};

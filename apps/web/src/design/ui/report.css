@@ -1,4 +1,4 @@
-/* Relatório do colaborador: usa os tokens do app (o artigo fixa data-theme="light", então o papel é sempre claro). */
+/* Folhas A4 (relatório do colaborador, folha da máquina): usam os tokens do app (o artigo fixa data-theme="light", então o papel é sempre claro). */
 .report-frame { overflow: auto; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--bg); touch-action: pan-x pan-y pinch-zoom; }
 .report-sheet { width: 190mm; margin: 0 auto; }
 .report {
