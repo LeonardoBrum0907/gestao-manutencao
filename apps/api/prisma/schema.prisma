@@ -177,6 +177,7 @@ model PerformanceCompetency {
   position    Int
   archived    Boolean            @default(false)
   evaluations MemberEvaluation[]
+  pdiItems    MemberPdiItem[]
 }
 
 model MemberEvaluation {
@@ -218,8 +219,8 @@ model MemberAttachment {
   @@index([memberId])
 }
 
-// Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz e/ou linha), com prazo, responsável e status.
-// Habilidade, linha e responsável são opcionais e viram nulos se forem excluídos.
+// Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz, competência da avaliação e/ou linha), com prazo, responsável e status.
+// Habilidade, competência, linha e responsável são opcionais e viram nulos se forem excluídos.
 model MemberPdiItem {
   id            String       @id @default(cuid())
   memberId      String
@@ -227,6 +228,8 @@ model MemberPdiItem {
   title         String
   skillId       String?
   skill         MatrixSkill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  competencyId  String?
+  competency    PerformanceCompetency? @relation(fields: [competencyId], references: [id], onDelete: SetNull)
   lineId        String?
   line          Line?        @relation(fields: [lineId], references: [id], onDelete: SetNull)
   responsibleId String?
@@ -240,6 +243,7 @@ model MemberPdiItem {
 
   @@index([memberId])
   @@index([skillId])
+  @@index([competencyId])
   @@index([lineId])
   @@index([responsibleId])
 }

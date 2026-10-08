@@ -9,31 +9,6 @@ export function usePdi(memberId: string) {
   });
 }
 
-export function useSetPdiLines(memberId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (body: { sponsor: string[]; development: string[] }) =>
-      api<MemberPdiDto>(`/api/members/${memberId}/pdi/lines`, { method: "PUT", body: JSON.stringify(body) }),
-    // Marca na hora; se a API recusar, volta ao que estava.
-    onMutate: async (body) => {
-      await client.cancelQueries({ queryKey: ["pdi", memberId] });
-      const previous = client.getQueryData<MemberPdiDto>(["pdi", memberId]);
-      if (previous) {
-        client.setQueryData<MemberPdiDto>(["pdi", memberId], {
-          ...previous,
-          sponsorLineIds: body.sponsor,
-          developmentLineIds: body.development,
-        });
-      }
-      return { previous };
-    },
-    onError: (_error, _body, context) => {
-      if (context?.previous) client.setQueryData(["pdi", memberId], context.previous);
-    },
-    onSuccess: (pdi) => client.setQueryData(["pdi", memberId], pdi),
-  });
-}
-
 export function useAddPdiFile(memberId: string) {
   const client = useQueryClient();
   return useMutation({

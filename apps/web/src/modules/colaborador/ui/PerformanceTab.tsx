@@ -7,22 +7,35 @@ import {
   QUARTERS,
   type MemberDto,
   type MemberPerformanceDto,
+  type PdiItemDto,
+  type PerformanceCompetencyDto,
   type PerformanceScore,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Field, Notice, SelectInput, Stat } from "../../../design/ui/controls";
+import { Button, Card, Field, Modal, Notice, SelectInput, Stat } from "../../../design/ui/controls";
 import { useMatrixSettings } from "../../competencia/data/catalog";
+import { usePdiItems } from "../data/pdi-items";
 import { usePerformance, useSetScore, type ScoreWrite } from "../data/performance";
+import { belowTarget, openItemOfCompetency } from "../model/pdi-items";
 import { formatScore, thisYear, yearOptions } from "../model/performance";
+import { emptyPdiItem, PdiItemForm } from "./PdiItems";
 import { RankedChart } from "./RankedChart";
 
 function ScoreTable({
+  member,
   performance,
+  target,
+  pdiItems,
   onChange,
+  onCreatePdi,
   disabled,
 }: {
+  member: MemberDto;
   performance: MemberPerformanceDto;
+  target: number;
+  pdiItems: PdiItemDto[];
   onChange: (write: ScoreWrite) => void;
+  onCreatePdi: (competency: PerformanceCompetencyDto) => void;
   disabled: boolean;
 }) {
   const score = (competencyId: string, quarter: number) =>
@@ -39,11 +52,16 @@ function ScoreTable({
               </th>
             ))}
             <th className="py-2 pl-3 text-right font-semibold">Média</th>
+            <th className="py-2 pl-3 font-semibold">
+              <span className="sr-only">PDI</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {performance.competencies.map((competency) => {
             const row = performance.competencyAverages.find((item) => item.competencyId === competency.id);
+            const below = belowTarget(row?.average ?? null, target);
+            const openItem = openItemOfCompetency(pdiItems, competency.id);
             return (
               <tr key={competency.id} className="border-t border-t-line">
                 <td className="py-2 pr-3 text-app">
@@ -74,7 +92,29 @@ function ScoreTable({
                     </SelectInput>
                   </td>
                 ))}
-                <td className="py-2 pl-3 text-right font-semibold tabular-nums text-app">{formatScore(row?.average ?? null)}</td>
+                <td className={`py-2 pl-3 text-right font-semibold tabular-nums ${below ? "text-danger" : "text-app"}`}>
+                  {formatScore(row?.average ?? null)}
+                </td>
+                <td className="py-1.5 pl-3 text-right">
+                  {openItem ? (
+                    <Link
+                      to={`/cadastro/colaboradores/${member.id}/pdi`}
+                      title={openItem.title}
+                      className="whitespace-nowrap text-xs font-medium text-accent hover:underline"
+                    >
+                      No PDI
+                    </Link>
+                  ) : below ? (
+                    <Button
+                      tone="ghost"
+                      className="whitespace-nowrap !px-3 !py-1 !text-xs"
+                      aria-label={`Criar item de PDI para ${competency.name}`}
+                      onClick={() => onCreatePdi(competency)}
+                    >
+                      + PDI
+                    </Button>
+                  ) : null}
+                </td>
               </tr>
             );
           })}
@@ -86,6 +126,7 @@ function ScoreTable({
               </td>
             ))}
             <td className="py-2 pl-3 text-right tabular-nums text-app">{formatScore(performance.average)}</td>
+            <td />
           </tr>
         </tbody>
       </table>
@@ -99,6 +140,9 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
   const performance = usePerformance(member.id, year);
   const settings = useMatrixSettings();
   const setScore = useSetScore(member.id, year);
+  const pdiItems = usePdiItems(member.id);
+  const [pdiFor, setPdiFor] = useState<PerformanceCompetencyDto | null>(null);
+  const target = settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET;
   const data = performance.data?.year === year ? performance.data : undefined;
   return (
     <div className="flex flex-col gap-6">
@@ -135,8 +179,19 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
           </div>
           <Card>
             <h2 className="text-sm font-semibold text-app">Nota por trimestre</h2>
+            <p className="mt-1 text-xs text-muted">
+              Média abaixo da meta ({target}) fica em vermelho e ganha o atalho “+ PDI”. A meta muda em Configurações › Avaliação.
+            </p>
             <div className="mt-3">
-              <ScoreTable performance={data} onChange={(write) => setScore.mutate(write)} disabled={setScore.isPending} />
+              <ScoreTable
+                member={member}
+                performance={data}
+                target={target}
+                pdiItems={pdiItems.data ?? []}
+                onChange={(write) => setScore.mutate(write)}
+                onCreatePdi={setPdiFor}
+                disabled={setScore.isPending}
+              />
             </div>
             {setScore.isError ? (
               <div className="mt-3">
@@ -148,10 +203,20 @@ export function PerformanceTab({ member }: { member: MemberDto }) {
             <h2 className="text-sm font-semibold text-app">Média por competência em {year}</h2>
             <p className="mt-1 text-sm text-muted">Da maior para a menor média, na escala de 0 a 10, com a nota de cada trimestre e a variação do último trimestre com nota.</p>
             <div className="mt-4">
-              <RankedChart performance={data} target={settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET} />
+              <RankedChart performance={data} target={target} />
             </div>
           </Card>
         </>
+      ) : null}
+      {pdiFor ? (
+        <Modal open title={`Item de PDI · ${pdiFor.name}`} onClose={() => setPdiFor(null)}>
+          <PdiItemForm
+            bare
+            member={member}
+            initial={{ ...emptyPdiItem, title: `Desenvolver ${pdiFor.name.toLowerCase()}`, competencyId: pdiFor.id }}
+            onDone={() => setPdiFor(null)}
+          />
+        </Modal>
       ) : null}
     </div>
   );

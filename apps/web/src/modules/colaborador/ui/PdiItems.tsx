@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import {
+  DEFAULT_PERFORMANCE_TARGET,
   PDI_ITEM_STATUSES,
   PDI_ITEM_STATUS_LABELS,
   type MatrixCatalogDto,
@@ -9,15 +10,19 @@ import {
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useLines, useMembers } from "../../cadastro/data/cadastro";
-import { useMatrixCatalog } from "../../competencia/data/catalog";
+import { usePerformanceCompetencies } from "../../cadastro/data/competencies";
+import { useMatrixCatalog, useMatrixSettings } from "../../competencia/data/catalog";
 import { useMatrix } from "../../competencia/data/matrix";
 import { entriesById, equipmentName, skillState } from "../../competencia/model/matrix";
 import { usePdiItems, useRemovePdiItem, useSavePdiItem } from "../data/pdi-items";
-import { formatDay, isOverdue, itemCounts, sortItems, todayIso, type PdiItemWrite } from "../model/pdi-items";
+import { usePerformance } from "../data/performance";
+import { belowTarget, formatDay, isOverdue, itemCounts, sortItems, todayIso, type PdiItemWrite } from "../model/pdi-items";
+import { formatScore, thisYear } from "../model/performance";
 
-const emptyWrite: PdiItemWrite = {
+export const emptyPdiItem: PdiItemWrite = {
   title: "",
   skillId: null,
+  competencyId: null,
   lineId: null,
   responsibleId: null,
   dueDate: null,
@@ -26,8 +31,8 @@ const emptyWrite: PdiItemWrite = {
 };
 
 function toWrite(item: PdiItemDto): PdiItemWrite {
-  const { title, skillId, lineId, responsibleId, dueDate, status, notes } = item;
-  return { title, skillId, lineId, responsibleId, dueDate, status, notes };
+  const { title, skillId, competencyId, lineId, responsibleId, dueDate, status, notes } = item;
+  return { title, skillId, competencyId, lineId, responsibleId, dueDate, status, notes };
 }
 
 type SkillOption = { id: string; label: string };
@@ -43,16 +48,45 @@ function useGapOptions(memberId: string, catalog: MatrixCatalogDto | undefined, 
     .map((skill) => ({ id: skill.id, label: `${equipmentName(catalog, skill.equipmentId)} · ${skill.text}` }));
 }
 
-function ItemForm({
+// Competências da avaliação de desempenho, com a média do ano; as abaixo da meta vêm marcadas.
+function CompetencyField({ memberId, value, onChange }: { memberId: string; value: string | null; onChange: (id: string | null) => void }) {
+  const competencies = usePerformanceCompetencies();
+  const performance = usePerformance(memberId, thisYear());
+  const settings = useMatrixSettings();
+  const target = settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET;
+  const averages = new Map((performance.data?.competencyAverages ?? []).map((item) => [item.competencyId, item.average]));
+  const options = (competencies.data ?? []).filter((competency) => !competency.archived || competency.id === value);
+  return (
+    <Field label="Competência (opcional)">
+      <SelectInput value={value ?? ""} onChange={(event) => onChange(event.target.value || null)}>
+        <option value="">—</option>
+        {options.map((competency) => {
+          const average = averages.get(competency.id) ?? null;
+          return (
+            <option key={competency.id} value={competency.id}>
+              {competency.name}
+              {average !== null ? ` · média ${formatScore(average)}${belowTarget(average, target) ? " (abaixo da meta)" : ""}` : ""}
+            </option>
+          );
+        })}
+      </SelectInput>
+    </Field>
+  );
+}
+
+export function PdiItemForm({
   member,
   initial,
   itemId,
   onDone,
+  bare = false,
 }: {
   member: MemberDto;
   initial: PdiItemWrite;
   itemId?: string;
   onDone: () => void;
+  // Dentro de um modal: sem a borda e o recuo de quando abre no meio da lista.
+  bare?: boolean;
 }) {
   const save = useSavePdiItem(member.id);
   const catalog = useMatrixCatalog();
@@ -68,12 +102,15 @@ function ItemForm({
   }
 
   return (
-    <form className="flex flex-col gap-3 border-t border-t-line px-4 py-4" noValidate onSubmit={submit}>
+    <form className={`flex flex-col gap-3 ${bare ? "" : "border-t border-t-line px-4 py-4"}`} noValidate onSubmit={submit}>
       <Field label="Ação">
         <TextInput value={form.title} maxLength={200} placeholder="Ex.: acompanhar o padrinho na troca de bobina" onChange={(event) => set("title", event.target.value)} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Lacuna da matriz (opcional)">
+        {member.position === "technician" || form.competencyId ? (
+          <CompetencyField memberId={member.id} value={form.competencyId} onChange={(id) => set("competencyId", id)} />
+        ) : null}
+        <Field label="Habilidade da matriz (opcional)">
           <SelectInput value={form.skillId ?? ""} onChange={(event) => set("skillId", event.target.value || null)}>
             <option value="">—</option>
             {skills.map((skill) => (
@@ -137,6 +174,7 @@ function ItemForm({
 export function PdiItems({ member }: { member: MemberDto }) {
   const items = usePdiItems(member.id);
   const catalog = useMatrixCatalog();
+  const competencies = usePerformanceCompetencies();
   const lines = useLines();
   const members = useMembers();
   const save = useSavePdiItem(member.id);
@@ -146,6 +184,7 @@ export function PdiItems({ member }: { member: MemberDto }) {
   const list = sortItems(items.data ?? []);
   const counts = itemCounts(list, today);
   const skillText = new Map((catalog.data?.skills ?? []).map((skill) => [skill.id, skill.text]));
+  const competencyName = new Map((competencies.data ?? []).map((competency) => [competency.id, competency.name]));
   const lineName = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
   const memberName = new Map((members.data ?? []).map((item) => [item.id, item.name]));
 
@@ -165,18 +204,18 @@ export function PdiItems({ member }: { member: MemberDto }) {
           </Button>
         ) : null}
       </div>
-      {editing === "new" ? <ItemForm member={member} initial={emptyWrite} onDone={() => setEditing(null)} /> : null}
+      {editing === "new" ? <PdiItemForm member={member} initial={emptyPdiItem} onDone={() => setEditing(null)} /> : null}
       {items.isError ? <Notice>{errorMessage(items.error)}</Notice> : null}
       {items.isSuccess && list.length === 0 && editing !== "new" ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">
-          Nenhum item ainda. Cada ação pode nascer de uma lacuna da matriz, com prazo e responsável.
+          Nenhum item ainda. Cada ação pode nascer de uma competência da avaliação ou de uma lacuna da matriz, com prazo e responsável.
         </p>
       ) : null}
       <ul>
         {list.map((item) =>
           editing === item.id ? (
             <li key={item.id}>
-              <ItemForm member={member} initial={toWrite(item)} itemId={item.id} onDone={() => setEditing(null)} />
+              <PdiItemForm member={member} initial={toWrite(item)} itemId={item.id} onDone={() => setEditing(null)} />
             </li>
           ) : (
             <li key={item.id} className="flex flex-col gap-2 border-t border-t-line px-4 py-3">
@@ -202,8 +241,9 @@ export function PdiItems({ member }: { member: MemberDto }) {
                   {isOverdue(item, today) ? " (atrasado)" : ""}
                 </span>
                 {item.responsibleId ? ` · Responsável ${memberName.get(item.responsibleId) ?? ""}` : ""}
+                {item.competencyId ? ` · Competência: ${competencyName.get(item.competencyId) ?? ""}` : ""}
                 {item.lineId ? ` · ${lineName.get(item.lineId) ?? ""}` : ""}
-                {item.skillId ? ` · Lacuna: ${skillText.get(item.skillId) ?? ""}` : ""}
+                {item.skillId ? ` · Matriz: ${skillText.get(item.skillId) ?? ""}` : ""}
                 {item.completedAt ? ` · Concluído em ${formatDay(item.completedAt.slice(0, 10))}` : ""}
               </p>
               {item.notes ? <p className="whitespace-pre-line text-sm text-app">{item.notes}</p> : null}

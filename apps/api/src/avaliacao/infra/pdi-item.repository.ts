@@ -8,6 +8,7 @@ type Row = {
   memberId: string;
   title: string;
   skillId: string | null;
+  competencyId: string | null;
   lineId: string | null;
   responsibleId: string | null;
   dueDate: Date | null;
@@ -23,6 +24,7 @@ function toDto(row: Row): PdiItemDto {
     memberId: row.memberId,
     title: row.title,
     skillId: row.skillId,
+    competencyId: row.competencyId,
     lineId: row.lineId,
     responsibleId: row.responsibleId,
     dueDate: row.dueDate ? row.dueDate.toISOString().slice(0, 10) : null,
@@ -53,6 +55,10 @@ export class PdiItemRepository {
 
   async skillExists(id: string): Promise<boolean> {
     return (await this.prisma.matrixSkill.count({ where: { id } })) > 0;
+  }
+
+  async competencyExists(id: string): Promise<boolean> {
+    return (await this.prisma.performanceCompetency.count({ where: { id } })) > 0;
   }
 
   async create(memberId: string, fields: Partial<PdiItemFields> & { title: string }): Promise<PdiItemDto> {

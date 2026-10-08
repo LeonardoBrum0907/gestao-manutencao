@@ -3,6 +3,7 @@ import { GESTOR_TIME_ZONE, type PdiItemDto, type PdiItemStatus } from "@manutenc
 export type PdiItemWrite = {
   title: string;
   skillId: string | null;
+  competencyId: string | null;
   lineId: string | null;
   responsibleId: string | null;
   dueDate: string | null;
@@ -40,6 +41,16 @@ export function sortItems(items: PdiItemDto[]): PdiItemDto[] {
     if (a.dueDate !== b.dueDate) return a.dueDate === null ? 1 : b.dueDate === null ? -1 : a.dueDate < b.dueDate ? -1 : 1;
     return a.createdAt < b.createdAt ? -1 : 1;
   });
+}
+
+// Atalho da tabela de notas: a média da competência no ano ficou abaixo da meta de desempenho.
+export function belowTarget(average: number | null, target: number): boolean {
+  return average !== null && average < target;
+}
+
+// Item em aberto que já trata a competência (o atalho vira "PDI aberto" em vez de criar outro).
+export function openItemOfCompetency(items: PdiItemDto[], competencyId: string): PdiItemDto | undefined {
+  return items.find((item) => item.competencyId === competencyId && isOpen(item));
 }
 
 export function itemCounts(items: PdiItemDto[], today: string) {

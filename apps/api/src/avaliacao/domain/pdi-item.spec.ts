@@ -20,6 +20,12 @@ describe("item do PDI", () => {
     assert.deepEqual(readPdiItem({ lineId: null, dueDate: "" }, true), { lineId: null, dueDate: null });
   });
 
+  it("liga o item a uma competência da avaliação", () => {
+    assert.deepEqual(readPdiItem({ competencyId: "c1" }, true), { competencyId: "c1" });
+    assert.deepEqual(readPdiItem({ competencyId: "" }, true), { competencyId: null });
+    assert.throws(() => readPdiItem({ competencyId: 3 }, true), (error: unknown) => error instanceof DomainError);
+  });
+
   it("recusa status desconhecido e texto grande demais", () => {
     assert.throws(() => readPdiItem({ status: "feito" }, true), invalid);
     assert.throws(() => readPdiItem({ title: "x".repeat(201) }, false), invalid);
