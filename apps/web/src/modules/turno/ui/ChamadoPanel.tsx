@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { ChamadoBody, ChamadoDto, ChamadoShift, RecordPriority, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { PanelFooter, PanelSection, PanelTag, SidePanel } from "../../../design/ui/panel";
+import { PanelFooter, PanelSection, PanelTag, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { useToast } from "../../../design/ui/toast";
 import { useLines, useMachines, useMembers } from "../../cadastro/data/cadastro";
@@ -262,7 +262,7 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
     : "Novo";
 
   return (
-    <SidePanel
+    <DetailModal
       open
       eyebrow={eyebrow}
       title={title}
@@ -407,7 +407,7 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
 
         {chamado ? <AfterChamado chamado={chamado} /> : null}
       </div>
-    </SidePanel>
+    </DetailModal>
   );
 }
 
