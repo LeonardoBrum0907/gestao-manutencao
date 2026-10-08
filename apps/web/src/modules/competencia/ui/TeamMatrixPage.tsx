@@ -49,7 +49,7 @@ function Heatmap({ team, shift }: { team: TeamMatrixDto; shift: string }) {
   const members = team.members.filter((member) => !shift || member.shift === shift);
   return (
     <Card compact className="overflow-hidden !p-0">
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="text-xs uppercase tracking-[0.06em] text-muted">
             <tr>

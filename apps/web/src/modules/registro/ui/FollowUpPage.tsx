@@ -157,7 +157,7 @@ export function FollowUpPage() {
               </div>
             ))}
           </div>
-          <div className="hidden overflow-x-auto rounded-card border border-line bg-card shadow-card sm:block">
+          <div className="relative hidden overflow-x-auto rounded-card border border-line bg-card shadow-card sm:block">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead className="bg-chip text-xs uppercase tracking-[0.12em] text-muted">
                 <tr>
