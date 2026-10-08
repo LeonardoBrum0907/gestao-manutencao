@@ -454,7 +454,7 @@ function Pdi({ memberId, isTechnician, year }: { memberId: string; isTechnician:
   const files = data.attachments.filter((item) => !item.mimeType.startsWith("image/"));
   return (
     <>
-      <h2>PDI e feedback</h2>
+      <h2>PDI</h2>
       <div className="grid">
         <Cell label="Itens no plano">{active}</Cell>
         <Cell label="Em aberto">{counts.open}</Cell>
