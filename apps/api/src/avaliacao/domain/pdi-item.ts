@@ -4,6 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 export type PdiItemFields = {
   title: string;
   skillId: string | null;
+  competencyId: string | null;
   lineId: string | null;
   responsibleId: string | null;
   dueDate: string | null;
@@ -46,6 +47,7 @@ export function readPdiItem(source: Record<string, unknown>, partial: boolean): 
     fields.title = title;
   }
   if ("skillId" in source) fields.skillId = reference(source.skillId);
+  if ("competencyId" in source) fields.competencyId = reference(source.competencyId);
   if ("lineId" in source) fields.lineId = reference(source.lineId);
   if ("responsibleId" in source) fields.responsibleId = reference(source.responsibleId);
   if ("dueDate" in source) fields.dueDate = parseDueDate(source.dueDate);

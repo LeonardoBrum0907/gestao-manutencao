@@ -10,9 +10,11 @@ import {
   PRODUCTIVITY_LEVEL_LABELS,
   QUARTERS,
   type MemberDto,
+  type PdiItemDto,
 } from "@manutencao/shared";
 import { Button, Card, Notice } from "../../../design/ui/controls";
 import { useLines, useMembers, useTeams } from "../../cadastro/data/cadastro";
+import { usePerformanceCompetencies } from "../../cadastro/data/competencies";
 import { positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamText } from "../../cadastro/model/team";
 import { useMatrixCatalog, useMatrixSettings } from "../../competencia/data/catalog";
@@ -24,7 +26,7 @@ import { useBehavior } from "../data/behavior";
 import { useMemberRecordList } from "../data/member-records";
 import { usePdi } from "../data/pdi";
 import { usePdiItems } from "../data/pdi-items";
-import { formatDay, isOverdue, sortItems, todayIso } from "../model/pdi-items";
+import { belowTarget, formatDay, isOverdue, itemCounts, sortItems, todayIso } from "../model/pdi-items";
 import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
 import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
@@ -321,26 +323,144 @@ function Matrix({ memberId }: { memberId: string }) {
   );
 }
 
-function Pdi({ memberId }: { memberId: string }) {
+const statusTone = (item: PdiItemDto, today: string): PillTone =>
+  isOverdue(item, today)
+    ? "bad"
+    : item.status === "done"
+      ? "ok"
+      : item.status === "in_progress"
+        ? "neutral"
+        : item.status === "cancelled"
+          ? "bad"
+          : "warn";
+
+// Pontos a desenvolver: competências do ano abaixo da meta e habilidades da matriz abaixo do esperado, dizendo se já têm item no plano.
+function PdiGaps({ memberId, year, items }: { memberId: string; year: number; items: PdiItemDto[] }) {
+  const performance = usePerformance(memberId, year);
+  const settings = useMatrixSettings();
+  const matrix = useMatrix(memberId);
+  const catalog = useMatrixCatalog();
+  const target = settings.data?.performanceTarget ?? DEFAULT_PERFORMANCE_TARGET;
+  const planned = (pick: (item: PdiItemDto) => string | null, id: string) =>
+    items.some((item) => pick(item) === id && item.status !== "cancelled");
+  const competencies = performance.data
+    ? performance.data.competencyAverages
+        .filter((row) => belowTarget(row.average, target))
+        .map((row) => ({
+          id: row.competencyId,
+          name: performance.data.competencies.find((competency) => competency.id === row.competencyId)?.name ?? "",
+          average: row.average,
+          planned: planned((item) => item.competencyId, row.competencyId),
+        }))
+        .sort((x, y) => (x.average ?? 0) - (y.average ?? 0))
+    : [];
+  const entries = entriesById(matrix.data?.entries ?? []);
+  const skills =
+    matrix.data && catalog.data
+      ? catalog.data.skills
+          .filter((skill) => !skill.archived && matrix.data.equipments.includes(skill.equipmentId))
+          .filter((skill) => skillState(skill, entries.get(skill.id)) === "below")
+          .map((skill) => {
+            const entry = entries.get(skill.id);
+            const expected = expectedOf(skill, entry);
+            return { skill, expected, real: entry?.score ?? 0, gap: expected - (entry?.score ?? 0), planned: planned((item) => item.skillId, skill.id) };
+          })
+          .sort((x, y) => Number(x.planned) - Number(y.planned) || y.gap - x.gap)
+      : [];
+  const shown = skills.slice(0, SKILL_GAPS_SHOWN);
+  const skillsPlanned = skills.filter((item) => item.planned).length;
+  if (!performance.data && !matrix.data) return null;
+  return (
+    <>
+      <h3>Pontos a desenvolver</h3>
+      {competencies.length === 0 && skills.length === 0 ? (
+        <p className="muted">Nenhuma competência abaixo da meta em {year} e nenhuma habilidade da matriz abaixo do esperado.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Origem</th>
+              <th>Ponto</th>
+              <th className="n">Nota</th>
+              <th>No plano</th>
+            </tr>
+          </thead>
+          <tbody>
+            {competencies.map((row) => (
+              <tr key={row.id}>
+                <td className="muted">Avaliação {year}</td>
+                <td>{row.name}</td>
+                <td className="n late">
+                  {formatScore(row.average)} <span className="muted font-normal">/ meta {target}</span>
+                </td>
+                <td>{row.planned ? <Pill tone="ok">Com item</Pill> : <Pill tone="warn">Sem item</Pill>}</td>
+              </tr>
+            ))}
+            {catalog.data
+              ? shown.map((row) => (
+                  <tr key={row.skill.id}>
+                    <td className="muted">Matriz · {equipmentName(catalog.data, row.skill.equipmentId)}</td>
+                    <td>{row.skill.text}</td>
+                    <td className="n">
+                      R {row.real} <span className="muted">/ E {row.expected}</span>
+                    </td>
+                    <td>{row.planned ? <Pill tone="ok">Com item</Pill> : <Pill tone="warn">Sem item</Pill>}</td>
+                  </tr>
+                ))
+              : null}
+          </tbody>
+        </table>
+      )}
+      {skills.length ? (
+        <p className="muted">
+          Matriz: {skills.length} habilidade(s) abaixo do esperado, {skillsPlanned} com item no plano
+          {skills.length > shown.length ? `; acima, as ${shown.length} primeiras (sem item e maior diferença primeiro)` : ""}.
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+const SKILL_GAPS_SHOWN = 10;
+
+function Pdi({ memberId, isTechnician, year }: { memberId: string; isTechnician: boolean; year: number }) {
   const pdi = usePdi(memberId);
   const pdiItems = usePdiItems(memberId);
   const members = useMembers();
   const lines = useLines();
-  const name = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
+  const competencies = usePerformanceCompetencies();
+  const catalog = useMatrixCatalog();
   const data = pdi.data;
   if (!data) return null;
   const today = todayIso();
   const planned = sortItems(pdiItems.data ?? []);
+  const counts = itemCounts(planned, today);
+  const active = planned.filter((item) => item.status !== "cancelled").length;
   const person = new Map((members.data ?? []).map((item) => [item.id, item.name]));
-  const list = (ids: string[]) => (ids.length ? ids.map((id) => name.get(id) ?? id).join(", ") : "—");
+  const lineName = new Map((lines.data ?? []).map((line) => [line.id, line.name]));
+  const competencyName = new Map((competencies.data ?? []).map((competency) => [competency.id, competency.name]));
+  const skill = new Map((catalog.data?.skills ?? []).map((item) => [item.id, item]));
+  const focus = (item: PdiItemDto) => {
+    const parts: string[] = [];
+    if (item.competencyId) parts.push(`Competência: ${competencyName.get(item.competencyId) ?? "—"}`);
+    const matrixSkill = item.skillId ? skill.get(item.skillId) : undefined;
+    if (matrixSkill && catalog.data) parts.push(`Matriz: ${equipmentName(catalog.data, matrixSkill.equipmentId)} · ${matrixSkill.text}`);
+    if (item.lineId) parts.push(`Linha ${lineName.get(item.lineId) ?? "—"}`);
+    return parts;
+  };
   const images = data.attachments.filter((item) => item.mimeType.startsWith("image/"));
   const files = data.attachments.filter((item) => !item.mimeType.startsWith("image/"));
   return (
     <>
       <h2>PDI e feedback</h2>
-      <div className="grid two">
-        <Cell label="Padrinho de">{list(data.sponsorLineIds)}</Cell>
-        <Cell label="Em desenvolvimento">{list(data.developmentLineIds)}</Cell>
+      <div className="grid">
+        <Cell label="Itens no plano">{active}</Cell>
+        <Cell label="Em aberto">{counts.open}</Cell>
+        <Cell label="Atrasados">{counts.overdue ? <span className="text-red-700">{counts.overdue}</span> : 0}</Cell>
+        <Cell label="Concluídos">
+          {counts.done}
+          {active ? <span className="muted font-normal"> · {Math.round((counts.done / active) * 100)}%</span> : null}
+        </Cell>
       </div>
       <h3>Plano de ação</h3>
       {planned.length === 0 ? (
@@ -350,6 +470,7 @@ function Pdi({ memberId }: { memberId: string }) {
           <thead>
             <tr>
               <th>Ação</th>
+              <th>Foco</th>
               <th>Responsável</th>
               <th className="n">Prazo</th>
               <th>Status</th>
@@ -360,45 +481,36 @@ function Pdi({ memberId }: { memberId: string }) {
               <tr key={item.id}>
                 <td>
                   {item.title}
-                  {item.notes ? <span className="muted"> — {item.notes}</span> : null}
+                  {item.notes ? <div className="muted">{item.notes}</div> : null}
+                </td>
+                <td>
+                  {focus(item).length ? (
+                    focus(item).map((part) => <div key={part}>{part}</div>)
+                  ) : (
+                    <span className="muted">—</span>
+                  )}
                 </td>
                 <td>{item.responsibleId ? (person.get(item.responsibleId) ?? "—") : "—"}</td>
                 <td className={`n ${isOverdue(item, today) ? "late" : ""}`}>{formatDay(item.dueDate)}</td>
                 <td>
-                  {isOverdue(item, today) ? (
-                    <Pill tone="bad">Atrasado</Pill>
-                  ) : (
-                    <Pill
-                      tone={
-                        item.status === "done"
-                          ? "ok"
-                          : item.status === "in_progress"
-                            ? "neutral"
-                            : item.status === "cancelled"
-                              ? "bad"
-                              : "warn"
-                      }
-                    >
-                      {PDI_ITEM_STATUS_LABELS[item.status]}
-                    </Pill>
-                  )}
+                  <Pill tone={statusTone(item, today)}>{isOverdue(item, today) ? "Atrasado" : PDI_ITEM_STATUS_LABELS[item.status]}</Pill>
+                  {item.completedAt ? <div className="muted">em {formatDay(item.completedAt.slice(0, 10))}</div> : null}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+      {isTechnician ? <PdiGaps memberId={memberId} year={year} items={planned} /> : null}
+      <h3>Anexos</h3>
       {files.length ? (
-        <>
-          <h3>Anexos</h3>
-          <ul>
-            {files.map((file) => (
-              <li key={file.id}>
-                {file.fileName} <span className="muted">· {dateFormat.format(new Date(file.createdAt))}</span>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul>
+          {files.map((file) => (
+            <li key={file.id}>
+              {file.fileName} <span className="muted">· {dateFormat.format(new Date(file.createdAt))}</span>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {images.length ? (
         <div className="att">
@@ -485,7 +597,7 @@ export function ReportPage() {
                 {has("comportamento") ? <Behavior memberId={member.id} /> : null}
                 {isTechnician && has("desempenho") ? <Performance memberId={member.id} year={year} /> : null}
                 {isTechnician && has("matriz") ? <Matrix memberId={member.id} /> : null}
-                {has("pdi") ? <Pdi memberId={member.id} /> : null}
+                {has("pdi") ? <Pdi memberId={member.id} isTechnician={isTechnician} year={year} /> : null}
               </div>
               <footer>
                 <span>Gestão de Manutenção · {member.name}</span>

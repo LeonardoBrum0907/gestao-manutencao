@@ -627,6 +627,8 @@ export type PdiItemDto = {
   memberId: string;
   title: string;
   skillId: string | null;
+  // Competência da avaliação de desempenho que o item quer melhorar.
+  competencyId: string | null;
   lineId: string | null;
   responsibleId: string | null;
   // Dia no formato AAAA-MM-DD.
