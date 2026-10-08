@@ -4,7 +4,6 @@ import {
   DEFAULT_PERFORMANCE_TARGET,
   BEHAVIOR_RATING_LABELS,
   PDI_ITEM_STATUS_LABELS,
-  BEHAVIOR_TAG_GROUPS,
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_SCORE_LABELS,
   PRODUCTIVITY_LEVEL_LABELS,
@@ -20,6 +19,7 @@ import { useMatrix } from "../../competencia/data/matrix";
 import { average, bySubgroup, entriesById, equipmentName, expectedOf, percent, skillState, skillsOf } from "../../competencia/model/matrix";
 import { flattenPages } from "../../registro/data/records";
 import { formatWhen, toneLabel } from "../../registro/model/record";
+import { useBehaviorTags } from "../../cadastro/data/behavior-tags";
 import { useBehavior } from "../data/behavior";
 import { useMemberRecordList } from "../data/member-records";
 import { usePdi } from "../data/pdi";
@@ -128,7 +128,8 @@ function Behavior({ memberId }: { memberId: string }) {
   const feedbacks = useMemberRecordList(memberId, "feedback");
   const items = flattenPages(feedbacks.data?.pages);
   const data = behavior.data;
-  const tagLabel = new Map(BEHAVIOR_TAG_GROUPS.flatMap((group) => group.tags.map((tag) => [tag.key, tag.label] as const)));
+  const tags = useBehaviorTags();
+  const tagLabel = new Map((tags.data ?? []).map((tag) => [tag.id, tag.name] as const));
   return (
     <>
       <h2>Comportamento</h2>

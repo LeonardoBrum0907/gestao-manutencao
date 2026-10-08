@@ -291,44 +291,26 @@ export const PRODUCTIVITY_LEVEL_LABELS: Record<ProductivityLevel, string> = {
   low: "Baixa",
 };
 
+// As três categorias são fixas; as opções dentro delas são cadastro do coordenador (Configurações › Avaliação).
 export const BEHAVIOR_TAG_GROUPS = [
-  {
-    key: "strengths",
-    label: "Pontos positivos",
-    tags: [
-      { key: "proactive", label: "Proativo" },
-      { key: "communicates", label: "Comunica bem" },
-      { key: "meets_deadlines", label: "Cumpre prazos" },
-      { key: "organized", label: "Organizado" },
-      { key: "teamwork", label: "Trabalho em equipe" },
-      { key: "solves_problems", label: "Resolve problemas" },
-    ],
-  },
-  {
-    key: "attention",
-    label: "Pontos de atenção",
-    tags: [
-      { key: "missed_deadlines", label: "Prazos perdidos" },
-      { key: "poor_communication", label: "Falta comunicação" },
-      { key: "frequent_rework", label: "Retrabalho frequente" },
-      { key: "stale_tasks", label: "Pendências sem atualização" },
-    ],
-  },
-  {
-    key: "situation",
-    label: "Situação atual",
-    tags: [
-      { key: "adapting", label: "Em adaptação" },
-      { key: "new_to_team", label: "Novo na equipe" },
-      { key: "under_supervision", label: "Sob supervisão" },
-    ],
-  },
+  { key: "strengths", label: "Pontos positivos" },
+  { key: "attention", label: "Pontos de atenção" },
+  { key: "situation", label: "Situação atual" },
 ] as const;
 
 export type BehaviorTagGroup = (typeof BEHAVIOR_TAG_GROUPS)[number]["key"];
-export type BehaviorTag = (typeof BEHAVIOR_TAG_GROUPS)[number]["tags"][number]["key"];
 
-export const BEHAVIOR_TAGS: readonly BehaviorTag[] = BEHAVIOR_TAG_GROUPS.flatMap((group) => group.tags.map((tag) => tag.key));
+export function isBehaviorTagGroup(value: string): value is BehaviorTagGroup {
+  return BEHAVIOR_TAG_GROUPS.some((group) => group.key === value);
+}
+
+// Arquivada some das opções da ficha, mas continua marcada em quem já tinha.
+export type BehaviorTagDto = {
+  id: string;
+  group: BehaviorTagGroup;
+  name: string;
+  archived: boolean;
+};
 
 export function isBehaviorRating(value: string): value is BehaviorRating {
   return (BEHAVIOR_RATINGS as readonly string[]).includes(value);
@@ -338,16 +320,12 @@ export function isProductivityLevel(value: string): value is ProductivityLevel {
   return (PRODUCTIVITY_LEVELS as readonly string[]).includes(value);
 }
 
-export function isBehaviorTag(value: string): value is BehaviorTag {
-  return (BEHAVIOR_TAGS as readonly string[]).includes(value);
-}
-
 export type MemberBehaviorDto = {
   memberId: string;
   punctuality: BehaviorRating | null;
   productivity: ProductivityLevel | null;
   collaboration: BehaviorRating | null;
-  tags: BehaviorTag[];
+  tags: string[];
 };
 
 // Avaliação de desempenho (SIGEM: Por Técnico › Avaliação de Desempenho): nota por competência e trimestre.

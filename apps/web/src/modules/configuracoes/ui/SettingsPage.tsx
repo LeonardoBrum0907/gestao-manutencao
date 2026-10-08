@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
+import { BehaviorTagsSection } from "../../cadastro/ui/BehaviorTagsSection";
 import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
 import { EquipmentModelsSection } from "../../cadastro/ui/EquipmentModelsSection";
 import { FactoriesSection } from "../../cadastro/ui/FactoriesSection";
@@ -59,6 +60,7 @@ export function SettingsPage() {
         {current === "avaliacao" ? (
           <>
             <CompetenciesSection />
+            <BehaviorTagsSection />
             <MatrixCatalogSection />
           </>
         ) : null}

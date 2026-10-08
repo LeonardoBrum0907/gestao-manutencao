@@ -7,7 +7,7 @@ import {
   PRODUCTIVITY_LEVEL_LABELS,
   PRODUCTIVITY_LEVELS,
   type BehaviorRating,
-  type BehaviorTag,
+  type BehaviorTagDto,
   type BehaviorTagGroup,
   type FeedbackTone,
   type MemberBehaviorDto,
@@ -18,6 +18,7 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { flattenPages, useCaptureRecord } from "../../registro/data/records";
 import { formatWhen, fromLocalInput, nowLocalInput, toneChipClass, toneLabel, toneOptions } from "../../registro/model/record";
+import { useBehaviorTags } from "../../cadastro/data/behavior-tags";
 import { useBehavior, useSaveBehavior, type BehaviorWrite } from "../data/behavior";
 import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
 
@@ -81,38 +82,71 @@ function Ratings({ behavior, onChange, disabled }: { behavior: MemberBehaviorDto
   );
 }
 
-function Tags({ behavior, onChange, disabled }: { behavior: MemberBehaviorDto; onChange: (next: BehaviorWrite) => void; disabled: boolean }) {
+function Tags({
+  behavior,
+  catalog,
+  onChange,
+  disabled,
+}: {
+  behavior: MemberBehaviorDto;
+  catalog: BehaviorTagDto[];
+  onChange: (next: BehaviorWrite) => void;
+  disabled: boolean;
+}) {
   const current = writable(behavior);
-  function toggle(tag: BehaviorTag) {
+  function toggle(tag: string) {
     const tags = current.tags.includes(tag) ? current.tags.filter((item) => item !== tag) : [...current.tags, tag];
     onChange({ ...current, tags });
   }
   return (
     <div className="flex flex-col gap-4">
-      {BEHAVIOR_TAG_GROUPS.map((group) => (
-        <div key={group.key}>
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.label}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {group.tags.map((tag) => {
-              const pressed = current.tags.includes(tag.key);
-              return (
-                <button
-                  key={tag.key}
-                  type="button"
-                  aria-pressed={pressed}
-                  disabled={disabled}
-                  onClick={() => toggle(tag.key)}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
-                    pressed ? pressedTone[group.key] : "border-line bg-surface text-muted hover:bg-chip"
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              );
-            })}
+      {BEHAVIOR_TAG_GROUPS.map((group) => {
+        // Arquivada só aparece em quem já tinha, para poder desmarcar.
+        const options = catalog.filter((tag) => tag.group === group.key && (!tag.archived || current.tags.includes(tag.id)));
+        return (
+          <div key={group.key}>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.label}</p>
+            {options.length === 0 ? (
+              <p className="mt-2 text-sm text-muted">
+                Nenhuma opção. Cadastre em{" "}
+                <Link to="/configuracoes/avaliacao" className="font-medium text-accent hover:underline">
+                  Configurações › Avaliação
+                </Link>
+                .
+              </p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {options.map((tag) => {
+                  const pressed = current.tags.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      aria-pressed={pressed}
+                      disabled={disabled}
+                      title={tag.archived ? "Opção arquivada: ao desmarcar, some daqui" : undefined}
+                      onClick={() => toggle(tag.id)}
+                      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
+                        pressed ? pressedTone[group.key] : "border-line bg-surface text-muted hover:bg-chip"
+                      } ${tag.archived ? "opacity-70" : ""}`}
+                    >
+                      {tag.name}
+                      {tag.archived ? " (arquivada)" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
+      <p className="text-xs text-muted">
+        As opções se ajustam em{" "}
+        <Link to="/configuracoes/avaliacao" className="font-medium text-accent hover:underline">
+          Configurações › Avaliação
+        </Link>
+        .
+      </p>
     </div>
   );
 }
@@ -215,17 +249,18 @@ function History({ member }: { member: MemberDto }) {
 export function BehaviorTab({ member }: { member: MemberDto }) {
   const behavior = useBehavior(member.id);
   const save = useSaveBehavior(member.id);
+  const tags = useBehaviorTags();
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <h2 className="text-sm font-semibold text-app">Avaliação</h2>
         <p className="mt-1 text-sm text-muted">Grava ao escolher.</p>
-        {behavior.isPending ? <p className="mt-3 text-sm text-muted">Carregando…</p> : null}
-        {behavior.isError ? <Notice>{errorMessage(behavior.error)}</Notice> : null}
-        {behavior.data ? (
+        {behavior.isPending || tags.isPending ? <p className="mt-3 text-sm text-muted">Carregando…</p> : null}
+        {behavior.isError || tags.isError ? <Notice>{errorMessage(behavior.error ?? tags.error)}</Notice> : null}
+        {behavior.data && tags.data ? (
           <div className="mt-4 flex flex-col gap-6">
             <Ratings behavior={behavior.data} onChange={(next) => save.mutate(next)} disabled={save.isPending} />
-            <Tags behavior={behavior.data} onChange={(next) => save.mutate(next)} disabled={save.isPending} />
+            <Tags behavior={behavior.data} catalog={tags.data} onChange={(next) => save.mutate(next)} disabled={save.isPending} />
           </div>
         ) : null}
         {save.isError ? (
