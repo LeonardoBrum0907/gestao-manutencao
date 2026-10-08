@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { MemberDto, TeamDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { PanelFooter, SidePanel } from "../../../design/ui/panel";
+import { PanelFooter, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { RowMenu } from "../../../design/ui/row-menu";
 import { useToast } from "../../../design/ui/toast";
@@ -155,7 +155,7 @@ function TeamPanel({
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
 
   return (
-    <SidePanel
+    <DetailModal
       open
       eyebrow={team ? "Equipe" : "Nova"}
       title={team ? team.name : "Nova equipe"}
@@ -228,7 +228,7 @@ function TeamPanel({
         <p className="text-sm text-muted">Os técnicos entram e saem pelo cartão da equipe, na lista.</p>
         {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
       </div>
-    </SidePanel>
+    </DetailModal>
   );
 }
 
