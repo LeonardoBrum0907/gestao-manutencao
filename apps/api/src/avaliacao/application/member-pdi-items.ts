@@ -53,6 +53,9 @@ export class MemberPdiItems {
     if (fields.skillId && !(await this.items.skillExists(fields.skillId))) {
       throw new DomainError("skill", 400, "Habilidade não encontrada.");
     }
+    if (fields.competencyId && !(await this.items.competencyExists(fields.competencyId))) {
+      throw new DomainError("competency", 400, "Competência não encontrada.");
+    }
   }
 
   private async assertMember(id: string): Promise<void> {

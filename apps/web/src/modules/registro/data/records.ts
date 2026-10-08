@@ -42,12 +42,6 @@ export function useFollowUp(query: FollowUpQuery) {
   return useRecordPages("follow-up", followUpSearch(query));
 }
 
-// Em aberto nas linhas que o técnico apadrinha (aba PDI).
-export function useOpenRecordsOfLines(lineIds: string[]) {
-  const params = new URLSearchParams({ lineIds: [...lineIds].sort().join(","), status: "open,in_progress" });
-  return useRecordPages("lines", params, { enabled: lineIds.length > 0 });
-}
-
 const fetchRecord = (id: string) => api<RecordDto>(`/api/records/${id}`);
 
 export function useRecord(id: string) {
