@@ -170,6 +170,18 @@ model MemberBehavior {
   member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
+// Opções do comportamento (pontos positivos, de atenção, situação atual): cadastro do coordenador.
+// MemberBehavior.tags guarda os ids. Arquivada sai das opções da ficha, mas fica em quem já tinha.
+model BehaviorTag {
+  id       String  @id @default(cuid())
+  group    String
+  name     String
+  position Int
+  archived Boolean @default(false)
+
+  @@unique([group, name])
+}
+
 // Competências da avaliação de desempenho: cadastro do coordenador. Arquivada sai da avaliação, mas a nota antiga fica.
 model PerformanceCompetency {
   id          String             @id @default(cuid())
