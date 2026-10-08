@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../../design/ui/icons";
+import { MENU_STATE } from "../../app/nav-trail";
 import { useOverdueCount } from "../../modules/dashboard/data/dashboard";
 import { useLogout } from "../data/session";
 import { ThemeToggle } from "./ThemeToggle";
@@ -77,6 +78,7 @@ export function Sidebar({
         </div>
         <NavLink
           to="/captura"
+          state={MENU_STATE}
           onClick={onClose}
           className="mt-4 flex items-center justify-center gap-2 rounded-control bg-accent px-3 py-2.5 text-sm font-semibold text-accent-contrast transition hover:brightness-90"
         >
@@ -91,7 +93,7 @@ export function Sidebar({
               ) : null}
               <div className="flex flex-col gap-0.5">
                 {group.items.map((item) => (
-                  <NavLink key={item.to} to={item.to} onClick={onClose} className={itemClass}>
+                  <NavLink key={item.to} to={item.to} state={MENU_STATE} onClick={onClose} className={itemClass}>
                     <Icon name={item.icon} />
                     {item.label}
                     {item.to === "/acompanhamento" ? <OverdueBadge /> : null}
@@ -102,7 +104,7 @@ export function Sidebar({
           ))}
         </nav>
         <div className="mt-3 flex flex-col gap-1 border-t border-sidebar-line pt-3">
-          <NavLink to="/configuracoes" onClick={onClose} className={itemClass}>
+          <NavLink to="/configuracoes" state={MENU_STATE} onClick={onClose} className={itemClass}>
             <Icon name="settings" />
             Configurações
           </NavLink>

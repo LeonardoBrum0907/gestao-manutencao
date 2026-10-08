@@ -31,6 +31,7 @@ import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
 import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
 import { RankedChart } from "./RankedChart";
+import { NavTrail } from "../../../design/ui/nav-trail";
 import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
 import "../../../design/ui/report.css";
 
@@ -550,9 +551,7 @@ export function ReportPage() {
   return (
     <div>
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Link to={`/cadastro/colaboradores/${member.id}`} className="text-sm font-medium text-accent hover:underline">
-          ← Voltar à ficha
-        </Link>
+        <NavTrail current={`Relatório de ${member.name}`} back={{ to: `/cadastro/colaboradores/${member.id}`, label: member.name }} className="" />
         <div className="flex flex-wrap items-center gap-2">
           <ZoomControls preview={preview} />
           <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>

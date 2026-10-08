@@ -21,12 +21,12 @@ export function NewPostPreventivePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle eyebrow="Turno" title="Nova ficha pós-preventiva" text={TEXT} />
-      <div className="-mt-4 mb-6 text-sm font-semibold">
-        <Link to={machine ? `/maquinas/${machine.id}` : "/pos-preventiva"} className="text-accent">
-          ← {machine ? machine.name : "Pós-preventiva"}
-        </Link>
-      </div>
+      <PageTitle
+        eyebrow="Turno"
+        title="Nova ficha pós-preventiva"
+        text={TEXT}
+        back={machine ? { to: `/maquinas/${machine.id}`, label: machine.name } : { to: "/pos-preventiva", label: "Pós-preventiva" }}
+      />
       <PostPreventiveForm
         initial={emptyValues(todayIso(), machine ? { lineId: machine.lineId, machineId: machine.id } : {})}
         onSaved={(item) => navigate(`/pos-preventiva/${item.id}`, { replace: true })}
@@ -48,11 +48,8 @@ export function PostPreventivePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle eyebrow="Turno" title="Ficha pós-preventiva" text={TEXT} />
+      <PageTitle eyebrow="Turno" title="Ficha pós-preventiva" text={TEXT} back={{ to: "/pos-preventiva", label: "Pós-preventiva" }} />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold">
-        <Link to="/pos-preventiva" className="text-accent">
-          ← Pós-preventiva
-        </Link>
         <Link to={`/maquinas/${data.machineId}`} className="text-accent">
           Tela da máquina
         </Link>
@@ -73,7 +70,7 @@ export function PostPreventivePage() {
             {confirming ? (
               <span className="flex items-center gap-2 text-sm text-app">
                 Excluir esta ficha?
-                <Button tone="danger" disabled={remove.isPending} onClick={() => remove.mutate(data.id, { onSuccess: () => navigate("/pos-preventiva") })}>
+                <Button tone="danger" disabled={remove.isPending} onClick={() => remove.mutate(data.id, { onSuccess: () => navigate("/pos-preventiva", { replace: true }) })}>
                   Sim, excluir
                 </Button>
                 <Button tone="ghost" onClick={() => setConfirming(false)}>

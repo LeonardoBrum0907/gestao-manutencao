@@ -45,10 +45,9 @@ export function RecordSheetPage() {
       <PageTitle
         eyebrow={data.origin === "inbox" ? recordShortName(data.type) : "Problema"}
         title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
+        crumb={data.origin === "inbox" ? undefined : `Problema (${originLabel(data.origin)})`}
+        back={{ to: "/acompanhamento", label: "Pendências" }}
       />
-      <Link to="/acompanhamento" className="-mt-4 mb-6 inline-flex text-sm font-semibold text-accent">
-        ← Pendências
-      </Link>
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
       {data.type === "problem" && data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
