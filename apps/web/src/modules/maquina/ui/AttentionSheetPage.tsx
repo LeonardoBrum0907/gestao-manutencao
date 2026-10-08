@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import type { PostPreventiveDto } from "@manutencao/shared";
 import { Button, Card, Notice } from "../../../design/ui/controls";
+import { NavTrail } from "../../../design/ui/nav-trail";
 import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
 import { formatDay } from "../../colaborador/model/pdi-items";
@@ -89,9 +90,11 @@ export function AttentionSheetPage() {
   return (
     <div>
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Link to={recordId ? `/pos-preventiva/${recordId}` : `/maquinas/${machine.id}`} className="text-sm font-medium text-accent hover:underline">
-          ← {recordId ? "Voltar à ficha" : "Voltar à máquina"}
-        </Link>
+        <NavTrail
+          current="Folha de atenção"
+          back={recordId ? { to: `/pos-preventiva/${recordId}`, label: "Ficha pós-preventiva" } : { to: `/maquinas/${machine.id}`, label: machine.name }}
+          className=""
+        />
         <div className="flex flex-wrap items-center gap-2">
           <ZoomControls preview={preview} />
           <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>

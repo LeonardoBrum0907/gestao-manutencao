@@ -1,6 +1,7 @@
 import { useId, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import { useDialogFocus } from "./dialog";
+import { NavTrail, type BackTo } from "./nav-trail";
 import { FieldLabelContext } from "./select";
 
 export { MultiSelect, SelectInput, type MultiOption } from "./select";
@@ -75,28 +76,37 @@ export function Stat({ label, value, tone = "" }: { label: string; value: string
   );
 }
 
+// Título da tela, com a barra de voltar e o caminho em cima. `crumb` é o nome da tela na trilha das
+// telas que ela abrir (o título, se não vier); `back` é para onde voltar quando não há trilha.
 export function PageTitle({
   eyebrow,
   title,
   text,
   action,
+  crumb,
+  back,
 }: {
   eyebrow?: string;
   title: string;
   text?: string;
   action?: ReactNode;
+  crumb?: string;
+  back?: BackTo;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0">
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{eyebrow}</p>
-        ) : null}
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
-        {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
-      </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </header>
+    <>
+      <NavTrail current={crumb ?? title} back={back} />
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          {eyebrow ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{eyebrow}</p>
+          ) : null}
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
+          {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </header>
+    </>
   );
 }
 

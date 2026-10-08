@@ -64,7 +64,12 @@ export function RpPastePage() {
   if (chamadoId) {
     return (
       <div className="mx-auto max-w-3xl">
-        <PageTitle eyebrow="Turno" title="Escrever RP" text="O RP fica ligado ao chamado. Confira o que veio dele e complete a análise." />
+        <PageTitle
+          eyebrow="Turno"
+          title="Escrever RP"
+          text="O RP fica ligado ao chamado. Confira o que veio dele e complete a análise."
+          back={{ to: "/turno/chamados", label: "Chamados" }}
+        />
         <RpFromChamado chamadoId={chamadoId} />
       </div>
     );
@@ -103,10 +108,8 @@ function PasteRp() {
         eyebrow="Turno"
         title="Colar RP"
         text="Cole o Relatório Padrão do WhatsApp. O sistema preenche a ficha e você confere antes de salvar. Pode colar mais de um de uma vez."
+        back={{ to: "/rp", label: "RPs" }}
       />
-      <Link to="/rp" className="-mt-4 mb-6 inline-flex text-sm font-semibold text-accent">
-        ← RPs
-      </Link>
       {!drafts ? (
         <Card>
           <div className="flex flex-col gap-4">

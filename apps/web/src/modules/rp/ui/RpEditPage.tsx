@@ -19,6 +19,13 @@ function ChamadoLink({ chamadoId }: { chamadoId: string }) {
   );
 }
 
+const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+
+// Nome do RP na trilha: linha e dia, para distinguir de outros RPs no caminho.
+function rpCrumb(rp: { line: string | null; occurredAt: string }): string {
+  return ["RP", rp.line, dayMonth.format(new Date(rp.occurredAt))].filter(Boolean).join(" · ");
+}
+
 export function RpEditPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -32,11 +39,14 @@ export function RpEditPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle eyebrow="Turno" title="RP" text="Ficha do Relatório Padrão. Ao gravar, o Problema ligado nas Pendências acompanha." />
-      <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold">
-        <Link to="/rp" className="text-accent">
-          ← RPs
-        </Link>
+      <PageTitle
+        eyebrow="Turno"
+        title="RP"
+        text="Ficha do Relatório Padrão. Ao gravar, o Problema ligado nas Pendências acompanha."
+        crumb={rpCrumb(data)}
+        back={{ to: "/rp", label: "RPs" }}
+      />
+      <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold empty:hidden">
         {data.problemRecordId ? (
           <Link to={`/registros/${data.problemRecordId}`} className="text-accent">
             Ver o Problema nas Pendências
@@ -58,7 +68,7 @@ export function RpEditPage() {
               <Button
                 tone="danger"
                 disabled={remove.isPending}
-                onClick={() => remove.mutate(data.id, { onSuccess: () => navigate("/rp") })}
+                onClick={() => remove.mutate(data.id, { onSuccess: () => navigate("/rp", { replace: true }) })}
               >
                 Sim, excluir
               </Button>

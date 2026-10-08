@@ -26,7 +26,7 @@ export function CapturePage() {
         occurredAt: fromLocalInput(when),
         memberId: memberId || null,
       },
-      { onSuccess: (record) => navigate(`/registros/${record.id}`) },
+      { onSuccess: (record) => navigate(`/registros/${record.id}`, { replace: true }) },
     );
   }
 

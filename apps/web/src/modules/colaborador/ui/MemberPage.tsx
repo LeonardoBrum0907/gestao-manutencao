@@ -46,10 +46,10 @@ export function MemberPage() {
 
   return (
     <div>
-      {back}
       <PageTitle
         eyebrow="Colaborador"
         title={member.name}
+        back={{ to: "/cadastro/colaboradores", label: "Colaboradores" }}
         text={subtitle}
         action={
           <div className="flex gap-2">
@@ -84,7 +84,7 @@ export function MemberPage() {
       {reporting ? (
         <ReportOptionsModal memberId={member.id} isTechnician={member.position === "technician"} onClose={() => setReporting(false)} />
       ) : null}
-      {editing ? <MemberPanel member={member} showProfileLink={false} onClose={() => setEditing(false)} onDeleted={() => navigate("/cadastro/colaboradores")} /> : null}
+      {editing ? <MemberPanel member={member} showProfileLink={false} onClose={() => setEditing(false)} onDeleted={() => navigate("/cadastro/colaboradores", { replace: true })} /> : null}
     </div>
   );
 }

@@ -85,6 +85,7 @@ const paths = {
   pencil: <path d="M15.5 4.5l4 4L8 20H4v-4z" />,
   trash: <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7" />,
   chevron: <path d="M9 5l7 7-7 7" />,
+  back: <path d="M19 12H5M11 6l-6 6 6 6" />,
   logout: (
     <>
       <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />

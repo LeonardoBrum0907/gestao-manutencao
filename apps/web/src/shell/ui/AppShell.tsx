@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate, Outlet } from "react-router-dom";
+import { MENU_STATE } from "../../app/nav-trail";
 import { useSession } from "../data/session";
 import { Icon } from "../../design/ui/icons";
 import { Sidebar } from "./Sidebar";
@@ -28,6 +29,7 @@ export function AppShell() {
           </button>
           <Link
             to="/captura"
+            state={MENU_STATE}
             className="inline-flex items-center gap-1.5 rounded-control bg-accent px-3 py-2 text-sm font-semibold text-accent-contrast"
           >
             <Icon name="plus" />
