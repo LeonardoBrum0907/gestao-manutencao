@@ -3,9 +3,9 @@ import { createPortal } from "react-dom";
 import { Button } from "./controls";
 import { useDialogFocus } from "./dialog";
 
-// Painel que abre à direita da lista (no celular, de baixo para cima), com o cadastro inteiro do item.
+// Ficha do item que abre no centro da tela (no celular, de baixo para cima), com o cadastro inteiro.
 // A lista continua visível atrás. Com onSubmit, corpo e rodapé viram um formulário só.
-export function SidePanel({
+export function DetailModal({
   open,
   eyebrow,
   title,
@@ -45,7 +45,7 @@ export function SidePanel({
   );
 
   return createPortal(
-    <div className="fixed inset-0 z-40 flex items-end justify-end sm:items-stretch">
+    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6">
       <div className="absolute inset-0 bg-overlay" onClick={onClose} />
       <div
         ref={panelRef}
@@ -53,7 +53,7 @@ export function SidePanel({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card border-t border-line bg-card shadow-card sm:h-full sm:max-h-none sm:w-[520px] sm:rounded-none sm:border-l sm:border-t-0"
+        className="relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card border-t border-line bg-card shadow-card sm:max-h-[min(52rem,calc(100dvh-3rem))] sm:max-w-xl sm:rounded-card sm:border"
       >
         <span className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-line sm:hidden" aria-hidden />
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-4 pb-4 pt-3 sm:px-6 sm:pt-5">

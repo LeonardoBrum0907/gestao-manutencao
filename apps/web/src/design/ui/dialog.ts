@@ -6,7 +6,7 @@ const focusable =
 // Janelas abertas, da de baixo para a de cima: só a de cima responde ao Esc e prende o Tab.
 const stack: object[] = [];
 
-// Modal e painel lateral: tira o resto da tela do alcance, foca o primeiro campo, Esc fecha e o Tab fica dentro.
+// Modal e ficha do item: tira o resto da tela do alcance, foca o primeiro campo, Esc fecha e o Tab fica dentro.
 export function useDialogFocus(open: boolean, onClose: () => void, panelRef: RefObject<HTMLElement | null>) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { LineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { PanelFooter, PanelSection, PanelTag, SidePanel } from "../../../design/ui/panel";
+import { PanelFooter, PanelSection, PanelTag, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { useToast } from "../../../design/ui/toast";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
@@ -69,7 +69,7 @@ export function LinePanel({ line, onClose }: { line: LineDto | null; onClose: ()
 
   return (
     <>
-      <SidePanel
+      <DetailModal
         open
         eyebrow={line ? "Linha" : "Nova"}
         title={line ? line.name : "Nova linha"}
@@ -223,7 +223,7 @@ export function LinePanel({ line, onClose }: { line: LineDto | null; onClose: ()
           </Field>
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
         </div>
-      </SidePanel>
+      </DetailModal>
       {line && addingMachine ? <MachineFormModal line={line} machine={null} onClose={() => setAddingMachine(false)} /> : null}
     </>
   );
