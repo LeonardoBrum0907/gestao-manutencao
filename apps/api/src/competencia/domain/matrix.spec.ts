@@ -53,10 +53,25 @@ describe("resumo da matriz", () => {
     assert.equal(summary.applicable, 4);
     assert.equal(summary.scored, 3);
     assert.equal(summary.meets, 2);
+    assert.equal(summary.above, 0);
+    assert.equal(summary.exact, 2);
     assert.equal(summary.below, 1);
     assert.equal(summary.unscored, 1);
     assert.equal(summary.average, 2.7);
     assert.equal(summary.adherence, 50);
+  });
+
+  it("separa quem passou do esperado de quem ficou igual", () => {
+    const entries = new Map([
+      ["A", entry("A", { score: 3 })],
+      ["B", entry("B", { score: 3 })],
+      ["C", entry("C", { score: 1 })],
+    ]);
+    const summary = summarize(skills, entries);
+    assert.equal(summary.above, 1);
+    assert.equal(summary.exact, 1);
+    assert.equal(summary.below, 1);
+    assert.equal(summary.meets, 2);
   });
 
   it("tira o “não se aplica” da conta", () => {

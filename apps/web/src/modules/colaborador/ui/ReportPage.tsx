@@ -41,6 +41,8 @@ const PILL_TONES = {
   ok: "bg-green-600/15 text-green-800",
   warn: "bg-amber-500/20 text-amber-800",
   bad: "bg-red-600/15 text-red-700",
+  // Nota igual ao esperado: o azul ardósia do tema claro (o relatório sai sempre claro).
+  equal: "bg-[#3b5b78]/15 text-[#2e4a63]",
   neutral: "bg-accent-soft text-accent",
 } as const;
 type PillTone = keyof typeof PILL_TONES;
@@ -244,8 +246,8 @@ function Matrix({ memberId }: { memberId: string }) {
         <Cell label="Avaliadas">
           {summary.scored}/{summary.applicable + summary.notApplicable}
         </Cell>
-        <Cell label="Atende">
-          <span className="text-green-700">{summary.meets}</span>
+        <Cell label="Acima / igual">
+          <span className="text-green-700">{summary.above}</span> / <span className="text-[#2e4a63]">{summary.exact}</span>
         </Cell>
         <Cell label="Abaixo">
           <span className="text-red-700">{summary.below}</span>
@@ -306,8 +308,8 @@ function Matrix({ memberId }: { memberId: string }) {
                           ) : score === null ? (
                             "—"
                           ) : (
-                            <Pill tone={state === "meets" ? "ok" : "bad"}>
-                              {state === "meets" ? "✔" : "✖"} {COMPETENCY_SCORE_LABELS[score].label}
+                            <Pill tone={state === "above" ? "ok" : state === "equal" ? "equal" : "bad"}>
+                              {state === "below" ? "✖" : "✔"} {COMPETENCY_SCORE_LABELS[score].label}
                             </Pill>
                           )}
                         </td>

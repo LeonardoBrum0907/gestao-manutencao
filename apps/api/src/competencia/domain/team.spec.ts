@@ -43,6 +43,8 @@ describe("visão da equipe", () => {
     assert.deepEqual(team.equipments.map((item) => item.id), ["e1", "e2"]);
     assert.deepEqual(team.members[0]?.cells.map((cell) => cell.equipmentId), ["e1"]);
     assert.equal(team.members[0]?.cells[0]?.adherence, 50);
+    assert.equal(team.members[0]?.cells[0]?.above, 1);
+    assert.equal(team.members[0]?.cells[0]?.exact, 0);
   });
 
   it("usa o corte de aderência configurado", () => {

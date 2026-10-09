@@ -1,5 +1,5 @@
-import { useState, type KeyboardEvent } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, type KeyboardEvent } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   COMPETENCY_LEVEL_EXPECTED,
   COMPETENCY_LEVEL_LABELS,
@@ -14,11 +14,10 @@ import {
   type MemberMatrixDto,
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, Stat, TextInput } from "../../../design/ui/controls";
+import { Card, Field, Notice, SelectInput, Stat, TextInput } from "../../../design/ui/controls";
 import { useMatrixCatalog } from "../data/catalog";
 import { useMatrix, useSetMatrixEquipments, useSetSkill, useSetSkills, type SkillWrite } from "../data/matrix";
 import {
-  adherenceTone,
   average,
   bySubgroup,
   entriesById,
@@ -28,20 +27,25 @@ import {
   pendingExpected,
   percent,
   skillsOf,
+  meetsExpected,
   skillState,
-  stateRowClass,
+  stateTextClass,
+  type SkillState,
 } from "../model/matrix";
-import { SkillScore, type ScoreValue } from "./SkillScore";
+import { ScoreStack, StackLegend, stackTitle } from "./ScoreStack";
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <Stat
-        label="Aderência"
-        value={percent(summary.adherence)}
-        tone={summary.adherence === null ? "text-muted" : summary.adherence >= 80 ? "text-accent" : "text-danger"}
-      />
-      <Stat label="Atende" value={summary.meets} />
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="col-span-2 sm:col-span-1">
+        <Stat
+          label="Aderência"
+          value={percent(summary.adherence)}
+          tone={summary.adherence === null ? "text-muted" : summary.adherence >= 80 ? "text-accent" : "text-danger"}
+        />
+      </div>
+      <Stat label="Acima" value={summary.above} tone={summary.above ? "text-accent" : ""} />
+      <Stat label="Igual" value={summary.exact} tone={summary.exact ? "text-equal-text" : ""} />
       <Stat label="Abaixo" value={summary.below} tone={summary.below ? "text-danger" : ""} />
       <Stat label="Sem nota" value={summary.unscored} tone="text-muted" />
       <Stat label="Não se aplica" value={summary.notApplicable} tone="text-muted" />
@@ -50,17 +54,85 @@ function Summary({ summary }: { summary: CompetencySummaryDto }) {
   );
 }
 
-function Bar({ value }: { value: number | null }) {
-  return (
-    <span className="block h-2 w-24 overflow-hidden rounded-full bg-chip" aria-hidden="true">
-      <span className={`block h-full ${adherenceTone(value)}`} style={{ width: `${value ?? 0}%` }} />
-    </span>
-  );
-}
-
 function focusSibling(row: HTMLElement, step: 1 | -1) {
   const rows = [...(row.closest("[data-matrix]")?.querySelectorAll<HTMLElement>("[data-skill-row]") ?? [])];
   rows[rows.indexOf(row) + step]?.focus();
+}
+
+type ScoreValue = { score: CompetencyScore | null; notApplicable: boolean };
+
+const scoreButton = "relative grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-sm font-semibold tabular-nums transition";
+
+// Nota escolhida, na cor do resultado; o esperado tem borda tracejada.
+function scoreTone(state: SkillState, picked: boolean, expected: boolean): string {
+  if (picked && state === "above") return "border-accent bg-accent text-accent-contrast";
+  if (picked && state === "equal") return "border-equal bg-equal text-equal-contrast";
+  if (picked && state === "below") return "border-danger bg-danger text-canvas";
+  if (expected) return "border-2 border-dashed border-muted bg-surface text-app hover:bg-chip";
+  return "border-line bg-surface text-muted hover:bg-chip hover:text-app";
+}
+
+function resultLabel(value: ScoreValue): string {
+  if (value.notApplicable) return "Não se aplica";
+  return value.score === null ? "Sem nota" : COMPETENCY_SCORE_LABELS[value.score].label;
+}
+
+// Régua de 0 a 4: um clique dá a nota, clicar de novo na mesma limpa.
+function ScoreScale({
+  skillText,
+  state,
+  expected,
+  value,
+  onPick,
+}: {
+  skillText: string;
+  state: SkillState;
+  expected: number;
+  value: ScoreValue;
+  onPick: (next: ScoreValue) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 pt-3.5">
+      <div role="radiogroup" aria-label={`Nota em ${skillText}`} className="flex items-center gap-1">
+        {COMPETENCY_SCORES.map((score) => {
+          const picked = !value.notApplicable && value.score === score;
+          return (
+            <button
+              key={score}
+              type="button"
+              role="radio"
+              aria-checked={picked}
+              data-skill-pill
+              title={`${score} · ${COMPETENCY_SCORE_LABELS[score].label}: ${COMPETENCY_SCORE_LABELS[score].hint}${score === expected ? " (esperado)" : ""}`}
+              onClick={() => onPick(picked ? { score: null, notApplicable: false } : { score, notApplicable: false })}
+              className={`${scoreButton} ${scoreTone(state, picked, score === expected)}`}
+            >
+              {score === expected ? (
+                <span aria-hidden="true" className="pointer-events-none absolute -top-3.5 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-[0.06em] text-muted">
+                  esp.
+                </span>
+              ) : null}
+              {score}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={value.notApplicable}
+          data-skill-pill
+          title="Não se aplica: fica fora da conta de aderência."
+          onClick={() => onPick({ score: null, notApplicable: !value.notApplicable })}
+          className={`ml-1.5 h-8 shrink-0 rounded-lg border px-2 text-[11px] font-semibold transition ${
+            value.notApplicable ? "border-muted bg-chip text-app" : "border-line bg-surface text-muted hover:bg-chip hover:text-app"
+          }`}
+        >
+          N/A
+        </button>
+      </div>
+      <span className={`w-32 text-xs ${stateTextClass[state]}`}>{resultLabel(value)}</span>
+    </div>
+  );
 }
 
 function SkillRow({
@@ -82,7 +154,7 @@ function SkillRow({
   };
   const set = (next: ScoreValue) => onChange({ ...base, ...next });
 
-  // Teclado com a linha (ou o seletor dela) em foco: 0 a 4 = nota, N = não se aplica, E = atende o esperado,
+  // Teclado com a linha (ou um botão da régua) em foco: 0 a 4 = nota, N = não se aplica, E = atende o esperado,
   // Del = limpar. Depois de marcar, o foco desce para a próxima habilidade.
   function onKeyDown(event: KeyboardEvent<HTMLLIElement>) {
     const target = event.target as HTMLElement;
@@ -110,12 +182,14 @@ function SkillRow({
       data-skill-row
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`flex flex-col gap-3 border-l-4 border-t border-t-line bg-card px-3 py-3 outline-none focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:flex-row sm:items-center sm:justify-between ${stateRowClass[state]}`}
+      className={`grid gap-x-6 border-t border-line px-4 py-2 outline-none focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:px-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center ${
+        state === "na" ? "opacity-70" : ""
+      }`}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 pt-1">
         <p className="text-sm text-app">{skill.text}</p>
-        <p className="mt-1 text-xs text-muted">
-          {COMPETENCY_LEVEL_LABELS[skill.level]} · esperado{" "}
+        <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted">
+          {COMPETENCY_LEVEL_LABELS[skill.level]} · esp.
           <SelectInput
             aria-label={`Esperado em ${skill.text}`}
             className="!inline-flex !w-auto !gap-1 !px-1.5 !py-0.5 !text-xs"
@@ -133,15 +207,18 @@ function SkillRow({
           </SelectInput>
         </p>
       </div>
-      <SkillScore
+      <ScoreScale
         skillText={skill.text}
         state={state}
+        expected={expected}
         value={{ score: base.score, notApplicable: base.notApplicable }}
         onPick={set}
       />
     </li>
   );
 }
+
+const linkButton = "text-xs font-semibold text-accent hover:underline disabled:cursor-default disabled:text-muted disabled:no-underline";
 
 function Equipment({
   catalog,
@@ -180,7 +257,7 @@ function Equipment({
       })),
     );
   return (
-    <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
+    <section id={`equipamento-${equipment}`} className="scroll-mt-4 overflow-hidden rounded-card border border-line bg-card shadow-card">
       <button
         type="button"
         aria-expanded={expanded}
@@ -189,52 +266,63 @@ function Equipment({
       >
         <span className="font-semibold text-app">{equipmentName(catalog, equipment)}</span>
         {summary ? (
-          <span className="flex items-center gap-3 text-sm text-muted">
+          <span className="flex items-center gap-3 text-sm text-muted" title={stackTitle(summary)}>
             <span className="tabular-nums">
               {summary.meets} de {summary.applicable} atendem
             </span>
-            <Bar value={summary.adherence} />
+            <ScoreStack counts={summary} />
             <span className="w-10 text-right font-semibold tabular-nums text-app">{percent(summary.adherence)}</span>
           </span>
         ) : null}
       </button>
       {expanded ? (
         <div className="border-t border-line">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-5">
-            <p className="text-xs text-muted">
-              Clique na nota para escolher. Com a linha em foco: <kbd className="rounded border border-line px-1">0</kbd> a{" "}
-              <kbd className="rounded border border-line px-1">4</kbd>, <kbd className="rounded border border-line px-1">N</kbd> não se aplica,{" "}
-              <kbd className="rounded border border-line px-1">E</kbd> atende o esperado, <kbd className="rounded border border-line px-1">Del</kbd> limpa.
-            </p>
-            <Button tone="ghost" className="px-3 py-1.5" disabled={bulkPending || pendingExpected(skills, entries).length === 0} onClick={fill(skills)}>
-              Atende o esperado em tudo sem nota
-            </Button>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-5">
+            {summary ? <StackLegend counts={summary} /> : <span />}
+            <span className="flex items-center gap-3">
+              <button type="button" className={linkButton} disabled={bulkPending || pendingExpected(skills, entries).length === 0} onClick={fill(skills)}>
+                Atende o esperado em tudo sem nota
+              </button>
+              <span
+                tabIndex={0}
+                role="note"
+                aria-label="Atalhos: com a linha em foco, 0 a 4 dá a nota, N não se aplica, E atende o esperado, Del limpa, setas sobem e descem."
+                title="Com a linha em foco: 0 a 4 dá a nota, N não se aplica, E atende o esperado, Del limpa, ↑ ↓ mudam de linha."
+                className="grid h-5 w-5 cursor-help place-items-center rounded-full border border-line text-[11px] font-bold text-muted"
+              >
+                ?
+              </span>
+            </span>
           </div>
-          {bySubgroup(skills).map((group) => (
-            <div key={group.subgroup}>
-              <div className="flex items-center justify-between gap-2 bg-chip px-4 py-2 sm:px-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.subgroup}</p>
-                <Button
-                  tone="ghost"
-                  className="px-2.5 py-1 text-xs"
-                  disabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
-                  onClick={fill(group.skills)}
-                >
-                  Atende o esperado
-                </Button>
+          {bySubgroup(skills).map((group) => {
+            const states = group.skills.map((skill) => skillState(skill, entries.get(skill.id)));
+            const applicable = states.filter((state) => state !== "na").length;
+            return (
+              <div key={group.subgroup}>
+                <div className="flex items-center justify-between gap-2 bg-chip px-4 py-2 sm:px-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.subgroup}</p>
+                  <span className="flex items-center gap-3">
+                    <span className="text-xs tabular-nums text-muted" title="Atendem / se aplicam">
+                      {states.filter(meetsExpected).length}/{applicable}
+                    </span>
+                    <button
+                      type="button"
+                      className={linkButton}
+                      disabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
+                      onClick={fill(group.skills)}
+                    >
+                      Atende o esperado
+                    </button>
+                  </span>
+                </div>
+                <ul>
+                  {group.skills.map((skill) => (
+                    <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
+                  ))}
+                </ul>
               </div>
-              <ul>
-                {group.skills.map((skill) => (
-                  <SkillRow
-                    key={skill.id}
-                    skill={skill}
-                    entry={entries.get(skill.id)}
-                    onChange={onChange}
-                  />
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
     </section>
@@ -246,7 +334,17 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
   const setSkill = useSetSkill(matrix.memberId);
   const setSkills = useSetSkills(matrix.memberId);
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState<string | null>(matrix.equipments[0] ?? null);
+  // ?equipamento= (vindo da Matriz da equipe) abre e mostra esse equipamento.
+  const [params] = useSearchParams();
+  const wanted = params.get("equipamento");
+  const [open, setOpen] = useState<string | null>(
+    wanted && matrix.equipments.includes(wanted) ? wanted : (matrix.equipments[0] ?? null),
+  );
+  useEffect(() => {
+    if (wanted && matrix.equipments.includes(wanted)) document.getElementById(`equipamento-${wanted}`)?.scrollIntoView({ block: "start" });
+    // Só ao abrir a tela.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleEquipment(key: string) {
     const next = matrix.equipments.includes(key)

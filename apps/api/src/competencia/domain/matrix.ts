@@ -32,7 +32,8 @@ export function expectedFor(skill: Pick<MatrixSkillDto, "level">, entry: MatrixE
 export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMap<string, MatrixEntry>): CompetencySummaryDto {
   let applicable = 0;
   let scored = 0;
-  let meets = 0;
+  let above = 0;
+  let exact = 0;
   let notApplicable = 0;
   let sum = 0;
   for (const skill of skills) {
@@ -45,12 +46,17 @@ export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMa
     if (entry?.score === null || entry?.score === undefined) continue;
     scored += 1;
     sum += entry.score;
-    if (entry.score >= expectedFor(skill, entry)) meets += 1;
+    const expected = expectedFor(skill, entry);
+    if (entry.score > expected) above += 1;
+    else if (entry.score === expected) exact += 1;
   }
+  const meets = above + exact;
   return {
     applicable,
     scored,
     meets,
+    above,
+    exact,
     below: scored - meets,
     unscored: applicable - scored,
     notApplicable,

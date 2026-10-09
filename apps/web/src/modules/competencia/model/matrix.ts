@@ -5,7 +5,8 @@ import {
   type MatrixSkillDto,
 } from "@manutencao/shared";
 
-export type SkillState = "meets" | "below" | "unscored" | "na";
+// above: nota acima do esperado; equal: igual (as duas contam como "atende"); below: abaixo.
+export type SkillState = "above" | "equal" | "below" | "unscored" | "na";
 
 export function entriesById(entries: CompetencyEntryDto[]): Map<string, CompetencyEntryDto> {
   return new Map(entries.map((entry) => [entry.skillId, entry]));
@@ -18,7 +19,9 @@ export function expectedOf(skill: MatrixSkillDto, entry: CompetencyEntryDto | un
 export function skillState(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined): SkillState {
   if (entry?.notApplicable) return "na";
   if (entry?.score === null || entry?.score === undefined) return "unscored";
-  return entry.score >= expectedOf(skill, entry) ? "meets" : "below";
+  const expected = expectedOf(skill, entry);
+  if (entry.score > expected) return "above";
+  return entry.score === expected ? "equal" : "below";
 }
 
 export function equipmentName(catalog: MatrixCatalogDto, id: string): string {
@@ -55,18 +58,18 @@ export function average(value: number | null): string {
   return value === null ? "—" : value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
-export const stateRowClass: Record<SkillState, string> = {
-  meets: "border-l-accent",
-  below: "border-l-danger",
-  unscored: "border-l-line",
-  na: "border-l-line opacity-70",
-};
-
-export function adherenceTone(value: number | null): string {
-  if (value === null) return "bg-line";
-  if (value >= 80) return "bg-accent";
-  return "bg-danger";
+export function meetsExpected(state: SkillState): boolean {
+  return state === "above" || state === "equal";
 }
+
+// Cor do texto do resultado de cada habilidade.
+export const stateTextClass: Record<SkillState, string> = {
+  above: "font-semibold text-accent",
+  equal: "font-semibold text-equal-text",
+  below: "font-semibold text-danger",
+  unscored: "text-muted",
+  na: "text-muted",
+};
 
 // Habilidades ainda sem nota e que se aplicam: as que o "atende o esperado" preenche.
 export function pendingExpected(skills: MatrixSkillDto[], entries: ReadonlyMap<string, CompetencyEntryDto>): MatrixSkillDto[] {
