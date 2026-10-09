@@ -27,6 +27,20 @@ export function cellClass(adherence: number | null, scored: number, threshold: n
   return isQualified(adherence, threshold) ? "bg-accent-soft text-accent" : "bg-danger-soft text-danger";
 }
 
+// Qualificados / mínimo no cabeçalho da coluna.
+export function coverageTextClass(status: TeamEquipmentDto["status"]): string {
+  if (status === "ok") return "text-accent";
+  if (status === "single") return "text-app";
+  return "text-danger";
+}
+
+// Alertas agrupados por tipo, do mais grave para o menos.
+export function alertGroups(team: TeamMatrixDto): { status: TeamEquipmentDto["status"]; equipments: TeamEquipmentDto[] }[] {
+  const groups = new Map<TeamEquipmentDto["status"], TeamEquipmentDto[]>();
+  for (const equipment of alertsOf(team)) groups.set(equipment.status, [...(groups.get(equipment.status) ?? []), equipment]);
+  return [...groups].map(([status, equipments]) => ({ status, equipments }));
+}
+
 export function statusChipClass(status: TeamEquipmentDto["status"]): string {
   if (status === "ok") return "rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent";
   if (status === "single") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-app";

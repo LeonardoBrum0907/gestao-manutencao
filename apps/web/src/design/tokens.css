@@ -17,6 +17,11 @@
   --card-bg: #fbfcfa;
   --danger: #8d2f2f;
   --danger-soft: #f8e8e6;
+  /* Nota igual ao esperado (azul ardósia): neutra, longe do verde (acima) e do vermelho (abaixo). */
+  --equal: #3b5b78;
+  --equal-contrast: #f4f8fc;
+  --equal-soft: #e6eef5;
+  --equal-text: #2e4a63;
   --chip-bg: #eef3f0;
   --overlay: rgb(28 40 34 / 0.4);
   /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
@@ -45,6 +50,10 @@
   --card-bg: #1e2823;
   --danger: #f0b4ae;
   --danger-soft: #3a2422;
+  --equal: #9dbbd6;
+  --equal-contrast: #0c1824;
+  --equal-soft: #1f2d3a;
+  --equal-text: #b3cde4;
   --chip-bg: #24302a;
   --overlay: rgb(0 0 0 / 0.6);
   --chart-1: #34a96c;

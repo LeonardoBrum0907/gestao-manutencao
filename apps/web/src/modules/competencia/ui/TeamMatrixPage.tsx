@@ -2,61 +2,97 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MEMBER_SHIFTS, MEMBER_SHIFT_LABELS, type MemberShift, type TeamMatrixDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
+import { Card, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { useTeamMatrix } from "../data/matrix";
-import { alertsOf, cellClass, coverageLabel, qualifiedMembers, statusChipClass } from "../model/team";
+import { alertGroups, cellClass, coverageLabel, coverageTextClass, qualifiedMembers, statusChipClass } from "../model/team";
+import { ScoreStack, StackLegend, stackTitle } from "./ScoreStack";
 
 function shiftName(shift: string): string {
   return MEMBER_SHIFT_LABELS[shift as MemberShift] ?? shift;
 }
 
 function Alerts({ team }: { team: TeamMatrixDto }) {
-  const alerts = alertsOf(team);
+  const groups = alertGroups(team);
   const late = team.members.filter((member) => member.pdiOverdue > 0);
+  if (groups.length === 0 && late.length === 0) {
+    return <Card compact className="text-sm text-muted">Nenhum alerta: todos os equipamentos estão cobertos e sem PDI atrasado.</Card>;
+  }
   return (
-    <Card>
-      <h2 className="text-sm font-semibold text-app">Alertas</h2>
-      {alerts.length === 0 && late.length === 0 ? <p className="mt-2 text-sm text-muted">Nenhum alerta: todos os equipamentos estão cobertos e sem PDI atrasado.</p> : null}
-      <ul className="mt-2 flex flex-col gap-2">
-        {alerts.map((equipment) => {
-          const names = qualifiedMembers(team, equipment.id).map((member) => member.name);
-          return (
-            <li key={equipment.id} className="flex flex-wrap items-center gap-2 text-sm text-app">
-              <span className={statusChipClass(equipment.status)}>{coverageLabel[equipment.status]}</span>
-              <span className="font-medium">{equipment.name}</span>
-              <span className="text-muted">
-                {equipment.qualified} qualificado(s){equipment.minQualified ? ` de ${equipment.minQualified} necessário(s)` : ""}
-                {equipment.status === "single" && names.length ? `: só ${names[0]}` : ""}
-              </span>
-            </li>
-          );
-        })}
-        {late.map((member) => (
-          <li key={member.id} className="flex flex-wrap items-center gap-2 text-sm text-app">
-            <span className="rounded-control bg-danger-soft px-2 py-1 text-xs font-semibold text-danger">PDI atrasado</span>
-            <Link to={`/cadastro/colaboradores/${member.id}/pdi`} className="font-medium text-accent hover:underline">
-              {member.name}
-            </Link>
-            <span className="text-muted">{member.pdiOverdue} item(ns) vencido(s)</span>
+    <Card compact>
+      <h2 className="sr-only">Alertas</h2>
+      <ul className="flex flex-col gap-2 text-sm">
+        {groups.map((group) => (
+          <li key={group.status} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className={`shrink-0 ${statusChipClass(group.status)}`}>
+              {coverageLabel[group.status]} · {group.equipments.length}
+            </span>
+            <span className="min-w-0 text-app">
+              {group.equipments
+                .map((equipment) => {
+                  const names = qualifiedMembers(team, equipment.id).map((member) => member.name);
+                  return group.status === "single" && names.length ? `${equipment.name} (só ${names[0]})` : equipment.name;
+                })
+                .join(" · ")}
+            </span>
           </li>
         ))}
+        {late.length ? (
+          <li className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="shrink-0 rounded-control bg-danger-soft px-2 py-1 text-xs font-semibold text-danger">PDI atrasado · {late.length}</span>
+            <span className="min-w-0">
+              {late.map((member, index) => (
+                <span key={member.id}>
+                  {index ? " · " : ""}
+                  <Link to={`/cadastro/colaboradores/${member.id}/pdi`} className="font-medium text-accent hover:underline">
+                    {member.name}
+                  </Link>
+                  <span className="text-muted"> ({member.pdiOverdue})</span>
+                </span>
+              ))}
+            </span>
+          </li>
+        ) : null}
       </ul>
     </Card>
   );
 }
 
-function Heatmap({ team, shift }: { team: TeamMatrixDto; shift: string }) {
+function Heatmap({ team, shift, onShift }: { team: TeamMatrixDto; shift: string; onShift: (shift: string) => void }) {
   const members = team.members.filter((member) => !shift || member.shift === shift);
   return (
     <Card compact className="overflow-hidden !p-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line px-4 py-2.5">
+        <StackLegend />
+        <div className="w-44">
+          <SelectInput aria-label="Turno" value={shift} onChange={(event) => onShift(event.target.value)}>
+            <option value="">Todos os turnos</option>
+            {MEMBER_SHIFTS.map((item) => (
+              <option key={item} value={item}>
+                {MEMBER_SHIFT_LABELS[item]}
+              </option>
+            ))}
+          </SelectInput>
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="text-xs uppercase tracking-[0.06em] text-muted">
             <tr>
               <th className="sticky left-0 z-10 bg-card px-4 py-3 font-semibold">Técnico</th>
               {team.equipments.map((equipment) => (
-                <th key={equipment.id} className="min-w-24 px-2 py-3 text-center font-semibold" title={equipment.name}>
-                  <span className="line-clamp-2">{equipment.name}</span>
+                <th key={equipment.id} className="min-w-28 px-2 py-3 text-center align-bottom font-semibold">
+                  <span className="line-clamp-2" title={equipment.name}>
+                    {equipment.name}
+                  </span>
+                  <span
+                    className={`mt-1 block text-[11px] normal-case tracking-normal tabular-nums ${coverageTextClass(equipment.status)}`}
+                    title={`${coverageLabel[equipment.status]}: ${equipment.qualified} qualificado(s)${equipment.minQualified ? ` de ${equipment.minQualified} necessário(s)` : ""}`}
+                  >
+                    {equipment.status === "none" || equipment.status === "short" ? "● " : ""}
+                    {equipment.qualified}
+                    {equipment.minQualified ? ` / ${equipment.minQualified}` : ""}
+                    <span className="sr-only"> qualificados, {coverageLabel[equipment.status]}</span>
+                  </span>
                 </th>
               ))}
             </tr>
@@ -75,12 +111,15 @@ function Heatmap({ team, shift }: { team: TeamMatrixDto; shift: string }) {
                   return (
                     <td key={equipment.id} className="px-1 py-1 text-center">
                       {cell ? (
-                        <span
-                          className={`block rounded-control px-2 py-1.5 font-semibold tabular-nums ${cellClass(cell.adherence, cell.scored, team.qualifiedAdherence)}`}
-                          title={`${cell.scored} de ${cell.applicable} avaliadas, ${cell.below} abaixo do esperado`}
+                        <Link
+                          to={`/cadastro/colaboradores/${member.id}/matriz?equipamento=${encodeURIComponent(equipment.id)}`}
+                          aria-label={`${member.name} em ${equipment.name}: ${cell.adherence === null ? "sem nota" : `${cell.adherence}%`}, ${stackTitle(cell)}`}
+                          title={stackTitle(cell)}
+                          className={`flex flex-col gap-1.5 rounded-control px-2 py-1.5 font-semibold tabular-nums transition hover:ring-2 hover:ring-inset hover:ring-accent ${cellClass(cell.adherence, cell.scored, team.qualifiedAdherence)}`}
                         >
                           {cell.adherence === null ? "—" : `${cell.adherence}%`}
-                        </span>
+                          <ScoreStack counts={cell} className="w-full !h-1.5" />
+                        </Link>
                       ) : (
                         <span className="text-muted" title="Equipamento não marcado na matriz do técnico">
                           ·
@@ -99,19 +138,6 @@ function Heatmap({ team, shift }: { team: TeamMatrixDto; shift: string }) {
               </tr>
             ) : null}
           </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-t-line">
-              <th className="sticky left-0 z-10 bg-card px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted">Qualificados / mínimo</th>
-              {team.equipments.map((equipment) => (
-                <td key={equipment.id} className="px-1 py-2 text-center">
-                  <span className={`inline-block ${statusChipClass(equipment.status)}`} title={coverageLabel[equipment.status]}>
-                    {equipment.qualified}
-                    {equipment.minQualified ? ` / ${equipment.minQualified}` : ""}
-                  </span>
-                </td>
-              ))}
-            </tr>
-          </tfoot>
         </table>
       </div>
     </Card>
@@ -122,27 +148,15 @@ export function TeamMatrixPage() {
   const team = useTeamMatrix();
   const [shift, setShift] = useState("");
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageTitle
         eyebrow="Equipe"
         title="Matriz da equipe"
         text={`Aderência de cada técnico por equipamento. Qualificado é aderência de ${team.data?.qualifiedAdherence ?? 80}% ou mais.`}
         action={
-          <div className="flex flex-wrap items-end gap-3">
-            <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
-              Ajustar o corte e o mínimo por equipamento (Configurações › Avaliação)
-            </Link>
-            <Field label="Turno">
-              <SelectInput value={shift} onChange={(event) => setShift(event.target.value)}>
-                <option value="">Todos</option>
-                {MEMBER_SHIFTS.map((item) => (
-                  <option key={item} value={item}>
-                    {MEMBER_SHIFT_LABELS[item]}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-          </div>
+          <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
+            Ajustar o corte e o mínimo por equipamento
+          </Link>
         }
       />
       {team.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
@@ -150,7 +164,7 @@ export function TeamMatrixPage() {
       {team.data ? (
         <>
           <Alerts team={team.data} />
-          <Heatmap team={team.data} shift={shift} />
+          <Heatmap team={team.data} shift={shift} onShift={setShift} />
           {team.data.equipments.some((equipment) => Object.keys(equipment.qualifiedByShift).length > 0) ? (
             <Card>
               <h2 className="text-sm font-semibold text-app">Qualificados por turno</h2>
