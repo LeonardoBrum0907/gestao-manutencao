@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import type { MemberDto, MemberPosition } from "@manutencao/shared";
 import { Button, Card, Field, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
@@ -15,7 +15,6 @@ const NO_TEAM = "none";
 type Open = { member: MemberDto | null; removing?: boolean } | undefined;
 
 export function MembersPage() {
-  const navigate = useNavigate();
   const members = useMembers();
   const teams = useTeams();
   const [positionFilter, setPositionFilter] = useState<MemberPosition | "">("");
@@ -35,7 +34,7 @@ export function MembersPage() {
       <PageTitle
         eyebrow="Equipe"
         title="Colaboradores"
-        text="Clique numa pessoa para ver e editar o cadastro. Matriz, PDI e desempenho ficam na ficha completa."
+        text="Clique numa pessoa para abrir a ficha completa (matriz, PDI e desempenho). O cadastro se edita pelo botão Editar da ficha ou pelo menu ⋯."
         action={<Button onClick={() => setOpen({ member: null })}>Novo colaborador</Button>}
       />
       {members.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
@@ -67,9 +66,8 @@ export function MembersPage() {
         <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-card">
           {visible.map((member) => (
             <li key={member.id} className={`flex items-center gap-1 pr-2 ${open?.member?.id === member.id ? "bg-accent-soft" : ""}`}>
-              <button
-                type="button"
-                onClick={() => setOpen({ member })}
+              <Link
+                to={`/cadastro/colaboradores/${member.id}`}
                 className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3 text-left transition hover:bg-accent-soft"
               >
                 <span className="min-w-0 flex-1">
@@ -81,11 +79,10 @@ export function MembersPage() {
                 <span className="hidden w-40 shrink-0 truncate text-sm text-app md:block">{teamText(member, allTeams) || "Sem equipe"}</span>
                 <span className={`w-20 shrink-0 text-sm ${memberStatusClass(member.status) || "text-app"}`}>{memberStatusLabel(member.status)}</span>
                 <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
-              </button>
+              </Link>
               <RowMenu
                 label={`Mais ações de ${member.name}`}
                 items={[
-                  { label: "Abrir ficha completa", onSelect: () => navigate(`/cadastro/colaboradores/${member.id}`) },
                   { label: "Editar", onSelect: () => setOpen({ member }) },
                   { label: "Excluir…", danger: true, onSelect: () => setOpen({ member, removing: true }) },
                 ]}

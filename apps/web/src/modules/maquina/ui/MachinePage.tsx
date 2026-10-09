@@ -105,6 +105,7 @@ export function MachinePage() {
         eyebrow={[factory?.name, line.name].filter(Boolean).join(" · ")}
         title={machine.name}
         text={facts.join(" · ")}
+        back={{ to: "/maquinas", label: "Máquinas" }}
         action={
           <div className="flex flex-wrap gap-2">
             <Button tone="ghost" onClick={() => setEditing(true)}>
@@ -120,9 +121,6 @@ export function MachinePage() {
         }
       />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm">
-        <Link to="/maquinas" className="font-semibold text-accent">
-          ← Máquinas
-        </Link>
         <span>
           Status: <span className={machineStatusClass(machine.status) || "text-app"}>{machineStatusLabel(machine.status)}</span>
         </span>
@@ -206,7 +204,7 @@ export function MachinePage() {
         </Card>
       </div>
       {editing ? (
-        <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/maquinas")} />
+        <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/maquinas", { replace: true })} />
       ) : null}
     </div>
   );

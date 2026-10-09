@@ -31,6 +31,7 @@ import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
 import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
 import { RankedChart } from "./RankedChart";
+import { NavTrail } from "../../../design/ui/nav-trail";
 import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
 import "../../../design/ui/report.css";
 
@@ -40,6 +41,8 @@ const PILL_TONES = {
   ok: "bg-green-600/15 text-green-800",
   warn: "bg-amber-500/20 text-amber-800",
   bad: "bg-red-600/15 text-red-700",
+  // Nota igual ao esperado: o azul ardósia do tema claro (o relatório sai sempre claro).
+  equal: "bg-[#3b5b78]/15 text-[#2e4a63]",
   neutral: "bg-accent-soft text-accent",
 } as const;
 type PillTone = keyof typeof PILL_TONES;
@@ -243,8 +246,8 @@ function Matrix({ memberId }: { memberId: string }) {
         <Cell label="Avaliadas">
           {summary.scored}/{summary.applicable + summary.notApplicable}
         </Cell>
-        <Cell label="Atende">
-          <span className="text-green-700">{summary.meets}</span>
+        <Cell label="Acima / igual">
+          <span className="text-green-700">{summary.above}</span> / <span className="text-[#2e4a63]">{summary.exact}</span>
         </Cell>
         <Cell label="Abaixo">
           <span className="text-red-700">{summary.below}</span>
@@ -305,8 +308,8 @@ function Matrix({ memberId }: { memberId: string }) {
                           ) : score === null ? (
                             "—"
                           ) : (
-                            <Pill tone={state === "meets" ? "ok" : "bad"}>
-                              {state === "meets" ? "✔" : "✖"} {COMPETENCY_SCORE_LABELS[score].label}
+                            <Pill tone={state === "above" ? "ok" : state === "equal" ? "equal" : "bad"}>
+                              {state === "below" ? "✖" : "✔"} {COMPETENCY_SCORE_LABELS[score].label}
                             </Pill>
                           )}
                         </td>
@@ -550,9 +553,7 @@ export function ReportPage() {
   return (
     <div>
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Link to={`/cadastro/colaboradores/${member.id}`} className="text-sm font-medium text-accent hover:underline">
-          ← Voltar à ficha
-        </Link>
+        <NavTrail current={`Relatório de ${member.name}`} back={{ to: `/cadastro/colaboradores/${member.id}`, label: member.name }} className="" />
         <div className="flex flex-wrap items-center gap-2">
           <ZoomControls preview={preview} />
           <Button onClick={() => window.print()}>Imprimir / Salvar PDF</Button>

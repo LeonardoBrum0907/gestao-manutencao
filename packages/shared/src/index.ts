@@ -457,7 +457,10 @@ export type CompetencyEntryDto = {
 export type CompetencySummaryDto = {
   applicable: number;
   scored: number;
+  // Atende = acima + igual ao esperado.
   meets: number;
+  above: number;
+  exact: number;
   below: number;
   unscored: number;
   notApplicable: number;

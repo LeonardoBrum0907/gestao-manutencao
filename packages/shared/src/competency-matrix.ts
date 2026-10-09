@@ -77,7 +77,8 @@ export type TeamMemberDto = {
   // Itens do PDI em aberto com prazo vencido.
   pdiOverdue: number;
   // Só os equipamentos marcados na matriz do técnico.
-  cells: { equipmentId: string; adherence: number | null; scored: number; applicable: number; below: number }[];
+  // above/exact/below: habilidades com nota acima, igual e abaixo do esperado.
+  cells: { equipmentId: string; adherence: number | null; scored: number; applicable: number; above: number; exact: number; below: number }[];
 };
 
 export type TeamMatrixDto = {

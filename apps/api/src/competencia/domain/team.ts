@@ -37,7 +37,15 @@ export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly Tea
       .map((equipment) => {
         const summary = summarize(skillsOf(equipment.id), byId);
         if (summary.adherence !== null && summary.adherence >= qualifiedAdherence) qualified.get(equipment.id)?.push(member.shift);
-        return { equipmentId: equipment.id, adherence: summary.adherence, scored: summary.scored, applicable: summary.applicable, below: summary.below };
+        return {
+          equipmentId: equipment.id,
+          adherence: summary.adherence,
+          scored: summary.scored,
+          applicable: summary.applicable,
+          above: summary.above,
+          exact: summary.exact,
+          below: summary.below,
+        };
       });
     return { id: member.id, name: member.name, shift: member.shift, teamId: member.teamId, pdiOverdue: member.pdiOverdue, cells };
   });

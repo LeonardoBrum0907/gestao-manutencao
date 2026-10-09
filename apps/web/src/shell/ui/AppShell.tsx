@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, Navigate, Outlet } from "react-router-dom";
+import { Link, Navigate, Outlet, useMatch } from "react-router-dom";
+import { MENU_STATE } from "../../app/nav-trail";
 import { useSession } from "../data/session";
 import { Icon } from "../../design/ui/icons";
 import { Sidebar } from "./Sidebar";
@@ -7,6 +8,8 @@ import { Sidebar } from "./Sidebar";
 export function AppShell() {
   const session = useSession();
   const [open, setOpen] = useState(false);
+  // Telas de tabela larga usam a largura toda; as demais ficam numa coluna de leitura.
+  const wide = useMatch("/competencias");
 
   if (session.isPending) {
     return <p className="h-full overflow-y-auto bg-canvas p-8 text-sm text-muted">Carregando…</p>;
@@ -28,6 +31,7 @@ export function AppShell() {
           </button>
           <Link
             to="/captura"
+            state={MENU_STATE}
             className="inline-flex items-center gap-1.5 rounded-control bg-accent px-3 py-2 text-sm font-semibold text-accent-contrast"
           >
             <Icon name="plus" />
@@ -35,7 +39,7 @@ export function AppShell() {
           </Link>
         </header>
         <main className="app-main min-h-0 flex-1 overflow-y-auto">
-          <div className="app-page mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
+          <div className={`app-page mx-auto w-full px-4 py-6 sm:px-8 sm:py-8 ${wide ? "" : "max-w-5xl"}`}>
             <Outlet />
           </div>
         </main>
