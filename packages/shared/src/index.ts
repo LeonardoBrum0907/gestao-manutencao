@@ -399,6 +399,33 @@ export type RecordPageDto = {
   nextCursor: string | null;
 };
 
+// Tarefas em checklist (Pendências): grupos por prazo, na ordem da tela.
+export const BOARD_GROUPS = ["overdue", "today", "upcoming", "undated", "done"] as const;
+export type BoardGroup = (typeof BOARD_GROUPS)[number];
+// Grupos que recebem um item arrastado: atrasada e concluída não são destino de arrastar.
+export const BOARD_TARGETS = ["today", "upcoming", "undated"] as const;
+export type BoardTarget = (typeof BOARD_TARGETS)[number];
+
+export function isBoardTarget(value: string): value is BoardTarget {
+  return (BOARD_TARGETS as readonly string[]).includes(value);
+}
+
+export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "occurredAt"> & {
+  group: BoardGroup;
+};
+
+export type BoardDto = {
+  today: string;
+  items: BoardItemDto[];
+};
+
+// Mudança feita no checklist: concluir/reabrir, levar para outro grupo e/ou a ordem do grupo de destino.
+export type BoardChangeDto = {
+  status?: RecordStatus;
+  group?: BoardTarget;
+  order?: string[];
+};
+
 export type SessionDto = {
   email: string;
 };

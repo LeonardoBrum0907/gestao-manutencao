@@ -7,6 +7,9 @@ import {
   isRecordStatus,
   isRecordType,
   type AttachmentDto,
+  type BoardDto,
+  type BoardGroup,
+  type BoardItemDto,
   type MemberRecordSummaryDto,
   type RecordDto,
   type RecordListItemDto,
@@ -14,7 +17,8 @@ import {
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
-import { dueRange } from "../domain/follow-up";
+import { boardGroup, compareBoard, doneSince } from "../domain/board";
+import { calendarDay, dueRange } from "../domain/follow-up";
 import type { RecordListFilter } from "../domain/record-list";
 import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
@@ -201,9 +205,91 @@ function memberRows(ids: string[]) {
   return ids.map((memberId, position) => ({ memberId, position }));
 }
 
+const boardSelect = {
+  id: true,
+  type: true,
+  body: true,
+  occurredAt: true,
+  status: true,
+  origin: true,
+  priority: true,
+  dueAt: true,
+  boardPosition: true,
+  updatedAt: true,
+} as const;
+
+const boardOrder: Record<BoardGroup, number> = { overdue: 0, today: 1, upcoming: 2, undated: 3, done: 4 };
+
+export type BoardWrite = {
+  status: string | null;
+  // undefined = prazo não muda; null = sem prazo.
+  dueAt: Date | null | undefined;
+  order: string[] | null;
+};
+
 @Injectable()
 export class RecordRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Checklist de Tarefas: as em aberto, mais as concluídas da última semana.
+  async board(now: Date): Promise<BoardDto> {
+    const rows = await this.prisma.record.findMany({
+      where: {
+        AND: [
+          notChamado,
+          { type: "task" },
+          { OR: [{ status: { in: ["open", "in_progress"] } }, { status: "done", updatedAt: { gte: doneSince(now) } }] },
+        ],
+      },
+      select: boardSelect,
+    });
+    const placed = rows.map((row) => ({ row, group: boardGroup({ status: row.status as BoardItemDto["status"], dueAt: row.dueAt }, now) }));
+    placed.sort((a, b) => {
+      if (a.group !== b.group) return boardOrder[a.group] - boardOrder[b.group];
+      // Concluídas: a última fechada no topo.
+      if (a.group === "done") return b.row.updatedAt.getTime() - a.row.updatedAt.getTime();
+      return compareBoard(a.row, b.row);
+    });
+    return {
+      today: calendarDay(now),
+      items: placed.map(({ row, group }) => {
+        const item = toListItem({ ...row, tone: null, lineId: null });
+        return {
+          id: item.id,
+          type: item.type,
+          body: item.body,
+          status: item.status,
+          origin: item.origin,
+          priority: item.priority,
+          dueAt: item.dueAt,
+          occurredAt: item.occurredAt,
+          group,
+        };
+      }),
+    };
+  }
+
+  async boardRecord(id: string) {
+    const row = await this.prisma.record.findUnique({ where: { id }, select: { type: true, origin: true } });
+    if (!row) return null;
+    if (!isRecordType(row.type) || !isRecordOrigin(row.origin)) {
+      throw new DomainError("invalid", 500, "Registro gravado está inválido.");
+    }
+    return { type: row.type, origin: row.origin };
+  }
+
+  // Uma transação: o item muda de status/prazo e o grupo de destino recebe a ordem nova (0, 1, 2…).
+  async applyBoard(id: string, write: BoardWrite): Promise<void> {
+    const data: Prisma.RecordUpdateInput = {};
+    if (write.status !== null) data.status = write.status;
+    if (write.dueAt !== undefined) data.dueAt = write.dueAt;
+    const steps: Prisma.PrismaPromise<unknown>[] = [];
+    if (Object.keys(data).length > 0) steps.push(this.prisma.record.update({ where: { id }, data }));
+    (write.order ?? []).forEach((recordId, index) => {
+      steps.push(this.prisma.record.updateMany({ where: { id: recordId }, data: { boardPosition: index } }));
+    });
+    await this.prisma.$transaction(steps);
+  }
 
   async listPage(filter: RecordListFilter, now: Date): Promise<RecordPageDto> {
     const rows = await this.prisma.record.findMany({

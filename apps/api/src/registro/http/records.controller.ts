@@ -30,6 +30,12 @@ export class RecordsController {
     return this.list.page(parseRecordList(query));
   }
 
+  // Antes de ":id", senão "board" vira um id.
+  @Get("board")
+  board() {
+    return this.list.board();
+  }
+
   @Get(":id")
   get(@Param("id") id: string) {
     return this.records.get(id);
@@ -54,6 +60,12 @@ export class RecordsController {
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.records.updateSheet(id, body);
+  }
+
+  @Patch(":id/board")
+  async changeOnBoard(@Param("id") id: string, @Body() body: unknown) {
+    await this.records.changeOnBoard(id, body);
+    return { ok: true };
   }
 
   @Post(":id/attachments")

@@ -1,29 +1,64 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { DueWindow, RecordListItemDto, RecordType } from "@manutencao/shared";
+import type { RecordListItemDto, RecordType } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { RowMenu, type RowMenuItem } from "../../../design/ui/row-menu";
 import { flattenPages, useFollowUp, usePrefetchRecord } from "../data/records";
-import {
-  dueChoices,
-  followUpFromSearch,
-  followUpSearch,
-  prazoApplies,
-  type FollowUpQuery,
-} from "../model/follow-up";
-import { originLabel, recordShortName, statusChipClass, statusLabel, statusOptions, typeChoices } from "../model/record";
+import { followUpFromSearch, followUpSearch, type FollowUpQuery } from "../model/follow-up";
+import { originLabel, recordShortName, statusChipClass, statusLabel, statusOptions } from "../model/record";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
 import { DueMark, PriorityMark } from "./RecordMarks";
+import { TaskBoard } from "./TaskBoard";
+
+type Tab = "tarefas" | "problemas" | "feedbacks";
+
+const tabs: { tab: Tab; label: string }[] = [
+  { tab: "tarefas", label: "Tarefas" },
+  { tab: "problemas", label: "Problemas" },
+  { tab: "feedbacks", label: "Feedbacks" },
+];
+
+function tabOf(params: URLSearchParams): Tab {
+  const tab = params.get("tab");
+  if (tab === "problemas" || tab === "feedbacks") return tab;
+  return "tarefas";
+}
 
 export function FollowUpPage() {
+  const [params, setParams] = useSearchParams();
+  const tab = tabOf(params);
+  return (
+    <div className="mx-auto max-w-3xl">
+      <PageTitle title="Pendências" />
+      <div role="tablist" aria-label="Tipo de pendência" className="-mt-2 mb-6 flex gap-1 overflow-x-auto border-b border-line">
+        {tabs.map((item) => (
+          <button
+            key={item.tab}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.tab}
+            onClick={() => setParams(item.tab === "tarefas" ? {} : { tab: item.tab }, { replace: true })}
+            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-[15px] transition ${
+              tab === item.tab ? "border-accent font-semibold text-app" : "border-transparent text-muted hover:text-app"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {tab === "tarefas" ? <TaskBoard /> : <RecordList type={tab === "problemas" ? "problem" : "feedback"} />}
+    </div>
+  );
+}
+
+function RecordList({ type }: { type: RecordType }) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const filter = followUpFromSearch(params);
+  const filter = { ...followUpFromSearch(params), type, due: null };
   const list = useFollowUp(filter);
   const records = flattenPages(list.data?.pages);
   const prefetch = usePrefetchRecord();
-  const dueEnabled = prazoApplies(filter.type);
   const [removing, setRemoving] = useState<RecordListItemDto | null>(null);
 
   function menu(record: RecordListItemDto): RowMenuItem[] {
@@ -34,85 +69,35 @@ export function FollowUpPage() {
   }
 
   function apply(next: FollowUpQuery) {
-    setParams(followUpSearch(next), { replace: true });
-  }
-
-  function onType(value: string) {
-    const type = value ? (value as RecordType) : null;
-    apply({
-      ...filter,
-      type,
-      due: prazoApplies(type) ? filter.due : null,
-    });
-  }
-
-  function onDue(due: DueWindow) {
-    apply({ ...filter, due: filter.due === due ? null : due });
+    const search = followUpSearch({ ...next, type: null, due: null });
+    search.set("tab", type === "problem" ? "problemas" : "feedbacks");
+    setParams(search, { replace: true });
   }
 
   const empty = list.isSuccess && records.length === 0;
-  const filtered = Boolean(filter.type || filter.status || filter.due);
+  const filtered = Boolean(filter.status);
 
   return (
     <div>
-      <PageTitle
-        title="Pendências"
-        text="Tudo o que foi registrado, para organizar por tipo, status e prazo. Abra a ficha pela linha."
-      />
-      <Card className="mb-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-          <Field label="Tipo">
-            <SelectInput value={filter.type ?? ""} onChange={(event) => onType(event.target.value)}>
-              <option value="">Todos</option>
-              {typeChoices.map((choice) => (
-                <option key={choice.type} value={choice.type}>
-                  {choice.short}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
-          <Field label="Status">
-            <SelectInput
-              value={filter.status ?? ""}
-              onChange={(event) => apply({ ...filter, status: event.target.value ? (event.target.value as FollowUpQuery["status"]) : null })}
-            >
-              <option value="">Todos</option>
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
-          <div>
-            <p className="text-sm font-medium text-app">Prazo</p>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {dueChoices.map((choice) => {
-                const pressed = filter.due === choice.due;
-                return (
-                  <button
-                    key={choice.due}
-                    type="button"
-                    aria-pressed={pressed}
-                    disabled={!dueEnabled}
-                    onClick={() => onDue(choice.due)}
-                    className={`rounded-control border px-3 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                      pressed ? "border-accent bg-accent-soft text-app" : "border-line bg-surface text-app hover:bg-chip"
-                    }`}
-                  >
-                    {choice.label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-xs text-muted">Prazo só existe na Tarefa.</p>
-          </div>
-        </div>
-      </Card>
+      <div className="mb-4 max-w-xs">
+        <Field label="Status">
+          <SelectInput
+            value={filter.status ?? ""}
+            onChange={(event) => apply({ ...filter, status: event.target.value ? (event.target.value as FollowUpQuery["status"]) : null })}
+          >
+            <option value="">Todos</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+      </div>
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
       {list.isPending ? <p className="text-sm text-muted">Carregando lista…</p> : null}
       {empty ? (
-        <Card>{filtered ? "Nenhum registro com esses filtros." : "Nenhum registro ainda. Comece por Registrar."}</Card>
+        <Card>{filtered ? "Nenhum registro com esse status." : "Nenhum registro ainda. Comece por Registrar."}</Card>
       ) : null}
       {records.length > 0 ? (
         <>

@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { AttachmentDto, RecordDto, RemovalCheckDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
+import { assertBoardChange, boardDueAt, parseBoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
 import { recordRemovalWarnings } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
@@ -74,6 +75,19 @@ export class Records {
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
     return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
+  }
+
+  // Checklist de Pendências: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.
+  async changeOnBoard(id: string, body: unknown, now: Date = new Date()): Promise<void> {
+    const change = parseBoardChange(id, body);
+    const record = await this.records.boardRecord(id);
+    if (!record) throw new DomainError("not_found", 404, "Registro não encontrado.");
+    assertBoardChange(record, change);
+    await this.records.applyBoard(id, {
+      status: change.status,
+      dueAt: change.target === null ? undefined : boardDueAt(change.target, now),
+      order: change.order,
+    });
   }
 
   // Todo registro pode ser excluído; o que tiver vínculo volta como aviso para o coordenador ler antes.
