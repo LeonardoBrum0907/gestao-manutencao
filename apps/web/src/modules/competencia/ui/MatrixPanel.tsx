@@ -32,6 +32,7 @@ import {
   stateTextClass,
   type SkillState,
 } from "../model/matrix";
+import { Chevron } from "../../../design/ui/select";
 import { ScoreStack, StackLegend, stackTitle } from "./ScoreStack";
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
@@ -224,20 +225,52 @@ function SkillRow({
 const linkButton = "text-xs font-semibold text-accent hover:underline disabled:cursor-default disabled:text-muted disabled:no-underline";
 
 // Faixa de título do subconjunto: mais escura e em negrito, para não se confundir com as habilidades abaixo.
+/**
+ * Subconjuntos recolhidos dentro de um equipamento. Começam todos abertos; com busca ativa ficam todos
+ * abertos, para o resultado nunca ficar escondido.
+ * @example const subgroups = useCollapsedSubgroups(); subgroups.isOpen("Desbobinador", query)
+ */
+function useCollapsedSubgroups(): { isOpen: (name: string, query: string) => boolean; toggle: (name: string) => void } {
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const isOpen = (name: string, query: string) => Boolean(query.trim()) || !collapsed.has(name);
+  const toggle = (name: string) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (!next.delete(name)) next.add(name);
+      return next;
+    });
+  return { isOpen, toggle };
+}
+
+// Clicar no nome recolhe ou expande as habilidades do subconjunto.
 function SubgroupHeader({
   name,
   tally,
+  expanded,
+  onToggle,
   fillDisabled,
   onFill,
 }: {
   name: string;
   tally: { meets: number; applicable: number };
+  expanded: boolean;
+  onToggle: () => void;
   fillDisabled: boolean;
   onFill: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-y border-line-strong bg-group px-4 py-2 sm:px-5">
-      <p className="text-[12.5px] font-bold uppercase tracking-[0.07em] text-app">{name}</p>
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={onToggle}
+        className="flex min-w-0 items-center gap-1.5 rounded text-left text-[12.5px] font-bold uppercase tracking-[0.07em] text-app hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <span className={`inline-flex transition-transform ${expanded ? "" : "-rotate-90"}`}>
+          <Chevron open={false} />
+        </span>
+        {name}
+      </button>
       <span className="flex items-center gap-3">
         <span className="text-xs font-semibold tabular-nums text-app" title="Atendem / se aplicam">
           {tally.meets}/{tally.applicable}
@@ -271,6 +304,7 @@ function Equipment({
   onBulk: (writes: SkillWrite[]) => void;
   bulkPending: boolean;
 }) {
+  const subgroups = useCollapsedSubgroups();
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
   const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
@@ -329,14 +363,18 @@ function Equipment({
               <SubgroupHeader
                 name={group.subgroup}
                 tally={subgroupTally(group.skills, entries)}
+                expanded={subgroups.isOpen(group.subgroup, query)}
+                onToggle={() => subgroups.toggle(group.subgroup)}
                 fillDisabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
                 onFill={fill(group.skills)}
               />
-              <ul>
-                {group.skills.map((skill) => (
-                  <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
-                ))}
-              </ul>
+              {subgroups.isOpen(group.subgroup, query) ? (
+                <ul>
+                  {group.skills.map((skill) => (
+                    <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ))}
         </div>
