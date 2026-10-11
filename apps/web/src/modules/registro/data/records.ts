@@ -83,6 +83,7 @@ export type FeedbackSheetBody = {
   occurredAt: string;
   memberId: string | null;
   tone: FeedbackTone | null;
+  notes: string | null;
 };
 
 export type ProblemSheetBody = {
@@ -96,10 +97,13 @@ export type ProblemSheetBody = {
   notes: string | null;
 };
 
+// Com `type` diferente do atual, a ficha troca o tipo do registro.
+export type SheetBody = (TaskSheetBody | FeedbackSheetBody | ProblemSheetBody) & { type?: RecordType };
+
 export function useUpdateRecord(id: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: TaskSheetBody | FeedbackSheetBody | ProblemSheetBody) =>
+    mutationFn: (body: SheetBody) =>
       api<RecordDto>(`/api/records/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
     onSuccess: (record) => {
       client.setQueryData(["records", id], record);

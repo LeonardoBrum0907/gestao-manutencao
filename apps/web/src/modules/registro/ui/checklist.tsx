@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { RecordLink } from "./record-link";
 
 // Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
 // para concluir e arrastar para reordenar ou levar a outro grupo.
@@ -74,7 +75,7 @@ export function CheckRow({
   ring = ringTone.plain,
   label,
   onToggle,
-  href,
+  link,
   title,
   info,
   tag,
@@ -83,7 +84,7 @@ export function CheckRow({
   ring?: string;
   label: string;
   onToggle?: () => void;
-  href: string;
+  link: RecordLink;
   title: string;
   info?: ReactNode;
   tag?: ReactNode;
@@ -103,7 +104,9 @@ export function CheckRow({
       </button>
       <div className="min-w-0">
         <Link
-          to={href}
+          to={link.to}
+          state={link.state}
+          data-record-id={link.recordId}
           onKeyDown={keepKeys}
           className={`block whitespace-pre-line break-words text-[15px] leading-snug hover:underline hover:decoration-line hover:underline-offset-4 ${
             checked ? "text-muted line-through" : "text-app"

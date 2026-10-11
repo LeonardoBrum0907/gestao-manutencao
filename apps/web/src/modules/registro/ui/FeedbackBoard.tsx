@@ -8,6 +8,7 @@ import { toneLabel } from "../model/record";
 import { CheckRow, Checklist, GroupingPills, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
 import { MemberChip, ToneChip } from "./chips";
 import { AddRow } from "./quick-add";
+import { useRecordLink } from "./record-link";
 
 const MODES = ["colaborador", "tom", "data"] as const;
 type Mode = (typeof MODES)[number];
@@ -79,6 +80,7 @@ export function FeedbackBoard() {
   const board = useFeedbackBoard();
   const change = useBoardChange();
   const toast = useToast();
+  const linkOf = useRecordLink();
   const { fading, complete } = useCompleting();
   const [mode, setMode] = useGrouping<Mode>("pendencias.feedbacks.agrupar", MODES, "colaborador");
 
@@ -160,7 +162,7 @@ export function FeedbackBoard() {
         checked={item.status === "done" || fading.has(id)}
         label={`${item.status === "done" ? "Voltar para a conversar" : "Marcar como conversado"}: ${item.body}`}
         onToggle={() => toggle(item)}
-        href={`/registros/${item.id}`}
+        link={linkOf({ id: item.id, origin: "inbox" })}
         title={item.body}
         info={
           <>

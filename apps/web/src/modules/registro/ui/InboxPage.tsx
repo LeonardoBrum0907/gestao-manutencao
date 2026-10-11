@@ -6,11 +6,11 @@ import { useToast } from "../../../design/ui/toast";
 import { useBoardChange, useFeedbackBoard, useProblemBoard, useTaskBoard } from "../data/board";
 import { dueDay, dueLabel } from "../model/board";
 import { inboxItems, type InboxItem } from "../model/inbox";
-import { recordShortName, toneLabel } from "../model/record";
+import { recordShortName, recordTypeIcon, toneLabel } from "../model/record";
 import { CheckRow, InProgressChip, ringTone, useCompleting } from "./checklist";
 import { InboxAdd } from "./InboxAdd";
-
-const typeIcon: Record<RecordType, IconName> = { task: "list", problem: "alert", feedback: "user" };
+import { RecordModalHost } from "./RecordModal";
+import { useRecordLink } from "./record-link";
 const doneText: Record<RecordType, string> = { task: "Tarefa concluída.", problem: "Problema resolvido.", feedback: "Marcado como conversado." };
 
 function dueTone(dueAt: string, today: string): string {
@@ -40,7 +40,7 @@ function TypeTag({ type }: { type: RecordType }) {
   return (
     <span className="inline-flex items-center gap-1">
       {recordShortName(type)}
-      <Icon name={typeIcon[type]} className="h-3.5 w-3.5" />
+      <Icon name={recordTypeIcon[type]} className="h-3.5 w-3.5" />
     </span>
   );
 }
@@ -52,6 +52,7 @@ export function InboxPage() {
   const feedbacks = useFeedbackBoard();
   const change = useBoardChange();
   const toast = useToast();
+  const linkOf = useRecordLink();
   const { fading, complete } = useCompleting();
 
   const failed = tasks.error ?? problems.error ?? feedbacks.error;
@@ -85,7 +86,7 @@ export function InboxPage() {
                 ring={item.priority === "high" ? ringTone.high : item.priority === "medium" ? ringTone.medium : ringTone.plain}
                 label={`${item.type === "feedback" ? "Marcar como conversado" : "Concluir"}: ${item.body}`}
                 onToggle={() => finish(item)}
-                href={`/registros/${item.id}`}
+                link={linkOf({ id: item.id, origin: "inbox" })}
                 title={item.body}
                 info={<ItemInfo item={item} today={today} fading={fading.has(item.id)} />}
                 tag={<TypeTag type={item.type} />}
@@ -99,6 +100,7 @@ export function InboxPage() {
       <div className="mt-4">
         <InboxAdd today={today} />
       </div>
+      <RecordModalHost />
     </div>
   );
 }

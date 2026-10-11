@@ -13,10 +13,14 @@ import {
   type RecordStatus,
   type RecordType,
 } from "@manutencao/shared";
+import type { IconName } from "../../../design/ui/icons";
 
 export function recordGestorName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].gestor;
 }
+
+// Ícone do tipo na Entrada, no modal e na etiqueta de tipo.
+export const recordTypeIcon: Record<RecordType, IconName> = { task: "list", problem: "alert", feedback: "user" };
 
 export function recordShortName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].short;

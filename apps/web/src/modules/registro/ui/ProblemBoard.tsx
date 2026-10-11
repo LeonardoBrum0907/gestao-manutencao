@@ -10,6 +10,7 @@ import { originLabel } from "../model/record";
 import { CheckRow, Checklist, GroupingPills, InProgressChip, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
 import { PlaceChips, type PlaceValue } from "./chips";
 import { AddRow } from "./quick-add";
+import { useRecordLink } from "./record-link";
 
 const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
@@ -58,6 +59,7 @@ export function ProblemBoard() {
   const board = useProblemBoard();
   const change = useBoardChange();
   const toast = useToast();
+  const linkOf = useRecordLink();
   const navigate = useNavigate();
   const { fading, complete } = useCompleting();
   const [mode, setMode] = useGrouping<ProblemMode>("pendencias.problemas.agrupar", PROBLEM_MODES, "linha");
@@ -145,7 +147,7 @@ export function ProblemBoard() {
         checked={checked}
         label={item.rpId ? `Abrir o RP para fechar: ${item.body}` : `${item.status === "done" ? "Reabrir" : "Marcar como resolvido"}: ${item.body}`}
         onToggle={() => toggle(item)}
-        href={`/registros/${item.id}`}
+        link={linkOf(item)}
         title={item.body}
         info={
           <>

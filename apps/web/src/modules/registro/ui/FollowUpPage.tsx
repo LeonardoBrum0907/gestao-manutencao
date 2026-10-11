@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
 import { FeedbackBoard } from "./FeedbackBoard";
 import { ProblemBoard } from "./ProblemBoard";
+import { RecordModalHost } from "./RecordModal";
 import { TaskBoard } from "./TaskBoard";
 
 type Tab = "tarefas" | "problemas" | "feedbacks";
@@ -41,6 +42,7 @@ export function FollowUpPage() {
         ))}
       </div>
       {tab === "tarefas" ? <TaskBoard /> : tab === "problemas" ? <ProblemBoard /> : <FeedbackBoard />}
+      <RecordModalHost />
     </div>
   );
 }

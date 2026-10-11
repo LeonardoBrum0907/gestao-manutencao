@@ -1,16 +1,24 @@
-import { useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import type { FeedbackTone, RecordPriority, RecordType } from "@manutencao/shared";
 import { SelectInput } from "../../../design/ui/controls";
 import { Icon, type IconName } from "../../../design/ui/icons";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
 import { subassemblyChoices } from "../../cadastro/model/machine-spot";
 import { dayLabel, nextDay } from "../model/board";
-import { priorityLabel, recordShortName, toneLabel } from "../model/record";
+import { priorityLabel, recordShortName, recordTypeIcon, toneLabel } from "../model/record";
 
 // Etiquetas do cartão de adicionar (no estilo do Todoist): cada uma abre a lista de escolha e,
 // quando tem valor, ganha um × para tirar.
 
 const chipIcon = (name: IconName) => <Icon name={name} className="h-3.5 w-3.5" />;
+
+// Na coluna lateral do modal do registro as etiquetas aparecem sem borda, alinhadas ao rótulo.
+const PlainChips = createContext(false);
+
+/** Etiquetas sem borda dentro dele. Ex.: `<PlainChipsArea><PriorityChip … /></PlainChipsArea>` */
+export function PlainChipsArea({ children }: { children: ReactNode }) {
+  return <PlainChips.Provider value>{children}</PlainChips.Provider>;
+}
 
 type ChipProps = {
   label: string;
@@ -28,10 +36,19 @@ type ChipProps = {
  * Ex.: `<Chip label="Linha" value={lineId} icon="line" onChange={setLineId} onClear={() => setLineId("")}>{options}</Chip>`
  */
 export function Chip({ label, value, icon, tone = "text-app", onChange, onClear, children }: ChipProps) {
+  const plain = useContext(PlainChips);
   const filled = value !== "";
+  const frame = plain ? "-ml-2" : "border border-line bg-surface";
   return (
-    <span className={`inline-flex items-center rounded-md border border-line bg-surface ${filled ? tone : "text-muted"}`}>
-      <SelectInput variant="chip" aria-label={label} value={value} icon={chipIcon(icon)} onChange={(event) => onChange(event.target.value)}>
+    <span className={`inline-flex items-center rounded-md ${frame} ${filled ? tone : "text-muted"}`}>
+      <SelectInput
+        variant="chip"
+        aria-label={label}
+        value={value}
+        icon={chipIcon(icon)}
+        className={plain ? "hover:!bg-card" : ""}
+        onChange={(event) => onChange(event.target.value)}
+      >
         {children}
       </SelectInput>
       {filled && onClear ? (
@@ -120,7 +137,7 @@ export function PriorityChip({ value, onChange }: { value: RecordPriority | null
 
 export function TypeChip({ value, onChange }: { value: RecordType; onChange: (value: RecordType) => void }) {
   return (
-    <Chip label="Tipo" value={value} icon="inbox" onChange={(next) => onChange(next as RecordType)}>
+    <Chip label="Tipo" value={value} icon={recordTypeIcon[value]} onChange={(next) => onChange(next as RecordType)}>
       <option value="task">{recordShortName("task")}</option>
       <option value="problem">{recordShortName("problem")}</option>
       <option value="feedback">{recordShortName("feedback")}</option>
@@ -128,11 +145,11 @@ export function TypeChip({ value, onChange }: { value: RecordType; onChange: (va
   );
 }
 
-export function MemberChip({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function MemberChip({ value, label = "Colaborador", onChange }: { value: string; label?: string; onChange: (value: string) => void }) {
   const members = useMembers();
   return (
-    <Chip label="Colaborador" value={value} icon="user" onChange={onChange} onClear={() => onChange("")}>
-      {value ? null : <option value="">Colaborador</option>}
+    <Chip label={label} value={value} icon="user" onChange={onChange} onClear={() => onChange("")}>
+      {value ? null : <option value="">{label}</option>}
       {(members.data ?? []).map((member) => (
         <option key={member.id} value={member.id}>
           {member.name}

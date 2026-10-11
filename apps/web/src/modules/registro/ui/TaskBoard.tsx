@@ -10,6 +10,7 @@ import { dueLabel, groupEmpty, isDropTarget, nextDay, todayTitle } from "../mode
 import { CheckRow, Checklist, InProgressChip, ringTone, scrollToGroup, useCompleting, type ChecklistGroup } from "./checklist";
 import { DueChip, PriorityChip } from "./chips";
 import { AddRow } from "./quick-add";
+import { useRecordLink } from "./record-link";
 
 const groupOrder: BoardGroup[] = ["overdue", "today", "upcoming", "undated", "done"];
 
@@ -60,6 +61,7 @@ export function TaskBoard() {
   const board = useTaskBoard();
   const change = useBoardChange();
   const toast = useToast();
+  const linkOf = useRecordLink();
   const client = useQueryClient();
   const [params] = useSearchParams();
   const { fading, complete } = useCompleting();
@@ -123,7 +125,7 @@ export function TaskBoard() {
         ring={item.priority === "high" ? ringTone.high : item.priority === "medium" ? ringTone.medium : ringTone.plain}
         label={`${item.status === "done" ? "Reabrir" : "Concluir"}: ${item.body}`}
         onToggle={() => toggle(item)}
-        href={`/registros/${item.id}`}
+        link={linkOf(item)}
         title={item.body}
         info={
           item.dueAt || (item.status === "in_progress" && !checked) ? (
