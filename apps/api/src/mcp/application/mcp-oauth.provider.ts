@@ -24,6 +24,14 @@ export const STATIC_TOKEN_CLIENT = "chave-fixa";
 
 type LoginForm = { decision?: unknown; password?: unknown };
 
+// O form-action do CSP vale também para o redirecionamento que vem depois do envio: sem a origem
+// do retorno (já conferida pelo SDK contra o cadastro do cliente), o navegador barra a volta ao app.
+// Endereço de app nativo (cursor://...) não tem origem, então vai só o esquema.
+export function redirectSource(redirectUri: string): string {
+  const url = new URL(redirectUri);
+  return url.origin === "null" ? url.protocol : url.origin;
+}
+
 @Injectable()
 export class McpOAuthProvider implements OAuthServerProvider {
   private readonly codes = new AuthorizationCodes();
@@ -179,7 +187,10 @@ export class McpOAuthProvider implements OAuthServerProvider {
 
   private page(res: Response, client: OAuthClientInformationFull, params: AuthorizationParams, error: string | null): void {
     res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'");
+    res.setHeader(
+      "Content-Security-Policy",
+      `default-src 'none'; style-src 'unsafe-inline'; form-action 'self' ${redirectSource(params.redirectUri)}; frame-ancestors 'none'`,
+    );
     res.status(error ? 400 : 200).type("html").send(
       renderLoginPage({
         clientName: client.client_name?.trim() || "um app de IA",

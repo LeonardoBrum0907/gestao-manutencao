@@ -6,7 +6,7 @@ import type { EnvService } from "../../env.module";
 import type { PasswordHasher } from "../../identity/infra/password.hasher";
 import type { UserRepository } from "../../identity/infra/user.repository";
 import type { McpOAuthRepository, StoredMcpToken } from "../infra/mcp-oauth.repository";
-import { McpOAuthProvider, STATIC_TOKEN_CLIENT } from "./mcp-oauth.provider";
+import { McpOAuthProvider, redirectSource, STATIC_TOKEN_CLIENT } from "./mcp-oauth.provider";
 
 const client = { client_id: "c1", redirect_uris: ["https://claude.ai/cb"], client_name: "Claude" } as OAuthClientInformationFull;
 const params = { codeChallenge: "ch", redirectUri: "https://claude.ai/cb", state: "s", scopes: [] };
@@ -26,10 +26,10 @@ function setup(storedPassword: string, mcpToken: string | null = null) {
 }
 
 function fakeResponse(body: Record<string, string>) {
-  const out: { status?: number; html?: string; location?: string } = {};
+  const out: { status?: number; html?: string; location?: string; headers: Record<string, string> } = { headers: {} };
   const res = {
     req: { method: "POST", body },
-    setHeader: () => res,
+    setHeader: (name: string, value: string) => ((out.headers[name] = value), res),
     status: (code: number) => ((out.status = code), res),
     type: () => res,
     send: (html: string) => ((out.html = html), res),
@@ -59,6 +59,13 @@ describe("login OAuth do MCP", () => {
     const info = await provider.verifyAccessToken(tokens.access_token);
     assert.equal(info.clientId, "c1");
     await assert.rejects(provider.verifyAccessToken(tokens.refresh_token ?? ""));
+  });
+
+  it("a tela de senha deixa o navegador voltar para o endereço de retorno do app", async () => {
+    const { res, out } = fakeResponse({});
+    await setup("a").authorize(client, params, res);
+    assert.match(out.headers["Content-Security-Policy"] ?? "", /form-action 'self' https:\/\/claude\.ai;/);
+    assert.equal(redirectSource("cursor://anysphere.cursor-retrieval/oauth/callback"), "cursor:");
   });
 
   it("aceita a chave fixa do .env só quando ela existe", async () => {

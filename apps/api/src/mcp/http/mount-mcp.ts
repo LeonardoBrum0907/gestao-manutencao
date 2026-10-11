@@ -10,8 +10,8 @@ import { McpOAuthProvider } from "../application/mcp-oauth.provider";
 import { McpUseCases } from "../application/mcp-use-cases";
 
 // Atrás do cloudflared todo pedido vem do mesmo IP; o limite do SDK vira um limite geral, e o
-// aviso sobre X-Forwarded-For só polui o log.
-const RATE_LIMIT = { validate: { xForwardedForHeader: false } };
+// aviso sobre X-Forwarded-For / Forwarded só polui o log.
+const RATE_LIMIT = { validate: { xForwardedForHeader: false, forwardedHeader: false } };
 
 // Rotas de fora do Nest: o guard de sessão por cookie não vale aqui. Quem protege /mcp é a chave
 // Bearer (OAuth ou MCP_TOKEN); /authorize, /token, /register e /.well-known são do protocolo OAuth.
