@@ -82,7 +82,7 @@ export class Records {
     return this.records.update(id, next, current.memberIds);
   }
 
-  // Checklist de Pendências: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.
+  // Checklist de Registros: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.
   async changeOnBoard(id: string, body: unknown, now: Date = new Date()): Promise<void> {
     const change = parseBoardChange(id, body);
     const record = await this.records.boardRecord(id);

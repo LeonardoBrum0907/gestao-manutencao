@@ -53,7 +53,7 @@ export function useSaveChamado(id?: string) {
   });
 }
 
-// "Gerar pendência": a Tarefa nova entra em Pendências e no Dashboard.
+// "Gerar pendência": a Tarefa nova entra em Registros e no Dashboard.
 export function useAddChamadoTask(id: string) {
   const client = useQueryClient();
   const saved = useChamadoSaved();

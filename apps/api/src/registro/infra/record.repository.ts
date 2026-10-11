@@ -193,7 +193,7 @@ function involving(memberId: string): Prisma.RecordWhereInput {
 }
 
 // Os filtros vão para o banco: antes a API trazia todos os registros e filtrava no Node.
-// Chamado tem tela própria (Turno › Chamados) e fica fora de Pendências; o que sobra dele vira Tarefa.
+// Chamado tem tela própria (Turno › Chamados) e fica fora de Registros; o que sobra dele vira Tarefa.
 export const notChamado = { origin: { not: "chamado" } } as const;
 
 function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput {
@@ -481,7 +481,7 @@ export class RecordRepository {
     };
   }
 
-  // Excluir pela lista de Pendências: o RP de quem o registro é espelho sai junto (sem o espelho o RP
+  // Excluir pela lista de Registros: o RP de quem o registro é espelho sai junto (sem o espelho o RP
   // some das listas). Pós-preventivas ligadas ao RP só perdem a ligação (SetNull no banco).
   async removeWithRp(id: string): Promise<string[]> {
     const files = await this.prisma.recordAttachment.findMany({ where: { recordId: id }, select: { storageKey: true } });

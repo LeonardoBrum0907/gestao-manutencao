@@ -7,7 +7,6 @@ import {
   RECORD_STATUSES,
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
-  RECORD_TYPES,
   type FeedbackTone,
   type RecordOrigin,
   type RecordPriority,
@@ -52,12 +51,6 @@ export function toneChipClass(tone: FeedbackTone | null): string {
   if (tone === "negative") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-danger";
   return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
 }
-
-export const typeChoices = RECORD_TYPES.map((type) => ({
-  type,
-  short: RECORD_TYPE_LABELS[type].short,
-  gestor: RECORD_TYPE_LABELS[type].gestor,
-}));
 
 export const statusOptions = RECORD_STATUSES.map((status) => ({
   value: status,

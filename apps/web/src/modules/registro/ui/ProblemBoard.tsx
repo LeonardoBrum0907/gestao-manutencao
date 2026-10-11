@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ProblemBoardItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Notice, SelectInput } from "../../../design/ui/controls";
+import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { useLines, useMachines } from "../../cadastro/data/cadastro";
 import { useAddProblem, useBoardChange, useProblemBoard, type NewProblemSpot } from "../data/board";
 import { PROBLEM_MODES, placeGroups, placeTag, problemModeOptions, type ProblemMode } from "../model/problem-board";
 import { originLabel } from "../model/record";
-import { AddRow, CheckRow, Checklist, GroupingPills, InProgressChip, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
+import { CheckRow, Checklist, GroupingPills, InProgressChip, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
+import { PlaceChips, type PlaceValue } from "./chips";
+import { AddRow } from "./quick-add";
 
 const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
@@ -16,44 +17,15 @@ function shortDay(iso: string) {
   return dayMonth.format(new Date(iso)).replace(".", "").replace(" de ", " ");
 }
 
-// Sem grupo que diga o lugar: escolhe a linha e, se ela tiver máquinas cadastradas, a máquina.
-function SpotPicker({ id, lineId, machineId, onLine, onMachine }: { id: string; lineId: string; machineId: string; onLine: (id: string) => void; onMachine: (id: string) => void }) {
-  const lines = useLines();
-  const machines = useMachines();
-  const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === lineId);
-  return (
-    <>
-      <div className="w-full sm:w-48">
-        <SelectInput id={`${id}-linha`} aria-label="Linha" value={lineId} onChange={(event) => onLine(event.target.value)}>
-          <option value="">Sem linha</option>
-          {(lines.data ?? []).map((line) => (
-            <option key={line.id} value={line.id}>
-              {line.name}
-            </option>
-          ))}
-        </SelectInput>
-      </div>
-      {lineMachines.length ? (
-        <div className="w-full sm:w-56">
-          <SelectInput id={`${id}-maquina`} aria-label="Máquina" value={machineId} onChange={(event) => onMachine(event.target.value)}>
-            <option value="">Máquina: não sei</option>
-            {lineMachines.map((machine) => (
-              <option key={machine.id} value={machine.id}>
-                {machine.name}
-              </option>
-            ))}
-          </SelectInput>
-        </div>
-      ) : null}
-    </>
-  );
+function placeOf(spot: NewProblemSpot | undefined): PlaceValue {
+  return { lineId: spot?.lineId ?? "", machineId: spot?.machineId ?? "", subassemblyId: spot?.subassemblyId ?? "" };
 }
 
+// O lugar começa com o do grupo e pode mudar nas etiquetas antes de adicionar.
 function AddProblem({ spot, inProgress, label = "Adicionar problema" }: { spot?: NewProblemSpot; inProgress?: boolean; label?: string }) {
   const add = useAddProblem();
   const toast = useToast();
-  const [lineId, setLineId] = useState("");
-  const [machineId, setMachineId] = useState("");
+  const [place, setPlace] = useState(() => placeOf(spot));
   const key = `${spot?.subassemblyId ?? spot?.machineId ?? spot?.lineId ?? "lugar"}-${inProgress ? "andamento" : "aberto"}`;
   return (
     <AddRow
@@ -61,23 +33,14 @@ function AddProblem({ spot, inProgress, label = "Adicionar problema" }: { spot?:
       placeholder="Qual é o problema?"
       id={`novo-problema-${key}`}
       pending={add.isPending}
-      extra={
-        spot ? null : (
-          <SpotPicker
-            id={`novo-problema-${key}`}
-            lineId={lineId}
-            machineId={machineId}
-            onLine={(next) => {
-              setLineId(next);
-              setMachineId("");
-            }}
-            onMachine={setMachineId}
-          />
-        )
-      }
+      chips={<PlaceChips value={place} onChange={setPlace} />}
       onAdd={(body, clear) =>
         add.mutate(
-          { body, spot: spot ?? { lineId: lineId || null, machineId: machineId || null }, inProgress: Boolean(inProgress) },
+          {
+            body,
+            spot: { lineId: place.lineId || null, machineId: place.machineId || null, subassemblyId: place.subassemblyId || null },
+            inProgress: Boolean(inProgress),
+          },
           { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) },
         )
       }

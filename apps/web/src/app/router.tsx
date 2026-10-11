@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
 import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
 import { TeamMatrixPage } from "../modules/competencia/ui/TeamMatrixPage";
@@ -11,8 +11,8 @@ import { MachinePage } from "../modules/maquina/ui/MachinePage";
 import { MachinesPage } from "../modules/maquina/ui/MachinesPage";
 import { PostPreventiveListPage } from "../modules/pos-preventiva/ui/PostPreventiveListPage";
 import { NewPostPreventivePage, PostPreventivePage } from "../modules/pos-preventiva/ui/PostPreventivePage";
-import { CapturePage } from "../modules/registro/ui/CapturePage";
 import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
+import { InboxPage } from "../modules/registro/ui/InboxPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
 import { RpEditPage } from "../modules/rp/ui/RpEditPage";
 import { RpListPage } from "../modules/rp/ui/RpListPage";
@@ -25,6 +25,12 @@ import { LoginPage } from "../shell/ui/LoginPage";
 function MatrixRedirect() {
   const { memberId } = useParams();
   return <Navigate to={`/cadastro/colaboradores/${memberId}/matriz`} replace />;
+}
+
+// Pendências virou Registros: o endereço antigo (links do painel, favoritos) leva junto o filtro da URL.
+function FollowUpRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/registros${search}`} replace />;
 }
 
 // Endereços antigos dos cadastros, que foram para Configurações.
@@ -43,12 +49,14 @@ export function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<AppShell />}>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/captura" element={<CapturePage />} />
-        <Route path="/acompanhamento" element={<FollowUpPage />} />
+        <Route path="/entrada" element={<InboxPage />} />
+        <Route path="/captura" element={<Navigate to="/entrada" replace />} />
+        <Route path="/registros" element={<FollowUpPage />} />
+        <Route path="/acompanhamento" element={<FollowUpRedirect />} />
         <Route path="/turno/chamados" element={<ChamadosPage />} />
         <Route path="/turno/chamado" element={<Navigate to="/turno/chamados?abrir=novo" replace />} />
-        {/* Ocorrência saiu do menu: anotar um problema rápido é Registrar. */}
-        <Route path="/turno/ocorrencia" element={<Navigate to="/captura" replace />} />
+        {/* Ocorrência saiu do menu: anotar um problema rápido é na Entrada. */}
+        <Route path="/turno/ocorrencia" element={<Navigate to="/entrada" replace />} />
         <Route path="/rp" element={<RpListPage />} />
         <Route path="/rp/novo" element={<RpPastePage />} />
         <Route path="/rp/:id" element={<RpEditPage />} />
@@ -58,7 +66,6 @@ export function AppRouter() {
         <Route path="/maquinas" element={<MachinesPage />} />
         <Route path="/maquinas/:id" element={<MachinePage />} />
         <Route path="/maquinas/:id/folha" element={<AttentionSheetPage />} />
-        <Route path="/registros" element={<Navigate to="/acompanhamento" replace />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
         <Route path="/cadastro/colaboradores/:memberId/relatorio" element={<ReportPage />} />
@@ -72,7 +79,7 @@ export function AppRouter() {
         <Route path="/competencias" element={<TeamMatrixPage />} />
         <Route path="/competencias/:memberId" element={<MatrixRedirect />} />
       </Route>
-      <Route path="*" element={<Navigate to="/captura" replace />} />
+      <Route path="*" element={<Navigate to="/entrada" replace />} />
     </Routes>
   );
 }

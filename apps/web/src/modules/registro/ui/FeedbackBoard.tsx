@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { FeedbackBoardItemDto, FeedbackTone } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Notice, SelectInput } from "../../../design/ui/controls";
+import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { useMembers } from "../../cadastro/data/cadastro";
 import { useAddFeedback, useBoardChange, useFeedbackBoard } from "../data/board";
 import { toneLabel } from "../model/record";
-import { AddRow, CheckRow, Checklist, GroupingPills, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
+import { CheckRow, Checklist, GroupingPills, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
+import { MemberChip, ToneChip } from "./chips";
+import { AddRow } from "./quick-add";
 
 const MODES = ["colaborador", "tom", "data"] as const;
 type Mode = (typeof MODES)[number];
@@ -23,7 +24,6 @@ const toneGroups: { tone: FeedbackTone | null; title: string }[] = [
   { tone: "neutral", title: "Neutros" },
   { tone: null, title: "Sem tom" },
 ];
-const tones: FeedbackTone[] = ["positive", "negative", "neutral"];
 const dotByTone: Record<FeedbackTone, string> = { positive: "bg-accent", negative: "bg-danger", neutral: "bg-muted" };
 const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
@@ -45,60 +45,31 @@ function ToneMark({ tone }: { tone: FeedbackTone | null }) {
   );
 }
 
-function AddFeedback({ memberId, tone: fixedTone, label = "Anotar feedback" }: { memberId?: string; tone?: FeedbackTone; label?: string }) {
+// Colaborador e tom começam com os do grupo e podem mudar nas etiquetas antes de anotar.
+function AddFeedback({ memberId: groupMember, tone: groupTone, label = "Anotar feedback" }: { memberId?: string; tone?: FeedbackTone; label?: string }) {
   const add = useAddFeedback();
-  const members = useMembers();
   const toast = useToast();
-  const [chosen, setChosen] = useState("");
-  const [tone, setTone] = useState<FeedbackTone>(fixedTone ?? "neutral");
-  const key = `${memberId ?? "pessoa"}-${fixedTone ?? "tom"}`;
+  const [memberId, setMemberId] = useState(groupMember ?? "");
+  const [tone, setTone] = useState<FeedbackTone>(groupTone ?? "neutral");
+  const key = `${groupMember ?? "pessoa"}-${groupTone ?? "tom"}`;
   return (
     <AddRow
       label={label}
       placeholder="O que você quer falar com a pessoa?"
       id={`novo-feedback-${key}`}
       pending={add.isPending}
-      extra={
+      chips={
         <>
-          {memberId ? null : (
-            <div className="w-full sm:w-56">
-              <SelectInput id={`novo-feedback-pessoa-${key}`} aria-label="Colaborador" value={chosen} onChange={(event) => setChosen(event.target.value)}>
-                <option value="">Escolha o colaborador</option>
-                {(members.data ?? []).map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-                ))}
-              </SelectInput>
-            </div>
-          )}
-          {fixedTone ? null : (
-            <div role="group" aria-label="Tom" className="flex gap-1">
-              {tones.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={tone === option}
-                  onClick={() => setTone(option)}
-                  className={`inline-flex items-center gap-1.5 rounded-control border px-2.5 py-2 text-[13px] ${
-                    tone === option ? "border-accent bg-accent-soft font-semibold text-app" : "border-line text-app hover:bg-chip"
-                  }`}
-                >
-                  <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dotByTone[option]}`} />
-                  {toneLabel(option)}
-                </button>
-              ))}
-            </div>
-          )}
+          <MemberChip value={memberId} onChange={setMemberId} />
+          <ToneChip value={tone} onChange={setTone} />
         </>
       }
       onAdd={(body, clear) => {
-        const member = memberId ?? (chosen || null);
-        if (!member) {
+        if (!memberId) {
           toast({ text: "Escolha o colaborador." });
           return;
         }
-        add.mutate({ body, memberId: member, tone }, { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) });
+        add.mutate({ body, memberId, tone }, { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) });
       }}
     />
   );

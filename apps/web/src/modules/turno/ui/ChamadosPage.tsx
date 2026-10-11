@@ -111,7 +111,7 @@ export function ChamadosPage() {
       <PageTitle
         eyebrow="Turno"
         title="Chamados"
-        text="O que o time atendeu no dia. Só vai para Pendências o que precisar de ação depois."
+        text="O que o time atendeu no dia. Só vai para Registros o que precisar de ação depois."
         action={
           <Button onClick={() => update({ abrir: NEW })} className="gap-2">
             <Icon name="plus" />

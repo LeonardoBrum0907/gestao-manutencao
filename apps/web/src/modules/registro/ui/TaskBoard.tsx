@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import type { BoardGroup, BoardItemDto, BoardTarget } from "@manutencao/shared";
+import type { BoardGroup, BoardItemDto, BoardTarget, RecordPriority } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
 import { changeOnBoard, refreshRecords, useAddTask, useBoardChange, useTaskBoard } from "../data/board";
-import { dueLabel, groupEmpty, isDropTarget, todayTitle } from "../model/board";
-import { AddRow, CheckRow, Checklist, InProgressChip, ringTone, scrollToGroup, useCompleting, type ChecklistGroup } from "./checklist";
+import { dueLabel, groupEmpty, isDropTarget, nextDay, todayTitle } from "../model/board";
+import { CheckRow, Checklist, InProgressChip, ringTone, scrollToGroup, useCompleting, type ChecklistGroup } from "./checklist";
+import { DueChip, PriorityChip } from "./chips";
+import { AddRow } from "./quick-add";
 
 const groupOrder: BoardGroup[] = ["overdue", "today", "upcoming", "undated", "done"];
 
@@ -26,16 +28,30 @@ function CalendarIcon() {
   );
 }
 
-function AddTask({ group }: { group: BoardTarget }) {
+function groupDay(group: BoardTarget, today: string): string | null {
+  if (group === "today") return today;
+  if (group === "upcoming") return nextDay(today);
+  return null;
+}
+
+function AddTask({ group, today }: { group: BoardTarget; today: string }) {
   const add = useAddTask();
   const toast = useToast();
+  const [day, setDay] = useState(() => groupDay(group, today));
+  const [priority, setPriority] = useState<RecordPriority | null>(null);
   return (
     <AddRow
       label="Adicionar tarefa"
-      placeholder="O que precisa ser feito?"
+      placeholder="Nome da tarefa"
       id={`nova-tarefa-${group}`}
       pending={add.isPending}
-      onAdd={(body, clear) => add.mutate({ body, group }, { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) })}
+      chips={
+        <>
+          <DueChip day={day} today={today} onChange={setDay} />
+          <PriorityChip value={priority} onChange={setPriority} />
+        </>
+      }
+      onAdd={(body, clear) => add.mutate({ body, day, priority }, { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) })}
     />
   );
 }
@@ -144,7 +160,7 @@ export function TaskBoard() {
       accepts: isDropTarget(group),
       locked: group === "done",
       startCollapsed: group === "done",
-      footer: isDropTarget(group) ? <AddTask group={group} /> : undefined,
+      footer: isDropTarget(group) ? <AddTask group={group} today={today} /> : undefined,
       action:
         group === "overdue" ? (
           <button type="button" onClick={() => void passOverdueToToday()} disabled={rescheduling} className="text-sm font-semibold text-accent disabled:opacity-50">

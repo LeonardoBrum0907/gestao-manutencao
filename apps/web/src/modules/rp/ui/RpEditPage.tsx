@@ -42,14 +42,14 @@ export function RpEditPage() {
       <PageTitle
         eyebrow="Turno"
         title="RP"
-        text="Ficha do Relatório Padrão. Ao gravar, o Problema ligado nas Pendências acompanha."
+        text="Ficha do Relatório Padrão. Ao gravar, o Problema ligado nos Registros acompanha."
         crumb={rpCrumb(data)}
         back={{ to: "/rp", label: "RPs" }}
       />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold empty:hidden">
         {data.problemRecordId ? (
           <Link to={`/registros/${data.problemRecordId}`} className="text-accent">
-            Ver o Problema nas Pendências
+            Ver o Problema nos Registros
           </Link>
         ) : null}
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}

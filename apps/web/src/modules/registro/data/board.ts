@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { BoardChangeDto, BoardDto, FeedbackBoardDto, FeedbackTone, ProblemBoardDto, RecordDto } from "@manutencao/shared";
+import type { BoardChangeDto, BoardDto, FeedbackBoardDto, FeedbackTone, ProblemBoardDto, RecordDto, RecordPriority } from "@manutencao/shared";
 import { api } from "../../../app/http";
-import type { ProblemSheetBody } from "./records";
+import { dueAtOf } from "../model/board";
+import type { ProblemSheetBody, TaskSheetBody } from "./records";
 
-// Os checklists de Pendências vêm inteiros (abertos + concluídos recentes): são dezenas, não milhares.
+// Os checklists de Registros vêm inteiros (abertos + concluídos recentes): são dezenas, não milhares.
 export function useTaskBoard() {
   return useQuery({ queryKey: ["records", "board", "tasks"], queryFn: () => api<BoardDto>("/api/records/board/tasks") });
 }
@@ -44,14 +45,28 @@ function capture(input: { type: "task" | "problem" | "feedback"; body: string; m
   });
 }
 
-// Adicionar no rodapé de um grupo: cria a tarefa e, fora de "Sem prazo", já leva para o grupo.
+export type NewTask = { body: string; day: string | null; priority: RecordPriority | null };
+
+// Tarefa nova já com o prazo e a prioridade do cartão de adicionar (o prazo vem do grupo, se não mudou).
 export function useAddTask() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ body, group }: { body: string; group: NonNullable<BoardChangeDto["group"]> }) => {
+    mutationFn: async ({ body, day, priority }: NewTask) => {
       const record = await capture({ type: "task", body });
-      if (group !== "undated") await changeOnBoard(record.id, { group });
-      return record;
+      if (!day && !priority) return record;
+      const sheet: TaskSheetBody = {
+        body: record.body,
+        occurredAt: record.occurredAt,
+        status: "open",
+        memberId: null,
+        factoryId: null,
+        tag: null,
+        line: null,
+        priority,
+        dueAt: day ? dueAtOf(day) : null,
+        notes: null,
+      };
+      return api<RecordDto>(`/api/records/${record.id}`, { method: "PATCH", body: JSON.stringify(sheet) });
     },
     onSettled: () => refreshRecords(client),
   });

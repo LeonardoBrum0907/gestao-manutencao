@@ -46,7 +46,7 @@ export function RecordSheetPage() {
         eyebrow={data.origin === "inbox" ? recordShortName(data.type) : "Problema"}
         title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
         crumb={data.origin === "inbox" ? undefined : `Problema (${originLabel(data.origin)})`}
-        back={{ to: "/acompanhamento", label: "Pendências" }}
+        back={{ to: "/registros", label: "Registros" }}
       />
       {data.type === "task" ? <TaskSheet record={data} /> : null}
       {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
@@ -66,7 +66,7 @@ export function RecordSheetPage() {
         <RecordRemoveDialog
           record={data}
           onCancel={() => setRemoving(false)}
-          onDeleted={() => navigate("/acompanhamento", { replace: true })}
+          onDeleted={() => navigate("/registros", { replace: true })}
         />
       ) : null}
     </div>

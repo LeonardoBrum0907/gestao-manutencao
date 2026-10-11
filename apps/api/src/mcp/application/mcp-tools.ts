@@ -367,7 +367,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "salvar_rp",
     {
       title: "Salvar RP",
-      description: "Grava um RP (e o problema espelho em Pendências). Confere antes se há RP parecido: se houver, não grava e devolve os parecidos; repita com confirmDuplicate true se o gestor confirmar que é outro.",
+      description: "Grava um RP (e o problema espelho em Registros). Confere antes se há RP parecido: se houver, não grava e devolve os parecidos; repita com confirmDuplicate true se o gestor confirmar que é outro.",
       inputSchema: {
         ...rpFields,
         chamadoId: id("do chamado que originou o RP").optional(),

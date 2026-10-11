@@ -30,12 +30,12 @@ export function AppShell() {
             <Icon name="menu" className="h-6 w-6" />
           </button>
           <Link
-            to="/captura"
+            to="/entrada"
             state={MENU_STATE}
             className="inline-flex items-center gap-1.5 rounded-control bg-accent px-3 py-2 text-sm font-semibold text-accent-contrast"
           >
-            <Icon name="plus" />
-            Registrar
+            <Icon name="inbox" />
+            Entrada
           </Link>
         </header>
         <main className="app-main min-h-0 flex-1 overflow-y-auto">

@@ -3,7 +3,7 @@ import { useToast } from "../../../design/ui/toast";
 import { useDeleteRecord } from "../data/records";
 import { recordCaption } from "../model/record";
 
-// Excluir um registro, da ficha ou do menu ⋯ das Pendências. Sempre dá para excluir; o que vai
+// Excluir um registro, da ficha ou do menu ⋯ dos Registros. Sempre dá para excluir; o que vai
 // junto (RP, anexos, histórico dos colaboradores) aparece na pergunta antes de confirmar.
 export function RecordRemoveDialog({
   record,

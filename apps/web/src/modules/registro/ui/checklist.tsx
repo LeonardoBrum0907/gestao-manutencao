@@ -18,7 +18,7 @@ import {
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Peças do checklist de Pendências (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
+// Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
 // para concluir e arrastar para reordenar ou levar a outro grupo.
 
 const COLUMN = "col:";
@@ -281,20 +281,21 @@ export function Checklist({
         return (
           <section key={group.key} id={domId(group.key)} className="mt-7 scroll-mt-4 first:mt-0">
             <div className="flex items-center gap-2 border-b border-line pb-2">
-              <button
-                type="button"
-                onClick={() => fold(group.key)}
-                aria-expanded={!collapsed}
-                aria-label={collapsed ? `Abrir ${group.title}` : `Recolher ${group.title}`}
-                className="grid place-items-center rounded-md p-0.5 text-muted hover:bg-chip"
-              >
-                <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 transition ${collapsed ? "-rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 6l4 4 4-4" />
-                </svg>
-              </button>
-              <h2 className="min-w-0 text-[15px] font-semibold text-app">
-                {group.title}
-                {group.sub ? <span className="font-medium text-muted"> · {group.sub}</span> : null}
+              <h2 className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => fold(group.key)}
+                  aria-expanded={!collapsed}
+                  className="-ml-0.5 flex items-center gap-2 rounded-md py-0.5 pl-0.5 pr-1.5 text-left text-[15px] font-semibold text-app hover:bg-chip"
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 text-muted transition ${collapsed ? "-rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 6l4 4 4-4" />
+                  </svg>
+                  <span className="min-w-0">
+                    {group.title}
+                    {group.sub ? <span className="font-medium text-muted"> · {group.sub}</span> : null}
+                  </span>
+                </button>
               </h2>
               {ids.length ? <span className="text-[13px] tabular-nums text-muted">{ids.length}</span> : null}
               {group.action ? <div className="ml-auto shrink-0">{group.action}</div> : null}
@@ -333,70 +334,6 @@ export function useCompleting() {
     );
   }
   return { fading, complete };
-}
-
-// "+ Adicionar …" no rodapé do grupo: abre um campo de texto (e o que mais o grupo pedir).
-export function AddRow({
-  label,
-  placeholder,
-  id,
-  pending,
-  extra,
-  onAdd,
-}: {
-  label: string;
-  placeholder: string;
-  id: string;
-  pending: boolean;
-  extra?: ReactNode;
-  onAdd: (body: string, clear: () => void) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [body, setBody] = useState("");
-  if (!open) {
-    return (
-      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm text-muted transition hover:text-accent">
-        <span aria-hidden="true" className="grid h-5 w-5 place-items-center text-lg leading-none text-accent">
-          +
-        </span>
-        {label}
-      </button>
-    );
-  }
-  return (
-    <form
-      className="flex flex-wrap items-center gap-2 border-b border-line py-2.5"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const text = body.trim();
-        if (text) onAdd(text, () => setBody(""));
-      }}
-    >
-      {extra}
-      <input
-        autoFocus
-        id={id}
-        aria-label={label}
-        placeholder={placeholder}
-        value={body}
-        onChange={(event) => setBody(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") setOpen(false);
-        }}
-        className="min-w-[12rem] flex-1 rounded-control border border-line bg-surface px-3 py-2 text-sm text-app"
-      />
-      <button
-        type="submit"
-        disabled={pending || !body.trim()}
-        className="rounded-control bg-accent px-4 py-2 text-sm font-semibold text-accent-contrast transition hover:brightness-90 disabled:opacity-50"
-      >
-        Adicionar
-      </button>
-      <button type="button" onClick={() => setOpen(false)} className="rounded-control px-3 py-2 text-sm font-semibold text-muted hover:bg-chip">
-        Cancelar
-      </button>
-    </form>
-  );
 }
 
 // "Agrupar por": a escolha fica guardada no aparelho.
