@@ -179,7 +179,10 @@ export class McpOAuthProvider implements OAuthServerProvider {
 
   private page(res: Response, client: OAuthClientInformationFull, params: AuthorizationParams, error: string | null): void {
     res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'");
+    // form-action também vale para o redirecionamento depois do POST: sem a origem
+    // do redirect_uri o navegador bloqueia a volta ao app e o botão parece não fazer nada.
+    const redirectOrigin = new URL(params.redirectUri).origin;
+    res.setHeader("Content-Security-Policy", `default-src 'none'; style-src 'unsafe-inline'; form-action 'self' ${redirectOrigin}; frame-ancestors 'none'`);
     res.status(error ? 400 : 200).type("html").send(
       renderLoginPage({
         clientName: client.client_name?.trim() || "um app de IA",

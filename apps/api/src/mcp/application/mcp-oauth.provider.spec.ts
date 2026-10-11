@@ -26,10 +26,10 @@ function setup(storedPassword: string, mcpToken: string | null = null) {
 }
 
 function fakeResponse(body: Record<string, string>) {
-  const out: { status?: number; html?: string; location?: string } = {};
+  const out: { status?: number; html?: string; location?: string; headers: Record<string, string> } = { headers: {} };
   const res = {
     req: { method: "POST", body },
-    setHeader: () => res,
+    setHeader: (name: string, value: string) => ((out.headers[name] = value), res),
     status: (code: number) => ((out.status = code), res),
     type: () => res,
     send: (html: string) => ((out.html = html), res),
@@ -45,6 +45,12 @@ describe("login OAuth do MCP", () => {
     await provider.authorize(client, params, res);
     assert.equal(out.status, 400);
     assert.match(out.html ?? "", /GESTOR_PASSWORD/);
+  });
+
+  it("deixa o formulário voltar para o app depois de liberar", async () => {
+    const { res, out } = fakeResponse({});
+    await setup("senha-nova-123").authorize(client, params, res);
+    assert.match(out.headers["Content-Security-Policy"] ?? "", /form-action 'self' https:\/\/claude\.ai;/);
   });
 
   it("com a senha nova devolve o código e troca por chaves que valem no /mcp", async () => {
