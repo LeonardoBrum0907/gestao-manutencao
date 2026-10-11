@@ -47,6 +47,12 @@ describe("login OAuth do MCP", () => {
     assert.match(out.html ?? "", /GESTOR_PASSWORD/);
   });
 
+  it("deixa o formulário voltar para o app depois de liberar", async () => {
+    const { res, out } = fakeResponse({});
+    await setup("senha-nova-123").authorize(client, params, res);
+    assert.match(out.headers["Content-Security-Policy"] ?? "", /form-action 'self' https:\/\/claude\.ai;/);
+  });
+
   it("com a senha nova devolve o código e troca por chaves que valem no /mcp", async () => {
     const provider = setup("senha-nova-123");
     const { res, out } = fakeResponse({ decision: "allow", password: "senha-nova-123" });
@@ -61,10 +67,8 @@ describe("login OAuth do MCP", () => {
     await assert.rejects(provider.verifyAccessToken(tokens.refresh_token ?? ""));
   });
 
-  it("a tela de senha deixa o navegador voltar para o endereço de retorno do app", async () => {
-    const { res, out } = fakeResponse({});
-    await setup("a").authorize(client, params, res);
-    assert.match(out.headers["Content-Security-Policy"] ?? "", /form-action 'self' https:\/\/claude\.ai;/);
+  it("libera o retorno de app nativo pelo esquema, já que ele não tem origem", () => {
+    assert.equal(redirectSource("https://claude.ai/api/mcp/auth_callback"), "https://claude.ai");
     assert.equal(redirectSource("cursor://anysphere.cursor-retrieval/oauth/callback"), "cursor:");
   });
 
