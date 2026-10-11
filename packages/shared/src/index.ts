@@ -440,11 +440,11 @@ export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
 export type CompetencyScore = (typeof COMPETENCY_SCORES)[number];
 
 export const COMPETENCY_SCORE_LABELS: Record<CompetencyScore, { label: string; hint: string }> = {
-  0: { label: "Não apto", hint: "Não sabe executar a atividade, falta conhecimento." },
-  1: { label: "Em treinamento", hint: "Conhece a teoria, falta o treinamento prático." },
-  2: { label: "Treinado", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
-  3: { label: "Apto", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
-  4: { label: "Referência no tema", hint: "Consegue ensinar os demais e melhorar o processo." },
+  0: { label: "Sem experiência", hint: "Não sabe executar a atividade, falta conhecimento." },
+  1: { label: "Básico", hint: "Conhece a teoria, falta o treinamento prático." },
+  2: { label: "Intermediário", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
+  3: { label: "Avançado", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
+  4: { label: "Referência", hint: "Consegue ensinar os demais e melhorar o processo." },
 };
 
 export type CompetencyEntryDto = {
