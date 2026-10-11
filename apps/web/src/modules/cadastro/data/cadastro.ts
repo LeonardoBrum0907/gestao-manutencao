@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type {
-  FactoryDto,
-  GradeExpectedDto,
-  LineDto,
-  MachineDto,
-  MemberDto,
-  MemberGradeDto,
-  MemberRoleDto,
-  SubassemblyDto,
-  TeamDto,
+import {
+  EMPTY_GRADE_EXPECTED,
+  type FactoryDto,
+  type GradeExpectedDto,
+  type LineDto,
+  type MachineDto,
+  type MemberDto,
+  type MemberGradeDto,
+  type MemberRoleDto,
+  type SubassemblyDto,
+  type TeamDto,
 } from "@manutencao/shared";
 import { removeById, REFERENCE_DATA, upsertByName } from "../../../app/cache";
 import { api } from "../../../app/http";
@@ -172,11 +173,17 @@ export function useDeleteRole() {
   });
 }
 
+// Uma API anterior ao esperado por grau (PR #40) não manda `expected`: vale "padrão" em tudo até o servidor ser atualizado.
+async function fetchGrades(): Promise<MemberGradeDto[]> {
+  const grades = await api<(Omit<MemberGradeDto, "expected"> & Partial<MemberGradeDto>)[]>("/api/member-grades");
+  return grades.map((grade) => ({ ...grade, expected: grade.expected ?? EMPTY_GRADE_EXPECTED }));
+}
+
 export function useGrades() {
   return useQuery({
     queryKey: ["grades"],
     ...REFERENCE_DATA,
-    queryFn: () => api<MemberGradeDto[]>("/api/member-grades"),
+    queryFn: fetchGrades,
   });
 }
 
