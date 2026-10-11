@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { MemberGradeDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredString } from "../../kernel/parse";
+import { requireGradeExpected } from "../domain/grade-expected";
 import { assertGradeNameAvailable } from "../domain/grade-name";
 import { assertGradeCanBeRemoved } from "../domain/grade-removal";
 import { requireName } from "../domain/names";
@@ -29,6 +30,13 @@ export class Grades {
     const owner = await this.grades.findByName(name);
     assertGradeNameAvailable(owner?.id ?? null, id);
     return this.grades.rename(id, name);
+  }
+
+  // Esperado da matriz por dificuldade para quem tem este grau; muda a aderência de todos os colaboradores do grau.
+  async setExpected(id: string, body: unknown): Promise<MemberGradeDto> {
+    const current = await this.grades.find(id);
+    if (!current) throw new DomainError("not_found", 404, "Grau não encontrado.");
+    return this.grades.setExpected(id, requireGradeExpected(body));
   }
 
   // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.

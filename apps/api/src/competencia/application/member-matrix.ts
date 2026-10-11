@@ -22,8 +22,11 @@ export class MemberMatrix {
 
   // Quem já checou o colaborador não precisa checar de novo para devolver a matriz.
   private async build(memberId: string): Promise<MemberMatrixDto> {
-    const [{ equipments, entries }, catalog] = await Promise.all([this.matrix.load(memberId), this.catalog.load()]);
-    return { memberId, entries, ...buildMatrix(catalog, equipments, entries) };
+    const [{ equipments, entries, gradeName, expectedByLevel }, catalog] = await Promise.all([
+      this.matrix.load(memberId),
+      this.catalog.load(),
+    ]);
+    return { memberId, gradeName, expectedByLevel, entries, ...buildMatrix(catalog, equipments, entries, expectedByLevel) };
   }
 
   async setEquipments(memberId: string, body: unknown): Promise<MemberMatrixDto> {

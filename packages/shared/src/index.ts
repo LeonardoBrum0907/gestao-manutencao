@@ -1,3 +1,5 @@
+import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
+
 export const RECORD_TYPES = ["task", "feedback", "problem"] as const;
 export type RecordType = (typeof RECORD_TYPES)[number];
 
@@ -206,6 +208,7 @@ export type MemberRoleDto = {
 export type MemberGradeDto = {
   id: string;
   name: string;
+  expected: GradeExpectedDto;
 };
 
 export type MemberDto = {
@@ -470,6 +473,9 @@ export type CompetencySummaryDto = {
 
 export type MemberMatrixDto = {
   memberId: string;
+  // Grau do colaborador e o esperado padrão que ele dá a cada dificuldade (o "padrão" do esp. na tela).
+  gradeName: string | null;
+  expectedByLevel: Record<CompetencyLevel, number>;
   equipments: string[];
   entries: CompetencyEntryDto[];
   summary: CompetencySummaryDto;

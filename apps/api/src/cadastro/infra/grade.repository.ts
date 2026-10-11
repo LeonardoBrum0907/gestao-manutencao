@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import type { MemberGradeDto } from "@manutencao/shared";
+import type { GradeExpectedDto, MemberGradeDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
+import { gradeExpectedColumns, gradeExpectedOf, type GradeExpectedRow } from "./grade-expected";
+
+function toGradeDto(row: { id: string; name: string } & GradeExpectedRow): MemberGradeDto {
+  return { id: row.id, name: row.name, expected: gradeExpectedOf(row) };
+}
 
 @Injectable()
 export class GradeRepository {
@@ -8,7 +13,7 @@ export class GradeRepository {
 
   async list(): Promise<MemberGradeDto[]> {
     const rows = await this.prisma.memberGrade.findMany({ orderBy: [{ position: "asc" }, { name: "asc" }] });
-    return rows.map((row) => ({ id: row.id, name: row.name }));
+    return rows.map(toGradeDto);
   }
 
   find(id: string) {
@@ -24,12 +29,17 @@ export class GradeRepository {
     const row = await this.prisma.memberGrade.create({
       data: { name, position: (last._max.position ?? 0) + 1 },
     });
-    return { id: row.id, name: row.name };
+    return toGradeDto(row);
   }
 
   async rename(id: string, name: string): Promise<MemberGradeDto> {
     const row = await this.prisma.memberGrade.update({ where: { id }, data: { name } });
-    return { id: row.id, name: row.name };
+    return toGradeDto(row);
+  }
+
+  async setExpected(id: string, expected: GradeExpectedDto): Promise<MemberGradeDto> {
+    const row = await this.prisma.memberGrade.update({ where: { id }, data: gradeExpectedColumns(expected) });
+    return toGradeDto(row);
   }
 
   countMembers(id: string) {

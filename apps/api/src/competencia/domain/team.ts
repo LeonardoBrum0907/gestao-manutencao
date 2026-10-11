@@ -4,7 +4,7 @@ import {
   type TeamEquipmentDto,
   type TeamMatrixDto,
 } from "@manutencao/shared";
-import { summarize, type MatrixEntry } from "./matrix";
+import { summarize, type ExpectedByLevel, type MatrixEntry } from "./matrix";
 
 export type TeamMemberInput = {
   id: string;
@@ -13,6 +13,7 @@ export type TeamMemberInput = {
   teamId: string | null;
   equipments: readonly string[];
   entries: readonly MatrixEntry[];
+  expectedByLevel: ExpectedByLevel;
   pdiOverdue: number;
 };
 
@@ -35,7 +36,7 @@ export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly Tea
     const cells = equipments
       .filter((equipment) => member.equipments.includes(equipment.id))
       .map((equipment) => {
-        const summary = summarize(skillsOf(equipment.id), byId);
+        const summary = summarize(skillsOf(equipment.id), byId, member.expectedByLevel);
         if (summary.adherence !== null && summary.adherence >= qualifiedAdherence) qualified.get(equipment.id)?.push(member.shift);
         return {
           equipmentId: equipment.id,
