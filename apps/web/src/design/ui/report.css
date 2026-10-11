@@ -42,10 +42,17 @@
 .report td.n, .report th.n { text-align: center; white-space: nowrap; }
 .report td.late { color: var(--danger); font-weight: 600; }
 .report tr { break-inside: avoid; }
-.report .eq { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 6px; padding: 6px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-deep); }
+/* Matriz: três níveis que se distinguem também em preto e branco (equipamento em faixa cheia, subconjunto em linha de título, habilidade). */
+.report .eq { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 16px 0 6px; padding: 7px 11px; border-radius: 8px; background: var(--accent); color: var(--accent-contrast); font-size: 13px; }
 .report .eq-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 500; }
-.report .bar { display: inline-block; width: 110px; height: 7px; border-radius: 999px; background: var(--border); overflow: hidden; }
-.report .bar span { display: block; height: 100%; background: var(--accent); }
+.report .bar { display: inline-block; width: 110px; height: 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent-contrast) 35%, transparent); overflow: hidden; }
+.report .bar span { display: block; height: 100%; background: var(--accent-contrast); }
+.report table.matrix th { background: none; border-bottom: 1.5px solid var(--text); color: var(--text); font-weight: 700; }
+.report table.matrix tbody tr:nth-child(even) td { background: none; }
+.report table.matrix tbody tr.subgroup td { padding: 7px 8px 5px; border-top: 1.5px solid var(--text); border-bottom-color: var(--border-strong); background: var(--group-bg); font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+.report table.matrix tbody tr.subgroup td span { float: right; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.report table.matrix td.skill { padding-left: 18px; font-weight: 500; }
+.report table.matrix td.level { white-space: nowrap; color: color-mix(in srgb, var(--text) 75%, var(--muted)); font-size: 11.5px; }
 .report .att { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .report .att figure { margin: 0; break-inside: avoid; }
 .report .att img { width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--border); }

@@ -62,6 +62,18 @@ export function meetsExpected(state: SkillState): boolean {
   return state === "above" || state === "equal";
 }
 
+/**
+ * Quantas habilidades do grupo atendem o esperado, entre as que se aplicam (sem nota conta como não atende).
+ * @example subgroupTally(group.skills, entries) // { meets: 4, applicable: 5 }
+ */
+export function subgroupTally(
+  skills: MatrixSkillDto[],
+  entries: ReadonlyMap<string, CompetencyEntryDto>,
+): { meets: number; applicable: number } {
+  const states = skills.map((skill) => skillState(skill, entries.get(skill.id)));
+  return { meets: states.filter(meetsExpected).length, applicable: states.filter((state) => state !== "na").length };
+}
+
 // Cor do texto do resultado de cada habilidade.
 export const stateTextClass: Record<SkillState, string> = {
   above: "font-semibold text-accent",

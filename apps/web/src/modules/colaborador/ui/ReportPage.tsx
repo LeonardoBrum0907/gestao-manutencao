@@ -18,7 +18,17 @@ import { positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamText } from "../../cadastro/model/team";
 import { useMatrixCatalog, useMatrixSettings } from "../../competencia/data/catalog";
 import { useMatrix } from "../../competencia/data/matrix";
-import { average, bySubgroup, entriesById, equipmentName, expectedOf, percent, skillState, skillsOf } from "../../competencia/model/matrix";
+import {
+  average,
+  bySubgroup,
+  entriesById,
+  equipmentName,
+  expectedOf,
+  percent,
+  skillState,
+  skillsOf,
+  subgroupTally,
+} from "../../competencia/model/matrix";
 import { flattenPages } from "../../registro/data/records";
 import { formatWhen, toneLabel } from "../../registro/model/record";
 import { useBehaviorTags } from "../../cadastro/data/behavior-tags";
@@ -225,6 +235,18 @@ function Performance({ memberId, year }: { memberId: string; year: number }) {
   );
 }
 
+// Linha de título do subconjunto na tabela da matriz, na largura toda (antes era uma coluna cinza só na 1ª linha).
+function SubgroupRow({ name, tally }: { name: string; tally: { meets: number; applicable: number } }) {
+  return (
+    <tr className="subgroup">
+      <td colSpan={5}>
+        {name}
+        <span>{tally.applicable ? `${tally.meets} de ${tally.applicable} atendem` : "Não se aplica"}</span>
+      </td>
+    </tr>
+  );
+}
+
 function Matrix({ memberId }: { memberId: string }) {
   const matrix = useMatrix(memberId);
   const catalog = useMatrixCatalog();
@@ -278,28 +300,27 @@ function Matrix({ memberId }: { memberId: string }) {
           {group.skills.length === 0 ? (
             <p className="muted">Sem notas lançadas.</p>
           ) : (
-            <table>
+            <table className="matrix">
               <thead>
                 <tr>
-                  <th>Subconjunto</th>
                   <th>Habilidade</th>
+                  <th>Nível</th>
                   <th className="n">E</th>
                   <th className="n">R</th>
                   <th>Situação</th>
                 </tr>
               </thead>
               <tbody>
-                {bySubgroup(group.skills).flatMap((subgroup) =>
-                  subgroup.skills.map((skill, index) => {
+                {bySubgroup(group.skills).flatMap((subgroup) => [
+                  <SubgroupRow key={`grupo-${subgroup.subgroup}`} name={subgroup.subgroup} tally={subgroupTally(subgroup.skills, entries)} />,
+                  ...subgroup.skills.map((skill) => {
                     const entry = entries.get(skill.id);
                     const state = skillState(skill, entry);
                     const score = entry?.score ?? null;
                     return (
                       <tr key={skill.id}>
-                        <td className="muted">{index === 0 ? subgroup.subgroup : ""}</td>
-                        <td>
-                          {skill.text} <span className="muted">({COMPETENCY_LEVEL_LABELS[skill.level]})</span>
-                        </td>
+                        <td className="skill">{skill.text}</td>
+                        <td className="level">{COMPETENCY_LEVEL_LABELS[skill.level]}</td>
                         <td className="n">{expectedOf(skill, entry)}</td>
                         <td className="n">{state === "na" ? "N/A" : score}</td>
                         <td>
@@ -316,7 +337,7 @@ function Matrix({ memberId }: { memberId: string }) {
                       </tr>
                     );
                   }),
-                )}
+                ])}
               </tbody>
             </table>
           )}

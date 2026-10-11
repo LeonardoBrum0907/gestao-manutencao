@@ -27,8 +27,8 @@ import {
   pendingExpected,
   percent,
   skillsOf,
-  meetsExpected,
   skillState,
+  subgroupTally,
   stateTextClass,
   type SkillState,
 } from "../model/matrix";
@@ -92,7 +92,7 @@ function ScoreScale({
   onPick: (next: ScoreValue) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 pt-3.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-3.5">
       <div role="radiogroup" aria-label={`Nota em ${skillText}`} className="flex items-center gap-1">
         {COMPETENCY_SCORES.map((score) => {
           const picked = !value.notApplicable && value.score === score;
@@ -130,7 +130,7 @@ function ScoreScale({
           N/A
         </button>
       </div>
-      <span className={`w-32 text-xs ${stateTextClass[state]}`}>{resultLabel(value)}</span>
+      <span className={`text-xs sm:w-32 ${stateTextClass[state]}`}>{resultLabel(value)}</span>
     </div>
   );
 }
@@ -182,14 +182,17 @@ function SkillRow({
       data-skill-row
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`grid gap-x-6 border-t border-line px-4 py-2 outline-none focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:px-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center ${
+      className={`grid grid-cols-[minmax(0,1fr)] gap-x-6 border-t border-line py-2 pl-6 pr-4 outline-none first:border-t-0 focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:pl-9 sm:pr-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center ${
         state === "na" ? "opacity-70" : ""
       }`}
     >
       <div className="min-w-0 pt-1">
-        <p className="text-sm text-app">{skill.text}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted">
-          {COMPETENCY_LEVEL_LABELS[skill.level]} · esp.
+        <p className="text-sm font-medium text-app">{skill.text}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+          <span className="rounded-full border border-line-strong px-1.5 text-[10.5px] font-semibold leading-[17px] text-app">
+            {COMPETENCY_LEVEL_LABELS[skill.level]}
+          </span>
+          esp.
           <SelectInput
             aria-label={`Esperado em ${skill.text}`}
             className="!inline-flex !w-auto !gap-1 !px-1.5 !py-0.5 !text-xs"
@@ -219,6 +222,33 @@ function SkillRow({
 }
 
 const linkButton = "text-xs font-semibold text-accent hover:underline disabled:cursor-default disabled:text-muted disabled:no-underline";
+
+// Faixa de título do subconjunto: mais escura e em negrito, para não se confundir com as habilidades abaixo.
+function SubgroupHeader({
+  name,
+  tally,
+  fillDisabled,
+  onFill,
+}: {
+  name: string;
+  tally: { meets: number; applicable: number };
+  fillDisabled: boolean;
+  onFill: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-y border-line-strong bg-group px-4 py-2 sm:px-5">
+      <p className="text-[12.5px] font-bold uppercase tracking-[0.07em] text-app">{name}</p>
+      <span className="flex items-center gap-3">
+        <span className="text-xs font-semibold tabular-nums text-app" title="Atendem / se aplicam">
+          {tally.meets}/{tally.applicable}
+        </span>
+        <button type="button" className={linkButton} disabled={fillDisabled} onClick={onFill}>
+          Atende o esperado
+        </button>
+      </span>
+    </div>
+  );
+}
 
 function Equipment({
   catalog,
@@ -262,9 +292,9 @@ function Equipment({
         type="button"
         aria-expanded={expanded}
         onClick={onToggle}
-        className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-chip sm:px-5"
+        className="flex w-full flex-wrap items-center justify-between gap-3 bg-accent-soft px-4 py-3 text-left transition hover:brightness-[0.97] sm:px-5"
       >
-        <span className="font-semibold text-app">{equipmentName(catalog, equipment)}</span>
+        <span className="text-base font-bold text-accent-ink">{equipmentName(catalog, equipment)}</span>
         {summary ? (
           <span className="flex items-center gap-3 text-sm text-muted" title={stackTitle(summary)}>
             <span className="tabular-nums">
@@ -294,35 +324,21 @@ function Equipment({
               </span>
             </span>
           </div>
-          {bySubgroup(skills).map((group) => {
-            const states = group.skills.map((skill) => skillState(skill, entries.get(skill.id)));
-            const applicable = states.filter((state) => state !== "na").length;
-            return (
-              <div key={group.subgroup}>
-                <div className="flex items-center justify-between gap-2 bg-chip px-4 py-2 sm:px-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.subgroup}</p>
-                  <span className="flex items-center gap-3">
-                    <span className="text-xs tabular-nums text-muted" title="Atendem / se aplicam">
-                      {states.filter(meetsExpected).length}/{applicable}
-                    </span>
-                    <button
-                      type="button"
-                      className={linkButton}
-                      disabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
-                      onClick={fill(group.skills)}
-                    >
-                      Atende o esperado
-                    </button>
-                  </span>
-                </div>
-                <ul>
-                  {group.skills.map((skill) => (
-                    <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+          {bySubgroup(skills).map((group) => (
+            <div key={group.subgroup}>
+              <SubgroupHeader
+                name={group.subgroup}
+                tally={subgroupTally(group.skills, entries)}
+                fillDisabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
+                onFill={fill(group.skills)}
+              />
+              <ul>
+                {group.skills.map((skill) => (
+                  <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       ) : null}
     </section>
