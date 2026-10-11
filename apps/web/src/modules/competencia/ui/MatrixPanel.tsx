@@ -1,7 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  COMPETENCY_LEVEL_EXPECTED,
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_MATRIX_TITLE,
   COMPETENCY_SCORE_LABELS,
@@ -30,6 +29,7 @@ import {
   skillState,
   subgroupTally,
   stateTextClass,
+  type ExpectedByLevel,
   type SkillState,
 } from "../model/matrix";
 import { Chevron } from "../../../design/ui/select";
@@ -139,14 +139,18 @@ function ScoreScale({
 function SkillRow({
   skill,
   entry,
+  byLevel,
+  gradeName,
   onChange,
 }: {
   skill: MatrixSkillDto;
   entry: CompetencyEntryDto | undefined;
+  byLevel: ExpectedByLevel;
+  gradeName: string | null;
   onChange: (write: SkillWrite) => void;
 }) {
-  const state = skillState(skill, entry);
-  const expected = expectedOf(skill, entry);
+  const state = skillState(skill, entry, byLevel);
+  const expected = expectedOf(skill, entry, byLevel);
   const base = {
     skillId: skill.id,
     score: entry?.score ?? null,
@@ -202,7 +206,9 @@ function SkillRow({
               onChange({ ...base, expected: event.target.value ? (Number(event.target.value) as CompetencyScore) : null })
             }
           >
-            <option value="">{COMPETENCY_LEVEL_EXPECTED[skill.level]} (padrão)</option>
+            <option value="">
+              {byLevel[skill.level]} (padrão{gradeName ? ` · ${gradeName}` : ""})
+            </option>
             {[1, 2, 3, 4].map((value) => (
               <option key={value} value={value}>
                 {value}
@@ -307,15 +313,16 @@ function Equipment({
   const subgroups = useCollapsedSubgroups();
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
+  const byLevel = matrix.expectedByLevel;
   const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
   if (query && skills.length === 0) return null;
   const expanded = open || Boolean(query);
   // "Atende o esperado": só o que ainda está sem nota (e não é "não se aplica"); o que já tem nota não muda.
   const fill = (list: MatrixSkillDto[]) => () =>
     onBulk(
-      pendingExpected(list, entries).map((skill) => ({
+      pendingExpected(list, entries, byLevel).map((skill) => ({
         skillId: skill.id,
-        score: expectedOf(skill, entries.get(skill.id)) as CompetencyScore,
+        score: expectedOf(skill, entries.get(skill.id), byLevel) as CompetencyScore,
         notApplicable: false,
         expected: entries.get(skill.id)?.expected ?? null,
       })),
@@ -344,7 +351,7 @@ function Equipment({
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-5">
             {summary ? <StackLegend counts={summary} /> : <span />}
             <span className="flex items-center gap-3">
-              <button type="button" className={linkButton} disabled={bulkPending || pendingExpected(skills, entries).length === 0} onClick={fill(skills)}>
+              <button type="button" className={linkButton} disabled={bulkPending || pendingExpected(skills, entries, byLevel).length === 0} onClick={fill(skills)}>
                 Atende o esperado em tudo sem nota
               </button>
               <span
@@ -362,16 +369,23 @@ function Equipment({
             <div key={group.subgroup}>
               <SubgroupHeader
                 name={group.subgroup}
-                tally={subgroupTally(group.skills, entries)}
+                tally={subgroupTally(group.skills, entries, byLevel)}
                 expanded={subgroups.isOpen(group.subgroup, query)}
                 onToggle={() => subgroups.toggle(group.subgroup)}
-                fillDisabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
+                fillDisabled={bulkPending || pendingExpected(group.skills, entries, byLevel).length === 0}
                 onFill={fill(group.skills)}
               />
               {subgroups.isOpen(group.subgroup, query) ? (
                 <ul>
                   {group.skills.map((skill) => (
-                    <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
+                    <SkillRow
+                      key={skill.id}
+                      skill={skill}
+                      entry={entries.get(skill.id)}
+                      byLevel={byLevel}
+                      gradeName={matrix.gradeName}
+                      onChange={onChange}
+                    />
                   ))}
                 </ul>
               ) : null}

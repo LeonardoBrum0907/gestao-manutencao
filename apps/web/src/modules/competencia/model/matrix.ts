@@ -1,6 +1,6 @@
 import {
-  COMPETENCY_LEVEL_EXPECTED,
   type CompetencyEntryDto,
+  type CompetencyLevel,
   type MatrixCatalogDto,
   type MatrixSkillDto,
 } from "@manutencao/shared";
@@ -12,14 +12,17 @@ export function entriesById(entries: CompetencyEntryDto[]): Map<string, Competen
   return new Map(entries.map((entry) => [entry.skillId, entry]));
 }
 
-export function expectedOf(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined): number {
-  return entry?.expected ?? COMPETENCY_LEVEL_EXPECTED[skill.level];
+// Esperado padrão de cada dificuldade para o colaborador (vem da API: o do grau dele, ou o da dificuldade).
+export type ExpectedByLevel = Readonly<Record<CompetencyLevel, number>>;
+
+export function expectedOf(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined, byLevel: ExpectedByLevel): number {
+  return entry?.expected ?? byLevel[skill.level];
 }
 
-export function skillState(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined): SkillState {
+export function skillState(skill: MatrixSkillDto, entry: CompetencyEntryDto | undefined, byLevel: ExpectedByLevel): SkillState {
   if (entry?.notApplicable) return "na";
   if (entry?.score === null || entry?.score === undefined) return "unscored";
-  const expected = expectedOf(skill, entry);
+  const expected = expectedOf(skill, entry, byLevel);
   if (entry.score > expected) return "above";
   return entry.score === expected ? "equal" : "below";
 }
@@ -64,13 +67,14 @@ export function meetsExpected(state: SkillState): boolean {
 
 /**
  * Quantas habilidades do grupo atendem o esperado, entre as que se aplicam (sem nota conta como não atende).
- * @example subgroupTally(group.skills, entries) // { meets: 4, applicable: 5 }
+ * @example subgroupTally(group.skills, entries, matrix.expectedByLevel) // { meets: 4, applicable: 5 }
  */
 export function subgroupTally(
   skills: MatrixSkillDto[],
   entries: ReadonlyMap<string, CompetencyEntryDto>,
+  byLevel: ExpectedByLevel,
 ): { meets: number; applicable: number } {
-  const states = skills.map((skill) => skillState(skill, entries.get(skill.id)));
+  const states = skills.map((skill) => skillState(skill, entries.get(skill.id), byLevel));
   return { meets: states.filter(meetsExpected).length, applicable: states.filter((state) => state !== "na").length };
 }
 
@@ -84,6 +88,10 @@ export const stateTextClass: Record<SkillState, string> = {
 };
 
 // Habilidades ainda sem nota e que se aplicam: as que o "atende o esperado" preenche.
-export function pendingExpected(skills: MatrixSkillDto[], entries: ReadonlyMap<string, CompetencyEntryDto>): MatrixSkillDto[] {
-  return skills.filter((skill) => skillState(skill, entries.get(skill.id)) === "unscored");
+export function pendingExpected(
+  skills: MatrixSkillDto[],
+  entries: ReadonlyMap<string, CompetencyEntryDto>,
+  byLevel: ExpectedByLevel,
+): MatrixSkillDto[] {
+  return skills.filter((skill) => skillState(skill, entries.get(skill.id), byLevel) === "unscored");
 }

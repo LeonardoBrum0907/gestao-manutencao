@@ -5,6 +5,7 @@ import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
 import { EquipmentModelsSection } from "../../cadastro/ui/EquipmentModelsSection";
 import { FactoriesSection } from "../../cadastro/ui/FactoriesSection";
 import { GradesSection } from "../../cadastro/ui/GradesSection";
+import { GradeExpectedSection } from "../../competencia/ui/GradeExpectedSection";
 import { LinesSection } from "../../cadastro/ui/LinesSection";
 import { RolesSection } from "../../cadastro/ui/RolesSection";
 import { SubassembliesSection } from "../../cadastro/ui/SubassembliesSection";
@@ -61,6 +62,7 @@ export function SettingsPage() {
           <>
             <CompetenciesSection />
             <BehaviorTagsSection />
+            <GradeExpectedSection />
             <MatrixCatalogSection />
           </>
         ) : null}

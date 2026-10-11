@@ -253,6 +253,7 @@ function Matrix({ memberId }: { memberId: string }) {
   if (!matrix.data || !catalog.data) return null;
   const summary = matrix.data.summary;
   const entries = entriesById(matrix.data.entries);
+  const byLevel = matrix.data.expectedByLevel;
   const groups = matrix.data.equipments.map((equipmentId) => {
     const skills = skillsOf(catalog.data, equipmentId).filter((skill) => {
       const entry = entries.get(skill.id);
@@ -312,16 +313,16 @@ function Matrix({ memberId }: { memberId: string }) {
               </thead>
               <tbody>
                 {bySubgroup(group.skills).flatMap((subgroup) => [
-                  <SubgroupRow key={`grupo-${subgroup.subgroup}`} name={subgroup.subgroup} tally={subgroupTally(subgroup.skills, entries)} />,
+                  <SubgroupRow key={`grupo-${subgroup.subgroup}`} name={subgroup.subgroup} tally={subgroupTally(subgroup.skills, entries, byLevel)} />,
                   ...subgroup.skills.map((skill) => {
                     const entry = entries.get(skill.id);
-                    const state = skillState(skill, entry);
+                    const state = skillState(skill, entry, byLevel);
                     const score = entry?.score ?? null;
                     return (
                       <tr key={skill.id}>
                         <td className="skill">{skill.text}</td>
                         <td className="level">{COMPETENCY_LEVEL_LABELS[skill.level]}</td>
-                        <td className="n">{expectedOf(skill, entry)}</td>
+                        <td className="n">{expectedOf(skill, entry, byLevel)}</td>
                         <td className="n">{state === "na" ? "N/A" : score}</td>
                         <td>
                           {state === "na" ? (
@@ -384,10 +385,10 @@ function PdiGaps({ memberId, year, items }: { memberId: string; year: number; it
     matrix.data && catalog.data
       ? catalog.data.skills
           .filter((skill) => !skill.archived && matrix.data.equipments.includes(skill.equipmentId))
-          .filter((skill) => skillState(skill, entries.get(skill.id)) === "below")
+          .filter((skill) => skillState(skill, entries.get(skill.id), matrix.data.expectedByLevel) === "below")
           .map((skill) => {
             const entry = entries.get(skill.id);
-            const expected = expectedOf(skill, entry);
+            const expected = expectedOf(skill, entry, matrix.data.expectedByLevel);
             return { skill, expected, real: entry?.score ?? 0, gap: expected - (entry?.score ?? 0), planned: planned((item) => item.skillId, skill.id) };
           })
           .sort((x, y) => Number(x.planned) - Number(y.planned) || y.gap - x.gap)
