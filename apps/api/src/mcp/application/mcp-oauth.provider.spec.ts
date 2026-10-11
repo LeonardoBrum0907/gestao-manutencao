@@ -6,7 +6,7 @@ import type { EnvService } from "../../env.module";
 import type { PasswordHasher } from "../../identity/infra/password.hasher";
 import type { UserRepository } from "../../identity/infra/user.repository";
 import type { McpOAuthRepository, StoredMcpToken } from "../infra/mcp-oauth.repository";
-import { McpOAuthProvider, STATIC_TOKEN_CLIENT } from "./mcp-oauth.provider";
+import { McpOAuthProvider, redirectSource, STATIC_TOKEN_CLIENT } from "./mcp-oauth.provider";
 
 const client = { client_id: "c1", redirect_uris: ["https://claude.ai/cb"], client_name: "Claude" } as OAuthClientInformationFull;
 const params = { codeChallenge: "ch", redirectUri: "https://claude.ai/cb", state: "s", scopes: [] };
@@ -65,6 +65,11 @@ describe("login OAuth do MCP", () => {
     const info = await provider.verifyAccessToken(tokens.access_token);
     assert.equal(info.clientId, "c1");
     await assert.rejects(provider.verifyAccessToken(tokens.refresh_token ?? ""));
+  });
+
+  it("libera o retorno de app nativo pelo esquema, já que ele não tem origem", () => {
+    assert.equal(redirectSource("https://claude.ai/api/mcp/auth_callback"), "https://claude.ai");
+    assert.equal(redirectSource("cursor://anysphere.cursor-retrieval/oauth/callback"), "cursor:");
   });
 
   it("aceita a chave fixa do .env só quando ela existe", async () => {
