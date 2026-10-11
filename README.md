@@ -15,7 +15,7 @@ O comando padrão sobe só `web` e `api`. O Postgres local não entra.
 - App: http://localhost:8080
 - O `web` encaminha `/api` e `/health` para a `api`
 - Saúde: http://localhost:8080/health e http://localhost:3000/health
-- Conta: `gestor@local` / `gestor`
+- Conta: `gestor@local`, senha `gestor` até você definir `GESTOR_PASSWORD` no `.env`
 
 A API recusa o boot sem `DATABASE_URL` e `SESSION_SECRET`. Na entrada ela roda `prisma migrate deploy` e só então escuta na porta 3000. O `web` espera essa saúde antes de publicar a porta 8080.
 
@@ -38,6 +38,20 @@ powershell -ExecutionPolicy Bypass -File scripts\servidor-pc.ps1
 Com o banco local vazio, o script tira um dump novo da VPS (o `DATABASE_URL` do `.env`) em `backup-local\` e restaura. Se a VPS não responder, usa o dump mais recente que estiver lá. `-Restaurar` apaga o banco local e restaura de novo. No fim ele mostra o endereço `https://….trycloudflare.com` e o grava em `backup-local\tunnel-url.txt`. Esse endereço muda quando o túnel reinicia, e o `vercel.json` precisa apontar para ele.
 
 Parar sem perder dados: `docker compose -f docker-compose.yml -f docker-compose.servidor.yml --profile local-db stop`.
+
+### IA (servidor MCP)
+
+A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências e pós-preventivas pelas mesmas regras das telas. São 20 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
+
+No `.env` do servidor:
+
+- `GESTOR_PASSWORD`: a senha do gestor, com pelo menos 8 caracteres. Ao reiniciar, a API troca a senha e derruba as sessões abertas. Enquanto a senha for a padrão `gestor`, a tela de login da IA recusa conectar.
+- `PUBLIC_URL`: o domínio da Vercel (ex.: `https://gestao-manutencao.vercel.app`, sem barra no fim). É por ele que o claude.ai chega; o `vercel.json` repassa `/mcp`, `/authorize`, `/token`, `/register`, `/revoke` e `/.well-known/*` para o túnel, junto com `/api`.
+- `MCP_TOKEN` (opcional): chave fixa para quem manda cabeçalho, como o Claude Code. Sem ela, só vale o login OAuth.
+
+Conectar no claude.ai: Configurações › Conectores › Adicionar conector personalizado, URL `https://<domínio da Vercel>/mcp`. Se pedir o tipo de cliente OAuth, escolha registrar automaticamente. Abre a tela da API pedindo a senha do gestor; depois disso o conector renova a chave sozinho (acesso de 1 hora, renovação de 30 dias).
+
+Conectar no Claude Code: `claude mcp add --transport http gestao https://<domínio da Vercel>/mcp`, que abre o mesmo login, ou com a chave fixa: `claude mcp add --transport http gestao http://localhost:3000/mcp --header "Authorization: Bearer <MCP_TOKEN>"`.
 
 ### Desenvolvimento
 
@@ -70,6 +84,8 @@ No Docker Desktop do Windows o bind mount não repassa eventos de arquivo, por i
 13. RP (Relatório Padrão de Manutenção) em Turno › RP (`/rp`). **Colar RP** (`/rp/novo`): cole o texto do WhatsApp (um ou vários relatórios, separados por `----` ou pelo título), o sistema lê os rótulos (DATA, LINHA, TAG, ORDEM, PROBLEMA, DESCRIÇÃO, FALHA REPETIDA, os 4M, CAUSA RAIZ, as duas CONTRAMEDIDAS, STATUS, TÉCNICO ou EXECUTANTES, IMPACTO) com ou sem asteriscos e em qualquer ordem, casa técnicos e linha com o cadastro e abre a ficha para você conferir. O que não casa fica como texto (técnicos fora do cadastro, linha e TAG sem cadastro). Status: em análise, em monitoramento, corrigido ou produzindo. RP parecido (mesma ordem, ou mesmo problema no mesmo dia e lugar) mostra um aviso, mas deixa salvar. Cada RP gera um Problema de origem RP nas Pendências, que acompanha a ficha (editar o RP atualiza o Problema; excluir o RP exclui o Problema). A lista filtra por período, fábrica, linha cadastrada, linha do texto, TAG, status, técnico, falha repetida e texto. A ficha do colaborador lista os RPs em que ele aparece. O leitor do texto é uma função pura (`apps/api/src/rp/domain/rp-text.ts`), testada com relatórios reais.
 
 14. Pós-preventiva em Turno › Pós-preventiva (`/pos-preventiva`): o coordenador registra a ocorrência que apareceu depois de uma preventiva (data da preventiva e da ocorrência, linha, máquina, subconjunto do modelo da máquina, técnicos, o que foi feito, a ocorrência, a ação preventiva e o ponto de atenção), e pode ligar a ficha a um RP da linha. O ponto fica ativo até ser desligado; a ficha continua no histórico. A lista filtra por linha, máquina, subconjunto, técnico, período e só pontos ativos. A lista Turno › Máquinas (`/maquinas`) busca por máquina, TAG, linha ou modelo, filtra por fábrica, linha e só com ponto ativo, e mostra quantos pontos ativos cada uma tem. A tela da máquina (`/maquinas/:id`, aberta pela lista ou pelas etiquetas das linhas em Configurações) mostra os pontos ativos por subconjunto, o histórico e os RPs da linha, e exporta a folha A4 para o técnico (`/maquinas/:id/folha`), com os subconjuntos escolhidos, caixa para marcar cada ponto e campo para assinar; a ficha também exporta sozinha. O RP mostra os pontos ativos da sua linha e as fichas ligadas a ele. Máquina com ficha não pode ser excluída nem trocar de modelo; subconjunto com ficha só arquiva.
+
+15. Servidor MCP em `/mcp` (veja “IA (servidor MCP)” acima): consultas (resumo do dia, cadastro, chamados, pendências, RPs, ficha do colaborador, matriz da equipe, pós-preventivas, leitura do RP do WhatsApp) e lançamentos (salvar RP com aviso de duplicado, abrir e editar chamado, gerar pendência, registrar, atualizar registro, lançar pós-preventiva). Login OAuth com a senha do gestor, ou chave fixa `MCP_TOKEN`.
 
 ## Fora desta versão
 

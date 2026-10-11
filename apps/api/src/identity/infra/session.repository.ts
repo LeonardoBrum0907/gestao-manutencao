@@ -22,6 +22,10 @@ export class SessionRepository {
     return this.prisma.session.deleteMany({ where: { expiresAt: { lt: now } } });
   }
 
+  deleteByUser(userId: string) {
+    return this.prisma.session.deleteMany({ where: { userId } });
+  }
+
   deleteByHash(tokenHash: string) {
     return this.prisma.session.deleteMany({ where: { tokenHash } });
   }

@@ -23,6 +23,14 @@
       "destination": "https://cage-qualify-right-ages.trycloudflare.com/health"
     },
     {
+      "source": "/:route(mcp|authorize|token|register|revoke)",
+      "destination": "https://cage-qualify-right-ages.trycloudflare.com/:route"
+    },
+    {
+      "source": "/.well-known/:path*",
+      "destination": "https://cage-qualify-right-ages.trycloudflare.com/.well-known/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "web"
