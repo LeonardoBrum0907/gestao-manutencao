@@ -3,7 +3,8 @@ import type { PostPreventiveDto, PostPreventiveFields } from "@manutencao/shared
 import { DomainError } from "../../kernel/domain-error";
 import { readObject } from "../../kernel/parse";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
-import { assertSubassemblyFits, parseDay, readPostPreventive } from "../domain/post-preventive";
+import { assertSubassemblyFits } from "../../cadastro/domain/hierarchy";
+import { parseDay, readPostPreventive } from "../domain/post-preventive";
 import { PostPreventiveRepository, type PostPreventiveFilter } from "../infra/post-preventive.repository";
 
 export type PostPreventiveQuery = Record<string, string | string[] | undefined>;
