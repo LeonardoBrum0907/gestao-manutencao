@@ -10,6 +10,8 @@ import {
   type BoardDto,
   type BoardGroup,
   type BoardItemDto,
+  type FeedbackBoardDto,
+  type ProblemBoardDto,
   type MemberRecordSummaryDto,
   type RecordDto,
   type RecordListItemDto,
@@ -17,7 +19,7 @@ import {
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
-import { boardGroup, compareBoard, doneSince } from "../domain/board";
+import { boardGroup, compareBoard, doneSince, FEEDBACK_DONE_WINDOW_DAYS } from "../domain/board";
 import { calendarDay, dueRange } from "../domain/follow-up";
 import type { RecordListFilter } from "../domain/record-list";
 import type { RecordLinks } from "../domain/record-removal";
@@ -218,6 +220,21 @@ const boardSelect = {
   updatedAt: true,
 } as const;
 
+function openOrDoneSince(since: Date): Prisma.RecordWhereInput {
+  return { OR: [{ status: { in: ["open", "in_progress"] } }, { status: "done", updatedAt: { gte: since } }] };
+}
+
+// Abertos primeiro, na ordem do checklist; concluídos depois, o último fechado no topo.
+function sortChecklist<T extends { id: string; status: string; boardPosition: number | null; dueAt: Date | null; occurredAt: Date; updatedAt: Date }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => {
+    const aDone = a.status === "done";
+    const bDone = b.status === "done";
+    if (aDone !== bDone) return aDone ? 1 : -1;
+    if (aDone) return b.updatedAt.getTime() - a.updatedAt.getTime();
+    return compareBoard(a, b);
+  });
+}
+
 const boardOrder: Record<BoardGroup, number> = { overdue: 0, today: 1, upcoming: 2, undated: 3, done: 4 };
 
 export type BoardWrite = {
@@ -232,13 +249,13 @@ export class RecordRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   // Checklist de Tarefas: as em aberto, mais as concluídas da última semana.
-  async board(now: Date): Promise<BoardDto> {
+  async taskBoard(now: Date): Promise<BoardDto> {
     const rows = await this.prisma.record.findMany({
       where: {
         AND: [
           notChamado,
           { type: "task" },
-          { OR: [{ status: { in: ["open", "in_progress"] } }, { status: "done", updatedAt: { gte: doneSince(now) } }] },
+          openOrDoneSince(doneSince(now)),
         ],
       },
       select: boardSelect,
@@ -264,6 +281,84 @@ export class RecordRepository {
           dueAt: item.dueAt,
           occurredAt: item.occurredAt,
           group,
+        };
+      }),
+    };
+  }
+
+  // Problemas em aberto e os resolvidos da semana; a tela agrupa por linha ou situação.
+  async problemBoard(now: Date): Promise<ProblemBoardDto> {
+    const rows = await this.prisma.record.findMany({
+      where: { AND: [notChamado, { type: "problem" }, openOrDoneSince(doneSince(now))] },
+      select: {
+        id: true,
+        body: true,
+        status: true,
+        origin: true,
+        occurredAt: true,
+        dueAt: true,
+        boardPosition: true,
+        updatedAt: true,
+        lineId: true,
+        lineLabel: true,
+        line: true,
+        rp: { select: { id: true } },
+      },
+    });
+    const lineIds = [...new Set(rows.map((row) => row.lineId).filter((id): id is string => Boolean(id)))];
+    const lines = lineIds.length
+      ? await this.prisma.line.findMany({ where: { id: { in: lineIds } }, select: { id: true, name: true } })
+      : [];
+    const lineNames = new Map(lines.map((line) => [line.id, line.name]));
+    return {
+      items: sortChecklist(rows).map((row) => {
+        if (!isRecordStatus(row.status) || !isRecordOrigin(row.origin)) {
+          throw new DomainError("invalid", 500, "Registro gravado está inválido.");
+        }
+        return {
+          id: row.id,
+          body: row.body,
+          status: row.status,
+          origin: row.origin,
+          occurredAt: row.occurredAt.toISOString(),
+          lineId: row.lineId,
+          lineName: (row.lineId ? lineNames.get(row.lineId) : null) ?? row.lineLabel ?? row.line ?? null,
+          rpId: row.rp?.id ?? null,
+        };
+      }),
+    };
+  }
+
+  // Feedbacks a conversar e os conversados do último mês; a tela agrupa por colaborador, tom ou data.
+  async feedbackBoard(now: Date): Promise<FeedbackBoardDto> {
+    const rows = await this.prisma.record.findMany({
+      where: { AND: [{ type: "feedback" }, openOrDoneSince(doneSince(now, FEEDBACK_DONE_WINDOW_DAYS))] },
+      select: {
+        id: true,
+        body: true,
+        status: true,
+        occurredAt: true,
+        dueAt: true,
+        boardPosition: true,
+        updatedAt: true,
+        tone: true,
+        memberId: true,
+        member: { select: { name: true } },
+      },
+    });
+    return {
+      items: sortChecklist(rows).map((row) => {
+        if (!isRecordStatus(row.status) || (row.tone !== null && !isFeedbackTone(row.tone))) {
+          throw new DomainError("invalid", 500, "Registro gravado está inválido.");
+        }
+        return {
+          id: row.id,
+          body: row.body,
+          status: row.status,
+          occurredAt: row.occurredAt.toISOString(),
+          tone: row.tone,
+          memberId: row.memberId,
+          memberName: row.member?.name ?? null,
         };
       }),
     };

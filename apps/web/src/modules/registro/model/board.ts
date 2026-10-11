@@ -1,23 +1,8 @@
-import { BOARD_GROUPS, GESTOR_TIME_ZONE, type BoardGroup, type BoardItemDto, type BoardTarget } from "@manutencao/shared";
-
-export type BoardColumns = Record<BoardGroup, string[]>;
-
-export const boardGroups = BOARD_GROUPS;
+import { GESTOR_TIME_ZONE, type BoardGroup, type BoardTarget } from "@manutencao/shared";
 
 // Grupos que recebem tarefa vinda de outro grupo.
 export function isDropTarget(group: BoardGroup): group is BoardTarget {
   return group === "today" || group === "upcoming" || group === "undated";
-}
-
-// Atrasada pode ser reordenada e arrastada para fora (nada entra nela); concluída fica parada.
-export function canDrag(group: BoardGroup): boolean {
-  return group !== "done";
-}
-
-export function columnsOf(items: BoardItemDto[]): BoardColumns {
-  const columns: BoardColumns = { overdue: [], today: [], upcoming: [], undated: [], done: [] };
-  for (const item of items) columns[item.group].push(item.id);
-  return columns;
 }
 
 const weekday = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", weekday: "long" });

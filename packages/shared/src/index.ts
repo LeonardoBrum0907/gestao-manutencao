@@ -399,7 +399,7 @@ export type RecordPageDto = {
   nextCursor: string | null;
 };
 
-// Tarefas em checklist (Pendências): grupos por prazo, na ordem da tela.
+// Pendências em checklist. Tarefas: grupos por prazo, na ordem da tela.
 export const BOARD_GROUPS = ["overdue", "today", "upcoming", "undated", "done"] as const;
 export type BoardGroup = (typeof BOARD_GROUPS)[number];
 // Grupos que recebem um item arrastado: atrasada e concluída não são destino de arrastar.
@@ -418,6 +418,21 @@ export type BoardDto = {
   today: string;
   items: BoardItemDto[];
 };
+
+// Problemas e feedbacks não têm prazo: a tela agrupa como o gestor escolher (linha, situação, colaborador, tom…).
+export type ProblemBoardItemDto = Pick<RecordDto, "id" | "body" | "status" | "origin" | "occurredAt" | "lineId"> & {
+  // Linha do cadastro, ou o texto da linha quando o problema veio sem cadastro.
+  lineName: string | null;
+  // Problema espelho de RP fecha pelo RP: o círculo leva até ele.
+  rpId: string | null;
+};
+
+export type FeedbackBoardItemDto = Pick<RecordDto, "id" | "body" | "status" | "occurredAt" | "tone" | "memberId"> & {
+  memberName: string | null;
+};
+
+export type ProblemBoardDto = { items: ProblemBoardItemDto[] };
+export type FeedbackBoardDto = { items: FeedbackBoardItemDto[] };
 
 // Mudança feita no checklist: concluir/reabrir, levar para outro grupo e/ou a ordem do grupo de destino.
 export type BoardChangeDto = {

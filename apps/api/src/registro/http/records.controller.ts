@@ -30,10 +30,19 @@ export class RecordsController {
     return this.list.page(parseRecordList(query));
   }
 
-  // Antes de ":id", senão "board" vira um id.
-  @Get("board")
-  board() {
-    return this.list.board();
+  @Get("board/tasks")
+  taskBoard() {
+    return this.list.taskBoard();
+  }
+
+  @Get("board/problems")
+  problemBoard() {
+    return this.list.problemBoard();
+  }
+
+  @Get("board/feedbacks")
+  feedbackBoard() {
+    return this.list.feedbackBoard();
   }
 
   @Get(":id")

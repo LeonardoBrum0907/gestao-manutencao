@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type {
   AttachmentDto,
@@ -11,7 +10,6 @@ import type {
   RecordType,
 } from "@manutencao/shared";
 import { api } from "../../../app/http";
-import { followUpSearch, type FollowUpQuery } from "../model/follow-up";
 
 const PAGE_SIZE = 50;
 
@@ -38,10 +36,6 @@ export function flattenPages(pages: RecordPageDto[] | undefined): RecordListItem
   return pages?.flatMap((page) => page.items) ?? [];
 }
 
-export function useFollowUp(query: FollowUpQuery) {
-  return useRecordPages("follow-up", followUpSearch(query));
-}
-
 const fetchRecord = (id: string) => api<RecordDto>(`/api/records/${id}`);
 
 export function useRecord(id: string) {
@@ -49,25 +43,6 @@ export function useRecord(id: string) {
     queryKey: ["records", id],
     queryFn: () => fetchRecord(id),
   });
-}
-
-// Parar o mouse (ou focar) numa linha já busca a ficha: quando o clique vem, ela abre sem esperar.
-// O atraso evita uma busca por linha quando o mouse só passa por cima da lista.
-export function usePrefetchRecord() {
-  const client = useQueryClient();
-  const timer = useRef<number | undefined>(undefined);
-  return {
-    start(id: string) {
-      window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(
-        () => void client.prefetchQuery({ queryKey: ["records", id], queryFn: () => fetchRecord(id) }),
-        150,
-      );
-    },
-    cancel() {
-      window.clearTimeout(timer.current);
-    },
-  };
 }
 
 // Depois de gravar uma ficha o cache dela já está certo (vem da resposta): refaz as listas, não a ficha.

@@ -11,8 +11,10 @@ import {
 import { DomainError } from "../../kernel/domain-error";
 import { calendarDay, nextCalendarDay, startOfDay, taskDueWindow } from "./follow-up";
 
-// Concluída some do checklist depois de uma semana; o histórico continua na ficha e nos relatórios.
+// Concluída some do checklist depois de uma semana (feedback conversado, depois de um mês); o histórico
+// continua na ficha e nos relatórios.
 export const DONE_WINDOW_DAYS = 7;
+export const FEEDBACK_DONE_WINDOW_DAYS = 30;
 export const MAX_ORDER = 500;
 
 export type BoardSubject = {
@@ -39,8 +41,8 @@ export function boardDueAt(target: BoardTarget, now: Date, timeZone: string = GE
   return new Date(startOfDay(day, timeZone).getTime() + NOON_MS);
 }
 
-export function doneSince(now: Date): Date {
-  return new Date(now.getTime() - DONE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+export function doneSince(now: Date, days: number = DONE_WINDOW_DAYS): Date {
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
 export type BoardSortable = {
@@ -113,9 +115,6 @@ export type BoardRecord = {
 };
 
 export function assertBoardChange(record: BoardRecord, change: BoardChange): void {
-  if (record.type === "feedback") {
-    throw new DomainError("wrong_type", 400, "Feedback não fica nas pendências.");
-  }
   if (change.target !== null && record.type !== "task") {
     throw new DomainError("wrong_type", 400, "Só tarefa tem prazo.");
   }

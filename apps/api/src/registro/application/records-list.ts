@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { BoardDto, MemberRecordSummaryDto, RecordPageDto } from "@manutencao/shared";
+import type { BoardDto, FeedbackBoardDto, MemberRecordSummaryDto, ProblemBoardDto, RecordPageDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { RecordRepository } from "../infra/record.repository";
@@ -16,8 +16,16 @@ export class RecordsList {
     return this.records.listPage(filter, now);
   }
 
-  board(now: Date = new Date()): Promise<BoardDto> {
-    return this.records.board(now);
+  taskBoard(now: Date = new Date()): Promise<BoardDto> {
+    return this.records.taskBoard(now);
+  }
+
+  problemBoard(now: Date = new Date()): Promise<ProblemBoardDto> {
+    return this.records.problemBoard(now);
+  }
+
+  feedbackBoard(now: Date = new Date()): Promise<FeedbackBoardDto> {
+    return this.records.feedbackBoard(now);
   }
 
   async memberSummary(memberId: string, now: Date = new Date()): Promise<MemberRecordSummaryDto> {

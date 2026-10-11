@@ -71,11 +71,12 @@ describe("mudança pelo checklist", () => {
     assert.throws(() => parseBoardChange("a", { status: "closed" }), DomainError);
   });
 
-  it("feedback fica fora, só tarefa ganha prazo e problema de RP só fecha pelo RP", () => {
+  it("só tarefa ganha prazo e problema de RP só fecha pelo RP", () => {
     const close = parseBoardChange("a", { status: "done" });
     const move = parseBoardChange("a", { group: "today", order: ["a"] });
     const reorder = parseBoardChange("a", { order: ["a"] });
-    assert.throws(() => assertBoardChange({ type: "feedback", origin: "inbox" }, reorder), DomainError);
+    assert.throws(() => assertBoardChange({ type: "feedback", origin: "inbox" }, move), DomainError);
+    assert.doesNotThrow(() => assertBoardChange({ type: "feedback", origin: "inbox" }, close));
     assert.throws(() => assertBoardChange({ type: "problem", origin: "inbox" }, move), DomainError);
     assert.throws(() => assertBoardChange({ type: "problem", origin: "rp" }, close), DomainError);
     assert.doesNotThrow(() => assertBoardChange({ type: "problem", origin: "rp" }, reorder));
