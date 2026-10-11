@@ -1,3 +1,5 @@
+import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
+
 export const RECORD_TYPES = ["task", "feedback", "problem"] as const;
 export type RecordType = (typeof RECORD_TYPES)[number];
 
@@ -206,6 +208,7 @@ export type MemberRoleDto = {
 export type MemberGradeDto = {
   id: string;
   name: string;
+  expected: GradeExpectedDto;
 };
 
 export type MemberDto = {
@@ -491,11 +494,11 @@ export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
 export type CompetencyScore = (typeof COMPETENCY_SCORES)[number];
 
 export const COMPETENCY_SCORE_LABELS: Record<CompetencyScore, { label: string; hint: string }> = {
-  0: { label: "Não apto", hint: "Não sabe executar a atividade, falta conhecimento." },
-  1: { label: "Em treinamento", hint: "Conhece a teoria, falta o treinamento prático." },
-  2: { label: "Treinado", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
-  3: { label: "Apto", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
-  4: { label: "Referência no tema", hint: "Consegue ensinar os demais e melhorar o processo." },
+  0: { label: "Sem experiência", hint: "Não sabe executar a atividade, falta conhecimento." },
+  1: { label: "Básico", hint: "Conhece a teoria, falta o treinamento prático." },
+  2: { label: "Intermediário", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
+  3: { label: "Avançado", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
+  4: { label: "Referência", hint: "Consegue ensinar os demais e melhorar o processo." },
 };
 
 export type CompetencyEntryDto = {
@@ -521,6 +524,9 @@ export type CompetencySummaryDto = {
 
 export type MemberMatrixDto = {
   memberId: string;
+  // Grau do colaborador e o esperado padrão que ele dá a cada dificuldade (o "padrão" do esp. na tela).
+  gradeName: string | null;
+  expectedByLevel: Record<CompetencyLevel, number>;
   equipments: string[];
   entries: CompetencyEntryDto[];
   summary: CompetencySummaryDto;

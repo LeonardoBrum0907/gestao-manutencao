@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { MatrixCatalogDto } from "@manutencao/shared";
+import { COMPETENCY_LEVEL_EXPECTED, type MatrixCatalogDto } from "@manutencao/shared";
 import type { MatrixEntry } from "./matrix";
 import { buildTeamMatrix, coverageStatus, type TeamMemberInput } from "./team";
 
@@ -20,9 +20,16 @@ const catalog: MatrixCatalogDto = {
 
 const meets = (skillId: string): MatrixEntry => ({ skillId, score: 3, notApplicable: false, expected: null });
 const below = (skillId: string): MatrixEntry => ({ skillId, score: 0, notApplicable: false, expected: null });
+const entryScore = (skillId: string, score: MatrixEntry["score"]): MatrixEntry => ({ skillId, score, notApplicable: false, expected: null });
 
-function member(id: string, shift: string, equipments: string[], entries: MatrixEntry[]): TeamMemberInput {
-  return { id, name: id, shift, teamId: null, equipments, entries, pdiOverdue: 0 };
+function member(
+  id: string,
+  shift: string,
+  equipments: string[],
+  entries: MatrixEntry[],
+  expectedByLevel = COMPETENCY_LEVEL_EXPECTED,
+): TeamMemberInput {
+  return { id, name: id, shift, teamId: null, equipments, entries, expectedByLevel, pdiOverdue: 0 };
 }
 
 describe("visão da equipe", () => {
@@ -45,6 +52,14 @@ describe("visão da equipe", () => {
     assert.equal(team.members[0]?.cells[0]?.adherence, 50);
     assert.equal(team.members[0]?.cells[0]?.above, 1);
     assert.equal(team.members[0]?.cells[0]?.exact, 0);
+  });
+
+  it("usa o esperado do grau de cada técnico", () => {
+    const junior = { basic: 1, intermediate: 2, advanced: 3 };
+    const team = buildTeamMatrix(catalog, [member("a", "first", ["e1"], [below("s1"), entryScore("s2", 1)], junior)], 80);
+    // s1 com nota 0 fica abaixo do 1 do júnior; s2 com nota 1 fica igual.
+    assert.equal(team.members[0]?.cells[0]?.exact, 1);
+    assert.equal(team.members[0]?.cells[0]?.below, 1);
   });
 
   it("usa o corte de aderência configurado", () => {

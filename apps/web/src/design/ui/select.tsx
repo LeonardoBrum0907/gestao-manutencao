@@ -118,7 +118,8 @@ function useOutsideClose(open: boolean, refs: RefObject<HTMLElement | null>[], c
   }, [open]);
 }
 
-function Chevron({ open }: { open?: boolean }) {
+/** Seta para baixo que gira quando aberto. Ex.: <Chevron open={expanded} /> */
+export function Chevron({ open }: { open?: boolean }) {
   return (
     <svg
       width="16"

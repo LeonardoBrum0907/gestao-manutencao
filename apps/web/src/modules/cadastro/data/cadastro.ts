@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FactoryDto, LineDto, MachineDto, MemberDto, MemberGradeDto, MemberRoleDto, SubassemblyDto, TeamDto } from "@manutencao/shared";
+import {
+  EMPTY_GRADE_EXPECTED,
+  type FactoryDto,
+  type GradeExpectedDto,
+  type LineDto,
+  type MachineDto,
+  type MemberDto,
+  type MemberGradeDto,
+  type MemberRoleDto,
+  type SubassemblyDto,
+  type TeamDto,
+} from "@manutencao/shared";
 import { removeById, REFERENCE_DATA, upsertByName } from "../../../app/cache";
 import { api } from "../../../app/http";
 
@@ -162,11 +173,17 @@ export function useDeleteRole() {
   });
 }
 
+// Uma API anterior ao esperado por grau (PR #40) não manda `expected`: vale "padrão" em tudo até o servidor ser atualizado.
+async function fetchGrades(): Promise<MemberGradeDto[]> {
+  const grades = await api<(Omit<MemberGradeDto, "expected"> & Partial<MemberGradeDto>)[]>("/api/member-grades");
+  return grades.map((grade) => ({ ...grade, expected: grade.expected ?? EMPTY_GRADE_EXPECTED }));
+}
+
 export function useGrades() {
   return useQuery({
     queryKey: ["grades"],
     ...REFERENCE_DATA,
-    queryFn: () => api<MemberGradeDto[]>("/api/member-grades"),
+    queryFn: fetchGrades,
   });
 }
 
@@ -186,6 +203,26 @@ export function useSaveGrade() {
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["grades"] });
       client.invalidateQueries({ queryKey: ["members"] });
+    },
+  });
+}
+
+/**
+ * Grava o esperado da matriz por dificuldade para um grau; a matriz de quem tem o grau é recalculada na API.
+ * @example useSetGradeExpected().mutate({ id, expected: { basic: null, intermediate: 2, advanced: 1 } })
+ */
+export function useSetGradeExpected() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; expected: GradeExpectedDto }) =>
+      api<MemberGradeDto>(`/api/member-grades/${input.id}/expected`, {
+        method: "PUT",
+        body: JSON.stringify({ expected: input.expected }),
+      }),
+    onSuccess: (grade) => {
+      client.setQueryData<MemberGradeDto[]>(["grades"], (list) => list?.map((item) => (item.id === grade.id ? grade : item)));
+      void client.invalidateQueries({ queryKey: ["matrix"] });
+      void client.invalidateQueries({ queryKey: ["team-matrix"] });
     },
   });
 }
@@ -235,6 +272,11 @@ export function useSaveMember() {
       upsertByName(client, ["members"], member);
       if (!before || before.teamId !== member.teamId || before.name !== member.name || before.position !== member.position) {
         void client.invalidateQueries({ queryKey: ["teams"] });
+      }
+      // O grau define o esperado padrão da matriz: trocou o grau, a aderência muda.
+      if (before && before.gradeId !== member.gradeId) {
+        void client.invalidateQueries({ queryKey: ["matrix", member.id] });
+        void client.invalidateQueries({ queryKey: ["team-matrix"] });
       }
     },
   });

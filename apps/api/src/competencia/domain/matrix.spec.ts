@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { MatrixCatalogDto, MatrixSkillDto } from "@manutencao/shared";
+import { expectedByLevel, type MatrixCatalogDto, type MatrixSkillDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import {
   assertMatrixEditable,
   buildMatrix,
+  expectedFor,
   normalizeEntry,
   requireEquipments,
   requireSkill,
@@ -43,6 +44,21 @@ function entry(skillId: string, partial: Partial<MatrixEntry>): MatrixEntry {
 }
 
 describe("resumo da matriz", () => {
+  it("usa o esperado do grau quando a linha não tem esp. próprio", () => {
+    const junior = expectedByLevel({ basic: null, intermediate: 2, advanced: 1 });
+    const entries = new Map([
+      ["A", entry("A", { score: 2 })],
+      ["B", entry("B", { score: 2 })],
+      ["C", entry("C", { score: 1 })],
+      ["D", entry("D", { score: 1, expected: 3 })],
+    ]);
+    const summary = summarize(skills, entries, junior);
+    // A: básico sem valor no grau, fica o padrão 2. B: 2 do grau. C: 1 do grau. D: o esp. 3 da linha vale mais que o grau.
+    assert.equal(summary.exact, 3);
+    assert.equal(summary.below, 1);
+    assert.equal(expectedFor(skills[2]!, undefined, junior), 1);
+  });
+
   it("compara a nota com o esperado do nível", () => {
     const entries = new Map([
       ["A", entry("A", { score: 2 })],

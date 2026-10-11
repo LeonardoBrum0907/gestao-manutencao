@@ -25,6 +25,10 @@
   --equal-soft: #e6eef5;
   --equal-text: #2e4a63;
   --chip-bg: #eef3f0;
+  /* Títulos de grupo (subconjunto da matriz): faixa e linha mais fortes que chip/border, para separar do conteúdo. */
+  --group-bg: #dbe4de;
+  --border-strong: #9fb0a5;
+  --accent-ink: #14502f;
   --overlay: rgb(28 40 34 / 0.4);
   /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
   --chart-1: #1f744b;
@@ -58,6 +62,9 @@
   --equal-soft: #1f2d3a;
   --equal-text: #b3cde4;
   --chip-bg: #24302a;
+  --group-bg: #2c3a33;
+  --border-strong: #4f6358;
+  --accent-ink: #8fdcb2;
   --overlay: rgb(0 0 0 / 0.6);
   --chart-1: #34a96c;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.28);

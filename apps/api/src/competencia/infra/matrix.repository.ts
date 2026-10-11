@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { GESTOR_TIME_ZONE } from "@manutencao/shared";
+import { expectedByLevel, GESTOR_TIME_ZONE } from "@manutencao/shared";
+import { gradeExpectedOf, GRADE_EXPECTED_SELECT } from "../../cadastro/infra/grade-expected";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
-import { isCompetencyScore, type MatrixEntry } from "../domain/matrix";
+import { isCompetencyScore, type ExpectedByLevel, type MatrixEntry } from "../domain/matrix";
 import type { TeamMemberInput } from "../domain/team";
 
 const dayFormat = new Intl.DateTimeFormat("en-CA", { timeZone: GESTOR_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
@@ -17,12 +18,21 @@ function score(value: number | null): MatrixEntry["score"] {
 export class MatrixRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async load(memberId: string): Promise<{ equipments: string[]; entries: MatrixEntry[] }> {
-    const [equipments, skills] = await Promise.all([
+  async load(memberId: string): Promise<{
+    equipments: string[];
+    entries: MatrixEntry[];
+    gradeName: string | null;
+    expectedByLevel: ExpectedByLevel;
+  }> {
+    const [equipments, skills, member] = await Promise.all([
       this.prisma.memberMatrixEquipment.findMany({ where: { memberId }, select: { equipmentId: true } }),
       this.prisma.memberSkill.findMany({ where: { memberId } }),
+      this.prisma.member.findUnique({ where: { id: memberId }, select: { grade: { select: { name: true, ...GRADE_EXPECTED_SELECT } } } }),
     ]);
+    const grade = member?.grade ?? null;
     return {
+      gradeName: grade?.name ?? null,
+      expectedByLevel: expectedByLevel(grade ? gradeExpectedOf(grade) : null),
       equipments: equipments.map((row) => row.equipmentId),
       entries: skills.map((row) => ({
         skillId: row.skillId,
@@ -74,7 +84,7 @@ export class MatrixRepository {
   async loadTeam(now = new Date()): Promise<TeamMemberInput[]> {
     const members = await this.prisma.member.findMany({
       where: { position: "technician", status: "active" },
-      select: { id: true, name: true, shift: true, teamId: true },
+      select: { id: true, name: true, shift: true, teamId: true, grade: { select: GRADE_EXPECTED_SELECT } },
       orderBy: { name: "asc" },
     });
     const ids = members.map((member) => member.id);
@@ -89,8 +99,9 @@ export class MatrixRepository {
       }),
     ]);
     const overdueBy = new Map(overdue.map((row) => [row.memberId, row._count._all]));
-    return members.map((member) => ({
+    return members.map(({ grade, ...member }) => ({
       ...member,
+      expectedByLevel: expectedByLevel(grade ? gradeExpectedOf(grade) : null),
       equipments: equipments.filter((row) => row.memberId === member.id).map((row) => row.equipmentId),
       entries: skills
         .filter((row) => row.memberId === member.id)

@@ -44,7 +44,7 @@ function useGapOptions(memberId: string, catalog: MatrixCatalogDto | undefined, 
   const entries = entriesById(matrix.data.entries);
   return catalog.skills
     .filter((skill) => !skill.archived && matrix.data.equipments.includes(skill.equipmentId))
-    .filter((skill) => skill.id === keep || skillState(skill, entries.get(skill.id)) === "below")
+    .filter((skill) => skill.id === keep || skillState(skill, entries.get(skill.id), matrix.data.expectedByLevel) === "below")
     .map((skill) => ({ id: skill.id, label: `${equipmentName(catalog, skill.equipmentId)} · ${skill.text}` }));
 }
 

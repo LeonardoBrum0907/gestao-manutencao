@@ -130,10 +130,14 @@ model MemberRole {
 }
 
 model MemberGrade {
-  id       String   @id @default(cuid())
-  name     String   @unique
-  position Int
-  members  Member[]
+  id                   String   @id @default(cuid())
+  name                 String   @unique
+  position             Int
+  // Esperado na matriz por dificuldade da habilidade para quem tem este grau (1 a 4); vazio usa o padrão da dificuldade.
+  expectedBasic        Int?
+  expectedIntermediate Int?
+  expectedAdvanced     Int?
+  members              Member[]
 }
 
 model Team {

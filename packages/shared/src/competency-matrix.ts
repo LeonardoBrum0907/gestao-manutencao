@@ -18,6 +18,24 @@ export const COMPETENCY_LEVEL_EXPECTED: Record<CompetencyLevel, number> = {
   advanced: 4,
 };
 
+// Esperado que o grau do colaborador define para cada dificuldade; null fica com o padrão da dificuldade.
+export type GradeExpectedDto = Record<CompetencyLevel, number | null>;
+
+export const EMPTY_GRADE_EXPECTED: GradeExpectedDto = { basic: null, intermediate: null, advanced: null };
+
+/**
+ * Esperado padrão por dificuldade para um colaborador: o do grau dele quando definido, senão o da dificuldade.
+ * O "esp." marcado na linha da habilidade continua valendo acima disto.
+ * @example expectedByLevel({ basic: null, intermediate: 2, advanced: 1 }) // { basic: 2, intermediate: 2, advanced: 1 }
+ */
+export function expectedByLevel(grade: GradeExpectedDto | null): Record<CompetencyLevel, number> {
+  return {
+    basic: grade?.basic ?? COMPETENCY_LEVEL_EXPECTED.basic,
+    intermediate: grade?.intermediate ?? COMPETENCY_LEVEL_EXPECTED.intermediate,
+    advanced: grade?.advanced ?? COMPETENCY_LEVEL_EXPECTED.advanced,
+  };
+}
+
 export function isCompetencyLevel(value: string): value is CompetencyLevel {
   return (COMPETENCY_LEVELS as readonly string[]).includes(value);
 }

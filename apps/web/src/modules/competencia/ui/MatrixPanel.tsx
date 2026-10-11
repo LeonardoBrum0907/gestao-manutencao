@@ -1,7 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  COMPETENCY_LEVEL_EXPECTED,
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_MATRIX_TITLE,
   COMPETENCY_SCORE_LABELS,
@@ -27,11 +26,13 @@ import {
   pendingExpected,
   percent,
   skillsOf,
-  meetsExpected,
   skillState,
+  subgroupTally,
   stateTextClass,
+  type ExpectedByLevel,
   type SkillState,
 } from "../model/matrix";
+import { Chevron } from "../../../design/ui/select";
 import { ScoreStack, StackLegend, stackTitle } from "./ScoreStack";
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
@@ -92,7 +93,7 @@ function ScoreScale({
   onPick: (next: ScoreValue) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 pt-3.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-3.5">
       <div role="radiogroup" aria-label={`Nota em ${skillText}`} className="flex items-center gap-1">
         {COMPETENCY_SCORES.map((score) => {
           const picked = !value.notApplicable && value.score === score;
@@ -130,7 +131,7 @@ function ScoreScale({
           N/A
         </button>
       </div>
-      <span className={`w-32 text-xs ${stateTextClass[state]}`}>{resultLabel(value)}</span>
+      <span className={`text-xs sm:w-32 ${stateTextClass[state]}`}>{resultLabel(value)}</span>
     </div>
   );
 }
@@ -138,14 +139,18 @@ function ScoreScale({
 function SkillRow({
   skill,
   entry,
+  byLevel,
+  gradeName,
   onChange,
 }: {
   skill: MatrixSkillDto;
   entry: CompetencyEntryDto | undefined;
+  byLevel: ExpectedByLevel;
+  gradeName: string | null;
   onChange: (write: SkillWrite) => void;
 }) {
-  const state = skillState(skill, entry);
-  const expected = expectedOf(skill, entry);
+  const state = skillState(skill, entry, byLevel);
+  const expected = expectedOf(skill, entry, byLevel);
   const base = {
     skillId: skill.id,
     score: entry?.score ?? null,
@@ -182,14 +187,17 @@ function SkillRow({
       data-skill-row
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className={`grid gap-x-6 border-t border-line px-4 py-2 outline-none focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:px-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center ${
+      className={`grid grid-cols-[minmax(0,1fr)] gap-x-6 border-t border-line py-2 pl-6 pr-4 outline-none first:border-t-0 focus:bg-accent-soft focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:pl-9 sm:pr-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center ${
         state === "na" ? "opacity-70" : ""
       }`}
     >
       <div className="min-w-0 pt-1">
-        <p className="text-sm text-app">{skill.text}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted">
-          {COMPETENCY_LEVEL_LABELS[skill.level]} · esp.
+        <p className="text-sm font-medium text-app">{skill.text}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+          <span className="rounded-full border border-line-strong px-1.5 text-[10.5px] font-semibold leading-[17px] text-app">
+            {COMPETENCY_LEVEL_LABELS[skill.level]}
+          </span>
+          esp.
           <SelectInput
             aria-label={`Esperado em ${skill.text}`}
             className="!inline-flex !w-auto !gap-1 !px-1.5 !py-0.5 !text-xs"
@@ -198,7 +206,9 @@ function SkillRow({
               onChange({ ...base, expected: event.target.value ? (Number(event.target.value) as CompetencyScore) : null })
             }
           >
-            <option value="">{COMPETENCY_LEVEL_EXPECTED[skill.level]} (padrão)</option>
+            <option value="">
+              {byLevel[skill.level]} (padrão{gradeName ? ` · ${gradeName}` : ""})
+            </option>
             {[1, 2, 3, 4].map((value) => (
               <option key={value} value={value}>
                 {value}
@@ -219,6 +229,65 @@ function SkillRow({
 }
 
 const linkButton = "text-xs font-semibold text-accent hover:underline disabled:cursor-default disabled:text-muted disabled:no-underline";
+
+// Faixa de título do subconjunto: mais escura e em negrito, para não se confundir com as habilidades abaixo.
+/**
+ * Subconjuntos recolhidos dentro de um equipamento. Começam todos abertos; com busca ativa ficam todos
+ * abertos, para o resultado nunca ficar escondido.
+ * @example const subgroups = useCollapsedSubgroups(); subgroups.isOpen("Desbobinador", query)
+ */
+function useCollapsedSubgroups(): { isOpen: (name: string, query: string) => boolean; toggle: (name: string) => void } {
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const isOpen = (name: string, query: string) => Boolean(query.trim()) || !collapsed.has(name);
+  const toggle = (name: string) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (!next.delete(name)) next.add(name);
+      return next;
+    });
+  return { isOpen, toggle };
+}
+
+// Clicar no nome recolhe ou expande as habilidades do subconjunto.
+function SubgroupHeader({
+  name,
+  tally,
+  expanded,
+  onToggle,
+  fillDisabled,
+  onFill,
+}: {
+  name: string;
+  tally: { meets: number; applicable: number };
+  expanded: boolean;
+  onToggle: () => void;
+  fillDisabled: boolean;
+  onFill: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-y border-line-strong bg-group px-4 py-2 sm:px-5">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={onToggle}
+        className="flex min-w-0 items-center gap-1.5 rounded text-left text-[12.5px] font-bold uppercase tracking-[0.07em] text-app hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <span className={`inline-flex transition-transform ${expanded ? "" : "-rotate-90"}`}>
+          <Chevron open={false} />
+        </span>
+        {name}
+      </button>
+      <span className="flex items-center gap-3">
+        <span className="text-xs font-semibold tabular-nums text-app" title="Atendem / se aplicam">
+          {tally.meets}/{tally.applicable}
+        </span>
+        <button type="button" className={linkButton} disabled={fillDisabled} onClick={onFill}>
+          Atende o esperado
+        </button>
+      </span>
+    </div>
+  );
+}
 
 function Equipment({
   catalog,
@@ -241,17 +310,19 @@ function Equipment({
   onBulk: (writes: SkillWrite[]) => void;
   bulkPending: boolean;
 }) {
+  const subgroups = useCollapsedSubgroups();
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
+  const byLevel = matrix.expectedByLevel;
   const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
   if (query && skills.length === 0) return null;
   const expanded = open || Boolean(query);
   // "Atende o esperado": só o que ainda está sem nota (e não é "não se aplica"); o que já tem nota não muda.
   const fill = (list: MatrixSkillDto[]) => () =>
     onBulk(
-      pendingExpected(list, entries).map((skill) => ({
+      pendingExpected(list, entries, byLevel).map((skill) => ({
         skillId: skill.id,
-        score: expectedOf(skill, entries.get(skill.id)) as CompetencyScore,
+        score: expectedOf(skill, entries.get(skill.id), byLevel) as CompetencyScore,
         notApplicable: false,
         expected: entries.get(skill.id)?.expected ?? null,
       })),
@@ -262,9 +333,9 @@ function Equipment({
         type="button"
         aria-expanded={expanded}
         onClick={onToggle}
-        className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-chip sm:px-5"
+        className="flex w-full flex-wrap items-center justify-between gap-3 bg-accent-soft px-4 py-3 text-left transition hover:brightness-[0.97] sm:px-5"
       >
-        <span className="font-semibold text-app">{equipmentName(catalog, equipment)}</span>
+        <span className="text-base font-bold text-accent-ink">{equipmentName(catalog, equipment)}</span>
         {summary ? (
           <span className="flex items-center gap-3 text-sm text-muted" title={stackTitle(summary)}>
             <span className="tabular-nums">
@@ -280,7 +351,7 @@ function Equipment({
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-5">
             {summary ? <StackLegend counts={summary} /> : <span />}
             <span className="flex items-center gap-3">
-              <button type="button" className={linkButton} disabled={bulkPending || pendingExpected(skills, entries).length === 0} onClick={fill(skills)}>
+              <button type="button" className={linkButton} disabled={bulkPending || pendingExpected(skills, entries, byLevel).length === 0} onClick={fill(skills)}>
                 Atende o esperado em tudo sem nota
               </button>
               <span
@@ -294,35 +365,32 @@ function Equipment({
               </span>
             </span>
           </div>
-          {bySubgroup(skills).map((group) => {
-            const states = group.skills.map((skill) => skillState(skill, entries.get(skill.id)));
-            const applicable = states.filter((state) => state !== "na").length;
-            return (
-              <div key={group.subgroup}>
-                <div className="flex items-center justify-between gap-2 bg-chip px-4 py-2 sm:px-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{group.subgroup}</p>
-                  <span className="flex items-center gap-3">
-                    <span className="text-xs tabular-nums text-muted" title="Atendem / se aplicam">
-                      {states.filter(meetsExpected).length}/{applicable}
-                    </span>
-                    <button
-                      type="button"
-                      className={linkButton}
-                      disabled={bulkPending || pendingExpected(group.skills, entries).length === 0}
-                      onClick={fill(group.skills)}
-                    >
-                      Atende o esperado
-                    </button>
-                  </span>
-                </div>
+          {bySubgroup(skills).map((group) => (
+            <div key={group.subgroup}>
+              <SubgroupHeader
+                name={group.subgroup}
+                tally={subgroupTally(group.skills, entries, byLevel)}
+                expanded={subgroups.isOpen(group.subgroup, query)}
+                onToggle={() => subgroups.toggle(group.subgroup)}
+                fillDisabled={bulkPending || pendingExpected(group.skills, entries, byLevel).length === 0}
+                onFill={fill(group.skills)}
+              />
+              {subgroups.isOpen(group.subgroup, query) ? (
                 <ul>
                   {group.skills.map((skill) => (
-                    <SkillRow key={skill.id} skill={skill} entry={entries.get(skill.id)} onChange={onChange} />
+                    <SkillRow
+                      key={skill.id}
+                      skill={skill}
+                      entry={entries.get(skill.id)}
+                      byLevel={byLevel}
+                      gradeName={matrix.gradeName}
+                      onChange={onChange}
+                    />
                   ))}
                 </ul>
-              </div>
-            );
-          })}
+              ) : null}
+            </div>
+          ))}
         </div>
       ) : null}
     </section>
