@@ -53,6 +53,8 @@ export function applyFeedbackSheet(state: RecordState, input: FeedbackSheetInput
     tone: input.tone,
     dueAt: null,
     notes: null,
+    machineId: null,
+    subassemblyId: null,
   };
 }
 
@@ -75,6 +77,8 @@ export function applyProblemSheet(state: RecordState, input: ProblemSheetInput):
     memberId: input.memberId,
     lineId: hasLine ? input.lineId : null,
     lineLabel: hasLabel ? label : null,
+    machineId: input.machineId,
+    subassemblyId: input.subassemblyId,
     notes: input.notes,
     factoryId: null,
     tag: null,

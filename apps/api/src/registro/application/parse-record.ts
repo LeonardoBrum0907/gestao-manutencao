@@ -67,6 +67,8 @@ export function parseProblemSheet(body: unknown): ProblemSheetInput {
     memberId: optionalString(source, "memberId"),
     lineId: optionalString(source, "lineId"),
     lineLabel: optionalString(source, "lineLabel"),
+    machineId: optionalString(source, "machineId"),
+    subassemblyId: optionalString(source, "subassemblyId"),
     notes: optionalString(source, "notes"),
   };
 }

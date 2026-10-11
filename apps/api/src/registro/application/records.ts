@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { AttachmentDto, RecordDto, RemovalCheckDto } from "@manutencao/shared";
+import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { assertBoardChange, boardDueAt, parseBoardChange } from "../domain/board";
@@ -33,6 +34,8 @@ function dtoToState(dto: RecordDto): RecordState {
     closedAt: dto.closedAt ? new Date(dto.closedAt) : null,
     durationMin: dto.durationMin,
     memberIds: dto.memberIds,
+    machineId: dto.machineId,
+    subassemblyId: dto.subassemblyId,
   };
 }
 
@@ -74,7 +77,9 @@ export class Records {
     }
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
-    return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
+    const next = applyProblemSheet(state, input);
+    assertMachineSpot(next, await this.refs.machineSpot(next.machineId, next.subassemblyId), current.subassemblyId);
+    return this.records.update(id, next, current.memberIds);
   }
 
   // Checklist de Pendências: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.

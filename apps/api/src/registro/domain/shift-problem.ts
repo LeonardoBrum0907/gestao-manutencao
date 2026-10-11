@@ -23,5 +23,7 @@ export function problemFromShift(write: ProblemWrite): RecordState {
     closedAt: write.closedAt,
     durationMin: write.durationMin,
     tone: null,
+    machineId: write.machineId,
+    subassemblyId: write.subassemblyId,
   };
 }

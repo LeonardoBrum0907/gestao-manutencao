@@ -4,35 +4,57 @@ import type { ProblemBoardItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Notice, SelectInput } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { useLines } from "../../cadastro/data/cadastro";
-import { useAddProblem, useBoardChange, useProblemBoard } from "../data/board";
+import { useLines, useMachines } from "../../cadastro/data/cadastro";
+import { useAddProblem, useBoardChange, useProblemBoard, type NewProblemSpot } from "../data/board";
+import { PROBLEM_MODES, placeGroups, placeTag, problemModeOptions, type ProblemMode } from "../model/problem-board";
 import { originLabel } from "../model/record";
 import { AddRow, CheckRow, Checklist, GroupingPills, InProgressChip, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
 
-const MODES = ["linha", "situacao"] as const;
-type Mode = (typeof MODES)[number];
-const modeOptions: { value: Mode; label: string }[] = [
-  { value: "linha", label: "Linha" },
-  { value: "situacao", label: "Situação" },
-];
-
-const NO_LINE = "Sem linha";
 const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
 function shortDay(iso: string) {
   return dayMonth.format(new Date(iso)).replace(".", "").replace(" de ", " ");
 }
 
-function lineOf(item: ProblemBoardItemDto) {
-  return item.lineName ?? NO_LINE;
+// Sem grupo que diga o lugar: escolhe a linha e, se ela tiver máquinas cadastradas, a máquina.
+function SpotPicker({ id, lineId, machineId, onLine, onMachine }: { id: string; lineId: string; machineId: string; onLine: (id: string) => void; onMachine: (id: string) => void }) {
+  const lines = useLines();
+  const machines = useMachines();
+  const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === lineId);
+  return (
+    <>
+      <div className="w-full sm:w-48">
+        <SelectInput id={`${id}-linha`} aria-label="Linha" value={lineId} onChange={(event) => onLine(event.target.value)}>
+          <option value="">Sem linha</option>
+          {(lines.data ?? []).map((line) => (
+            <option key={line.id} value={line.id}>
+              {line.name}
+            </option>
+          ))}
+        </SelectInput>
+      </div>
+      {lineMachines.length ? (
+        <div className="w-full sm:w-56">
+          <SelectInput id={`${id}-maquina`} aria-label="Máquina" value={machineId} onChange={(event) => onMachine(event.target.value)}>
+            <option value="">Máquina: não sei</option>
+            {lineMachines.map((machine) => (
+              <option key={machine.id} value={machine.id}>
+                {machine.name}
+              </option>
+            ))}
+          </SelectInput>
+        </div>
+      ) : null}
+    </>
+  );
 }
 
-function AddProblem({ lineId, inProgress, label = "Adicionar problema" }: { lineId?: string; inProgress?: boolean; label?: string }) {
+function AddProblem({ spot, inProgress, label = "Adicionar problema" }: { spot?: NewProblemSpot; inProgress?: boolean; label?: string }) {
   const add = useAddProblem();
-  const lines = useLines();
   const toast = useToast();
-  const [chosen, setChosen] = useState("");
-  const key = `${lineId ?? "linha"}-${inProgress ? "andamento" : "aberto"}`;
+  const [lineId, setLineId] = useState("");
+  const [machineId, setMachineId] = useState("");
+  const key = `${spot?.subassemblyId ?? spot?.machineId ?? spot?.lineId ?? "lugar"}-${inProgress ? "andamento" : "aberto"}`;
   return (
     <AddRow
       label={label}
@@ -40,22 +62,22 @@ function AddProblem({ lineId, inProgress, label = "Adicionar problema" }: { line
       id={`novo-problema-${key}`}
       pending={add.isPending}
       extra={
-        lineId ? null : (
-          <div className="w-full sm:w-48">
-            <SelectInput id={`novo-problema-linha-${key}`} aria-label="Linha" value={chosen} onChange={(event) => setChosen(event.target.value)}>
-              <option value="">Sem linha</option>
-              {(lines.data ?? []).map((line) => (
-                <option key={line.id} value={line.id}>
-                  {line.name}
-                </option>
-              ))}
-            </SelectInput>
-          </div>
+        spot ? null : (
+          <SpotPicker
+            id={`novo-problema-${key}`}
+            lineId={lineId}
+            machineId={machineId}
+            onLine={(next) => {
+              setLineId(next);
+              setMachineId("");
+            }}
+            onMachine={setMachineId}
+          />
         )
       }
       onAdd={(body, clear) =>
         add.mutate(
-          { body, lineId: lineId ?? (chosen || null), inProgress: Boolean(inProgress) },
+          { body, spot: spot ?? { lineId: lineId || null, machineId: machineId || null }, inProgress: Boolean(inProgress) },
           { onSuccess: clear, onError: (error) => toast({ text: errorMessage(error) }) },
         )
       }
@@ -63,13 +85,19 @@ function AddProblem({ lineId, inProgress, label = "Adicionar problema" }: { line
   );
 }
 
+const otherPlace: Record<Exclude<ProblemMode, "situacao">, string> = {
+  linha: "Adicionar problema em outra linha",
+  maquina: "Adicionar problema em outra máquina",
+  conjunto: "Adicionar problema",
+};
+
 export function ProblemBoard() {
   const board = useProblemBoard();
   const change = useBoardChange();
   const toast = useToast();
   const navigate = useNavigate();
   const { fading, complete } = useCompleting();
-  const [mode, setMode] = useGrouping<Mode>("pendencias.problemas.agrupar", MODES, "linha");
+  const [mode, setMode] = useGrouping<ProblemMode>("pendencias.problemas.agrupar", PROBLEM_MODES, "linha");
 
   if (board.isError) return <Notice>{errorMessage(board.error)}</Notice>;
   if (!board.data) return <p className="text-sm text-muted">Carregando problemas…</p>;
@@ -87,20 +115,17 @@ export function ProblemBoard() {
   };
 
   let groups: ChecklistGroup[];
-  if (mode === "linha") {
-    const names = [...new Set(open.map(lineOf))].sort((a, b) => Number(a === NO_LINE) - Number(b === NO_LINE) || a.localeCompare(b, "pt-BR"));
+  if (mode !== "situacao") {
     groups = [
-      ...names.map((name): ChecklistGroup => {
-        const members = open.filter((item) => lineOf(item) === name);
-        const lineId = members.find((item) => item.lineId)?.lineId ?? undefined;
-        return {
-          key: `linha:${name}`,
-          title: name,
-          ids: members.map((item) => item.id),
+      ...placeGroups(open, mode).map(
+        (group): ChecklistGroup => ({
+          key: group.key,
+          title: group.title,
+          ids: group.ids,
           empty: "",
-          footer: lineId ? <AddProblem lineId={lineId} /> : undefined,
-        };
-      }),
+          footer: group.spot ? <AddProblem spot={group.spot} /> : undefined,
+        }),
+      ),
       resolved,
     ];
   } else {
@@ -163,18 +188,18 @@ export function ProblemBoard() {
           <>
             <span className="tabular-nums">{shortDay(item.occurredAt)}</span>
             {item.origin !== "inbox" ? <span>{originLabel(item.origin)}</span> : null}
-            {item.status === "in_progress" && !checked && mode === "linha" ? <InProgressChip /> : null}
+            {item.status === "in_progress" && !checked && mode !== "situacao" ? <InProgressChip /> : null}
           </>
         }
-        tag={mode !== "linha" || groupKey === "resolvidos" ? lineOf(item) : undefined}
+        tag={placeTag(item, mode, groupKey)}
       />
     );
   }
 
   return (
     <div>
-      <GroupingPills value={mode} options={modeOptions} onChange={setMode} />
-      {open.length === 0 && mode === "linha" ? <p className="mb-2 text-sm text-muted">Nenhum problema em aberto.</p> : null}
+      <GroupingPills value={mode} options={problemModeOptions} onChange={setMode} />
+      {open.length === 0 && mode !== "situacao" ? <p className="mb-2 text-sm text-muted">Nenhum problema em aberto.</p> : null}
       <Checklist
         key={mode}
         groups={groups}
@@ -194,9 +219,9 @@ export function ProblemBoard() {
           }
         }}
       />
-      {mode === "linha" ? (
+      {mode !== "situacao" ? (
         <div className="mt-4">
-          <AddProblem label={open.length ? "Adicionar problema em outra linha" : "Adicionar problema"} />
+          <AddProblem label={open.length ? otherPlace[mode] : "Adicionar problema"} />
         </div>
       ) : null}
     </div>

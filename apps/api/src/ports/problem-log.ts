@@ -10,6 +10,8 @@ export type ProblemWrite = {
   lineId: string | null;
   lineLabel: string | null;
   line: string | null;
+  machineId: string | null;
+  subassemblyId: string | null;
   notes: string | null;
   dayNumber: number | null;
   openedAt: Date | null;

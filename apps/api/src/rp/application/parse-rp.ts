@@ -53,6 +53,8 @@ export function parseRp(body: unknown): RpInput {
     lineId: optionalString(source, "lineId"),
     line: optionalString(source, "line"),
     tag: optionalString(source, "tag"),
+    machineId: optionalString(source, "machineId"),
+    subassemblyId: optionalString(source, "subassemblyId"),
     problem: requiredString(source, "problem", "Descreva o problema."),
     description: optionalString(source, "description"),
     repeatedFailure: flag(source, "repeatedFailure"),

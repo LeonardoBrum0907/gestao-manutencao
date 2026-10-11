@@ -46,6 +46,8 @@ export type RpFormValues = {
   lineId: string;
   line: string;
   tag: string;
+  machineId: string;
+  subassemblyId: string;
   problem: string;
   description: string;
   repeatedFailure: boolean;
@@ -73,6 +75,8 @@ export function emptyRpValues(): RpFormValues {
     lineId: "",
     line: "",
     tag: "",
+    machineId: "",
+    subassemblyId: "",
     problem: "",
     description: "",
     repeatedFailure: false,
@@ -102,6 +106,8 @@ export function valuesFromRp(rp: RpDto | RpDraftDto): RpFormValues {
     lineId: rp.lineId ?? "",
     line: rp.line ?? "",
     tag: rp.tag ?? "",
+    machineId: rp.machineId ?? "",
+    subassemblyId: rp.subassemblyId ?? "",
     problem: rp.problem,
     description: rp.description ?? "",
     repeatedFailure: rp.repeatedFailure,
@@ -130,6 +136,8 @@ export function bodyFromValues(values: RpFormValues, rawText: string): RpBody {
     lineId: blank(values.lineId),
     line: blank(values.line),
     tag: blank(values.tag),
+    machineId: blank(values.machineId),
+    subassemblyId: blank(values.subassemblyId),
     problem: values.problem,
     description: blank(values.description),
     repeatedFailure: values.repeatedFailure,

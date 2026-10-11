@@ -54,13 +54,23 @@ export type MachineFieldsProps = {
   // Quem chama limpa o subconjunto ao trocar de máquina.
   onMachineChange: (machineId: string) => void;
   onSubassemblyChange: (subassemblyId: string) => void;
+  // Problema e RP aceitam "não sei"; a pós-preventiva exige os dois.
+  optional?: boolean;
 };
 
 /**
  * Máquina da linha escolhida e subconjunto do modelo dela, com os avisos de cadastro incompleto.
  * Ex.: `<MachineFields lineId={lineId} machineId={machineId} subassemblyId={subId} savedSubassemblyId="" onMachineChange={pick} onSubassemblyChange={setSubId} />`
  */
-export function MachineFields({ lineId, machineId, subassemblyId, savedSubassemblyId, onMachineChange, onSubassemblyChange }: MachineFieldsProps) {
+export function MachineFields({
+  lineId,
+  machineId,
+  subassemblyId,
+  savedSubassemblyId,
+  onMachineChange,
+  onSubassemblyChange,
+  optional = false,
+}: MachineFieldsProps) {
   const machines = useMachines();
   const subassemblies = useSubassemblies();
   const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === lineId);
@@ -72,7 +82,7 @@ export function MachineFields({ lineId, machineId, subassemblyId, savedSubassemb
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Máquina">
           <SelectInput value={machineId} disabled={!lineId} onChange={(event) => onMachineChange(event.target.value)}>
-            <option value="">{lineId && !lineMachines.length ? "Nenhuma máquina nesta linha" : "Escolha a máquina"}</option>
+            <option value="">{lineId && !lineMachines.length ? "Nenhuma máquina nesta linha" : optional ? "Não sei" : "Escolha a máquina"}</option>
             {lineMachines.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -84,7 +94,7 @@ export function MachineFields({ lineId, machineId, subassemblyId, savedSubassemb
         {machine?.equipmentId ? (
           <Field label="Subconjunto">
             <SelectInput value={subassemblyId} onChange={(event) => onSubassemblyChange(event.target.value)}>
-              <option value="">Escolha o subconjunto</option>
+              <option value="">{optional ? "Não sei" : "Escolha o subconjunto"}</option>
               {choices.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}

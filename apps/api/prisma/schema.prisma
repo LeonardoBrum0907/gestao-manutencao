@@ -99,6 +99,7 @@ model Machine {
   updatedAt       DateTime         @updatedAt
   postPreventives PostPreventive[]
   chamados        Record[]
+  rps             Rp[]
 
   @@index([lineId])
   @@index([equipmentId])
@@ -116,6 +117,8 @@ model Subassembly {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   postPreventives PostPreventive[]
+  records         Record[]
+  rps             Rp[]
 
   @@unique([equipmentId, name])
 }
@@ -371,6 +374,9 @@ model Record {
   shift         String?
   machineId     String?
   machine       Machine?           @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  // Problema: subconjunto do modelo da máquina, se souber.
+  subassemblyId String?
+  subassembly   Subassembly?       @relation(fields: [subassemblyId], references: [id], onDelete: SetNull)
   // Tarefa gerada a partir de um chamado ("gerar pendência").
   chamadoId     String?
   chamado       Record?            @relation("ChamadoTasks", fields: [chamadoId], references: [id], onDelete: SetNull)
@@ -392,6 +398,7 @@ model Record {
   @@index([occurredAt, id])
   @@index([createdAt])
   @@index([machineId])
+  @@index([subassemblyId])
   @@index([chamadoId])
 }
 
@@ -428,6 +435,11 @@ model Rp {
   lineId               String?
   line                 String?
   tag                  String?
+  // Máquina da linha e subconjunto do modelo dela; vão também para o Problema espelho.
+  machineId            String?
+  machine              Machine?         @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  subassemblyId        String?
+  subassembly          Subassembly?     @relation(fields: [subassemblyId], references: [id], onDelete: SetNull)
   problem              String
   problemKey           String
   description          String?
@@ -463,6 +475,8 @@ model Rp {
   @@index([status])
   @@index([orderKey])
   @@index([tag])
+  @@index([machineId])
+  @@index([subassemblyId])
 }
 
 model RpMember {

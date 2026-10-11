@@ -16,6 +16,8 @@ function chamado(): ProblemWrite {
     lineId: "maq",
     lineLabel: null,
     line: null,
+    machineId: null,
+    subassemblyId: null,
     notes: "Aguardando peça",
     dayNumber: 4,
     openedAt: when,

@@ -32,6 +32,28 @@ export function assertSubassemblyFits(
   }
 }
 
+export type MachineSpot = { lineId: string | null; machineId: string | null; subassemblyId: string | null };
+export type MachineSpotRefs = {
+  machine: { lineId: string; equipmentId: string | null } | null;
+  subassembly: { id: string; equipmentId: string; archived: boolean } | null;
+};
+
+/**
+ * Máquina e subconjunto escolhidos numa ficha (problema, RP) batem com o cadastro: a máquina é da linha
+ * e o subconjunto é do modelo dela. Os dois são opcionais, mas subconjunto pede máquina e máquina pede linha.
+ * Ex.: `assertMachineSpot({ lineId: "l1", machineId: "m1", subassemblyId: null }, await refs.machineSpot("m1", null), null)`
+ */
+export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, savedSubassemblyId: string | null): void {
+  if (spot.subassemblyId && !spot.machineId) throw new DomainError("machine", 400, "Escolha a máquina do subconjunto.");
+  if (!spot.machineId) return;
+  if (!spot.lineId) throw new DomainError("machine", 400, "Escolha a linha da máquina.");
+  if (!refs.machine) throw new DomainError("machine", 400, `Máquina não encontrada (id ${spot.machineId}).`);
+  if (refs.machine.lineId !== spot.lineId) throw new DomainError("machine", 400, "Esta máquina não é da linha escolhida.");
+  if (!spot.subassemblyId) return;
+  if (!refs.subassembly) throw new DomainError("subassembly", 400, `Subconjunto não encontrado (id ${spot.subassemblyId}).`);
+  assertSubassemblyFits(refs.machine, refs.subassembly, savedSubassemblyId);
+}
+
 function fold(text: string): string {
   return text
     .normalize("NFD")

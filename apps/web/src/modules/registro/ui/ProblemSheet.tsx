@@ -4,6 +4,7 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
+import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { useUpdateRecord } from "../data/records";
 import { fromLocalInput, toLocalInput } from "../model/record";
 
@@ -18,6 +19,19 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
   const [mode, setMode] = useState<"line" | "other">(initialMode);
   const [lineId, setLineId] = useState(record.lineId ?? "");
   const [lineLabel, setLineLabel] = useState(record.lineLabel ?? "");
+  const [machineId, setMachineId] = useState(record.machineId ?? "");
+  const [subassemblyId, setSubassemblyId] = useState(record.subassemblyId ?? "");
+
+  function pickLine(next: string) {
+    setLineId(next);
+    setMachineId("");
+    setSubassemblyId("");
+  }
+
+  function pickMachine(next: string) {
+    setMachineId(next);
+    setSubassemblyId("");
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -27,6 +41,8 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
       memberId: memberId || null,
       lineId: mode === "line" ? lineId || null : null,
       lineLabel: mode === "other" ? lineLabel || null : null,
+      machineId: mode === "line" ? machineId || null : null,
+      subassemblyId: mode === "line" ? subassemblyId || null : null,
       notes: record.notes,
     });
   }
@@ -70,7 +86,7 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
         </div>
         {mode === "line" ? (
           <Field label="Linha">
-            <SelectInput value={lineId} onChange={(event) => setLineId(event.target.value)}>
+            <SelectInput value={lineId} onChange={(event) => pickLine(event.target.value)}>
               <option value="">Escolha</option>
               {lines.data?.map((line) => (
                 <option key={line.id} value={line.id}>
@@ -88,6 +104,17 @@ export function ProblemSheet({ record }: { record: RecordDto }) {
             />
           </Field>
         )}
+        {mode === "line" && lineId ? (
+          <MachineFields
+            optional
+            lineId={lineId}
+            machineId={machineId}
+            subassemblyId={subassemblyId}
+            savedSubassemblyId={record.subassemblyId ?? ""}
+            onMachineChange={pickMachine}
+            onSubassemblyChange={setSubassemblyId}
+          />
+        ) : null}
         {update.isError ? <Notice>{errorMessage(update.error)}</Notice> : null}
         {update.isSuccess ? <p className="text-sm font-medium text-accent">Ficha gravada.</p> : null}
         <Button type="submit" disabled={update.isPending}>

@@ -37,5 +37,7 @@ export function captureRecord(input: CaptureInput): RecordState {
     closedAt: null,
     durationMin: null,
     memberIds: [],
+    machineId: null,
+    subassemblyId: null,
   };
 }

@@ -51,6 +51,8 @@ type Row = {
   openedAt: Date | null;
   closedAt: Date | null;
   durationMin: number | null;
+  machineId: string | null;
+  subassemblyId: string | null;
   chamadoId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +97,8 @@ function toDto(row: Row): RecordDto {
     closedAt: row.closedAt ? row.closedAt.toISOString() : null,
     durationMin: row.durationMin,
     memberIds: row.members.map((person) => person.memberId),
+    machineId: row.machineId,
+    subassemblyId: row.subassemblyId,
     chamadoId: row.chamadoId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -130,6 +134,8 @@ function scalars(state: RecordState) {
     openedAt: state.openedAt,
     closedAt: state.closedAt,
     durationMin: state.durationMin,
+    machineId: state.machineId,
+    subassemblyId: state.subassemblyId,
   };
 }
 
@@ -302,6 +308,10 @@ export class RecordRepository {
         lineId: true,
         lineLabel: true,
         line: true,
+        machineId: true,
+        machine: { select: { name: true } },
+        subassemblyId: true,
+        subassembly: { select: { name: true } },
         rp: { select: { id: true } },
       },
     });
@@ -323,6 +333,10 @@ export class RecordRepository {
           occurredAt: row.occurredAt.toISOString(),
           lineId: row.lineId,
           lineName: (row.lineId ? lineNames.get(row.lineId) : null) ?? row.lineLabel ?? row.line ?? null,
+          machineId: row.machineId,
+          machineName: row.machine?.name ?? null,
+          subassemblyId: row.subassemblyId,
+          subassemblyName: row.subassembly?.name ?? null,
           rpId: row.rp?.id ?? null,
         };
       }),

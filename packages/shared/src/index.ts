@@ -264,6 +264,9 @@ export type RecordDto = {
   closedAt: string | null;
   durationMin: number | null;
   memberIds: string[];
+  // Máquina (chamado, problema) e subconjunto do modelo dela (problema).
+  machineId: string | null;
+  subassemblyId: string | null;
   // Tarefa gerada de um chamado: aponta para ele.
   chamadoId: string | null;
   createdAt: string;
@@ -420,9 +423,15 @@ export type BoardDto = {
 };
 
 // Problemas e feedbacks não têm prazo: a tela agrupa como o gestor escolher (linha, situação, colaborador, tom…).
-export type ProblemBoardItemDto = Pick<RecordDto, "id" | "body" | "status" | "origin" | "occurredAt" | "lineId"> & {
+export type ProblemBoardItemDto = Pick<
+  RecordDto,
+  "id" | "body" | "status" | "origin" | "occurredAt" | "lineId" | "machineId" | "subassemblyId"
+> & {
   // Linha do cadastro, ou o texto da linha quando o problema veio sem cadastro.
   lineName: string | null;
+  // Nome da máquina; a tela junta a linha ("MED 03 · Encartuchadeira"), porque o nome se repete entre linhas.
+  machineName: string | null;
+  subassemblyName: string | null;
   // Problema espelho de RP fecha pelo RP: o círculo leva até ele.
   rpId: string | null;
 };
@@ -554,6 +563,9 @@ export type RpFields = {
   lineId: string | null;
   line: string | null;
   tag: string | null;
+  // Máquina da linha cadastrada e subconjunto do modelo dela, se souber.
+  machineId: string | null;
+  subassemblyId: string | null;
   problem: string;
   description: string | null;
   repeatedFailure: boolean;
@@ -602,6 +614,9 @@ export type RpDraftDto = {
   lineId: string | null;
   line: string | null;
   tag: string | null;
+  // O texto do WhatsApp não traz a máquina do cadastro: o gestor escolhe na ficha.
+  machineId: null;
+  subassemblyId: null;
   problem: string;
   description: string | null;
   repeatedFailure: boolean;

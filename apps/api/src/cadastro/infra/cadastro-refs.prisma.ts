@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { isMemberPosition, type MemberPosition } from "@manutencao/shared";
 import type { CadastroRefs } from "../../ports/cadastro-refs";
+import type { MachineSpotRefs } from "../domain/hierarchy";
 import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
@@ -37,6 +38,16 @@ export class PrismaCadastroRefs implements CadastroRefs {
   async memberPosition(id: string): Promise<MemberPosition | null> {
     const row = await this.prisma.member.findUnique({ where: { id }, select: { position: true } });
     return row && isMemberPosition(row.position) ? row.position : null;
+  }
+
+  async machineSpot(machineId: string | null, subassemblyId: string | null): Promise<MachineSpotRefs> {
+    const [machine, subassembly] = await Promise.all([
+      machineId ? this.prisma.machine.findUnique({ where: { id: machineId }, select: { lineId: true, equipmentId: true } }) : null,
+      subassemblyId
+        ? this.prisma.subassembly.findUnique({ where: { id: subassemblyId }, select: { id: true, equipmentId: true, archived: true } })
+        : null,
+    ]);
+    return { machine, subassembly };
   }
 
   async memberDirectory() {

@@ -57,14 +57,17 @@ export function useAddTask() {
   });
 }
 
-// Problema novo já na linha do grupo (ou na escolhida) e, em "Em andamento", já em andamento.
+export type NewProblemSpot = { lineId: string | null; machineId?: string | null; subassemblyId?: string | null };
+
+// Problema novo já no lugar do grupo (linha, máquina, subconjunto) e, em "Em andamento", já em andamento.
 export function useAddProblem() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ body, lineId, inProgress }: { body: string; lineId: string | null; inProgress: boolean }) => {
+    mutationFn: async ({ body, spot, inProgress }: { body: string; spot: NewProblemSpot; inProgress: boolean }) => {
       const record = await capture({ type: "problem", body });
+      const { lineId, machineId = null, subassemblyId = null } = spot;
       if (lineId) {
-        const sheet: ProblemSheetBody = { body: record.body, occurredAt: record.occurredAt, memberId: null, lineId, lineLabel: null, notes: null };
+        const sheet: ProblemSheetBody = { body: record.body, occurredAt: record.occurredAt, memberId: null, lineId, lineLabel: null, machineId, subassemblyId, notes: null };
         await api<RecordDto>(`/api/records/${record.id}`, { method: "PATCH", body: JSON.stringify(sheet) });
       }
       if (inProgress) await changeOnBoard(record.id, { status: "in_progress" });

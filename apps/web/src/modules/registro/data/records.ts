@@ -91,6 +91,8 @@ export type ProblemSheetBody = {
   memberId: string | null;
   lineId: string | null;
   lineLabel: string | null;
+  machineId: string | null;
+  subassemblyId: string | null;
   notes: string | null;
 };
 
