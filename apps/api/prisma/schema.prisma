@@ -28,6 +28,30 @@ model Session {
   @@index([userId])
 }
 
+// Cliente OAuth que se registrou sozinho para usar o MCP (o conector do claude.ai, por exemplo).
+// O registro inteiro fica em data, no formato do protocolo.
+model McpClient {
+  id        String     @id
+  data      Json
+  tokens    McpToken[]
+  createdAt DateTime   @default(now())
+}
+
+// Chave de acesso ou de renovação entregue a um cliente MCP. Só o hash fica gravado.
+model McpToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  kind      String
+  clientId  String
+  client    McpClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  scopes    String[]
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([clientId])
+  @@index([expiresAt])
+}
+
 model Factory {
   id        String   @id @default(cuid())
   name      String
@@ -234,24 +258,24 @@ model MemberAttachment {
 // Itens do PDI formal: ação para fechar uma lacuna (habilidade da matriz, competência da avaliação e/ou linha), com prazo, responsável e status.
 // Habilidade, competência, linha e responsável são opcionais e viram nulos se forem excluídos.
 model MemberPdiItem {
-  id            String       @id @default(cuid())
+  id            String                 @id @default(cuid())
   memberId      String
-  member        Member       @relation("PdiItemMember", fields: [memberId], references: [id], onDelete: Cascade)
+  member        Member                 @relation("PdiItemMember", fields: [memberId], references: [id], onDelete: Cascade)
   title         String
   skillId       String?
-  skill         MatrixSkill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  skill         MatrixSkill?           @relation(fields: [skillId], references: [id], onDelete: SetNull)
   competencyId  String?
   competency    PerformanceCompetency? @relation(fields: [competencyId], references: [id], onDelete: SetNull)
   lineId        String?
-  line          Line?        @relation(fields: [lineId], references: [id], onDelete: SetNull)
+  line          Line?                  @relation(fields: [lineId], references: [id], onDelete: SetNull)
   responsibleId String?
-  responsible   Member?      @relation("PdiItemResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
-  dueDate       DateTime?    @db.Date
-  status        String       @default("planned")
+  responsible   Member?                @relation("PdiItemResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  dueDate       DateTime?              @db.Date
+  status        String                 @default("planned")
   notes         String?
   completedAt   DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
   @@index([memberId])
   @@index([skillId])

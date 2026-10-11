@@ -8,6 +8,9 @@ export class EnvService implements AppEnv {
   readonly cookieSecure: boolean;
   readonly attachmentDir: string;
   readonly port: number;
+  readonly publicUrl: string;
+  readonly mcpToken: string | null;
+  readonly gestorPassword: string | null;
 
   constructor() {
     const env = loadEnv();
@@ -16,6 +19,9 @@ export class EnvService implements AppEnv {
     this.cookieSecure = env.cookieSecure;
     this.attachmentDir = env.attachmentDir;
     this.port = env.port;
+    this.publicUrl = env.publicUrl;
+    this.mcpToken = env.mcpToken;
+    this.gestorPassword = env.gestorPassword;
   }
 }
 
