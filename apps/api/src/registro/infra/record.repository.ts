@@ -445,13 +445,15 @@ export class RecordRepository {
   }
 
   // Com os mesmos técnicos de antes, só o registro muda: um UPDATE, sem transação para refazer os vínculos.
-  async update(id: string, state: RecordState, previousMemberIds: string[]): Promise<RecordDto> {
+  // Registro que trocou de tipo vai para outra lista do checklist: a posição da lista antiga não vale lá.
+  async update(id: string, state: RecordState, previousMemberIds: string[], options: { retyped?: boolean } = {}): Promise<RecordDto> {
     const sameMembers =
       previousMemberIds.length === state.memberIds.length && previousMemberIds.every((memberId, index) => memberId === state.memberIds[index]);
     const row = await this.prisma.record.update({
       where: { id },
       data: {
         ...scalars(state),
+        ...(options.retyped ? { boardPosition: null } : {}),
         ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
       },
       include,

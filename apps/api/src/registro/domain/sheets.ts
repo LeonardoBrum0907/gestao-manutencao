@@ -52,7 +52,7 @@ export function applyFeedbackSheet(state: RecordState, input: FeedbackSheetInput
     priority: null,
     tone: input.tone,
     dueAt: null,
-    notes: null,
+    notes: input.notes,
     machineId: null,
     subassemblyId: null,
   };

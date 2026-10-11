@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
 import { captureRecord } from "./capture";
-import { applyProblemSheet, applyTaskSheet } from "./sheets";
+import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "./sheets";
 
 const when = new Date("2026-09-30T12:00:00.000Z");
 
@@ -72,5 +72,11 @@ describe("ficha", () => {
     assert.equal(next.dueAt, due);
     assert.equal(next.status, "in_progress");
     assert.equal(next.tag, "TAG-1");
+  });
+
+  it("feedback guarda a observação", () => {
+    const feedback = captureRecord({ type: "feedback", body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive" });
+    const next = applyFeedbackSheet(feedback, { body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive", notes: "na reunião de segunda" });
+    assert.equal(next.notes, "na reunião de segunda");
   });
 });

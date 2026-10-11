@@ -57,6 +57,7 @@ export type FeedbackSheetInput = {
   occurredAt: Date;
   memberId: string | null;
   tone: FeedbackTone | null;
+  notes: string | null;
 };
 
 export type ProblemSheetInput = {

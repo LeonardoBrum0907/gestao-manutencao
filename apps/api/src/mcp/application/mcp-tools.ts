@@ -460,9 +460,10 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "atualizar_registro",
     {
       title: "Atualizar registro",
-      description: "Muda um registro: mande só os campos que mudam (null limpa). Tarefa aceita status, responsável, prazo, prioridade, fábrica, linha, TAG e observações; feedback aceita tom; problema aceita linha, máquina, subconjunto e observações. Problema que veio de chamado ou RP muda por lá.",
+      description: "Muda um registro: mande só os campos que mudam (null limpa). Tarefa aceita status, responsável, prazo, prioridade, fábrica, linha, TAG e observações; feedback aceita tom e observações; problema aceita linha, máquina, subconjunto e observações. Problema que veio de chamado ou RP muda por lá.",
       inputSchema: {
         id: id("do registro"),
+        type: z.enum(RECORD_TYPES).optional().describe("troca o tipo (só registro da Entrada, sem anexo e que não veio de chamado)"),
         body: z.string().min(1).optional(),
         occurredAt: dateTime("quando aconteceu").optional(),
         status: z.enum(RECORD_STATUSES).optional().describe("tarefa: open, in_progress, done"),

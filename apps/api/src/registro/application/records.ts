@@ -6,11 +6,12 @@ import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { assertBoardChange, boardDueAt, parseBoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
 import { recordRemovalWarnings } from "../domain/record-removal";
+import { assertRetype, retypeState } from "../domain/retype";
 import type { RecordState } from "../domain/record-state";
 import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
 import { AttachmentStorage } from "../infra/attachment.storage";
 import { RecordRepository } from "../infra/record.repository";
-import { parseCapture, parseFeedbackSheet, parseProblemSheet, parseTaskSheet } from "./parse-record";
+import { parseCapture, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
 
 function dtoToState(dto: RecordDto): RecordState {
   return {
@@ -61,17 +62,29 @@ export class Records {
 
   async updateSheet(id: string, body: unknown): Promise<RecordDto> {
     const current = await this.get(id);
-    const state = dtoToState(current);
-    if (current.type === "task") {
+    const target = parseSheetType(body) ?? current.type;
+    assertRetype({ ...current, attachments: current.attachments.length }, target);
+    const state = retypeState(dtoToState(current), target);
+    const next = await this.sheetState(current, state, body);
+    return this.records.update(id, next, current.memberIds, { retyped: target !== current.type });
+  }
+
+  // Aplica a ficha do tipo de destino (o tipo novo, quando a ficha troca o tipo).
+  private async sheetState(current: RecordDto, state: RecordState, body: unknown): Promise<RecordState> {
+    if (state.type === "task") {
       const input = parseTaskSheet(body);
       await Promise.all([this.assertMember(input.memberId), this.assertFactory(input.factoryId)]);
-      return this.records.update(id, applyTaskSheet(state, input), current.memberIds);
+      return applyTaskSheet(state, input);
     }
-    if (current.type === "feedback") {
+    if (state.type === "feedback") {
       const input = parseFeedbackSheet(body);
       await this.assertMember(input.memberId);
-      return this.records.update(id, applyFeedbackSheet(state, input), current.memberIds);
+      return applyFeedbackSheet(state, input);
     }
+    return this.problemState(current, state, body);
+  }
+
+  private async problemState(current: RecordDto, state: RecordState, body: unknown): Promise<RecordState> {
     if (current.origin !== "inbox") {
       throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado, pela ocorrência ou pelo RP.");
     }
@@ -79,7 +92,7 @@ export class Records {
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
     const next = applyProblemSheet(state, input);
     assertMachineSpot(next, await this.refs.machineSpot(next.machineId, next.subassemblyId), current.subassemblyId);
-    return this.records.update(id, next, current.memberIds);
+    return next;
   }
 
   // Checklist de Registros: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.
