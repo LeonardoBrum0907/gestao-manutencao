@@ -1,5 +1,6 @@
 import {
   COMPETENCY_LEVEL_EXPECTED,
+  type CompetencyLevel,
   type CompetencyScore,
   type CompetencySummaryDto,
   type MatrixCatalogDto,
@@ -25,11 +26,26 @@ export function isCompetencyScore(value: number): value is CompetencyScore {
   return Number.isInteger(value) && value >= 0 && value <= 4;
 }
 
-export function expectedFor(skill: Pick<MatrixSkillDto, "level">, entry: MatrixEntry | undefined): number {
-  return entry?.expected ?? COMPETENCY_LEVEL_EXPECTED[skill.level];
+// Esperado padrão de cada dificuldade para um colaborador (o do grau dele, ou o da dificuldade).
+export type ExpectedByLevel = Readonly<Record<CompetencyLevel, number>>;
+
+/**
+ * O "esp." marcado na linha vale primeiro; sem ele, o padrão da dificuldade para o grau do colaborador.
+ * @example expectedFor({ level: "advanced" }, undefined, { basic: 2, intermediate: 2, advanced: 1 }) // 1
+ */
+export function expectedFor(
+  skill: Pick<MatrixSkillDto, "level">,
+  entry: MatrixEntry | undefined,
+  byLevel: ExpectedByLevel = COMPETENCY_LEVEL_EXPECTED,
+): number {
+  return entry?.expected ?? byLevel[skill.level];
 }
 
-export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMap<string, MatrixEntry>): CompetencySummaryDto {
+export function summarize(
+  skills: readonly MatrixSkillDto[],
+  entries: ReadonlyMap<string, MatrixEntry>,
+  byLevel: ExpectedByLevel = COMPETENCY_LEVEL_EXPECTED,
+): CompetencySummaryDto {
   let applicable = 0;
   let scored = 0;
   let above = 0;
@@ -46,7 +62,7 @@ export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMa
     if (entry?.score === null || entry?.score === undefined) continue;
     scored += 1;
     sum += entry.score;
-    const expected = expectedFor(skill, entry);
+    const expected = expectedFor(skill, entry, byLevel);
     if (entry.score > expected) above += 1;
     else if (entry.score === expected) exact += 1;
   }
@@ -66,7 +82,12 @@ export function summarize(skills: readonly MatrixSkillDto[], entries: ReadonlyMa
 }
 
 // Só o que está ativo entra na matriz. Equipamento ou habilidade arquivada fica guardada, fora da conta.
-export function buildMatrix(catalog: MatrixCatalogDto, equipments: readonly string[], entries: readonly MatrixEntry[]) {
+export function buildMatrix(
+  catalog: MatrixCatalogDto,
+  equipments: readonly string[],
+  entries: readonly MatrixEntry[],
+  byLevel: ExpectedByLevel = COMPETENCY_LEVEL_EXPECTED,
+) {
   const byId = new Map(entries.map((entry) => [entry.skillId, entry]));
   const selected = catalog.equipments.filter((equipment) => !equipment.archived && equipments.includes(equipment.id));
   const skillsOf = (id: string) => catalog.skills.filter((skill) => !skill.archived && skill.equipmentId === id);
@@ -75,10 +96,11 @@ export function buildMatrix(catalog: MatrixCatalogDto, equipments: readonly stri
     summary: summarize(
       selected.flatMap((equipment) => skillsOf(equipment.id)),
       byId,
+      byLevel,
     ),
     byEquipment: selected.map((equipment) => ({
       equipment: equipment.id,
-      ...summarize(skillsOf(equipment.id), byId),
+      ...summarize(skillsOf(equipment.id), byId, byLevel),
     })),
   };
 }

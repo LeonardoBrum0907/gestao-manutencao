@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { Grades } from "../application/grades";
 import { removalCheck } from "../../kernel/removal";
 
@@ -19,6 +19,11 @@ export class GradesController {
   @Patch(":id")
   rename(@Param("id") id: string, @Body() body: unknown) {
     return this.grades.rename(id, body);
+  }
+
+  @Put(":id/expected")
+  setExpected(@Param("id") id: string, @Body() body: unknown) {
+    return this.grades.setExpected(id, body);
   }
 
   @Get(":id/removal")
