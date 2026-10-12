@@ -1,4 +1,4 @@
-import type { LineDto } from "@manutencao/shared";
+import type { LineDto, MachineDto } from "@manutencao/shared";
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
 import { machineStatusClass, machineStatusLabel } from "../model/labels";
 
@@ -41,4 +41,22 @@ export function lineStacked(row: LineTableRow): StackedRow {
     meta: marks.filter(Boolean).join(" · "),
     side: line.status === "stopped" ? <StatusText line={line} /> : null,
   };
+}
+
+/**
+ * Máquinas no painel da linha: nome, modelo e situação. Clicar na linha abre a tela da máquina.
+ * @example <DataTable plain columns={lineMachineColumns(modelName)} ... />
+ */
+export function lineMachineColumns(modelName: Map<string, string>): TableColumn<MachineDto>[] {
+  const model = (machine: MachineDto) => (machine.equipmentId ? (modelName.get(machine.equipmentId) ?? "Modelo") : null);
+  return [
+    { key: "name", header: "Máquina", cell: (machine) => machine.name, sortValue: (machine) => machine.name },
+    { key: "model", header: "Modelo", cell: (machine) => model(machine) ?? <span className="text-muted">Sem modelo</span>, sortValue: model },
+    {
+      key: "status",
+      header: "Situação",
+      cell: (machine) => <span className={machineStatusClass(machine.status) || "text-muted"}>{machineStatusLabel(machine.status)}</span>,
+      sortValue: (machine) => machineStatusLabel(machine.status),
+    },
+  ];
 }

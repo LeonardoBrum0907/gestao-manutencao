@@ -201,7 +201,8 @@ function StackedList<T>(props: Shared<T>) {
   const count = props.groups.reduce((total, group) => total + group.rows.length, 0);
   return (
     <div className={props.plain ? "" : boxClass}>
-      <SortBar {...props} count={count} />
+      {/* Dentro de ficha ou painel a lista é curta: a barra de ordenar só atrapalharia. */}
+      {props.plain ? null : <SortBar {...props} count={count} />}
       {props.groups.map((group) => (
         <section key={group.key} aria-label={group.title || props.label}>
           {group.title ? <div className="border-b border-line-strong bg-group px-3 py-1.5 text-[13px] font-semibold text-app">{group.title}</div> : null}

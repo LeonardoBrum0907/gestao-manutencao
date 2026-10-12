@@ -36,3 +36,21 @@ export function memberStacked(member: MemberDto, teams: TeamDto[]): StackedRow {
     side: member.status === "active" ? null : <StatusText member={member} />,
   };
 }
+
+/**
+ * Técnicos dentro do cartão da equipe: nome, função e turno; tirar da equipe fica no menu ⋯.
+ * @example <DataTable plain columns={TEAM_MEMBER_COLUMNS} stacked={teamMemberStacked} ... />
+ */
+export const TEAM_MEMBER_COLUMNS: TableColumn<MemberDto>[] = [
+  { key: "name", header: "Técnico", cell: (member) => member.name, sortValue: (member) => member.name },
+  { key: "role", header: "Função", cell: (member) => member.roleName ?? "—", sortValue: (member) => member.roleName },
+  { key: "shift", header: "Turno", cell: (member) => shiftLabel(member.shift), sortValue: (member) => shiftLabel(member.shift) },
+];
+
+/**
+ * O técnico da equipe no celular: nome em cima, função e turno embaixo.
+ * @example stacked={teamMemberStacked}
+ */
+export function teamMemberStacked(member: MemberDto): StackedRow {
+  return { title: member.name, meta: [member.roleName, shiftLabel(member.shift)].filter(Boolean).join(" · ") };
+}
