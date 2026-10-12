@@ -19,6 +19,7 @@ export function GradesSection() {
       {grades.data ? (
         <InlineNameList<MemberGradeDto & { meta: string }>
           items={grades.data.map((grade) => ({ ...grade, meta: usageText(members.data?.filter((member) => member.gradeId === grade.id).length) }))}
+          nameHeader="Grau"
           emptyText="Nenhum grau ainda."
           addLabel="Adicionar grau"
           placeholder="Ex.: Grau IV"

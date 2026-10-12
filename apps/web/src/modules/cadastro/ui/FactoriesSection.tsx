@@ -22,6 +22,8 @@ export function FactoriesSection() {
             const count = lineCount.get(factory.id) ?? 0;
             return { ...factory, meta: count ? `${count} ${count === 1 ? "linha" : "linhas"}` : "sem linhas" };
           })}
+          nameHeader="Fábrica"
+          metaHeader="Linhas"
           emptyText="Nenhuma fábrica ainda."
           addLabel="Adicionar fábrica"
           placeholder="Ex.: Fábrica 3"

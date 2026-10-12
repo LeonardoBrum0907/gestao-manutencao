@@ -159,7 +159,7 @@ function TableRow<T>(props: Shared<T> & { row: T; span: number }) {
   return (
     <tr
       onClick={onOpen ? (event) => !fromControl(event) && onOpen(row) : undefined}
-      className={`border-b border-line transition last:border-b-0 ${onOpen ? "cursor-pointer hover:bg-accent-soft" : ""} ${selected ? "bg-accent-soft" : ""}`}
+      className={`group border-b border-line transition last:border-b-0 ${onOpen ? "cursor-pointer hover:bg-accent-soft" : ""} ${selected ? "bg-accent-soft" : ""}`}
     >
       {columns.map((column, index) => (
         <BodyCell key={column.key} column={column} row={row} openLabel={index === 0 && onOpen ? () => onOpen(row) : undefined} />

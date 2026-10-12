@@ -89,6 +89,8 @@ export function CompetenciesSection() {
       {competencies.data ? (
         <InlineNameList
           items={list.map((competency) => ({ ...competency, muted: competency.archived, meta: competency.archived ? "Arquivada" : undefined }))}
+          nameHeader="Competência"
+          metaHeader="Situação"
           emptyText="Nenhuma competência ainda."
           addLabel="Adicionar competência"
           placeholder="Ex.: Trabalho em equipe"

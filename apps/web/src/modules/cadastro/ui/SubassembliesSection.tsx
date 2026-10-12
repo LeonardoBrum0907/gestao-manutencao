@@ -67,6 +67,7 @@ export function SubassembliesSection() {
           <InlineNameList
             key={equipmentId}
             items={active}
+            nameHeader="Subconjunto"
             emptyText="Nenhum subconjunto ativo neste modelo."
             addLabel="Adicionar subconjunto"
             placeholder="Ex.: Válvulas roletes"
@@ -85,6 +86,7 @@ export function SubassembliesSection() {
               <InlineNameList
                 key={`${equipmentId}-archived`}
                 items={archived.map((item) => ({ ...item, muted: true }))}
+                nameHeader="Subconjunto"
                 emptyText=""
                 menuItems={(item) => [{ label: "Reativar", onSelect: () => void setArchived(item, false) }]}
                 {...shared}
