@@ -1,0 +1,27 @@
+/* Folha A4 deitada da Matriz da equipe. Usa a base de report.css; aqui só o que muda: página deitada e grade compacta. */
+@page team-landscape { size: A4 landscape; margin: 10mm; }
+.report-sheet.team-sheet-frame { width: 277mm; }
+.report.team-sheet { page: team-landscape; font-size: 11px; }
+.team-sheet .content { padding: 16px 22px 8px; }
+.team-sheet .hero { padding: 18px 22px 16px; }
+.team-sheet .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.team-sheet .kpi { padding: 7px 10px; border: 1px solid var(--border); border-radius: 10px; }
+.team-sheet .kpi b { display: block; font-size: 18px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.team-sheet .kpi small { font-size: 10px; color: var(--muted); }
+.team-sheet table.grid-sheet { table-layout: auto; font-size: 10px; }
+.team-sheet table.grid-sheet th, .team-sheet table.grid-sheet td { padding: 3px 4px; text-align: center; border-bottom: 1px solid var(--border); }
+.team-sheet table.grid-sheet th.who, .team-sheet table.grid-sheet td.who { text-align: left; white-space: nowrap; }
+.team-sheet table.grid-sheet thead th { background: none; color: var(--text); font-weight: 700; letter-spacing: 0; text-transform: none; font-size: 9.5px; border-bottom: 1.5px solid var(--text); vertical-align: bottom; }
+.team-sheet table.grid-sheet thead tr.blocks th { border-bottom: 1.5px solid var(--border-strong); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.team-sheet table.grid-sheet thead th .min { display: block; font-weight: 500; color: var(--muted); }
+/* Com muitas colunas o nome deita para caber na largura da folha. */
+.team-sheet table.grid-sheet.many thead tr.cols th:not(.who) span.name { writing-mode: vertical-rl; transform: rotate(180deg); max-height: 34mm; display: inline-block; text-align: left; }
+.team-sheet table.grid-sheet tbody tr:nth-child(even) td { background: none; }
+.team-sheet td.q { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.team-sheet td.near { background: var(--warn-soft); color: var(--warn); outline: 1.5px dashed var(--warn); outline-offset: -2px; }
+.team-sheet td.below { background: var(--danger-soft); color: var(--danger); }
+.team-sheet td.none { color: var(--muted); }
+.team-sheet tr.group td { background: var(--group-bg) !important; text-align: left; font-weight: 700; border-top: 1.5px solid var(--text); }
+.team-sheet tr.subtotal td { background: var(--chip-bg) !important; font-weight: 600; color: var(--muted); }
+.team-sheet tr.subtotal td.zero { color: var(--danger); }
+.team-sheet .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 9.5px; color: var(--muted); }

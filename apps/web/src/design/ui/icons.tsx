@@ -75,6 +75,17 @@ const paths = {
     </>
   ),
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  // Alça de arrastar (coluna da Matriz da equipe).
+  grip: (
+    <>
+      <circle cx="9" cy="6" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="6" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="18" r="1.3" fill="currentColor" />
+      <circle cx="15" cy="18" r="1.3" fill="currentColor" />
+    </>
+  ),
   dots: (
     <>
       <circle cx="5" cy="12" r="1.3" fill="currentColor" />
