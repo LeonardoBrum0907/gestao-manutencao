@@ -24,7 +24,7 @@ export function QuickAddCard({ id, label, placeholder, pending, chips, onAdd, on
   const text = body.trim();
   return (
     <form
-      className="rounded-xl border border-line bg-surface p-3 shadow-sm focus-within:border-muted"
+      className="rounded-card border border-line bg-surface p-3 shadow-sm focus-within:border-muted"
       onSubmit={(event) => {
         event.preventDefault();
         if (text && !pending) onAdd(text, () => setBody(""));

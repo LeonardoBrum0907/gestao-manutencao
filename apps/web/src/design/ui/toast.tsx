@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {createPortal(
         <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-4 bottom-4 z-[80] flex justify-center sm:justify-start lg:left-[272px]">
           {toast ? (
-            <div className="pointer-events-auto flex items-center gap-4 rounded-xl bg-app px-4 py-3 text-sm text-canvas shadow-card">
+            <div className="pointer-events-auto flex items-center gap-4 rounded-card bg-app px-4 py-3 text-sm text-canvas shadow-card">
               <span>{toast.text}</span>
               {toast.action ? (
                 <button
