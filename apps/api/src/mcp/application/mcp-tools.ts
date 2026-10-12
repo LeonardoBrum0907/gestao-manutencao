@@ -74,6 +74,8 @@ const rpFields = {
   lineId: id("da linha").nullable().optional(),
   line: optionalText("linha como veio no texto, quando não está no cadastro"),
   tag: optionalText("TAG da máquina"),
+  machineId: id("da máquina (tem de ser da linha escolhida)").nullable().optional(),
+  subassemblyId: id("do subconjunto (tem de ser do modelo da máquina)").nullable().optional(),
   description: optionalText("descrição da falha"),
   repeatedFailure: z.boolean().optional().describe("falha repetida"),
   repeatedTimes: optionalText("quantas vezes repetiu"),
@@ -365,7 +367,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "salvar_rp",
     {
       title: "Salvar RP",
-      description: "Grava um RP (e o problema espelho em Pendências). Confere antes se há RP parecido: se houver, não grava e devolve os parecidos; repita com confirmDuplicate true se o gestor confirmar que é outro.",
+      description: "Grava um RP (e o problema espelho em Registros). Confere antes se há RP parecido: se houver, não grava e devolve os parecidos; repita com confirmDuplicate true se o gestor confirmar que é outro.",
       inputSchema: {
         ...rpFields,
         chamadoId: id("do chamado que originou o RP").optional(),
@@ -458,9 +460,10 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "atualizar_registro",
     {
       title: "Atualizar registro",
-      description: "Muda um registro: mande só os campos que mudam (null limpa). Tarefa aceita status, responsável, prazo, prioridade, fábrica, linha, TAG e observações; feedback aceita tom; problema aceita linha e observações. Problema que veio de chamado ou RP muda por lá.",
+      description: "Muda um registro: mande só os campos que mudam (null limpa). Tarefa aceita status, responsável, prazo, prioridade, fábrica, linha, TAG e observações; feedback aceita tom e observações; problema aceita linha, máquina, subconjunto e observações. Problema que veio de chamado ou RP muda por lá.",
       inputSchema: {
         id: id("do registro"),
+        type: z.enum(RECORD_TYPES).optional().describe("troca o tipo (só registro da Entrada, sem anexo e que não veio de chamado)"),
         body: z.string().min(1).optional(),
         occurredAt: dateTime("quando aconteceu").optional(),
         status: z.enum(RECORD_STATUSES).optional().describe("tarefa: open, in_progress, done"),
@@ -472,6 +475,8 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
         tag: optionalText("tarefa: TAG"),
         lineId: id("da linha (problema)").nullable().optional(),
         lineLabel: optionalText("problema: linha em texto"),
+        machineId: id("da máquina (problema; tem de ser da linha)").nullable().optional(),
+        subassemblyId: id("do subconjunto (problema; tem de ser do modelo da máquina)").nullable().optional(),
         tone: z.enum(FEEDBACK_TONES).nullable().optional(),
         notes: optionalText("observações"),
       },
@@ -492,6 +497,8 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
           tag: current.tag,
           lineId: current.lineId,
           lineLabel: current.lineLabel,
+          machineId: current.machineId,
+          subassemblyId: current.subassemblyId,
           tone: current.tone,
           notes: current.notes,
         },

@@ -19,6 +19,7 @@ function valuesFromChamado(chamado: ChamadoDto, line: LineDto | undefined): RpFo
     lineId: line?.id ?? "",
     line: line?.name ?? chamado.lineLabel ?? "",
     tag: line?.internalCode ?? "",
+    machineId: line ? (chamado.machineId ?? "") : "",
     problem: chamado.body,
     memberIds: chamado.memberIds,
   };

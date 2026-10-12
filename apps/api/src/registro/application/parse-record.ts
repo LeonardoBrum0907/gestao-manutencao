@@ -1,4 +1,4 @@
-import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority } from "@manutencao/shared";
+import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority, type RecordType } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
 import type { CaptureInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
@@ -23,6 +23,17 @@ export function parseCapture(body: unknown): CaptureInput {
     memberId: optionalString(source, "memberId"),
     tone: parseTone(source),
   };
+}
+
+/**
+ * Tipo pedido na ficha: ausente mantém o atual; outro valor troca o tipo (veja assertRetype).
+ * Ex.: `parseSheetType({ type: "problem", body: "…" })` → `"problem"`
+ */
+export function parseSheetType(body: unknown): RecordType | null {
+  const type = optionalString(readObject(body), "type");
+  if (type === null) return null;
+  if (!isRecordType(type)) throw new DomainError("type", 400, `Tipo "${type}" inválido: use task, problem ou feedback.`);
+  return type;
 }
 
 export function parseTaskSheet(body: unknown): TaskSheetInput {
@@ -56,6 +67,7 @@ export function parseFeedbackSheet(body: unknown): FeedbackSheetInput {
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
     tone: parseTone(source),
+    notes: optionalString(source, "notes"),
   };
 }
 
@@ -67,6 +79,8 @@ export function parseProblemSheet(body: unknown): ProblemSheetInput {
     memberId: optionalString(source, "memberId"),
     lineId: optionalString(source, "lineId"),
     lineLabel: optionalString(source, "lineLabel"),
+    machineId: optionalString(source, "machineId"),
+    subassemblyId: optionalString(source, "subassemblyId"),
     notes: optionalString(source, "notes"),
   };
 }

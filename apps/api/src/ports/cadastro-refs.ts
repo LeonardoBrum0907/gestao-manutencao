@@ -1,4 +1,5 @@
 import type { MemberPosition } from "@manutencao/shared";
+import type { MachineSpotRefs } from "../cadastro/domain/hierarchy";
 
 export interface CadastroRefs {
   factoryExists(id: string): Promise<boolean>;
@@ -8,6 +9,8 @@ export interface CadastroRefs {
   linesExist(ids: string[]): Promise<boolean>;
   membersExist(ids: string[]): Promise<boolean>;
   memberPosition(id: string): Promise<MemberPosition | null>;
+  // Linha e modelo da máquina e o subconjunto, para conferir a escolha de uma ficha. Id nulo volta nulo.
+  machineSpot(machineId: string | null, subassemblyId: string | null): Promise<MachineSpotRefs>;
   // Leitura para casar nomes, linhas e TAGs de texto colado com o cadastro.
   memberDirectory(): Promise<{ id: string; name: string; active: boolean }[]>;
   lineDirectory(): Promise<{ id: string; name: string; internalCode: string | null; factoryId: string }[]>;

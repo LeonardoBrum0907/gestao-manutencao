@@ -20,6 +20,8 @@ export function mirrorProblem(rp: RpFields, occurredAt: Date): ProblemWrite {
     lineId: rp.lineId,
     lineLabel: rp.lineId ? null : [rp.line, rp.tag].filter(Boolean).join(" · ") || null,
     line: rp.line,
+    machineId: rp.machineId,
+    subassemblyId: rp.subassemblyId,
     notes: null,
     dayNumber: null,
     openedAt: null,

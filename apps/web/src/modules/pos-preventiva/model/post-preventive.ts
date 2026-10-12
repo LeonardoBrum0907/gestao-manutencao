@@ -79,9 +79,3 @@ export function groupBySubassembly(items: PostPreventiveDto[], subassemblies: Su
   }
   return [...groups.values()].sort((a, b) => (order.get(a.subassemblyId) ?? Infinity) - (order.get(b.subassemblyId) ?? Infinity));
 }
-
-// Subconjuntos que a ficha pode usar: os ativos do modelo da máquina e o que a ficha já tinha (mesmo arquivado).
-export function subassemblyChoices(subassemblies: SubassemblyDto[], equipmentId: string | null, currentId: string): SubassemblyDto[] {
-  if (!equipmentId) return [];
-  return subassemblies.filter((item) => item.equipmentId === equipmentId && (!item.archived || item.id === currentId));
-}

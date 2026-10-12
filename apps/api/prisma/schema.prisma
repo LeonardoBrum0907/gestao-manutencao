@@ -99,6 +99,7 @@ model Machine {
   updatedAt       DateTime         @updatedAt
   postPreventives PostPreventive[]
   chamados        Record[]
+  rps             Rp[]
 
   @@index([lineId])
   @@index([equipmentId])
@@ -116,6 +117,8 @@ model Subassembly {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   postPreventives PostPreventive[]
+  records         Record[]
+  rps             Rp[]
 
   @@unique([equipmentId, name])
 }
@@ -350,42 +353,47 @@ model MemberSkill {
 }
 
 model Record {
-  id          String             @id @default(cuid())
-  type        String
-  body        String
-  occurredAt  DateTime
-  status      String
-  memberId    String?
-  member      Member?            @relation(fields: [memberId], references: [id], onDelete: Restrict)
-  factoryId   String?
-  lineId      String?
-  lineLabel   String?
-  tag         String?
-  line        String?
-  priority    String?
-  tone        String?
-  dueAt       DateTime?
-  notes       String?
-  origin      String
-  dayNumber   Int?
-  openedAt    DateTime?
-  closedAt    DateTime?
-  durationMin Int?
+  id            String             @id @default(cuid())
+  type          String
+  body          String
+  occurredAt    DateTime
+  status        String
+  memberId      String?
+  member        Member?            @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  factoryId     String?
+  lineId        String?
+  lineLabel     String?
+  tag           String?
+  line          String?
+  priority      String?
+  tone          String?
+  dueAt         DateTime?
+  notes         String?
+  origin        String
+  dayNumber     Int?
+  openedAt      DateTime?
+  closedAt      DateTime?
+  durationMin   Int?
   // Chamado: turno (first, second, third) e máquina da linha, se souber.
-  shift       String?
-  machineId   String?
-  machine     Machine?           @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  shift         String?
+  machineId     String?
+  machine       Machine?           @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  // Problema: subconjunto do modelo da máquina, se souber.
+  subassemblyId String?
+  subassembly   Subassembly?       @relation(fields: [subassemblyId], references: [id], onDelete: SetNull)
   // Tarefa gerada a partir de um chamado ("gerar pendência").
-  chamadoId   String?
-  chamado     Record?            @relation("ChamadoTasks", fields: [chamadoId], references: [id], onDelete: SetNull)
-  tasks       Record[]           @relation("ChamadoTasks")
-  members     RecordMember[]
-  attachments RecordAttachment[]
-  rp          Rp?                @relation("RpMirror")
+  chamadoId     String?
+  chamado       Record?            @relation("ChamadoTasks", fields: [chamadoId], references: [id], onDelete: SetNull)
+  tasks         Record[]           @relation("ChamadoTasks")
+  members       RecordMember[]
+  attachments   RecordAttachment[]
+  rp            Rp?                @relation("RpMirror")
   // RP escrito a partir deste chamado.
-  rpOfChamado Rp?                @relation("RpChamado")
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  rpOfChamado   Rp?                @relation("RpChamado")
+  // Ordem no checklist de Pendências, dentro do grupo de prazo; nulo = nunca arrastado.
+  boardPosition Float?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([type, status, dueAt])
   @@index([origin])
@@ -394,6 +402,7 @@ model Record {
   @@index([occurredAt, id])
   @@index([createdAt])
   @@index([machineId])
+  @@index([subassemblyId])
   @@index([chamadoId])
 }
 
@@ -430,6 +439,11 @@ model Rp {
   lineId               String?
   line                 String?
   tag                  String?
+  // Máquina da linha e subconjunto do modelo dela; vão também para o Problema espelho.
+  machineId            String?
+  machine              Machine?         @relation(fields: [machineId], references: [id], onDelete: SetNull)
+  subassemblyId        String?
+  subassembly          Subassembly?     @relation(fields: [subassemblyId], references: [id], onDelete: SetNull)
   problem              String
   problemKey           String
   description          String?
@@ -465,6 +479,8 @@ model Rp {
   @@index([status])
   @@index([orderKey])
   @@index([tag])
+  @@index([machineId])
+  @@index([subassemblyId])
 }
 
 model RpMember {

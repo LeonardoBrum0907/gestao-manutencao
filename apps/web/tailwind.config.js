@@ -21,6 +21,7 @@ export default {
         card: "var(--card-bg)",
         danger: "var(--danger)",
         "danger-soft": "var(--danger-soft)",
+        warn: "var(--warn)",
         equal: "var(--equal)",
         "equal-contrast": "var(--equal-contrast)",
         "equal-soft": "var(--equal-soft)",

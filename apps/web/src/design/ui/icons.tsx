@@ -86,6 +86,32 @@ const paths = {
   trash: <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7" />,
   chevron: <path d="M9 5l7 7-7 7" />,
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  inbox: (
+    <>
+      <path d="M3 13l2.5-8h13L21 13v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19z" />
+      <path d="M3 13h5l1.5 2.5h5L16 13h5" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
+  flag: <path d="M5 21V4M5 4h11l-2 4 2 4H5" />,
+  line: <path d="M3 7h18M3 12h18M3 17h18" />,
+  tone: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" />
+    </>
+  ),
+  send: <path d="M12 19V5M6 11l6-6 6 6" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  up: <path d="M6 15l6-6 6 6" />,
+  down: <path d="M6 9l6 6 6-6" />,
+  notes: <path d="M4 7h16M4 12h16M4 17h10" />,
+  clip: <path d="M20 11.5l-8 8a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5L10 17.5a2 2 0 0 1-3-3l7.5-7.5" />,
   logout: (
     <>
       <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />

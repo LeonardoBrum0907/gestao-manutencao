@@ -7,17 +7,20 @@ import {
   RECORD_STATUSES,
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
-  RECORD_TYPES,
   type FeedbackTone,
   type RecordOrigin,
   type RecordPriority,
   type RecordStatus,
   type RecordType,
 } from "@manutencao/shared";
+import type { IconName } from "../../../design/ui/icons";
 
 export function recordGestorName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].gestor;
 }
+
+// Ícone do tipo na Entrada, no modal e na etiqueta de tipo.
+export const recordTypeIcon: Record<RecordType, IconName> = { task: "list", problem: "alert", feedback: "user" };
 
 export function recordShortName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].short;
@@ -52,12 +55,6 @@ export function toneChipClass(tone: FeedbackTone | null): string {
   if (tone === "negative") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-danger";
   return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
 }
-
-export const typeChoices = RECORD_TYPES.map((type) => ({
-  type,
-  short: RECORD_TYPE_LABELS[type].short,
-  gestor: RECORD_TYPE_LABELS[type].gestor,
-}));
 
 export const statusOptions = RECORD_STATUSES.map((status) => ({
   value: status,

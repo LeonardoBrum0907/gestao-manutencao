@@ -11,6 +11,8 @@ function fields(partial: Partial<RpFields> = {}): RpFields {
     lineId: null,
     line: "Cam 08",
     tag: "EBS-BLI-31",
+    machineId: null,
+    subassemblyId: null,
     problem: "Alarme na esteira",
     description: null,
     repeatedFailure: false,
@@ -55,6 +57,12 @@ describe("problema espelho do RP", () => {
     assert.equal(write.lineId, "m1");
     assert.equal(write.lineLabel, null);
     assert.equal(write.status, "done");
+  });
+
+  it("leva máquina e subconjunto para o Problema", () => {
+    const write = mirrorProblem(fields({ lineId: "m1", machineId: "maq", subassemblyId: "sub" }), new Date());
+    assert.equal(write.machineId, "maq");
+    assert.equal(write.subassemblyId, "sub");
   });
 });
 

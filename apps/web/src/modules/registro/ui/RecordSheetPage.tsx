@@ -5,11 +5,9 @@ import { chamadoHref, dayOf } from "../../turno/model/chamado";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
 import { useRpOfProblem } from "../../rp/data/rp";
 import { useRecord } from "../data/records";
-import { originLabel, recordGestorName, recordShortName } from "../model/record";
-import { FeedbackSheet } from "./FeedbackSheet";
+import { originLabel } from "../model/record";
+import type { RecordType } from "@manutencao/shared";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
-import { ProblemSheet } from "./ProblemSheet";
-import { TaskSheet } from "./TaskSheet";
 
 // O Problema de um RP é só o espelho: a ficha de verdade é a do RP.
 function RpMirror({ recordId }: { recordId: string }) {
@@ -30,6 +28,13 @@ function RpMirror({ recordId }: { recordId: string }) {
   );
 }
 
+const tabOf: Record<RecordType, string> = { task: "", problem: "tab=problemas&", feedback: "tab=feedbacks&" };
+
+function inboxRecordHref(id: string, type: RecordType): string {
+  return `/registros?${tabOf[type]}registro=${id}`;
+}
+
+// Problema de ocorrência ou de RP (o resto abre no modal de Registros ou na tela de Chamados).
 export function RecordSheetPage() {
   const { id = "" } = useParams();
   const record = useRecord(id);
@@ -40,19 +45,18 @@ export function RecordSheetPage() {
   const data = record.data;
   // Chamado tem tela própria: abre a lista do dia dele, com o painel aberto.
   if (data.origin === "chamado") return <Navigate to={chamadoHref({ id: data.id, day: dayOf(new Date(data.occurredAt)) })} replace />;
+  // Registro da Entrada abre no modal, por cima da aba do tipo dele em Registros.
+  if (data.origin === "inbox") return <Navigate to={inboxRecordHref(data.id, data.type)} replace />;
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle
-        eyebrow={data.origin === "inbox" ? recordShortName(data.type) : "Problema"}
-        title={data.origin === "inbox" ? recordGestorName(data.type) : originLabel(data.origin)}
-        crumb={data.origin === "inbox" ? undefined : `Problema (${originLabel(data.origin)})`}
-        back={{ to: "/acompanhamento", label: "Pendências" }}
+        eyebrow="Problema"
+        title={originLabel(data.origin)}
+        crumb={`Problema (${originLabel(data.origin)})`}
+        back={{ to: "/registros", label: "Registros" }}
       />
-      {data.type === "task" ? <TaskSheet record={data} /> : null}
-      {data.type === "feedback" ? <FeedbackSheet record={data} /> : null}
-      {data.type === "problem" && data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
-      {data.type === "problem" && data.origin === "rp" ? <RpMirror recordId={data.id} /> : null}
-      {data.type === "problem" && data.origin === "inbox" ? <ProblemSheet record={data} /> : null}
+      {data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
+      {data.origin === "rp" ? <RpMirror recordId={data.id} /> : null}
       <div className="mt-6 flex justify-end border-t border-line pt-4">
         <button
           type="button"
@@ -66,7 +70,7 @@ export function RecordSheetPage() {
         <RecordRemoveDialog
           record={data}
           onCancel={() => setRemoving(false)}
-          onDeleted={() => navigate("/acompanhamento", { replace: true })}
+          onDeleted={() => navigate("/registros", { replace: true })}
         />
       ) : null}
     </div>

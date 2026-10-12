@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import type { PostPreventiveDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { useLines, useMachines, useMembers, useSaveSubassembly, useSubassemblies } from "../../cadastro/data/cadastro";
+import { useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
+import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay } from "../../rp/model/rp";
 import { useSavePostPreventive } from "../data/post-preventives";
-import { bodyFromValues, subassemblyChoices, type PostPreventiveFormValues } from "../model/post-preventive";
+import { bodyFromValues, type PostPreventiveFormValues } from "../model/post-preventive";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -16,46 +17,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <legend className="mb-1 text-sm font-semibold text-app">{title}</legend>
       {children}
     </fieldset>
-  );
-}
-
-// Novo subconjunto direto da ficha, no modelo da máquina escolhida.
-function NewSubassembly({ equipmentId, onCreated }: { equipmentId: string; onCreated: (id: string) => void }) {
-  const save = useSaveSubassembly();
-  const [name, setName] = useState("");
-  const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
-      <button type="button" className="self-start text-sm font-semibold text-accent hover:underline" onClick={() => setOpen(true)}>
-        + Novo subconjunto
-      </button>
-    );
-  }
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <TextInput aria-label="Nome do novo subconjunto" value={name} placeholder="Nome do subconjunto" onChange={(event) => setName(event.target.value)} />
-        <Button
-          tone="ghost"
-          disabled={save.isPending}
-          onClick={() =>
-            save.mutate(
-              { equipmentId, name, archived: false },
-              {
-                onSuccess: (item) => {
-                  onCreated(item.id);
-                  setName("");
-                  setOpen(false);
-                },
-              },
-            )
-          }
-        >
-          Criar
-        </Button>
-      </div>
-      {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-    </div>
   );
 }
 
@@ -71,8 +32,6 @@ export function PostPreventiveForm({
   extraActions?: ReactNode;
 }) {
   const lines = useLines();
-  const machines = useMachines();
-  const subassemblies = useSubassemblies();
   const members = useMembers();
   const save = useSavePostPreventive(id);
   const [values, setValues] = useState(initial);
@@ -80,10 +39,6 @@ export function PostPreventiveForm({
   const rpSearch = new URLSearchParams(values.lineId ? { lineId: values.lineId } : {});
   const rps = useRpPages(rpSearch);
   const rpItems = values.lineId ? flattenRp(rps.data?.pages) : [];
-
-  const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === values.lineId);
-  const machine = machines.data?.find((item) => item.id === values.machineId);
-  const choices = subassemblyChoices(subassemblies.data ?? [], machine?.equipmentId ?? null, initial.subassemblyId);
 
   function set<K extends keyof PostPreventiveFormValues>(key: K, value: PostPreventiveFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -131,52 +86,15 @@ export function PostPreventiveForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Máquina">
-              <SelectInput value={values.machineId} disabled={!values.lineId} onChange={(event) => pickMachine(event.target.value)}>
-                <option value="">{values.lineId && !lineMachines.length ? "Nenhuma máquina nesta linha" : "Escolha a máquina"}</option>
-                {lineMachines.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                    {item.tag ? ` · ${item.tag}` : ""}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
           </div>
-          {values.lineId && machines.isSuccess && !lineMachines.length ? (
-            <p className="text-sm text-muted">
-              Cadastre as máquinas da linha em{" "}
-              <Link to="/configuracoes/fabricas" className="font-semibold text-accent hover:underline">
-                Configurações
-              </Link>
-              .
-            </p>
-          ) : null}
-          {machine && !machine.equipmentId ? (
-            <p className="text-sm text-danger">
-              Esta máquina ainda não tem modelo de equipamento, e os subconjuntos vêm do modelo. Escolha o modelo na{" "}
-              <Link to={`/maquinas/${machine.id}`} className="font-semibold underline">
-                tela da máquina
-              </Link>
-              .
-            </p>
-          ) : null}
-          {machine?.equipmentId ? (
-            <div className="flex flex-col gap-2">
-              <Field label="Subconjunto">
-                <SelectInput value={values.subassemblyId} onChange={(event) => set("subassemblyId", event.target.value)}>
-                  <option value="">Escolha o subconjunto</option>
-                  {choices.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                      {item.archived ? " (arquivado)" : ""}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-              <NewSubassembly equipmentId={machine.equipmentId} onCreated={(subassemblyId) => set("subassemblyId", subassemblyId)} />
-            </div>
-          ) : null}
+          <MachineFields
+            lineId={values.lineId}
+            machineId={values.machineId}
+            subassemblyId={values.subassemblyId}
+            savedSubassemblyId={initial.subassemblyId}
+            onMachineChange={pickMachine}
+            onSubassemblyChange={(subassemblyId) => set("subassemblyId", subassemblyId)}
+          />
         </Section>
 
         <Section title="Preventiva e ocorrência">
