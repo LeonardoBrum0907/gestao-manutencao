@@ -11,8 +11,9 @@ export type TableColumn<T> = {
   sortValue?: (row: T) => SortValue;
   align?: "right";
   // Texto que quebra em até duas linhas em vez de esticar a coluna: "long" para frases (problema do RP,
-  // ocorrência), "short" para listas curtas (nomes dos técnicos).
-  wrap?: "long" | "short";
+  // ocorrência), "short" para listas curtas (nomes dos técnicos), "rich" para texto longo com marcas
+  // embaixo (chamado com RP e pendências): a célula corta o próprio texto para as marcas não sumirem.
+  wrap?: "long" | "short" | "rich";
   className?: string;
 };
 
@@ -172,10 +173,15 @@ function TableRow<T>(props: Shared<T> & { row: T; span: number }) {
   );
 }
 
-const WRAP_SHAPE = { long: "min-w-[13rem] max-w-[28rem] whitespace-normal", short: "min-w-[8rem] max-w-[14rem] whitespace-normal" };
+const WRAP_SHAPE = {
+  long: "min-w-[13rem] max-w-[28rem] whitespace-normal",
+  rich: "min-w-[13rem] max-w-[28rem] whitespace-normal",
+  short: "min-w-[8rem] max-w-[14rem] whitespace-normal",
+};
 
 function BodyCell<T>({ column, row, openLabel }: { column: TableColumn<T>; row: T; openLabel?: () => void }) {
-  const content = column.wrap ? <span className="line-clamp-2">{column.cell(row)}</span> : column.cell(row);
+  const clamp = column.wrap === "long" || column.wrap === "short";
+  const content = clamp ? <span className="line-clamp-2">{column.cell(row)}</span> : column.cell(row);
   const shape = column.wrap ? WRAP_SHAPE[column.wrap] : "whitespace-nowrap";
   return (
     <td className={`px-3 py-2.5 align-middle text-app ${shape} ${column.align === "right" ? "text-right tabular-nums" : ""} ${column.className ?? ""}`}>

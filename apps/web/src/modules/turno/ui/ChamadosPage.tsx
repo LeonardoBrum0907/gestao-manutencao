@@ -2,21 +2,20 @@ import { useSearchParams } from "react-router-dom";
 import type { ChamadoDto, ChamadoShift, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
 import { useLines, useMachines, useMembers } from "../../cadastro/data/cadastro";
 import { useChamadosOfDay } from "../data/shift";
 import {
   addDays,
-  chamadoStatusChipClass,
   chamadoStatusChoices,
-  chamadoStatusLabel,
   dayTitle,
-  hours,
   shiftChoices,
   shiftLabel,
   today,
 } from "../model/chamado";
 import { ChamadoPanel } from "./ChamadoPanel";
+import { CHAMADO_COLUMNS, chamadoStacked, type ChamadoTableRow } from "./chamado-table";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const NEW = "novo";
@@ -40,22 +39,6 @@ function summary(items: ChamadoDto[]): string {
     .filter((part) => part.count > 0)
     .map((part) => `${part.count} ${part.label}`);
   return `${items.length} ${items.length === 1 ? "chamado" : "chamados"} · ${parts.join(" · ")}`;
-}
-
-const chip = "rounded-control px-2 py-0.5 text-xs font-semibold";
-
-function Marks({ item }: { item: ChamadoDto }) {
-  if (!item.rp && !item.tasks.length) return null;
-  return (
-    <span className="mt-1 flex flex-wrap gap-1.5">
-      {item.rp ? <span className={`${chip} bg-chip text-app`}>RP</span> : null}
-      {item.tasks.length ? (
-        <span className={`${chip} bg-danger-soft text-danger`}>
-          {item.tasks.length === 1 ? "Pendência" : `${item.tasks.length} pendências`}
-        </span>
-      ) : null}
-    </span>
-  );
 }
 
 export function ChamadosPage() {
@@ -91,6 +74,8 @@ export function ChamadosPage() {
       (!statusFilter || item.status === statusFilter),
   );
   const groups = groupByShift(shown);
+  // As linhas vão na ordem dos grupos (1º, 2º, 3º turno, sem turno), que é a ordem das faixas na tabela.
+  const groupOf = new Map(groups.flatMap((group) => group.items.map((item) => [item.id, { key: group.key, title: group.title }] as const)));
   const open = openId && openId !== NEW ? all.find((item) => item.id === openId) ?? null : null;
   const filtered = Boolean(shift || lineFilter || statusFilter);
 
@@ -105,6 +90,8 @@ export function ChamadosPage() {
   function people(item: ChamadoDto): string {
     return item.memberIds.map((id) => memberNames.get(id)?.split(" ")[0] ?? "").filter(Boolean).join(", ");
   }
+
+  const rows: ChamadoTableRow[] = groups.flatMap((group) => group.items.map((item) => ({ item, ...place(item), people: people(item) })));
 
   return (
     <div>
@@ -206,55 +193,17 @@ export function ChamadosPage() {
       ) : null}
 
       {groups.length ? (
-        <div className="overflow-hidden rounded-card border border-line bg-card shadow-card">
-          <div className="hidden grid-cols-[44px_110px_minmax(0,1.1fr)_minmax(0,2fr)_minmax(0,1fr)_120px] gap-3 bg-chip px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted md:grid">
-            <span>Nº</span>
-            <span>Horário</span>
-            <span>Linha · máquina</span>
-            <span>O que aconteceu</span>
-            <span>Técnicos</span>
-            <span>Status</span>
-          </div>
-          {groups.map((group) => (
-            <section key={group.key} aria-label={group.title}>
-              <h3 className="border-t border-line bg-surface px-4 py-2 text-sm font-semibold text-muted first:border-t-0 md:first:border-t">{group.title}</h3>
-              <ul>
-                {group.items.map((item) => {
-                  const where = place(item);
-                  const selected = item.id === openId;
-                  return (
-                    <li key={item.id} className="border-t border-line">
-                      <button
-                        type="button"
-                        onClick={() => update({ abrir: item.id })}
-                        className={`grid w-full gap-x-3 gap-y-1 px-4 py-3 text-left text-sm text-app transition hover:bg-accent-soft md:grid-cols-[44px_110px_minmax(0,1.1fr)_minmax(0,2fr)_minmax(0,1fr)_120px] md:items-center ${
-                          selected ? "bg-accent-soft" : ""
-                        }`}
-                      >
-                        <span className="flex items-center justify-between gap-2 md:contents">
-                          <span className="font-semibold tabular-nums">{item.dayNumber ? `nº ${item.dayNumber}` : "—"}</span>
-                          <span className="tabular-nums text-muted">{hours(item)}</span>
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block font-semibold">{where.line}</span>
-                          {where.machine ? <span className="block text-xs text-muted">{where.machine}</span> : null}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="line-clamp-2 block">{item.body}</span>
-                          <Marks item={item} />
-                        </span>
-                        <span className="min-w-0 truncate text-muted md:text-app">{people(item)}</span>
-                        <span>
-                          <span className={chamadoStatusChipClass(item.status)}>{chamadoStatusLabel(item.status)}</span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <DataTable
+          label="Chamados"
+          rows={rows}
+          rowKey={(row) => row.item.id}
+          columns={CHAMADO_COLUMNS}
+          stacked={chamadoStacked}
+          groupBy={(row) => groupOf.get(row.item.id) ?? { key: "none", title: "Sem turno" }}
+          countLabel={(count) => `${count} ${count === 1 ? "chamado" : "chamados"}`}
+          selectedKey={openId}
+          onOpen={(row) => update({ abrir: row.item.id })}
+        />
       ) : null}
 
       {openId === NEW ? (
