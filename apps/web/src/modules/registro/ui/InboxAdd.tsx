@@ -3,10 +3,13 @@ import type { FeedbackTone, RecordPriority, RecordType } from "@manutencao/share
 import { errorMessage } from "../../../app/http";
 import { useToast } from "../../../design/ui/toast";
 import { useAddFeedback, useAddProblem, useAddTask } from "../data/board";
+import { useAddEntry } from "../data/entries";
+import { recordShortName } from "../model/record";
 import { DueChip, MemberChip, PlaceChips, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
 import { QuickAddCard } from "./quick-add";
 
 const placeholders: Record<RecordType, string> = {
+  entry: "Anote rápido; o tipo você define depois",
   task: "Nome da tarefa",
   problem: "Qual é o problema?",
   feedback: "O que você quer falar com a pessoa?",
@@ -21,7 +24,7 @@ type InboxDraft = {
   tone: FeedbackTone;
 };
 
-const emptyDraft: InboxDraft = { type: "task", day: null, priority: null, place: noPlace, memberId: "", tone: "neutral" };
+const emptyDraft: InboxDraft = { type: "entry", day: null, priority: null, place: noPlace, memberId: "", tone: "neutral" };
 
 function DraftChips({ draft, today, onChange }: { draft: InboxDraft; today: string; onChange: (patch: Partial<InboxDraft>) => void }) {
   return (
@@ -45,19 +48,32 @@ function DraftChips({ draft, today, onChange }: { draft: InboxDraft; today: stri
 }
 
 /**
- * Cartão sempre aberto no fim da Entrada: escolhe o tipo e as etiquetas dele. Depois de adicionar, o texto limpa
- * e as etiquetas ficam, para lançar várias coisas parecidas em sequência.
+ * Cartão sempre aberto no fim da Entrada. Por padrão anota um rascunho (tipo Entrada), que fica na lista até ser
+ * revisado; escolhendo outro tipo, o registro vai direto para Registros. Depois de adicionar, o texto limpa e as
+ * etiquetas ficam, para lançar várias coisas parecidas em sequência.
  */
 export function InboxAdd({ today }: { today: string }) {
   const toast = useToast();
+  const addEntry = useAddEntry();
   const addTask = useAddTask();
   const addProblem = useAddProblem();
   const addFeedback = useAddFeedback();
   const [draft, setDraft] = useState<InboxDraft>(emptyDraft);
-  const pending = addTask.isPending || addProblem.isPending || addFeedback.isPending;
-  const done = (clear: () => void) => ({ onSuccess: clear, onError: (error: Error) => toast({ text: errorMessage(error) }) });
+  const pending = addEntry.isPending || addTask.isPending || addProblem.isPending || addFeedback.isPending;
+
+  function done(clear: () => void) {
+    const sent = draft.type === "entry" ? null : `Foi para Registros como ${recordShortName(draft.type).toLowerCase()}.`;
+    return {
+      onSuccess: () => {
+        clear();
+        if (sent) toast({ text: sent });
+      },
+      onError: (error: Error) => toast({ text: errorMessage(error) }),
+    };
+  }
 
   function add(body: string, clear: () => void) {
+    if (draft.type === "entry") return addEntry.mutate(body, done(clear));
     if (draft.type === "task") return addTask.mutate({ body, day: draft.day, priority: draft.priority }, done(clear));
     if (draft.type === "problem") {
       const { lineId, machineId, subassemblyId } = draft.place;

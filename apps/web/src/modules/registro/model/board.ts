@@ -44,6 +44,11 @@ export function dueDay(dueAt: string): string {
   return dayOf.format(new Date(dueAt));
 }
 
+/** Hoje em "AAAA-MM-DD", no fuso do gestor (o mesmo dia que a API usa). Ex.: `todayDay()` → `"2026-10-12"`. */
+export function todayDay(): string {
+  return dayOf.format(new Date());
+}
+
 // Prazo curto na linha da tarefa: Hoje, Amanhã ou "09 out".
 export function dueLabel(dueAt: string, today: string): string {
   return dayLabel(dueDay(dueAt), today);

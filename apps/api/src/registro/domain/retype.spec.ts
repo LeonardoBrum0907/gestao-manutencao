@@ -49,4 +49,10 @@ describe("trocar o tipo do registro", () => {
     assert.equal(next.notes, "na reunião");
     assert.equal(next.memberId, "tec");
   });
+
+  it("rascunho da Entrada vira tarefa, e tarefa em andamento volta a rascunho aberto", () => {
+    assert.doesNotThrow(() => assertRetype({ ...fromInbox, type: "entry" }, "task"));
+    const task = { ...captureRecord({ type: "task", body: "Trocar correia", occurredAt: when, memberId: null, tone: null }), status: "in_progress" as const };
+    assert.equal(retypeState(task, "entry").status, "open");
+  });
 });

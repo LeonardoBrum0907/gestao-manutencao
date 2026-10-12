@@ -70,3 +70,9 @@ export type ProblemSheetInput = {
   subassemblyId: string | null;
   notes: string | null;
 };
+
+export type EntrySheetInput = {
+  body: string;
+  occurredAt: Date;
+  notes: string | null;
+};

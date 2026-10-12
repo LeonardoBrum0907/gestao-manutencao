@@ -1,6 +1,7 @@
 import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
 
-export const RECORD_TYPES = ["task", "feedback", "problem"] as const;
+// "entry" é o rascunho da Entrada: anotado rápido, vira tarefa, problema ou feedback quando o coordenador revisa.
+export const RECORD_TYPES = ["task", "feedback", "problem", "entry"] as const;
 export type RecordType = (typeof RECORD_TYPES)[number];
 
 export const RECORD_STATUSES = ["open", "in_progress", "done"] as const;
@@ -58,6 +59,7 @@ export const RECORD_TYPE_LABELS: Record<RecordType, { short: string; gestor: str
   task: { short: "Tarefa", gestor: "Pendências do dia a dia" },
   feedback: { short: "Feedback", gestor: "Pessoas" },
   problem: { short: "Problema", gestor: "Pendências Preventivas" },
+  entry: { short: "Entrada", gestor: "Entrada" },
 };
 
 export const RECORD_STATUS_LABELS: Record<RecordStatus, string> = {

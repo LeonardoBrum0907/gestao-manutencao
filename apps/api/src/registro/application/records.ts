@@ -8,10 +8,10 @@ import { captureRecord } from "../domain/capture";
 import { recordRemovalWarnings } from "../domain/record-removal";
 import { assertRetype, retypeState } from "../domain/retype";
 import type { RecordState } from "../domain/record-state";
-import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
+import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
 import { AttachmentStorage } from "../infra/attachment.storage";
 import { RecordRepository } from "../infra/record.repository";
-import { parseCapture, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
+import { parseCapture, parseEntrySheet, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
 
 function dtoToState(dto: RecordDto): RecordState {
   return {
@@ -81,6 +81,7 @@ export class Records {
       await this.assertMember(input.memberId);
       return applyFeedbackSheet(state, input);
     }
+    if (state.type === "entry") return applyEntrySheet(state, parseEntrySheet(body));
     return this.problemState(current, state, body);
   }
 

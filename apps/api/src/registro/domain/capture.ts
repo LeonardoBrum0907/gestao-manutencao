@@ -8,7 +8,7 @@ export function captureRecord(input: CaptureInput): RecordState {
     throw new DomainError("empty_body", 400, "Escreva o texto do registro.");
   }
   if (!isRecordType(input.type)) {
-    throw new DomainError("type", 400, "Escolha Tarefa, Feedback ou Problema.");
+    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Feedback ou Problema.");
   }
   if (Number.isNaN(input.occurredAt.getTime())) {
     throw new DomainError("when", 400, "Informe quando aconteceu.");

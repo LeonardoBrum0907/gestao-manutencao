@@ -443,9 +443,9 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "registrar",
     {
       title: "Registrar",
-      description: "Anota um registro novo: tarefa (task), feedback sobre um técnico ou problema (problem). Para prazo, prioridade e outros detalhes, use atualizar_registro em seguida.",
+      description: "Anota um registro novo: rascunho da Entrada (entry, para o coordenador classificar depois), tarefa (task), feedback sobre um técnico ou problema (problem). Para prazo, prioridade e outros detalhes, use atualizar_registro em seguida.",
       inputSchema: {
-        type: z.enum(RECORD_TYPES).describe("task = tarefa, feedback, problem = problema"),
+        type: z.enum(RECORD_TYPES).describe("entry = rascunho da Entrada, task = tarefa, feedback, problem = problema"),
         body: z.string().min(1).describe("texto do registro"),
         occurredAt: dateTime("quando aconteceu"),
         memberId: id("do colaborador").nullable().optional(),
