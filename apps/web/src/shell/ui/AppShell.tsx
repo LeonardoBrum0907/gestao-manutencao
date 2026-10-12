@@ -39,7 +39,7 @@ export function AppShell() {
           </Link>
         </header>
         <main className="app-main min-h-0 flex-1 overflow-y-auto">
-          <div className={`app-page mx-auto w-full px-4 py-6 sm:px-8 sm:py-8 ${wide ? "" : "max-w-5xl"}`}>
+          <div className={`app-page mx-auto w-full px-4 py-6 sm:px-8 sm:py-8 ${wide ? "" : "max-w-page"}`}>
             <Outlet />
           </div>
         </main>

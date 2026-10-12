@@ -60,6 +60,9 @@ export default {
         card: "var(--shadow-card)",
         pop: "var(--shadow-pop)",
       },
+      maxWidth: {
+        page: "var(--page-max-width)",
+      },
       fontFamily: {
         sans: ["var(--font-sans)"],
       },
