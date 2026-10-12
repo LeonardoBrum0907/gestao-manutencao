@@ -16,10 +16,12 @@
 .team-sheet table.grid-sheet thead th .min { display: block; font-weight: 500; color: var(--muted); }
 /* Com muitas colunas o nome deita para caber na largura da folha. */
 .team-sheet table.grid-sheet.many thead tr.cols th:not(.who) span.name { writing-mode: vertical-rl; transform: rotate(180deg); max-height: 34mm; display: inline-block; text-align: left; }
-.team-sheet table.grid-sheet tbody tr:nth-child(even) td { background: none; }
-.team-sheet td.q { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
-.team-sheet td.near { background: var(--warn-soft); color: var(--warn); outline: 1.5px dashed var(--warn); outline-offset: -2px; }
-.team-sheet td.below { background: var(--danger-soft); color: var(--danger); }
+/* Sem zebra na grade: a cor da célula é a informação. A regra de zebra do report.css e esta limpeza
+   são mais específicas que td.q/.near/.below, e apagavam o fundo das células nas linhas pares. */
+.team-sheet table.grid-sheet tbody tr:nth-child(even) td:not(.q, .near, .below) { background: none; }
+.team-sheet .grid-sheet td.q { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.team-sheet .grid-sheet td.near { background: var(--warn-soft); color: var(--warn); outline: 1.5px dashed var(--warn); outline-offset: -2px; }
+.team-sheet .grid-sheet td.below { background: var(--danger-soft); color: var(--danger); }
 .team-sheet td.none { color: var(--muted); }
 .team-sheet tr.group td { background: var(--group-bg) !important; text-align: left; font-weight: 700; border-top: 1.5px solid var(--text); }
 .team-sheet tr.subtotal td { background: var(--chip-bg) !important; font-weight: 600; color: var(--muted); }
