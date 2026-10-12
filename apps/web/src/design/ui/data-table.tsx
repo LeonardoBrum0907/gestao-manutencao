@@ -10,8 +10,9 @@ export type TableColumn<T> = {
   // Com sortValue o cabeçalho vira botão de ordenar.
   sortValue?: (row: T) => SortValue;
   align?: "right";
-  // Texto longo (problema do RP, ocorrência): quebra em até duas linhas em vez de esticar a coluna.
-  wrap?: boolean;
+  // Texto que quebra em até duas linhas em vez de esticar a coluna: "long" para frases (problema do RP,
+  // ocorrência), "short" para listas curtas (nomes dos técnicos).
+  wrap?: "long" | "short";
   className?: string;
 };
 
@@ -171,9 +172,11 @@ function TableRow<T>(props: Shared<T> & { row: T; span: number }) {
   );
 }
 
+const WRAP_SHAPE = { long: "min-w-[13rem] max-w-[28rem] whitespace-normal", short: "min-w-[8rem] max-w-[14rem] whitespace-normal" };
+
 function BodyCell<T>({ column, row, openLabel }: { column: TableColumn<T>; row: T; openLabel?: () => void }) {
   const content = column.wrap ? <span className="line-clamp-2">{column.cell(row)}</span> : column.cell(row);
-  const shape = column.wrap ? "min-w-[14rem] max-w-[28rem] whitespace-normal" : "whitespace-nowrap";
+  const shape = column.wrap ? WRAP_SHAPE[column.wrap] : "whitespace-nowrap";
   return (
     <td className={`px-3 py-2.5 align-middle text-app ${shape} ${column.align === "right" ? "text-right tabular-nums" : ""} ${column.className ?? ""}`}>
       {openLabel ? (
@@ -253,17 +256,20 @@ function StackedItem<T>(props: Shared<T> & { row: T }) {
 }
 
 function StackedBody({ view, onOpen }: { view: StackedRow; onOpen?: () => void }) {
+  // O lado (status, chip) vai na última linha, junto da meta: assim o título e o texto de cima usam a largura toda.
   const body = (
-    <>
-      <span className="min-w-0 flex-1">
-        {view.eyebrow ? <span className="block text-xs text-muted">{view.eyebrow}</span> : null}
-        <span className="block font-medium text-app">{view.title}</span>
-        {view.meta ? <span className="mt-0.5 block text-[13px] text-muted">{view.meta}</span> : null}
-      </span>
-      {view.side ? <span className="shrink-0 text-right text-[13px]">{view.side}</span> : null}
-    </>
+    <span className="block min-w-0 flex-1">
+      {view.eyebrow ? <span className="block text-xs text-muted">{view.eyebrow}</span> : null}
+      <span className="block font-medium text-app">{view.title}</span>
+      {view.meta || view.side ? (
+        <span className="mt-0.5 flex items-center justify-between gap-3 text-[13px]">
+          <span className="min-w-0 text-muted">{view.meta}</span>
+          {view.side ? <span className="shrink-0 text-right">{view.side}</span> : null}
+        </span>
+      ) : null}
+    </span>
   );
-  const shape = "flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left";
+  const shape = "flex min-w-0 flex-1 px-3 py-2.5 text-left";
   if (!onOpen) return <div className={shape}>{body}</div>;
   return (
     <button type="button" onClick={onOpen} className={`${shape} transition hover:bg-accent-soft`}>

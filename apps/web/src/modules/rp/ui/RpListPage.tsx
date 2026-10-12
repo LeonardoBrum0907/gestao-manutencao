@@ -2,10 +2,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { RpListItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { flattenRp, useRpPages } from "../data/rp";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel, rpStatusOptions } from "../model/rp";
+import { rpStatusOptions } from "../model/rp";
+import { RP_COLUMNS, rpStacked, type RpTableRow } from "./rp-table";
 
 // Nome da linha cadastrada (ou a linha do texto) e a TAG, sem repetir o mesmo nome duas vezes.
 function place(rp: RpListItemDto, lineNames: Map<string, string>): string[] {
@@ -18,6 +20,21 @@ function place(rp: RpListItemDto, lineNames: Map<string, string>): string[] {
     seen.add(key);
     return true;
   });
+}
+
+function technicianNames(rp: RpListItemDto, memberNames: Map<string, string>): string {
+  return [...rp.memberIds.map((id) => memberNames.get(id)), rp.unmatchedTechnicians].filter(Boolean).join(", ");
+}
+
+// Ordenar só reordena o que já veio; por isso a contagem diz "carregados" enquanto houver mais.
+function LoadMore({ loading, onLoad }: { loading: boolean; onLoad: () => void }) {
+  return (
+    <div className="flex justify-center border-t border-t-line px-4 py-3">
+      <Button tone="ghost" onClick={onLoad} disabled={loading}>
+        {loading ? "Carregando…" : "Carregar mais"}
+      </Button>
+    </div>
+  );
 }
 
 const FILTERS = ["q", "status", "factoryId", "lineId", "memberId", "line", "tag", "repeated", "from", "to"] as const;
@@ -33,6 +50,7 @@ export function RpListPage() {
   const lineNames = new Map(lines.data?.map((line) => [line.id, line.name]));
   const memberNames = new Map(members.data?.map((member) => [member.id, member.name]));
   const filtered = FILTERS.some((key) => params.get(key));
+  const rows: RpTableRow[] = items.map((rp) => ({ rp, place: place(rp, lineNames), technicians: technicianNames(rp, memberNames) }));
 
   function setFilter(key: (typeof FILTERS)[number], value: string) {
     const next = new URLSearchParams(params);
@@ -143,44 +161,18 @@ export function RpListPage() {
         </Card>
       ) : null}
       {items.length ? (
-        <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
-          <ul>
-            {items.map((rp) => (
-              <li key={rp.id} className="border-t border-t-line first:border-t-0">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/rp/${rp.id}`)}
-                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-accent-soft"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                      {formatRpDay(rp.occurredAt)}
-                      {place(rp, lineNames).map((part) => ` · ${part}`)}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-sm text-app" title={rp.problem}>
-                      {rp.problem}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {[...rp.memberIds.map((id) => memberNames.get(id)).filter(Boolean), rp.unmatchedTechnicians].filter(Boolean).join(", ") ||
-                        "Sem técnico"}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className={rpStatusChipClass(rp.status)}>{rpStatusLabel(rp.status)}</span>
-                    {rp.repeatedFailure ? <span className="text-xs font-semibold text-danger">Falha repetida</span> : null}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-          {list.hasNextPage ? (
-            <div className="flex justify-center border-t border-t-line px-4 py-3">
-              <Button tone="ghost" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
-                {list.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-              </Button>
-            </div>
-          ) : null}
-        </section>
+        <DataTable
+          label="RPs"
+          rows={rows}
+          rowKey={(row) => row.rp.id}
+          columns={RP_COLUMNS}
+          stacked={rpStacked}
+          // A API já manda do mais recente para o mais antigo; a seta só mostra essa ordem.
+          defaultSort={{ key: "date", direction: "desc" }}
+          countLabel={(count) => `${count} ${count === 1 ? "RP" : "RPs"}${list.hasNextPage ? " carregados" : ""}`}
+          onOpen={(row) => navigate(`/rp/${row.rp.id}`)}
+          footer={list.hasNextPage ? <LoadMore loading={list.isFetchingNextPage} onLoad={() => void list.fetchNextPage()} /> : null}
+        />
       ) : null}
     </div>
   );
