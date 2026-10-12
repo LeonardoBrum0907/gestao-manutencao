@@ -33,6 +33,9 @@ export class Lines {
     const current = await this.lines.find(id);
     if (!current) throw new DomainError("not_found", 404, "Linha não encontrada.");
     assertLineCanBeRemoved(await this.machines.countByLine(id));
+    if (await this.lines.countTechCards(id)) {
+      throw new DomainError("line_in_use", 409, "Esta linha tem fichas de documentação técnica. Exclua ou mude as fichas antes.");
+    }
   }
 
   async remove(id: string): Promise<void> {

@@ -1,5 +1,4 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   CHAMADO_SHIFTS,
   DUE_WINDOWS,
@@ -14,6 +13,8 @@ import * as z from "zod";
 import { DomainError } from "../../kernel/domain-error";
 import { parseRecordList } from "../../registro/application/parse-record-list";
 import { matches, overlay } from "../domain/merge";
+import { registerDocTools } from "./mcp-doc-tools";
+import { answer, CHANGE, CREATE, id, optionalText, READ, toolWriter, type ToolLog } from "./mcp-tool-kit";
 import type { McpUseCases } from "./mcp-use-cases";
 
 export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábrica (linhas de produção, máquinas, técnicos).
@@ -24,23 +25,16 @@ export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábri
 - RP (Relatório Padrão): análise de falha que chega pelo WhatsApp. Use ler_rp para transformar o texto em campos, mostre ao gestor e só depois salvar_rp.
 - Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com o ponto de atenção para a próxima.
 - Antes de qualquer ferramenta que grava, mostre ao gestor o que vai gravar.
+- Documentação técnica: fichas curtas tiradas dos manuais (código de erro, interface entre máquinas, sinal, peça, parâmetro, procedimento), cada uma com a fonte. Antes de responder sobre um alarme, uma peça ou a ligação entre máquinas, use buscar_documentacao. Ao ler um PDF enviado pelo gestor, crie uma ficha por fato com criar_ficha, citando documentId (listar_documentos) e página ou folha; marque reviewNeeded quando a leitura ficou em dúvida.
 - Não há ferramenta de excluir: exclusão é feita na tela.`;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-const id = (what: string) => z.string().min(1).describe(`id ${what} (de buscar_cadastro ou de uma listagem)`);
 const day = (what: string) => z.string().regex(DAY, "Use AAAA-MM-DD.").describe(what);
 const dateTime = (what: string) => z.string().min(1).describe(`${what}, ISO 8601 com fuso (ex.: 2026-10-11T14:30:00-03:00)`);
-const optionalText = (what: string) => z.string().nullable().optional().describe(what);
-
-const READ = { readOnlyHint: true, openWorldHint: false } as const;
-const CREATE = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } as const;
-const CHANGE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false } as const;
 
 const CADASTRO_KINDS = ["fabricas", "linhas", "maquinas", "subconjuntos", "colaboradores", "equipes"] as const;
 const SEARCH_LIMIT = 100;
-
-export type ToolLog = (tool: string, clientId: string | undefined) => void;
 
 function today(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: GESTOR_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
@@ -48,19 +42,6 @@ function today(now: Date = new Date()): string {
 
 function list(values: readonly string[] | undefined): string | undefined {
   return values?.length ? values.join(",") : undefined;
-}
-
-async function answer(work: () => Promise<unknown>): Promise<CallToolResult> {
-  try {
-    const result = await work();
-    return { content: [{ type: "text", text: JSON.stringify(result ?? { ok: true }) }] };
-  } catch (error) {
-    if (error instanceof DomainError) {
-      return { isError: true, content: [{ type: "text", text: error.message }] };
-    }
-    console.error("[mcp] erro inesperado", error);
-    return { isError: true, content: [{ type: "text", text: "Erro inesperado no servidor." }] };
-  }
 }
 
 const cause = z.object({ marked: z.boolean().describe("marcado no 4M"), text: z.string().nullable().optional() });
@@ -107,11 +88,8 @@ const chamadoFields = {
 };
 
 export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog): void {
-  const write = <A>(name: string, run: (args: A) => Promise<unknown>) =>
-    (args: A, extra: { authInfo?: { clientId: string } }) => {
-      log(name, extra.authInfo?.clientId);
-      return answer(() => run(args));
-    };
+  const write = toolWriter(log);
+  registerDocTools(server, uc, log);
 
   // ---- Consultas ----
 

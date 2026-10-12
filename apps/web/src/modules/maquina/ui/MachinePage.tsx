@@ -8,6 +8,7 @@ import { useFactories, useLines, useMachines, useSubassemblies } from "../../cad
 import { machineStatusClass, machineStatusLabel } from "../../cadastro/model/labels";
 import { MachineFormModal } from "../../cadastro/ui/MachineFormModal";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
+import { MachineDocsCard } from "../../documentacao/ui/MachineDocsCard";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
 import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
@@ -174,7 +175,9 @@ export function MachinePage() {
             ) : null}
           </Card>
         </div>
-        <Card className="self-start">
+        <div className="flex flex-col gap-4 self-start">
+        <MachineDocsCard machine={machine} />
+        <Card>
           <SectionTitle
             title={`RPs da linha ${line.name}`}
             action={
@@ -196,6 +199,7 @@ export function MachinePage() {
             <RecentChamados lineId={line.id} machineId={machine.id} />
           </div>
         </Card>
+        </div>
       </div>
       {editing ? (
         <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/maquinas", { replace: true })} />

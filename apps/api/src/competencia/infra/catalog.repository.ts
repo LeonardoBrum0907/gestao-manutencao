@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { isCompetencyLevel, type MatrixCatalogDto, type MatrixEquipmentDto, type MatrixSkillDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
+import type { EquipmentUsage } from "../domain/catalog";
 import { PrismaService } from "../../prisma/prisma.service";
 
 type SkillRow = { id: string; equipmentId: string; subgroup: string; text: string; level: string; archived: boolean };
@@ -76,14 +77,16 @@ export class CatalogRepository {
     });
   }
 
-  async equipmentUsage(id: string): Promise<{ skills: number; members: number; subassemblies: number; machines: number }> {
-    const [skills, members, subassemblies, machines] = await Promise.all([
+  async equipmentUsage(id: string): Promise<EquipmentUsage> {
+    const [skills, members, subassemblies, machines, documents, techCards] = await Promise.all([
       this.prisma.matrixSkill.count({ where: { equipmentId: id } }),
       this.prisma.memberMatrixEquipment.count({ where: { equipmentId: id } }),
       this.prisma.subassembly.count({ where: { equipmentId: id } }),
       this.prisma.machine.count({ where: { equipmentId: id } }),
+      this.prisma.techDocument.count({ where: { equipmentId: id } }),
+      this.prisma.techCard.count({ where: { equipmentId: id } }),
     ]);
-    return { skills, members, subassemblies, machines };
+    return { skills, members, subassemblies, machines, documents, techCards };
   }
 
   async removeEquipment(id: string): Promise<void> {

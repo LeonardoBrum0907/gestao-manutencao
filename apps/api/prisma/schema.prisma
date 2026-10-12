@@ -79,6 +79,7 @@ model Line {
   machines     Machine[]
   memberLinks  MemberLine[]
   pdiItems     MemberPdiItem[]
+  techCards    TechCard[]
 
   @@index([factoryId])
 }
@@ -100,6 +101,7 @@ model Machine {
   postPreventives PostPreventive[]
   chamados        Record[]
   rps             Rp[]
+  techCards       TechCard[]
 
   @@index([lineId])
   @@index([equipmentId])
@@ -119,6 +121,7 @@ model Subassembly {
   postPreventives PostPreventive[]
   records         Record[]
   rps             Rp[]
+  techCards       TechCard[]
 
   @@unique([equipmentId, name])
 }
@@ -322,6 +325,8 @@ model MatrixEquipment {
   members       MemberMatrixEquipment[]
   machines      Machine[]
   subassemblies Subassembly[]
+  techDocuments TechDocument[]
+  techCards     TechCard[]
 }
 
 model MatrixSkill {
@@ -546,4 +551,64 @@ model PostPreventiveMember {
 
   @@id([postPreventiveId, memberId])
   @@index([memberId])
+}
+
+// ---- Documentação técnica (PR da thread "5. Documentação técnica por máquina") ----
+
+// PDF (manual, catálogo, esquema) de um modelo de equipamento, guardado no disco de anexos.
+model TechDocument {
+  id          String          @id @default(cuid())
+  equipmentId String
+  equipment   MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  name        String
+  kind        String
+  fileName    String
+  mimeType    String
+  storageKey  String          @unique
+  size        Int
+  revision    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  cards       TechCard[]
+
+  @@index([equipmentId])
+}
+
+// Ficha de conhecimento: um fato curto tirado do manual (código de erro, interface, peça...), com a fonte.
+// Vale para um modelo, uma máquina ou uma linha: só um dos três vem preenchido.
+model TechCard {
+  id            String           @id @default(cuid())
+  type          String
+  equipmentId   String?
+  equipment     MatrixEquipment? @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  machineId     String?
+  machine       Machine?         @relation(fields: [machineId], references: [id], onDelete: Restrict)
+  lineId        String?
+  line          Line?            @relation(fields: [lineId], references: [id], onDelete: Restrict)
+  subassemblyId String?
+  subassembly   Subassembly?     @relation(fields: [subassemblyId], references: [id], onDelete: SetNull)
+  code          String?
+  title         String
+  summary       String
+  details       Json
+  deviceTag     String?
+  originalTerm  String?
+  tags          String[]         @default([])
+  documentId    String?
+  document      TechDocument?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  page          Int?
+  sheet         String?
+  reviewNeeded  Boolean          @default(false)
+  // Tudo que a busca lê, já em minúsculas e sem acento (ver normalizeSearchText); índice trigram em cima.
+  searchText    String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([equipmentId])
+  @@index([machineId])
+  @@index([lineId])
+  @@index([documentId])
+  @@index([type])
+  // Trigram: a busca "contém" acha código, nº de peça e termo original em qualquer parte do texto.
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "TechCard_searchText_trgm_idx")
 }

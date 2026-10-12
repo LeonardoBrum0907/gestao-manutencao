@@ -774,3 +774,5 @@ export type ChamadoTaskBody = {
   memberId: string | null;
   priority: RecordPriority | null;
 };
+
+export * from "./tech-docs";
