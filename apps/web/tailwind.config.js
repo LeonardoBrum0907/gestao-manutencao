@@ -36,6 +36,7 @@ export default {
         "line-strong": "var(--border-strong)",
         overlay: "var(--overlay)",
         chart: "var(--chart-1)",
+        "chart-2": "var(--chart-2)",
         "band-high": "var(--band-high)",
         "band-good": "var(--band-good)",
         "band-mid": "var(--band-mid)",
