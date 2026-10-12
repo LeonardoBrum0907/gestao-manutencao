@@ -40,8 +40,10 @@ function ScoreTable({
 }) {
   const score = (competencyId: string, quarter: number) =>
     performance.entries.find((entry) => entry.competencyId === competencyId && entry.quarter === quarter)?.score ?? null;
+  // "relative" segura o rótulo escondido (sr-only, que é absolute) dentro da rolagem da tabela.
+  // Sem ele, o rótulo vazava para a direita e o celular abria a página mais larga que a tela.
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead className="text-xs uppercase tracking-[0.08em] text-muted">
           <tr>
