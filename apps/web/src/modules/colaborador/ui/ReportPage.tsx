@@ -48,11 +48,11 @@ import "../../../design/ui/report.css";
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
 
 const PILL_TONES = {
-  ok: "bg-green-600/15 text-green-800",
-  warn: "bg-amber-500/20 text-amber-800",
-  bad: "bg-red-600/15 text-red-700",
+  ok: "bg-pill-ok text-pill-ok-text",
+  warn: "bg-pill-warn text-pill-warn-text",
+  bad: "bg-pill-bad text-pill-bad-text",
   // Nota igual ao esperado: o azul ardósia do tema claro (o relatório sai sempre claro).
-  equal: "bg-[#3b5b78]/15 text-[#2e4a63]",
+  equal: "bg-pill-equal text-equal-text",
   neutral: "bg-accent-soft text-accent",
 } as const;
 type PillTone = keyof typeof PILL_TONES;
@@ -69,7 +69,7 @@ const ratingTone = (rating: string): PillTone =>
   rating === "excellent" || rating === "good" ? "ok" : rating === "regular" ? "warn" : "bad";
 const productivityTone = (level: string): PillTone => (level === "high" ? "ok" : level === "medium" ? "warn" : "bad");
 
-const BAND_TEXT = { high: "text-green-600", good: "text-lime-500", mid: "text-amber-500", low: "text-red-600" } as const;
+const BAND_TEXT = { high: "text-band-high", good: "text-band-good", mid: "text-band-mid", low: "text-band-low" } as const;
 
 function Cell({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -270,10 +270,10 @@ function Matrix({ memberId }: { memberId: string }) {
           {summary.scored}/{summary.applicable + summary.notApplicable}
         </Cell>
         <Cell label="Acima / igual">
-          <span className="text-green-700">{summary.above}</span> / <span className="text-[#2e4a63]">{summary.exact}</span>
+          <span className="text-report-good">{summary.above}</span> / <span className="text-equal-text">{summary.exact}</span>
         </Cell>
         <Cell label="Abaixo">
-          <span className="text-red-700">{summary.below}</span>
+          <span className="text-pill-bad-text">{summary.below}</span>
         </Cell>
         <Cell label="Aderência">
           {percent(summary.adherence)} <span className="muted font-normal">· média {average(summary.average)}</span>
@@ -482,7 +482,7 @@ function Pdi({ memberId, isTechnician, year }: { memberId: string; isTechnician:
       <div className="grid">
         <Cell label="Itens no plano">{active}</Cell>
         <Cell label="Em aberto">{counts.open}</Cell>
-        <Cell label="Atrasados">{counts.overdue ? <span className="text-red-700">{counts.overdue}</span> : 0}</Cell>
+        <Cell label="Atrasados">{counts.overdue ? <span className="text-pill-bad-text">{counts.overdue}</span> : 0}</Cell>
         <Cell label="Concluídos">
           {counts.done}
           {active ? <span className="muted font-normal"> · {Math.round((counts.done / active) * 100)}%</span> : null}

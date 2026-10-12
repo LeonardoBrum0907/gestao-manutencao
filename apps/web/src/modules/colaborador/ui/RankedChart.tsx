@@ -2,10 +2,10 @@ import { QUARTERS, type MemberPerformanceDto } from "@manutencao/shared";
 import { formatScore, rankedAverages, scoreBand } from "../model/performance";
 
 export const BAND_CLASS = {
-  high: "bg-green-600",
-  good: "bg-lime-500",
-  mid: "bg-amber-500",
-  low: "bg-red-600",
+  high: "bg-band-high",
+  good: "bg-band-good",
+  mid: "bg-band-mid",
+  low: "bg-band-low",
 } as const;
 
 const BAND_LEGEND = [
@@ -19,9 +19,9 @@ function Delta({ value }: { value: number | null }) {
   if (value === null) return <span className="text-muted">—</span>;
   if (value === 0) return <span className="text-muted">= 0</span>;
   return value > 0 ? (
-    <span className="font-semibold text-green-600">▲ +{value}</span>
+    <span className="font-semibold text-band-high">▲ +{value}</span>
   ) : (
-    <span className="font-semibold text-red-600">▼ {value}</span>
+    <span className="font-semibold text-band-low">▼ {value}</span>
   );
 }
 
@@ -72,7 +72,7 @@ export function RankedChart({
       </div>
       <ol>
         {rows.map((row) => {
-          const tone = row.competencyId === best ? "bg-green-500/10" : row.competencyId === worst ? "bg-red-500/10" : "";
+          const tone = row.competencyId === best ? "bg-band-high-soft" : row.competencyId === worst ? "bg-band-low-soft" : "";
           const summary = QUARTERS.map((quarter, i) => `${quarter}º tri ${row.scores[i] ?? "sem nota"}`).join(", ");
           return (
             <li

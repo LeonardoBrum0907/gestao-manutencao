@@ -104,7 +104,7 @@ export function RowMenu({ label, items }: { label: string; items: RowMenuItem[] 
               aria-label={label}
               onKeyDown={onMenuKey}
               style={{ top: place.top, bottom: place.bottom, right: place.right }}
-              className="fixed z-[60] flex w-56 flex-col gap-0.5 rounded-card border border-line bg-card p-1 shadow-[0_12px_32px_rgb(28_40_34_/_0.14)]"
+              className="fixed z-[60] flex w-56 flex-col gap-0.5 rounded-card border border-line bg-card p-1 shadow-pop"
             >
               {items.map((item, index) => (
                 <div key={item.label} className="contents">

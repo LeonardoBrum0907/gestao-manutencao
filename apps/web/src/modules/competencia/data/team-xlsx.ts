@@ -1,17 +1,25 @@
 import type { Cell, Row, Sheet } from "write-excel-file/browser";
+import { domLightTokenReader, lightColors, type TokenReader } from "../../../design/light-tokens";
 import type { SheetCell, SheetRow, SheetTab, SheetTone } from "../model/team-sheet";
 
-// Cores do tema claro do app (tokens.css): a planilha sai sempre em fundo branco.
-const toneColors: Record<SheetTone, { backgroundColor: string; textColor: string } | null> = {
-  qualified: { backgroundColor: "#E5F3EB", textColor: "#14502F" },
-  near: { backgroundColor: "#FBF0DE", textColor: "#A35F00" },
-  below: { backgroundColor: "#F8E8E6", textColor: "#8D2F2F" },
-  unscored: { backgroundColor: "#EEF3F0", textColor: "#5E6E64" },
-  group: { backgroundColor: "#DBE4DE", textColor: "#1C2822" },
-  header: { backgroundColor: "#EEF3F0", textColor: "#1C2822" },
+// Tokens de tokens.css por tom: a planilha sai sempre no tema claro, com as mesmas cores da tela.
+const toneTokens: Record<SheetTone, { backgroundColor: string; textColor: string }> = {
+  qualified: { backgroundColor: "--accent-soft", textColor: "--accent-ink" },
+  near: { backgroundColor: "--warn-soft", textColor: "--warn" },
+  below: { backgroundColor: "--danger-soft", textColor: "--danger" },
+  unscored: { backgroundColor: "--chip-bg", textColor: "--muted" },
+  group: { backgroundColor: "--group-bg", textColor: "--text" },
+  header: { backgroundColor: "--chip-bg", textColor: "--text" },
 };
 
-function toCell(cell: SheetCell): Cell {
+type ToneColors = Record<SheetTone, { backgroundColor: string; textColor: string }>;
+
+function toneColorsFrom(read: TokenReader): ToneColors {
+  const tones = Object.keys(toneTokens) as SheetTone[];
+  return Object.fromEntries(tones.map((tone) => [tone, lightColors(toneTokens[tone], read)])) as ToneColors;
+}
+
+function toCell(cell: SheetCell, toneColors: ToneColors): Cell {
   if (cell.value === null && !cell.tone) return null;
   const colors = cell.tone ? toneColors[cell.tone] : null;
   return {
@@ -27,14 +35,14 @@ function toCell(cell: SheetCell): Cell {
 }
 
 // A biblioteca exige uma célula vazia (null) para cada coluna que a mesclagem cobre.
-function toRow(row: SheetRow): Row {
-  return row.flatMap((cell) => [toCell(cell), ...Array.from({ length: Math.max(0, (cell.span ?? 1) - 1) }, () => null)]);
+function toRow(row: SheetRow, toneColors: ToneColors): Row {
+  return row.flatMap((cell) => [toCell(cell, toneColors), ...Array.from({ length: Math.max(0, (cell.span ?? 1) - 1) }, () => null)]);
 }
 
-function toSheet(tab: SheetTab): Sheet<Blob> {
+function toSheet(tab: SheetTab, toneColors: ToneColors): Sheet<Blob> {
   return {
     sheet: tab.name,
-    data: tab.rows.map(toRow),
+    data: tab.rows.map((row) => toRow(row, toneColors)),
     columns: tab.widths.map((width) => ({ width })),
     stickyRowsCount: tab.frozenRows,
     stickyColumnsCount: tab.frozenColumns,
@@ -47,5 +55,6 @@ function toSheet(tab: SheetTab): Sheet<Blob> {
  */
 export async function downloadTeamWorkbook(tabs: SheetTab[], fileName: string): Promise<void> {
   const { default: writeXlsxFile } = await import("write-excel-file/browser");
-  await writeXlsxFile(tabs.map(toSheet)).toFile(fileName);
+  const toneColors = toneColorsFrom(domLightTokenReader());
+  await writeXlsxFile(tabs.map((tab) => toSheet(tab, toneColors))).toFile(fileName);
 }

@@ -42,6 +42,25 @@
   /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
   --chart-1: #1f744b;
   --shadow-card: 0 1px 2px rgb(28 40 34 / 0.05), 0 10px 28px rgb(28 40 34 / 0.06);
+  /* Sombra de menus e listas que abrem por cima da tela (row-menu, select). */
+  --shadow-pop: 0 12px 32px rgb(28 40 34 / 0.14);
+  /* Faixas da nota de desempenho (0 a 10): 9–10, 7–8, 5–6 e até 4. Iguais nos dois temas. */
+  --band-high: #16a34a;
+  --band-good: #84cc16;
+  --band-mid: #f59e0b;
+  --band-low: #dc2626;
+  --band-high-soft: rgb(34 197 94 / 0.1);
+  --band-low-soft: rgb(239 68 68 / 0.1);
+  /* Folhas A4 (sempre no tema claro): etiquetas de situação e números bons/ruins. */
+  --pill-ok-bg: rgb(22 163 74 / 0.15);
+  --pill-ok-text: #166534;
+  --pill-warn-bg: rgb(245 158 11 / 0.2);
+  --pill-warn-text: #92400e;
+  --pill-bad-bg: rgb(220 38 38 / 0.15);
+  --pill-bad-text: #b91c1c;
+  --pill-equal-bg: rgb(59 91 120 / 0.15);
+  --report-good-text: #15803d;
+  --report-stripe-end: #84b81f;
   /* Raios menores a pedido do Léo (eram 16px e 10px): os componentes pareciam redondos demais. */
   --radius-card: 10px;
   --radius-control: 6px;
