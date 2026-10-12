@@ -16,7 +16,7 @@ export type InlineCreateProps = {
 /**
  * Link "+ Novo …" que vira um campo com Criar e Cancelar, para cadastrar algo sem sair do formulário.
  * Enter no campo cria (sem enviar o formulário de fora).
- * @example <InlineCreate label="+ Nova versão" inputLabel="Nome da nova versão" placeholder="Ex.: NMX" pending={save.isPending} error={save.error} onCreate={(name) => save.mutateAsync({ name })} />
+ * @example <InlineCreate label="+ Novo modelo" inputLabel="Nome do novo modelo" placeholder="Ex.: Blistadeira M91" pending={save.isPending} error={save.error} onCreate={(name) => save.mutateAsync({ name })} />
  */
 export function InlineCreate({ label, inputLabel, placeholder, pending, error, onCreate }: InlineCreateProps) {
   const [name, setName] = useState("");

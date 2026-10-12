@@ -31,44 +31,41 @@ describe("exclusão de linha", () => {
 });
 
 describe("nome do subconjunto", () => {
-  const model = { versionId: null, machineId: null };
+  const model = { machineId: null };
   const siblings = [
     { id: "a", name: "Esteira de Saída", ...model },
     { id: "b", name: "Magazine de Cartucho", ...model },
-    { id: "c", name: "Balança", versionId: null, machineId: "m1" },
-    { id: "d", name: "Selagem fria", versionId: "nmx", machineId: null },
+    { id: "c", name: "Balança", machineId: "m1" },
   ];
-  const versionOf = (machineId: string) => ({ m1: "m092", m2: "m092", m3: "nmx" })[machineId] ?? null;
 
   it("recusa repetido no mesmo modelo, ignorando acento e maiúsculas", () => {
-    refused(() => assertSubassemblyNameAvailable("esteira de  saida", model, siblings, null, versionOf), "subassembly_name_taken");
+    refused(() => assertSubassemblyNameAvailable("esteira de  saida", model, siblings, null), "subassembly_name_taken");
   });
 
   it("aceita o próprio nome ao editar", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Esteira de Saída", model, siblings, "a", versionOf));
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Esteira de Saída", model, siblings, "a"));
   });
 
   it("aceita nome novo", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Válvulas roletes", model, siblings, null, versionOf));
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Válvulas roletes", model, siblings, null));
   });
 
   it("aceita o mesmo nome só-desta-máquina em outra máquina", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Balança", { versionId: null, machineId: "m2" }, siblings, null, versionOf));
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Balança", { machineId: "m2" }, siblings, null));
+  });
+
+  it("recusa o mesmo nome duas vezes na mesma máquina", () => {
+    refused(() => assertSubassemblyNameAvailable("balanca", { machineId: "m1" }, siblings, null), "subassembly_name_taken");
   });
 
   it("recusa no modelo um nome que já existe numa máquina dele", () => {
-    refused(() => assertSubassemblyNameAvailable("Balança", model, siblings, null, versionOf), "subassembly_name_taken");
-  });
-
-  it("separa versões: o nome da NMX pode repetir na M092, mas não numa máquina NMX", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Selagem fria", { versionId: "m092", machineId: null }, siblings, null, versionOf));
-    refused(() => assertSubassemblyNameAvailable("Selagem fria", { versionId: null, machineId: "m3" }, siblings, null, versionOf), "subassembly_name_taken");
+    refused(() => assertSubassemblyNameAvailable("Balança", model, siblings, null), "subassembly_name_taken");
   });
 });
 
 describe("subconjunto da máquina", () => {
-  const machine = { id: "m1", equipmentId: "encartuchadeira-cam", versionId: null, hiddenSubassemblyIds: [] };
-  const sub = { id: "s1", equipmentId: "encartuchadeira-cam", versionId: null, machineId: null, archived: false };
+  const machine = { id: "m1", equipmentId: "encartuchadeira-cam", hiddenSubassemblyIds: [] };
+  const sub = { id: "s1", equipmentId: "encartuchadeira-cam", machineId: null, archived: false };
 
   it("aceita subconjunto do modelo da máquina", () => {
     assert.doesNotThrow(() => assertSubassemblyFits(machine, sub, null));
@@ -88,12 +85,9 @@ describe("subconjunto da máquina", () => {
     assert.doesNotThrow(() => assertSubassemblyFits(machine, archived, "s1"));
   });
 
-  it("aceita o da versão e o da própria máquina, recusa os de outra versão ou máquina", () => {
-    const m092 = { ...machine, versionId: "m092" };
-    assert.doesNotThrow(() => assertSubassemblyFits(m092, { ...sub, versionId: "m092" }, null));
-    assert.doesNotThrow(() => assertSubassemblyFits(m092, { ...sub, machineId: "m1" }, null));
-    refusedSaying(() => assertSubassemblyFits(m092, { ...sub, versionId: "nmx" }, null), "Este subconjunto é de outra versão ou de outra máquina.");
-    refusedSaying(() => assertSubassemblyFits(m092, { ...sub, machineId: "m2" }, null), "Este subconjunto é de outra versão ou de outra máquina.");
+  it("aceita o da própria máquina, recusa o só de outra máquina", () => {
+    assert.doesNotThrow(() => assertSubassemblyFits(machine, { ...sub, machineId: "m1" }, null));
+    refusedSaying(() => assertSubassemblyFits(machine, { ...sub, machineId: "m2" }, null), "Este subconjunto é só de outra máquina.");
   });
 
   it("recusa o que a máquina desmarcou, a não ser que a ficha já apontasse para ele", () => {
@@ -104,8 +98,8 @@ describe("subconjunto da máquina", () => {
 });
 
 describe("máquina e subconjunto de uma ficha", () => {
-  const machine = { id: "m1", lineId: "med-03", equipmentId: "encartuchadeira-cam", versionId: null, hiddenSubassemblyIds: [] };
-  const subassembly = { id: "s1", equipmentId: "encartuchadeira-cam", versionId: null, machineId: null, archived: false };
+  const machine = { id: "m1", lineId: "med-03", equipmentId: "encartuchadeira-cam", hiddenSubassemblyIds: [] };
+  const subassembly = { id: "s1", equipmentId: "encartuchadeira-cam", machineId: null, archived: false };
   const refs = { machine, subassembly };
 
   it("aceita ficha sem máquina", () => {

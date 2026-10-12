@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { MachineDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
-import { assertHideable, assertModelChangeAllowed, machineVersion } from "../domain/machine-model";
+import { assertHideable, assertModelChangeAllowed } from "../domain/machine-model";
 import { requireMachineStatus, requireName } from "../domain/names";
 import { LineRepository } from "../infra/line.repository";
 import { MachineRepository } from "../infra/machine.repository";
@@ -47,7 +47,7 @@ export class Machines {
   }
 
   /**
-   * Subconjuntos do modelo (ou da versão) que esta máquina não tem. Recebe a lista inteira: { ids: string[] }.
+   * Subconjuntos do modelo que esta máquina não tem. Recebe a lista inteira: { ids: string[] }.
    * Ex.: PUT /api/machines/m1/hidden-subassemblies { "ids": ["s3"] }
    */
   async setHidden(id: string, body: unknown): Promise<MachineDto> {
@@ -73,7 +73,6 @@ export class Machines {
     const input = {
       lineId,
       equipmentId,
-      versionId: await this.versionOf(equipmentId, optionalString(source, "versionId"), current?.versionId ?? null),
       name: requireName(requiredString(source, "name", NAME_MESSAGE), NAME_MESSAGE),
       tag: optionalString(source, "tag"),
       manufacturer: optionalString(source, "manufacturer"),
@@ -89,11 +88,6 @@ export class Machines {
       throw new DomainError("machine_model_locked", 409, "Esta máquina tem fichas pós-preventiva; o modelo de equipamento não pode mudar.");
     }
     assertModelChangeAllowed(currentEquipmentId, nextEquipmentId, await this.machines.countOwnSubassemblies(id));
-  }
-
-  private async versionOf(equipmentId: string | null, versionId: string | null, currentVersionId: string | null): Promise<string | null> {
-    const version = versionId ? await this.machines.findVersion(versionId) : null;
-    return machineVersion(equipmentId, versionId, version, currentVersionId);
   }
 }
 

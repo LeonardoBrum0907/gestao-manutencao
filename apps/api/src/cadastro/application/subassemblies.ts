@@ -17,14 +17,14 @@ export class Subassemblies {
     return this.subassemblies.list();
   }
 
-  // versionId ou machineId opcionais: sem eles o subconjunto vale para todas as máquinas do modelo.
+  // machineId opcional: sem ele o subconjunto vale para todas as máquinas do modelo.
   async create(body: unknown): Promise<SubassemblyDto> {
     const source = readObject(body);
     const equipmentId = requiredString(source, "equipmentId", "Escolha o modelo de equipamento.");
     if (!(await this.subassemblies.equipmentExists(equipmentId))) {
       throw new DomainError("equipment", 400, "Modelo de equipamento não encontrado.");
     }
-    const place = await this.placeOf(equipmentId, { versionId: optionalString(source, "versionId"), machineId: optionalString(source, "machineId") });
+    const place = await this.placeOf(equipmentId, optionalString(source, "machineId"));
     const name = requireName(requiredString(source, "name", NAME_MESSAGE), NAME_MESSAGE);
     await this.assertNameFree(equipmentId, name, place, null);
     return this.subassemblies.create(equipmentId, place, name);
@@ -40,17 +40,13 @@ export class Subassemblies {
     return this.subassemblies.update(id, { name, archived: requiredBoolean(source, "archived") });
   }
 
-  private async placeOf(equipmentId: string, wanted: SubassemblyPlace): Promise<SubassemblyPlace> {
-    const [version, machine] = await Promise.all([
-      wanted.versionId ? this.subassemblies.findVersion(wanted.versionId) : null,
-      wanted.machineId ? this.subassemblies.findMachine(wanted.machineId) : null,
-    ]);
-    return subassemblyPlace(equipmentId, wanted, { version, machine });
+  private async placeOf(equipmentId: string, machineId: string | null): Promise<SubassemblyPlace> {
+    const machine = machineId ? await this.subassemblies.findMachine(machineId) : null;
+    return { machineId: subassemblyPlace(equipmentId, machineId, machine) };
   }
 
   private async assertNameFree(equipmentId: string, name: string, place: SubassemblyPlace, currentId: string | null): Promise<void> {
-    const [siblings, versions] = await Promise.all([this.subassemblies.siblings(equipmentId), this.subassemblies.machineVersions(equipmentId)]);
-    assertSubassemblyNameAvailable(name, place, siblings, currentId, (machineId) => versions.get(machineId) ?? null);
+    assertSubassemblyNameAvailable(name, place, await this.subassemblies.siblings(equipmentId), currentId);
   }
 
   // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.

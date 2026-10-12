@@ -4,26 +4,24 @@ import type { SubassemblyDto } from "@manutencao/shared";
 import { subassemblyChoices, withMachineDefaults, withSubassemblyDefaults } from "./machine-spot";
 
 function sub(id: string, scope: Partial<SubassemblyDto> = {}): SubassemblyDto {
-  return { id, equipmentId: "blis", versionId: null, machineId: null, name: id, archived: false, ...scope };
+  return { id, equipmentId: "blis", machineId: null, name: id, archived: false, ...scope };
 }
 
 describe("subconjuntos que a ficha da máquina pode escolher", () => {
   const all = [
     sub("modelo"),
-    sub("m092", { versionId: "m092" }),
-    sub("nmx", { versionId: "nmx" }),
     sub("so-m1", { machineId: "m1" }),
     sub("so-m2", { machineId: "m2" }),
     sub("arquivado", { archived: true }),
     sub("desmarcado"),
     sub("outro-modelo", { equipmentId: "enc" }),
   ];
-  const machine = { id: "m1", equipmentId: "blis", versionId: "m092", hiddenSubassemblyIds: ["desmarcado"] };
+  const machine = { id: "m1", equipmentId: "blis", hiddenSubassemblyIds: ["desmarcado"] };
 
-  it("mostra os do modelo, da versão e da própria máquina, sem arquivados nem desmarcados", () => {
+  it("mostra os do modelo e da própria máquina, sem arquivados nem desmarcados", () => {
     assert.deepEqual(
       subassemblyChoices(all, machine, "").map((item) => item.id),
-      ["modelo", "m092", "so-m1"],
+      ["modelo", "so-m1"],
     );
   });
 
@@ -39,9 +37,8 @@ describe("subconjuntos que a ficha da máquina pode escolher", () => {
 });
 
 describe("resposta da API antiga", () => {
-  it("completa a máquina sem versão nem desmarcados", () => {
+  it("completa a máquina sem desmarcados", () => {
     const machine = withMachineDefaults({ id: "m1", lineId: "l1", equipmentId: "blis", name: "Blistadeira", tag: null, manufacturer: null, status: "released", notes: null });
-    assert.equal(machine.versionId, null);
     assert.deepEqual(machine.hiddenSubassemblyIds, []);
   });
 

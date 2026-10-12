@@ -12,44 +12,16 @@ function refusedSaying(run: () => void, message: string) {
 }
 
 describe("onde vale o subconjunto novo", () => {
-  const none = { version: null, machine: null };
-
-  it("sem versão nem máquina vale no modelo todo", () => {
-    assert.deepEqual(subassemblyPlace("blis", { versionId: null, machineId: null }, none), { versionId: null, machineId: null });
+  it("sem máquina vale no modelo todo", () => {
+    assert.equal(subassemblyPlace("blis", null, null), null);
   });
 
-  it("aceita versão e máquina do mesmo modelo", () => {
-    const version = { equipmentId: "blis", archived: false };
-    assert.deepEqual(subassemblyPlace("blis", { versionId: "m092", machineId: null }, { version, machine: null }), { versionId: "m092", machineId: null });
-    assert.deepEqual(subassemblyPlace("blis", { versionId: null, machineId: "m1" }, { version: null, machine: { equipmentId: "blis" } }), {
-      versionId: null,
-      machineId: "m1",
-    });
+  it("aceita máquina do mesmo modelo", () => {
+    assert.equal(subassemblyPlace("blis", "m1", { equipmentId: "blis" }), "m1");
   });
 
-  it("recusa versão e máquina juntas", () => {
-    refusedSaying(
-      () => subassemblyPlace("blis", { versionId: "m092", machineId: "m1" }, none),
-      "O subconjunto vale para uma versão ou para uma máquina, não para as duas.",
-    );
-  });
-
-  it("recusa versão de outro modelo, arquivada ou que não existe", () => {
-    refusedSaying(() => subassemblyPlace("blis", { versionId: "x", machineId: null }, none), "Versão não encontrada (id x).");
-    refusedSaying(
-      () => subassemblyPlace("blis", { versionId: "x", machineId: null }, { version: { equipmentId: "enc", archived: false }, machine: null }),
-      "Esta versão é de outro modelo de equipamento.",
-    );
-    refusedSaying(
-      () => subassemblyPlace("blis", { versionId: "x", machineId: null }, { version: { equipmentId: "blis", archived: true }, machine: null }),
-      "Esta versão está arquivada.",
-    );
-  });
-
-  it("recusa máquina de outro modelo", () => {
-    refusedSaying(
-      () => subassemblyPlace("blis", { versionId: null, machineId: "m1" }, { version: null, machine: { equipmentId: null } }),
-      "Esta máquina é de outro modelo de equipamento.",
-    );
+  it("recusa máquina de outro modelo ou que não existe", () => {
+    refusedSaying(() => subassemblyPlace("blis", "m1", { equipmentId: null }), "Esta máquina é de outro modelo de equipamento.");
+    refusedSaying(() => subassemblyPlace("blis", "m9", null), "Máquina não encontrada (id m9).");
   });
 });

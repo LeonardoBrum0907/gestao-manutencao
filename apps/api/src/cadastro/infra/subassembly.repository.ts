@@ -3,8 +3,8 @@ import type { SubassemblyDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { SubassemblyPlace, SubassemblySibling } from "../domain/hierarchy";
 
-function toDto(row: { id: string; equipmentId: string; versionId: string | null; machineId: string | null; name: string; archived: boolean }): SubassemblyDto {
-  return { id: row.id, equipmentId: row.equipmentId, versionId: row.versionId, machineId: row.machineId, name: row.name, archived: row.archived };
+function toDto(row: { id: string; equipmentId: string; machineId: string | null; name: string; archived: boolean }): SubassemblyDto {
+  return { id: row.id, equipmentId: row.equipmentId, machineId: row.machineId, name: row.name, archived: row.archived };
 }
 
 @Injectable()
@@ -22,21 +22,11 @@ export class SubassemblyRepository {
   }
 
   siblings(equipmentId: string): Promise<SubassemblySibling[]> {
-    return this.prisma.subassembly.findMany({ where: { equipmentId }, select: { id: true, name: true, versionId: true, machineId: true } });
-  }
-
-  // Versão de cada máquina do modelo, para a regra de nome saber quais subconjuntos aparecem juntos.
-  async machineVersions(equipmentId: string): Promise<Map<string, string | null>> {
-    const rows = await this.prisma.machine.findMany({ where: { equipmentId }, select: { id: true, versionId: true } });
-    return new Map(rows.map((row) => [row.id, row.versionId]));
+    return this.prisma.subassembly.findMany({ where: { equipmentId }, select: { id: true, name: true, machineId: true } });
   }
 
   equipmentExists(id: string): Promise<boolean> {
     return this.prisma.matrixEquipment.findUnique({ where: { id }, select: { id: true } }).then(Boolean);
-  }
-
-  findVersion(id: string) {
-    return this.prisma.equipmentVersion.findUnique({ where: { id }, select: { id: true, equipmentId: true, archived: true } });
   }
 
   findMachine(id: string) {
@@ -45,7 +35,7 @@ export class SubassemblyRepository {
 
   async create(equipmentId: string, place: SubassemblyPlace, name: string): Promise<SubassemblyDto> {
     const last = await this.prisma.subassembly.aggregate({ where: { equipmentId }, _max: { position: true } });
-    const data = { equipmentId, versionId: place.versionId, machineId: place.machineId, name, position: (last._max.position ?? 0) + 1 };
+    const data = { equipmentId, machineId: place.machineId, name, position: (last._max.position ?? 0) + 1 };
     return toDto(await this.prisma.subassembly.create({ data }));
   }
 

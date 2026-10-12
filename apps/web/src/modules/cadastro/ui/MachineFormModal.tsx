@@ -4,18 +4,18 @@ import { errorMessage } from "../../../app/http";
 import { Button, Field, Modal, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { useToast } from "../../../design/ui/toast";
+import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useDeleteMachine, useSaveMachine } from "../data/cadastro";
 import { machineStatusOptions } from "../model/labels";
-import { MachineModelFields } from "./MachineModelFields";
+import { NewEquipmentModel } from "./NewEquipmentModel";
 
 type Draft = MachineWriteDto;
 
 function draftOf(line: LineDto, machine: MachineDto | null): Draft {
-  if (!machine) return { lineId: line.id, equipmentId: null, versionId: null, name: "", tag: "", manufacturer: "", status: "released", notes: "" };
+  if (!machine) return { lineId: line.id, equipmentId: null, name: "", tag: "", manufacturer: "", status: "released", notes: "" };
   return {
     lineId: machine.lineId,
     equipmentId: machine.equipmentId,
-    versionId: machine.versionId,
     name: machine.name,
     tag: machine.tag ?? "",
     manufacturer: machine.manufacturer ?? "",
@@ -28,7 +28,6 @@ function toBody(draft: Draft): Draft {
   return {
     ...draft,
     equipmentId: draft.equipmentId || null,
-    versionId: draft.versionId || null,
     tag: draft.tag || null,
     manufacturer: draft.manufacturer || null,
     notes: draft.notes || null,
@@ -47,11 +46,14 @@ export function MachineFormModal({
   onClose: () => void;
   onDeleted?: () => void;
 }) {
+  const catalog = useMatrixCatalog();
   const save = useSaveMachine();
   const remove = useDeleteMachine();
   const [draft, setDraft] = useState<Draft>(() => draftOf(line, machine));
   const [asking, setAsking] = useState(false);
   const toast = useToast();
+  const equipments = catalog.data?.equipments ?? [];
+  const choices = equipments.filter((equipment) => !equipment.archived || equipment.id === draft.equipmentId);
 
   return (
     <Modal open title={machine ? `Editar máquina · ${line.name}` : `Nova máquina · ${line.name}`} onClose={onClose}>
@@ -69,10 +71,23 @@ export function MachineFormModal({
             onChange={(event) => setDraft({ ...draft, name: event.target.value })}
           />
         </Field>
-        <MachineModelFields
-          value={{ equipmentId: draft.equipmentId, versionId: draft.versionId }}
-          onChange={(next) => setDraft({ ...draft, ...next })}
-        />
+        <Field label="Modelo de equipamento">
+          <SelectInput
+            value={draft.equipmentId ?? ""}
+            onChange={(event) => setDraft({ ...draft, equipmentId: event.target.value || null })}
+          >
+            <option value="">Sem modelo</option>
+            {choices.map((equipment) => (
+              <option key={equipment.id} value={equipment.id}>
+                {equipment.name}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+        <p className="-mt-2 text-xs text-muted">
+          O modelo (ex.: Blistadeira M91) dá os subconjuntos da máquina e é o mesmo equipamento da matriz de habilidades. Se ainda não existe, crie aqui.
+        </p>
+        <NewEquipmentModel onCreated={(equipmentId) => setDraft({ ...draft, equipmentId })} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="TAG">
             <TextInput value={draft.tag ?? ""} onChange={(event) => setDraft({ ...draft, tag: event.target.value })} />

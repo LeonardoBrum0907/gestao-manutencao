@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { EquipmentVersionDto, MachineDto, MatrixEquipmentDto, SubassemblyDto } from "@manutencao/shared";
+import type { MachineDto, MatrixEquipmentDto, SubassemblyDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Notice, SectionTitle } from "../../../design/ui/controls";
 import { InlineCreate } from "../../../design/ui/inline-create";
@@ -11,17 +11,16 @@ import { machineSubassemblyGroups, toggledHidden } from "../model/machine-subass
 type CardProps = {
   machine: MachineDto;
   model: MatrixEquipmentDto | undefined;
-  version: EquipmentVersionDto | undefined;
   subassemblies: SubassemblyDto[];
   onEdit: () => void;
 };
 
 /**
- * Bloco "Subconjuntos" da tela da máquina: marca o que ela tem entre os do modelo e da versão,
+ * Bloco "Subconjuntos" da tela da máquina: marca o que ela tem entre os do modelo
  * e cria ou exclui os que são só dela. Sem modelo, abre o Editar para escolher.
- * @example <MachineSubassembliesCard machine={machine} model={model} version={version} subassemblies={list} onEdit={() => setEditing(true)} />
+ * @example <MachineSubassembliesCard machine={machine} model={model} subassemblies={list} onEdit={() => setEditing(true)} />
  */
-export function MachineSubassembliesCard({ machine, model, version, subassemblies, onEdit }: CardProps) {
+export function MachineSubassembliesCard({ machine, model, subassemblies, onEdit }: CardProps) {
   if (!model) {
     return (
       <Card>
@@ -32,10 +31,10 @@ export function MachineSubassembliesCard({ machine, model, version, subassemblie
       </Card>
     );
   }
-  return <SubassemblyChecklist machine={machine} model={model} version={version} subassemblies={subassemblies} />;
+  return <SubassemblyChecklist machine={machine} model={model} subassemblies={subassemblies} />;
 }
 
-function SubassemblyChecklist({ machine, model, version, subassemblies }: Omit<CardProps, "onEdit"> & { model: MatrixEquipmentDto }) {
+function SubassemblyChecklist({ machine, model, subassemblies }: Omit<CardProps, "onEdit"> & { model: MatrixEquipmentDto }) {
   const setHidden = useSetHiddenSubassemblies();
   const save = useSaveSubassembly();
   const groups = machineSubassemblyGroups(subassemblies, machine);
@@ -55,7 +54,6 @@ function SubassemblyChecklist({ machine, model, version, subassemblies }: Omit<C
       <p className="-mt-2 mb-3 text-sm text-muted">Desmarque o que esta máquina não tem. Só o que está marcado aparece nas fichas dela.</p>
       <div className="flex flex-col gap-4">
         <CheckGroup title={`Do modelo ${model.name}`} items={groups.model} machine={machine} onToggle={toggle} />
-        {version ? <CheckGroup title={`Da versão ${version.name}`} items={groups.version} machine={machine} onToggle={toggle} /> : null}
         <OwnGroup items={groups.own} machine={machine} onToggle={toggle} />
         <InlineCreate
           label="+ Subconjunto só desta máquina"

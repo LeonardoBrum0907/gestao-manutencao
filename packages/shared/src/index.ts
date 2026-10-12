@@ -182,30 +182,28 @@ export type LineDto = {
   isCritical: boolean;
 };
 
-// Máquina (equipamento) de uma linha. O modelo é um equipamento do catálogo da matriz; a versão (M092, NMX) fica abaixo dele.
+// Máquina (equipamento) de uma linha. O modelo (ex.: Blistadeira M91) é um equipamento do catálogo da matriz.
 export type MachineDto = {
   id: string;
   lineId: string;
   equipmentId: string | null;
-  versionId: string | null;
   name: string;
   tag: string | null;
   manufacturer: string | null;
   status: MachineOperationalStatus;
   notes: string | null;
-  // Subconjuntos do modelo (ou da versão) que esta máquina não tem.
+  // Subconjuntos do modelo que esta máquina não tem.
   hiddenSubassemblyIds: string[];
 };
 
 // O que o cadastro da máquina grava; os subconjuntos escondidos têm rota própria.
 export type MachineWriteDto = Omit<MachineDto, "id" | "hiddenSubassemblyIds">;
 
-// Subconjunto de um modelo de equipamento. Sem versão nem máquina vale para todas as máquinas do modelo;
-// com versionId, só nas máquinas dessa versão; com machineId, só nessa máquina.
+// Subconjunto de um modelo de equipamento. Sem máquina vale para todas as máquinas do modelo;
+// com machineId, só nessa máquina.
 export type SubassemblyDto = {
   id: string;
   equipmentId: string;
-  versionId: string | null;
   machineId: string | null;
   name: string;
   archived: boolean;

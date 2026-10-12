@@ -6,7 +6,6 @@ import { PrismaService } from "../../prisma/prisma.service";
 export type MachineWrite = {
   lineId: string;
   equipmentId: string | null;
-  versionId: string | null;
   name: string;
   tag: string | null;
   manufacturer: string | null;
@@ -20,7 +19,6 @@ function toDto(row: {
   id: string;
   lineId: string;
   equipmentId: string | null;
-  versionId: string | null;
   name: string;
   tag: string | null;
   manufacturer: string | null;
@@ -35,7 +33,6 @@ function toDto(row: {
     id: row.id,
     lineId: row.lineId,
     equipmentId: row.equipmentId,
-    versionId: row.versionId,
     name: row.name,
     tag: row.tag,
     manufacturer: row.manufacturer,
@@ -63,10 +60,6 @@ export class MachineRepository {
     return row ? toDto(row) : null;
   }
 
-  findVersion(id: string) {
-    return this.prisma.equipmentVersion.findUnique({ where: { id }, select: { id: true, equipmentId: true, archived: true } });
-  }
-
   countPostPreventives(id: string) {
     return this.prisma.postPreventive.count({ where: { machineId: id } });
   }
@@ -85,7 +78,7 @@ export class MachineRepository {
 
   // Escopo dos subconjuntos pedidos, para conferir que chegam à máquina antes de desmarcar.
   async subassemblyScopes(ids: string[]) {
-    const rows = await this.prisma.subassembly.findMany({ where: { id: { in: ids } }, select: { id: true, equipmentId: true, versionId: true, machineId: true } });
+    const rows = await this.prisma.subassembly.findMany({ where: { id: { in: ids } }, select: { id: true, equipmentId: true, machineId: true } });
     return new Map(rows.map((row) => [row.id, row]));
   }
 

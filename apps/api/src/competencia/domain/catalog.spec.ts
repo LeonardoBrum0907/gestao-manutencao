@@ -38,7 +38,7 @@ describe("cadastro da matriz", () => {
   });
 
   it("só exclui equipamento sem habilidade, técnico marcado, subconjunto, máquina ou documentação", () => {
-    const none = { skills: 0, members: 0, subassemblies: 0, versions: 0, machines: 0, documents: 0, techCards: 0 };
+    const none = { skills: 0, members: 0, subassemblies: 0, machines: 0, documents: 0, techCards: 0 };
     for (const used of ["skills", "members", "subassemblies", "machines", "documents", "techCards"] as const) {
       fails(() => assertEquipmentCanBeRemoved({ ...none, [used]: 1 }), "equipment_in_use", 409);
     }

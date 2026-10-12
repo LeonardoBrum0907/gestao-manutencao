@@ -45,13 +45,13 @@ export class PrismaCadastroRefs implements CadastroRefs {
       machineId
         ? this.prisma.machine.findUnique({
             where: { id: machineId },
-            select: { id: true, lineId: true, equipmentId: true, versionId: true, hiddenSubassemblies: { select: { subassemblyId: true } } },
+            select: { id: true, lineId: true, equipmentId: true, hiddenSubassemblies: { select: { subassemblyId: true } } },
           })
         : null,
       subassemblyId
         ? this.prisma.subassembly.findUnique({
             where: { id: subassemblyId },
-            select: { id: true, equipmentId: true, versionId: true, machineId: true, archived: true },
+            select: { id: true, equipmentId: true, machineId: true, archived: true },
           })
         : null,
     ]);

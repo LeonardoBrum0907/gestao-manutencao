@@ -1,17 +1,16 @@
 import { subassemblyReaches, type SubassemblyDto, type SubassemblyHolder } from "@manutencao/shared";
 
-export type MachineSubassemblyGroups = { model: SubassemblyDto[]; version: SubassemblyDto[]; own: SubassemblyDto[] };
+export type MachineSubassemblyGroups = { model: SubassemblyDto[]; own: SubassemblyDto[] };
 
 /**
- * Subconjuntos ativos que chegam à máquina, separados por origem: do modelo, da versão dela e só dela.
+ * Subconjuntos ativos que chegam à máquina, separados por origem: do modelo dela e só dela.
  * Os desmarcados continuam na lista (a tela mostra a caixa vazia para poder marcar de novo).
- * @example machineSubassemblyGroups(todos, maquina).version // os da M092, se a máquina é M092
+ * @example machineSubassemblyGroups(todos, maquina).own // os só desta máquina
  */
 export function machineSubassemblyGroups(subassemblies: SubassemblyDto[], machine: SubassemblyHolder): MachineSubassemblyGroups {
   const reaching = subassemblies.filter((item) => !item.archived && subassemblyReaches(item, machine));
   return {
-    model: reaching.filter((item) => !item.versionId && !item.machineId),
-    version: reaching.filter((item) => Boolean(item.versionId)),
+    model: reaching.filter((item) => !item.machineId),
     own: reaching.filter((item) => Boolean(item.machineId)),
   };
 }

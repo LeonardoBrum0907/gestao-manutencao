@@ -4,25 +4,22 @@ import type { SubassemblyDto } from "@manutencao/shared";
 import { machineSubassemblyGroups, toggledHidden } from "./machine-subassemblies";
 
 function sub(id: string, scope: Partial<SubassemblyDto> = {}): SubassemblyDto {
-  return { id, equipmentId: "blis", versionId: null, machineId: null, name: id, archived: false, ...scope };
+  return { id, equipmentId: "blis", machineId: null, name: id, archived: false, ...scope };
 }
 
 describe("subconjuntos na tela da máquina", () => {
-  const machine = { id: "m1", equipmentId: "blis", versionId: "m092", hiddenSubassemblyIds: ["desmarcado"] };
+  const machine = { id: "m1", equipmentId: "blis", hiddenSubassemblyIds: ["desmarcado"] };
   const all = [
     sub("modelo"),
     sub("desmarcado"),
     sub("arquivado", { archived: true }),
-    sub("m092", { versionId: "m092" }),
-    sub("nmx", { versionId: "nmx" }),
     sub("so-m1", { machineId: "m1" }),
     sub("so-m2", { machineId: "m2" }),
   ];
 
-  it("separa do modelo, da versão e só da máquina, mantendo os desmarcados e tirando os arquivados", () => {
+  it("separa do modelo e só da máquina, mantendo os desmarcados e tirando os arquivados", () => {
     const groups = machineSubassemblyGroups(all, machine);
     assert.deepEqual(groups.model.map((item) => item.id), ["modelo", "desmarcado"]);
-    assert.deepEqual(groups.version.map((item) => item.id), ["m092"]);
     assert.deepEqual(groups.own.map((item) => item.id), ["so-m1"]);
   });
 });

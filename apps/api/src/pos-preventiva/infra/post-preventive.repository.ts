@@ -117,11 +117,11 @@ export class PostPreventiveRepository {
     await this.prisma.postPreventive.delete({ where: { id } });
   }
 
-  // Com versão e desmarcados: o subconjunto da ficha precisa chegar a esta máquina.
+  // Com os desmarcados: o subconjunto da ficha precisa chegar a esta máquina.
   async findMachine(id: string) {
     const row = await this.prisma.machine.findUnique({
       where: { id },
-      select: { id: true, equipmentId: true, versionId: true, hiddenSubassemblies: { select: { subassemblyId: true } } },
+      select: { id: true, equipmentId: true, hiddenSubassemblies: { select: { subassemblyId: true } } },
     });
     if (!row) return null;
     const { hiddenSubassemblies, ...machine } = row;
@@ -129,7 +129,7 @@ export class PostPreventiveRepository {
   }
 
   findSubassembly(id: string) {
-    return this.prisma.subassembly.findUnique({ where: { id }, select: { id: true, equipmentId: true, versionId: true, machineId: true, archived: true } });
+    return this.prisma.subassembly.findUnique({ where: { id }, select: { id: true, equipmentId: true, machineId: true, archived: true } });
   }
 
   rpExists(id: string): Promise<boolean> {

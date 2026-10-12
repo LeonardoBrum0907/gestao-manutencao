@@ -8,36 +8,35 @@ export function assertLineCanBeRemoved(machineCount: number): void {
   }
 }
 
-export type SubassemblySibling = { id: string; name: string; versionId: string | null; machineId: string | null };
-export type SubassemblyPlace = Pick<SubassemblySibling, "versionId" | "machineId">;
+export type SubassemblySibling = { id: string; name: string; machineId: string | null };
+export type SubassemblyPlace = Pick<SubassemblySibling, "machineId">;
 
 /**
  * Nome do subconjunto não repete entre os que aparecem juntos numa máquina, sem diferenciar maiúsculas e acentos.
- * Os "só desta máquina" de máquinas diferentes podem repetir (desde o PR das versões, 2026-10-12).
- * Ex.: `assertSubassemblyNameAvailable("Balança", { versionId: null, machineId: "m1" }, irmaos, null, versaoDaMaquina)`
+ * Os "só desta máquina" de máquinas diferentes podem repetir (desde o PR #54, 2026-10-12).
+ * Ex.: `assertSubassemblyNameAvailable("Balança", { machineId: "m1" }, irmaos, null)`
  */
 export function assertSubassemblyNameAvailable(
   name: string,
   place: SubassemblyPlace,
   siblings: SubassemblySibling[],
   currentId: string | null,
-  versionOfMachine: (machineId: string) => string | null,
 ): void {
   const wanted = foldName(name);
   const clash = siblings.some(
-    (sibling) => sibling.id !== currentId && foldName(sibling.name) === wanted && scopesOverlap(place, sibling, versionOfMachine),
+    (sibling) => sibling.id !== currentId && foldName(sibling.name) === wanted && scopesOverlap(place, sibling),
   );
   if (clash) {
     throw new DomainError("subassembly_name_taken", 409, `Já existe o subconjunto "${name}" nas mesmas máquinas deste modelo.`);
   }
 }
 
-export type SpotMachine = { id: string; equipmentId: string | null; versionId: string | null; hiddenSubassemblyIds: string[] };
-export type SpotSubassembly = { id: string; equipmentId: string; versionId: string | null; machineId: string | null; archived: boolean };
+export type SpotMachine = { id: string; equipmentId: string | null; hiddenSubassemblyIds: string[] };
+export type SpotSubassembly = { id: string; equipmentId: string; machineId: string | null; archived: boolean };
 
 /**
- * O subconjunto alcança a máquina (modelo, versão ou a própria máquina), está ativo e a máquina não o escondeu.
- * O que a ficha já apontava (currentSubassemblyId) fica, mesmo arquivado, escondido ou de outra versão; de outro modelo, não.
+ * O subconjunto alcança a máquina (é do modelo ou só dela), está ativo e a máquina não o escondeu.
+ * O que a ficha já apontava (currentSubassemblyId) fica, mesmo arquivado, escondido ou só de outra máquina; de outro modelo, não.
  * Ex.: `assertSubassemblyFits(maquina, subconjunto, ficha.subassemblyId)`
  */
 export function assertSubassemblyFits(machine: SpotMachine, subassembly: SpotSubassembly, currentSubassemblyId: string | null): void {
@@ -49,7 +48,7 @@ export function assertSubassemblyFits(machine: SpotMachine, subassembly: SpotSub
   }
   if (subassembly.id === currentSubassemblyId) return;
   if (!subassemblyReaches(subassembly, machine)) {
-    throw new DomainError("subassembly", 400, "Este subconjunto é de outra versão ou de outra máquina.");
+    throw new DomainError("subassembly", 400, "Este subconjunto é só de outra máquina.");
   }
   if (subassembly.archived) throw new DomainError("subassembly", 400, "Este subconjunto está arquivado.");
   if (machine.hiddenSubassemblyIds.includes(subassembly.id)) {

@@ -114,8 +114,8 @@ export function useSubassemblies() {
 export function useSaveSubassembly() {
   const client = useQueryClient();
   return useMutation({
-    // versionId ou machineId só na criação: sem eles o subconjunto vale para o modelo todo.
-    mutationFn: async (input: { id?: string; equipmentId: string; versionId?: string | null; machineId?: string | null; name: string; archived: boolean }) =>
+    // machineId só na criação: sem ele o subconjunto vale para o modelo todo.
+    mutationFn: async (input: { id?: string; equipmentId: string; machineId?: string | null; name: string; archived: boolean }) =>
       withSubassemblyDefaults(
         input.id
           ? await api<SubassemblyDto>(`/api/subassemblies/${input.id}`, {
@@ -124,7 +124,7 @@ export function useSaveSubassembly() {
             })
           : await api<SubassemblyDto>("/api/subassemblies", {
               method: "POST",
-              body: JSON.stringify({ equipmentId: input.equipmentId, versionId: input.versionId ?? null, machineId: input.machineId ?? null, name: input.name }),
+              body: JSON.stringify({ equipmentId: input.equipmentId, machineId: input.machineId ?? null, name: input.name }),
             }),
       ),
     onSuccess: (item) =>
