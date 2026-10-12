@@ -5,11 +5,7 @@ import { InlineNameList } from "../../../design/ui/inline-list";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteEquipment, useMatrixCatalog, useReorderEquipments, useSaveEquipment } from "../../competencia/data/catalog";
 import { useMachines, useSubassemblies } from "../data/cadastro";
-
-function count(value: number, one: string, many: string): string | null {
-  if (!value) return null;
-  return value === 1 ? `1 ${one}` : `${value} ${many}`;
-}
+import { modelUsageText } from "../model/model-machines";
 
 // Modelos de equipamento: o tipo de cada máquina. É o mesmo equipamento da matriz de habilidades,
 // então criar, renomear ou arquivar aqui vale também na aba Avaliação.
@@ -27,12 +23,10 @@ export function EquipmentModelsSection() {
   const activeIds = active.map((equipment) => equipment.id);
 
   const meta = (equipment: MatrixEquipmentDto) =>
-    [
-      count(machines.data?.filter((machine) => machine.equipmentId === equipment.id).length ?? 0, "máquina", "máquinas"),
-      count(subassemblies.data?.filter((item) => item.equipmentId === equipment.id && !item.archived).length ?? 0, "subconjunto", "subconjuntos"),
-    ]
-      .filter(Boolean)
-      .join(" · ") || "sem uso";
+    modelUsageText(
+      machines.data?.filter((machine) => machine.equipmentId === equipment.id).length ?? 0,
+      subassemblies.data?.filter((item) => item.equipmentId === equipment.id && !item.archived).length ?? 0,
+    );
 
   async function setArchived(equipment: MatrixEquipmentDto, value: boolean) {
     try {
