@@ -53,12 +53,7 @@ export class MatrixRepository {
   }
 
   async saveSkill(memberId: string, entry: MatrixEntry): Promise<void> {
-    const data = { score: entry.score, notApplicable: entry.notApplicable, expected: entry.expected };
-    await this.prisma.memberSkill.upsert({
-      where: { memberId_skillId: { memberId, skillId: entry.skillId } },
-      create: { memberId, skillId: entry.skillId, ...data },
-      update: data,
-    });
+    await this.saveSkills(memberId, [entry], []);
   }
 
   // Tudo ou nada: ou entram todas as notas, ou nenhuma.
@@ -77,7 +72,7 @@ export class MatrixRepository {
   }
 
   async clearSkill(memberId: string, skillId: string): Promise<void> {
-    await this.prisma.memberSkill.deleteMany({ where: { memberId, skillId } });
+    await this.saveSkills(memberId, [], [skillId]);
   }
 
   // Técnicos ativos com a matriz e os itens de PDI vencidos, em poucas consultas para a equipe toda.
