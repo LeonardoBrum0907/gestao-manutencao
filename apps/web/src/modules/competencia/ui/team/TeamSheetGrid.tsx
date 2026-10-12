@@ -93,28 +93,36 @@ function SheetLegend({ cut, view }: { cut: number; view: TeamMatrixView }) {
 
 export type SheetGridParts = { subtotals: boolean; legend: boolean };
 
+type SheetTableProps = { team: TeamMatrixDto; grid: TeamGrid; view: TeamMatrixView; subtotals: boolean };
+
+function SheetTable({ team, grid, view, subtotals }: SheetTableProps) {
+  const width = grid.columns.length + 2;
+  return (
+    <table className={`grid-sheet ${grid.columns.length >= MANY_COLUMNS ? "many" : ""}`}>
+      <Head team={team} grid={grid} />
+      <tbody>
+        {grid.rowBlocks.flatMap((block) => [
+          block.label ? (
+            <tr key={`g-${block.label}`} className="group">
+              <td colSpan={width}>
+                {block.label} · {block.members.length}
+              </td>
+            </tr>
+          ) : null,
+          ...block.members.map((member) => <MemberRow key={member.id} member={member} grid={grid} team={team} view={view} />),
+          block.label && subtotals ? <SubtotalRow key={`s-${block.label}`} block={block} grid={grid} cut={team.qualifiedAdherence} /> : null,
+        ])}
+      </tbody>
+    </table>
+  );
+}
+
 // Grade da folha A4: as mesmas colunas, blocos e técnicos da tela, em tamanho de papel. Legível em preto e branco
 // (qualificado em negrito, perto do corte com contorno tracejado). Subtotais e legenda saem se o gestor pedir.
 export function TeamSheetGrid({ team, grid, view, parts }: { team: TeamMatrixDto; grid: TeamGrid; view: TeamMatrixView; parts: SheetGridParts }) {
-  const width = grid.columns.length + 2;
   return (
     <>
-      <table className={`grid-sheet ${grid.columns.length >= MANY_COLUMNS ? "many" : ""}`}>
-        <Head team={team} grid={grid} />
-        <tbody>
-          {grid.rowBlocks.flatMap((block) => [
-            block.label ? (
-              <tr key={`g-${block.label}`} className="group">
-                <td colSpan={width}>
-                  {block.label} · {block.members.length}
-                </td>
-              </tr>
-            ) : null,
-            ...block.members.map((member) => <MemberRow key={member.id} member={member} grid={grid} team={team} view={view} />),
-            block.label && parts.subtotals ? <SubtotalRow key={`s-${block.label}`} block={block} grid={grid} cut={team.qualifiedAdherence} /> : null,
-          ])}
-        </tbody>
-      </table>
+      <SheetTable team={team} grid={grid} view={view} subtotals={parts.subtotals} />
       {parts.legend ? <SheetLegend cut={team.qualifiedAdherence} view={view} /> : null}
     </>
   );
