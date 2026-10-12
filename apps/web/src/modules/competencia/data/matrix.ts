@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { COMPETENCY_LEVEL_EXPECTED, type CompetencyScore, type MemberMatrixDto, type TeamMatrixDto } from "@manutencao/shared";
+import {
+  COMPETENCY_LEVEL_EXPECTED,
+  DEFAULT_TEAM_MATRIX_LAYOUT,
+  type CompetencyScore,
+  type MemberMatrixDto,
+  type TeamMatrixDto,
+  type TeamMatrixLayoutDto,
+  type TeamMemberDto,
+} from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export type SkillWrite = {
@@ -27,10 +35,37 @@ export function useMatrix(memberId: string | undefined) {
   });
 }
 
+type OlderTeamMatrix = Omit<TeamMatrixDto, "lines" | "layout" | "members"> &
+  Partial<Pick<TeamMatrixDto, "lines" | "layout">> & { members: (Omit<TeamMemberDto, "gradeName" | "teamName"> & Partial<TeamMemberDto>)[] };
+
+/**
+ * Busca a matriz da equipe. A tela publica na Vercel antes do deploy da API no PC: uma API anterior às linhas e à
+ * disposição salva não manda lines, layout, gradeName nem teamName, e aí valem os padrões (vazio e a disposição padrão).
+ * @example teamMatrix() // { equipments, members, lines, layout, qualifiedAdherence }
+ */
+export async function teamMatrix(): Promise<TeamMatrixDto> {
+  const team = await api<OlderTeamMatrix>("/api/team-matrix");
+  return {
+    ...team,
+    lines: team.lines ?? [],
+    layout: team.layout ?? DEFAULT_TEAM_MATRIX_LAYOUT,
+    members: team.members.map((member) => ({ ...member, gradeName: member.gradeName ?? null, teamName: member.teamName ?? null })),
+  };
+}
+
 export function useTeamMatrix() {
-  return useQuery({
-    queryKey: ["team-matrix"],
-    queryFn: () => api<TeamMatrixDto>("/api/team-matrix"),
+  return useQuery({ queryKey: ["team-matrix"], queryFn: teamMatrix });
+}
+
+// Cada mudança de visão, agrupamento ou coluna arrastada grava a disposição inteira. A tela muda na hora;
+// se a gravação falhar, volta ao que o servidor tem.
+export function useSaveTeamLayout() {
+  const client = useQueryClient();
+  return useMutation({
+    scope: { id: "team-matrix-layout" },
+    mutationFn: (layout: TeamMatrixLayoutDto) => api<TeamMatrixLayoutDto>("/api/team-matrix/layout", { method: "PUT", body: JSON.stringify(layout) }),
+    onMutate: (layout) => client.setQueryData<TeamMatrixDto>(["team-matrix"], (team) => (team ? { ...team, layout } : team)),
+    onError: () => client.invalidateQueries({ queryKey: ["team-matrix"] }),
   });
 }
 

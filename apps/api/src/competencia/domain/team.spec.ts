@@ -29,7 +29,7 @@ function member(
   entries: MatrixEntry[],
   expectedByLevel = COMPETENCY_LEVEL_EXPECTED,
 ): TeamMemberInput {
-  return { id, name: id, shift, teamId: null, equipments, entries, expectedByLevel, pdiOverdue: 0 };
+  return { id, name: id, shift, teamId: null, gradeName: null, teamName: null, equipments, entries, expectedByLevel, pdiOverdue: 0 };
 }
 
 describe("visão da equipe", () => {

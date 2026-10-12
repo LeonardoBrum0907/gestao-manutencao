@@ -19,6 +19,8 @@
   --danger-soft: #f8e8e6;
   /* Prioridade média no checklist de tarefas (laranja), entre a alta (vermelho) e a sem cor. */
   --warn: #a35f00;
+  /* Fundo do laranja: nota perto do corte na Matriz da equipe (melhor aposta para treinar). */
+  --warn-soft: #fbf0de;
   /* Nota igual ao esperado (azul ardósia): neutra, longe do verde (acima) e do vermelho (abaixo). */
   --equal: #3b5b78;
   --equal-contrast: #f4f8fc;
@@ -57,6 +59,7 @@
   --danger: #f0b4ae;
   --danger-soft: #3a2422;
   --warn: #e8b05a;
+  --warn-soft: #3a2e1a;
   --equal: #9dbbd6;
   --equal-contrast: #0c1824;
   --equal-soft: #1f2d3a;

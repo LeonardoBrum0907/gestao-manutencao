@@ -491,6 +491,7 @@ export type DashboardDto = {
 };
 
 export * from "./competency-matrix";
+export * from "./team-matrix-layout";
 
 export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
 export type CompetencyScore = (typeof COMPETENCY_SCORES)[number];

@@ -22,6 +22,7 @@ export default {
         danger: "var(--danger)",
         "danger-soft": "var(--danger-soft)",
         warn: "var(--warn)",
+        "warn-soft": "var(--warn-soft)",
         equal: "var(--equal)",
         "equal-contrast": "var(--equal-contrast)",
         "equal-soft": "var(--equal-soft)",

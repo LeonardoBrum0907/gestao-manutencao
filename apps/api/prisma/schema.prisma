@@ -298,6 +298,17 @@ model MatrixSetting {
   performanceTarget  Int    @default(8)
 }
 
+// Como o gestor deixou a Matriz da equipe: visão, agrupamentos e a ordem das colunas que ele arrastou.
+// Uma linha só ("default"), como MatrixSetting. A ordem guarda ids de linha, máquina e modelo; id que sumiu é ignorado na tela.
+model TeamMatrixLayout {
+  id          String   @id @default("default")
+  view        String   @default("training")
+  rowGroup    String   @default("shift")
+  columnGroup String   @default("line")
+  columnOrder String[] @default([])
+  updatedAt   DateTime @updatedAt
+}
+
 // Catálogo da matriz de habilidades: cadastro do coordenador (os 9 equipamentos e as 222 habilidades do SIGEM de partida).
 // Arquivado sai da matriz, mas o que já foi marcado ou avaliado fica guardado.
 model MatrixEquipment {
