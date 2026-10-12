@@ -1,112 +1,80 @@
-import { Link } from "react-router-dom";
-import { RECORD_TYPE_LABELS, type DashboardDto } from "@manutencao/shared";
+import { useSearchParams } from "react-router-dom";
+import { DASHBOARD_PERIODS, type DashboardPeriod } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Card, Notice, PageTitle } from "../../../design/ui/controls";
-import { statusChipClass, statusLabel } from "../../registro/model/record";
-import { useDashboard } from "../data/dashboard";
-import { formatDashboardWhen, openRankLabel } from "../model/when";
+import { Field, Notice, PageTitle, SelectInput } from "../../../design/ui/controls";
+import { useFactories } from "../../cadastro/data/cadastro";
+import { useTeamMatrix } from "../../competencia/data/matrix";
+import { useDashboardOverview } from "../data/dashboard";
+import { readOverviewFilter, writeOverviewFilter, type OverviewFilter } from "../model/overview-filter";
+import { MachinesBand } from "./MachinesBand";
+import { NowBand } from "./NowBand";
+import { TeamBand } from "./TeamBand";
 
-const cardLink = "block rounded-card border p-4 shadow-card transition hover:border-accent sm:p-5";
-
-function CountLink({
-  to,
-  label,
-  count,
-  tone = "neutral",
-}: {
-  to: string;
-  label: string;
-  count: number;
-  tone?: "neutral" | "danger" | "today" | "quiet";
-}) {
-  const frame = tone === "danger" ? "border-danger bg-card" : tone === "today" ? "border-line bg-accent-soft" : "border-line bg-card";
-  const number = tone === "danger" ? "text-danger" : tone === "quiet" ? "text-muted" : "text-app";
+function PeriodSwitch({ days, onChange }: { days: DashboardPeriod; onChange: (days: DashboardPeriod) => void }) {
   return (
-    <Link to={to} className={`${cardLink} ${frame}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
-      <p className={`mt-2 text-4xl font-semibold tabular-nums tracking-tight ${number}`}>{count}</p>
-    </Link>
+    <div className="flex flex-col gap-1.5 text-sm">
+      <span className="font-medium text-app" id="dashboard-period">
+        Período
+      </span>
+      <div role="group" aria-labelledby="dashboard-period" className="flex rounded-control border border-line bg-surface p-0.5">
+        {DASHBOARD_PERIODS.map((period) => (
+          <button
+            key={period}
+            type="button"
+            aria-pressed={period === days}
+            onClick={() => onChange(period)}
+            className={`rounded-control px-3 py-1.5 text-sm font-medium tabular-nums transition ${period === days ? "bg-accent text-accent-contrast" : "text-muted hover:text-app"}`}
+          >
+            {period} dias
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function Ranking({
-  title,
-  rows,
-  linkTo,
-}: {
-  title: string;
-  rows: DashboardDto["lineRanking"];
-  linkTo?: (id: string) => string;
-}) {
+function Filters({ filter, onChange }: { filter: OverviewFilter; onChange: (filter: OverviewFilter) => void }) {
+  const factories = useFactories();
   return (
-    <Card>
-      <h2 className="text-sm font-semibold text-app">{title}</h2>
-      {rows.length === 0 ? <p className="mt-3 text-sm text-muted">Nenhum aberto.</p> : null}
-      <ol className="mt-3 flex flex-col gap-2">
-        {rows.map((row) => (
-          <li key={row.id} className="flex items-baseline justify-between gap-3 text-sm">
-            {linkTo ? (
-              <Link to={linkTo(row.id)} className="font-medium text-app hover:text-accent hover:underline">
-                {row.name}
-              </Link>
-            ) : (
-              <span className="font-medium text-app">{row.name}</span>
-            )}
-            <span className="shrink-0 tabular-nums text-muted">{openRankLabel(row.openCount)}</span>
-          </li>
-        ))}
-      </ol>
-    </Card>
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="w-full sm:w-56">
+        <Field label="Fábrica">
+          <SelectInput value={filter.factoryId} onChange={(event) => onChange({ ...filter, factoryId: event.target.value })}>
+            <option value="">Todas as fábricas</option>
+            {(factories.data ?? []).map((factory) => (
+              <option key={factory.id} value={factory.id}>
+                {factory.name}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+      </div>
+      <PeriodSwitch days={filter.days} onChange={(days) => onChange({ ...filter, days })} />
+    </div>
   );
 }
 
 export function DashboardPage() {
-  const dashboard = useDashboard();
-  const data = dashboard.data;
+  const [params, setParams] = useSearchParams();
+  const filter = readOverviewFilter(params);
+  const overview = useDashboardOverview(filter);
+  const team = useTeamMatrix();
+  const data = overview.data;
   return (
-    <div>
-      <PageTitle title="Dashboard" text="Abertos, prazos, cadastro e o que entrou por último." />
-      {dashboard.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      {dashboard.isError ? <Notice>{errorMessage(dashboard.error)}</Notice> : null}
+    <div className="flex flex-col gap-6">
+      <PageTitle
+        title="Dashboard"
+        text="O que precisa de você agora, onde as máquinas mais pararam e como está a equipe. A fábrica vale para chamados, linhas e RPs."
+      />
+      <Filters filter={filter} onChange={(next) => setParams(writeOverviewFilter(next), { replace: true })} />
+      {overview.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
+      {overview.isError ? <Notice>{errorMessage(overview.error)}</Notice> : null}
       {data ? (
-        <div className="flex flex-col gap-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <CountLink to="/registros?status=open" label="Abertas" count={data.openCount} />
-            <CountLink to="/registros?due=overdue" label="Vencidas" count={data.overdueCount} tone="danger" />
-            <CountLink to="/registros?due=today" label="Vencem hoje" count={data.dueTodayCount} tone="today" />
-            <CountLink to="/registros?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <CountLink to="/configuracoes/fabricas" label="Linhas" count={data.lineCount} />
-            <CountLink to="/cadastro/colaboradores" label="Colaboradores ativos" count={data.activeMemberCount} />
-          </div>
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-app">Últimos registros</h2>
-            {data.recent.length === 0 ? <Card>Nenhum registro ainda.</Card> : null}
-            <div className="flex flex-col gap-3">
-              {data.recent.map((record) => (
-                <Link key={record.id} to={`/registros/${record.id}`} className={`${cardLink} border-line bg-card`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                      {RECORD_TYPE_LABELS[record.type].short}
-                    </p>
-                    <span className={statusChipClass(record.status)}>{statusLabel(record.status)}</span>
-                  </div>
-                  <p className="mt-2 line-clamp-2 font-medium text-app">{record.body}</p>
-                  <p className="mt-2 text-sm text-muted">{formatDashboardWhen(record.occurredAt)}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-          <div className="grid gap-3 lg:grid-cols-2">
-            <Ranking title="Linhas com mais abertos" rows={data.lineRanking} />
-            <Ranking
-              title="Colaboradores com mais abertos"
-              rows={data.memberRanking}
-              linkTo={(id) => `/cadastro/colaboradores/${id}`}
-            />
-          </div>
-        </div>
+        <>
+          <NowBand now={data.now} flow={data.flow} at={new Date(data.generatedAt)} />
+          <MachinesBand machines={data.machines} />
+          <TeamBand people={data.people} team={team.data} />
+        </>
       ) : null}
     </div>
   );

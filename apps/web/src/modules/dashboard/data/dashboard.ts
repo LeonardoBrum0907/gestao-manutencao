@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import type { DashboardDto, OverdueCountDto } from "@manutencao/shared";
+import type { DashboardOverviewDto, OverdueCountDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
+import { overviewApiQuery, type OverviewFilter } from "../model/overview-filter";
 
-export function useDashboard() {
+export function useDashboardOverview(filter: OverviewFilter) {
   return useQuery({
-    queryKey: ["dashboard", "panel"],
-    queryFn: () => api<DashboardDto>("/api/dashboard"),
+    queryKey: ["dashboard", "overview", filter.days, filter.factoryId],
+    queryFn: () => api<DashboardOverviewDto>(`/api/dashboard/overview?${overviewApiQuery(filter)}`),
   });
 }
 
