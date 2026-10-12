@@ -7,6 +7,7 @@ import { useToast } from "../../../design/ui/toast";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useDeleteMachine, useSaveMachine } from "../data/cadastro";
 import { machineStatusOptions } from "../model/labels";
+import { NewEquipmentModel } from "./NewEquipmentModel";
 
 type Draft = Omit<MachineDto, "id">;
 
@@ -83,7 +84,10 @@ export function MachineFormModal({
             ))}
           </SelectInput>
         </Field>
-        <p className="-mt-2 text-xs text-muted">O modelo dá os subconjuntos da máquina e é o mesmo equipamento da matriz de habilidades.</p>
+        <p className="-mt-2 text-xs text-muted">
+          O modelo dá os subconjuntos da máquina e é o mesmo equipamento da matriz de habilidades. Se ainda não existe, crie aqui.
+        </p>
+        <NewEquipmentModel onCreated={(equipmentId) => setDraft({ ...draft, equipmentId })} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="TAG">
             <TextInput value={draft.tag ?? ""} onChange={(event) => setDraft({ ...draft, tag: event.target.value })} />
