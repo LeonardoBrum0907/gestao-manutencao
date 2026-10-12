@@ -1,31 +1,33 @@
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #e7ece8;
-  --surface: #fbfcfa;
+  /* Tema claro "branco com toques pastel" (opção C, escolhida pelo Léo em 2026-10-12): fundo quase branco, pastel
+     só nas superfícies suaves (item ativo, etiquetas, células, avisos) e o verde da marca mais claro nos botões. */
+  --bg: #f5f8f6;
+  --surface: #ffffff;
   --text: #1c2822;
   --muted: #5e6e64;
-  --border: #d3ddd6;
-  --accent: #1d6b45;
-  --accent-contrast: #f4fff8;
-  --accent-soft: #e5f3eb;
-  --sidebar-bg: #f4f7f5;
+  --border: #e0e9e3;
+  --accent: #287a51;
+  --accent-contrast: #ffffff;
+  --accent-soft: #dcf3e6;
+  --sidebar-bg: #ffffff;
   --sidebar-text: #1c2822;
   --sidebar-muted: #5e6e64;
-  --sidebar-active: #e3f2e9;
-  --sidebar-border: #d3ddd6;
-  --card-bg: #fbfcfa;
-  --danger: #8d2f2f;
-  --danger-soft: #f8e8e6;
+  --sidebar-active: #dcf2e5;
+  --sidebar-border: #e0e9e3;
+  --card-bg: #ffffff;
+  --danger: #a3413b;
+  --danger-soft: #fde4e1;
   /* Prioridade média no checklist de tarefas (laranja), entre a alta (vermelho) e a sem cor. */
-  --warn: #a35f00;
+  --warn: #9a5a00;
   /* Fundo do laranja: nota perto do corte na Matriz da equipe (melhor aposta para treinar). */
-  --warn-soft: #fbf0de;
+  --warn-soft: #fff1d8;
   /* Nota igual ao esperado (azul ardósia): neutra, longe do verde (acima) e do vermelho (abaixo). */
   --equal: #3b5b78;
   --equal-contrast: #f4f8fc;
-  --equal-soft: #e6eef5;
-  --equal-text: #2e4a63;
+  --equal-soft: #e1ecfb;
+  --equal-text: #2d4c70;
   /* Cores dos níveis acima / igual / abaixo do esperado (barrinha, legenda e nota escolhida nas matrizes).
      Pastel no claro e vivas no escuro, a pedido do Léo: as antigas (accent, equal, danger) eram escuras e da
      mesma claridade e viravam uma faixa só na barrinha. --level-ink é o texto em cima delas. */
@@ -33,11 +35,11 @@
   --level-equal: #86b4ea;
   --level-below: #f08c84;
   --level-ink: #1c2822;
-  --chip-bg: #eef3f0;
+  --chip-bg: #edf3ef;
   /* Títulos de grupo (subconjunto da matriz): faixa e linha mais fortes que chip/border, para separar do conteúdo. */
-  --group-bg: #dbe4de;
+  --group-bg: #e3ece6;
   --border-strong: #9fb0a5;
-  --accent-ink: #14502f;
+  --accent-ink: #17543a;
   --overlay: rgb(28 40 34 / 0.4);
   /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
   --chart-1: #1f744b;
