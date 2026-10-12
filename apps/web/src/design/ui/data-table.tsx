@@ -100,10 +100,11 @@ function TableBox<T>(props: Shared<T>) {
   );
 }
 
-function TableHead<T>({ columns, menu, sort, setSort, plain }: Shared<T>) {
+// Cabeçalho no verde claro e faixas de grupo no verde mais escuro, como os equipamentos e subconjuntos da matriz.
+function TableHead<T>({ columns, menu, sort, setSort }: Shared<T>) {
   return (
     <thead>
-      <tr className={`border-b border-line-strong ${plain ? "" : "bg-chip"}`}>
+      <tr className="border-b border-line-strong bg-accent-soft">
         {columns.map((column) => (
           <HeaderCell key={column.key} column={column} sort={sort} onSort={() => setSort(nextSort(sort, column.key))} />
         ))}
@@ -119,13 +120,13 @@ function HeaderCell<T>({ column, sort, onSort }: { column: TableColumn<T>; sort:
   const active = sort?.key === column.key;
   const ariaSort = active ? (sort.direction === "asc" ? "ascending" : "descending") : undefined;
   const align = column.align === "right" ? "text-right" : "text-left";
-  if (!column.sortValue) return <th className={`whitespace-nowrap px-3 py-2.5 text-muted ${headText} ${align}`}>{column.header}</th>;
+  if (!column.sortValue) return <th className={`whitespace-nowrap px-3 py-2.5 text-accent-ink ${headText} ${align}`}>{column.header}</th>;
   return (
     <th aria-sort={ariaSort} className={`whitespace-nowrap px-1.5 py-1 ${align}`}>
       <button
         type="button"
         onClick={onSort}
-        className={`control-focus inline-flex items-center gap-1 rounded-md px-1.5 py-1.5 transition hover:bg-accent-soft ${headText} ${active ? "text-accent-ink" : "text-muted"}`}
+        className={`control-focus inline-flex items-center gap-1 rounded-md px-1.5 py-1.5 transition hover:bg-group ${headText} text-accent-ink`}
       >
         {column.header}
         <span aria-hidden className={active ? "" : "opacity-0"}>
@@ -136,10 +137,12 @@ function HeaderCell<T>({ column, sort, onSort }: { column: TableColumn<T>; sort:
   );
 }
 
+const groupText = "text-[12.5px] font-bold uppercase tracking-[0.07em] text-app";
+
 function GroupBand({ title, span }: { title: string; span: number }) {
   return (
     <tr className="border-b border-line-strong bg-group">
-      <th colSpan={span} scope="colgroup" className="px-3 py-1.5 text-left text-[13px] font-semibold text-app">
+      <th colSpan={span} scope="colgroup" className={`px-3 py-2 text-left ${groupText}`}>
         {title}
       </th>
     </tr>
@@ -205,7 +208,7 @@ function StackedList<T>(props: Shared<T>) {
       {props.plain ? null : <SortBar {...props} count={count} />}
       {props.groups.map((group) => (
         <section key={group.key} aria-label={group.title || props.label}>
-          {group.title ? <div className="border-b border-line-strong bg-group px-3 py-1.5 text-[13px] font-semibold text-app">{group.title}</div> : null}
+          {group.title ? <div className={`border-b border-line-strong bg-group px-3 py-2 ${groupText}`}>{group.title}</div> : null}
           <ul>
             {group.rows.map((row) => (
               <StackedItem key={props.rowKey(row)} row={row} {...props} />
@@ -221,7 +224,7 @@ function StackedList<T>(props: Shared<T>) {
 function SortBar<T>({ columns, sort, setSort, countLabel, count }: Shared<T> & { count: number }) {
   const sortable = columns.filter((column) => column.sortValue);
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-line-strong bg-chip px-3 py-1.5 text-[13px] text-muted">
+    <div className="flex items-center justify-between gap-2 border-b border-line-strong bg-accent-soft px-3 py-1.5 text-[13px] font-semibold text-accent-ink">
       <span>{countLabel ? countLabel(count) : count}</span>
       {sortable.length ? (
         <span className="flex items-center gap-1">
