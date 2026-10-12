@@ -12,4 +12,8 @@ export class UserRepository {
   create(email: string, passwordHash: string) {
     return this.prisma.user.create({ data: { email, passwordHash } });
   }
+
+  updatePassword(id: string, passwordHash: string) {
+    return this.prisma.user.update({ where: { id }, data: { passwordHash } });
+  }
 }

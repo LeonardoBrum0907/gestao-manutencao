@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { assertSubassemblyFits, parseDay, readPostPreventive } from "./post-preventive";
+import { parseDay, readPostPreventive } from "./post-preventive";
 
 const valid = {
   preventiveDate: "2026-09-19",
@@ -44,28 +44,5 @@ describe("ficha pós-preventiva", () => {
 
   it("recusa dia que não existe", () => {
     refused(() => parseDay("2026-02-31", "Data inválida."), "Data inválida.");
-  });
-});
-
-describe("subconjunto da máquina", () => {
-  const machine = { equipmentId: "encartuchadeira-cam" };
-  const sub = { id: "s1", equipmentId: "encartuchadeira-cam", archived: false };
-
-  it("aceita subconjunto do modelo da máquina", () => {
-    assert.doesNotThrow(() => assertSubassemblyFits(machine, sub, null));
-  });
-
-  it("recusa subconjunto de outro modelo", () => {
-    refused(() => assertSubassemblyFits(machine, { ...sub, equipmentId: "blistadeira-cam" }, null), "Este subconjunto não é do modelo desta máquina.");
-  });
-
-  it("recusa máquina sem modelo", () => {
-    assert.throws(() => assertSubassemblyFits({ equipmentId: null }, sub, null), DomainError);
-  });
-
-  it("arquivado só fica se a ficha já apontava para ele", () => {
-    const archived = { ...sub, archived: true };
-    refused(() => assertSubassemblyFits(machine, archived, null), "Este subconjunto está arquivado.");
-    assert.doesNotThrow(() => assertSubassemblyFits(machine, archived, "s1"));
   });
 });

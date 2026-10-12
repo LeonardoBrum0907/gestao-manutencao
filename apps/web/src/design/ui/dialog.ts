@@ -7,7 +7,14 @@ const focusable =
 const stack: object[] = [];
 
 // Modal e ficha do item: tira o resto da tela do alcance, foca o primeiro campo, Esc fecha e o Tab fica dentro.
-export function useDialogFocus(open: boolean, onClose: () => void, panelRef: RefObject<HTMLElement | null>) {
+// focusField: false foca a janela em vez do primeiro campo (modal com texto editável no lugar, que não
+// deve abrir já em edição).
+export function useDialogFocus(
+  open: boolean,
+  onClose: () => void,
+  panelRef: RefObject<HTMLElement | null>,
+  { focusField = true }: { focusField?: boolean } = {},
+) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -20,7 +27,7 @@ export function useDialogFocus(open: boolean, onClose: () => void, panelRef: Ref
     const wasInert = root?.hasAttribute("inert") ?? false;
     root?.setAttribute("inert", "");
     const panel = panelRef.current;
-    const field = panel?.querySelector<HTMLElement>("input, select, textarea, [role=combobox]");
+    const field = focusField ? panel?.querySelector<HTMLElement>("input, select, textarea, [role=combobox]") : null;
     (field ?? panel)?.focus();
 
     function onKey(event: KeyboardEvent) {

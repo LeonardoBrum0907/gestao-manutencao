@@ -30,6 +30,21 @@ export class RecordsController {
     return this.list.page(parseRecordList(query));
   }
 
+  @Get("board/tasks")
+  taskBoard() {
+    return this.list.taskBoard();
+  }
+
+  @Get("board/problems")
+  problemBoard() {
+    return this.list.problemBoard();
+  }
+
+  @Get("board/feedbacks")
+  feedbackBoard() {
+    return this.list.feedbackBoard();
+  }
+
   @Get(":id")
   get(@Param("id") id: string) {
     return this.records.get(id);
@@ -54,6 +69,12 @@ export class RecordsController {
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.records.updateSheet(id, body);
+  }
+
+  @Patch(":id/board")
+  async changeOnBoard(@Param("id") id: string, @Body() body: unknown) {
+    await this.records.changeOnBoard(id, body);
+    return { ok: true };
   }
 
   @Post(":id/attachments")

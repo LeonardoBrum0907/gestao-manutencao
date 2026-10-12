@@ -1,14 +1,17 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { AttachmentDto, RecordDto, RemovalCheckDto } from "@manutencao/shared";
+import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
+import { assertBoardChange, boardDueAt, parseBoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
 import { recordRemovalWarnings } from "../domain/record-removal";
+import { assertRetype, retypeState } from "../domain/retype";
 import type { RecordState } from "../domain/record-state";
-import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
+import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
 import { AttachmentStorage } from "../infra/attachment.storage";
 import { RecordRepository } from "../infra/record.repository";
-import { parseCapture, parseFeedbackSheet, parseProblemSheet, parseTaskSheet } from "./parse-record";
+import { parseCapture, parseEntrySheet, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
 
 function dtoToState(dto: RecordDto): RecordState {
   return {
@@ -32,6 +35,8 @@ function dtoToState(dto: RecordDto): RecordState {
     closedAt: dto.closedAt ? new Date(dto.closedAt) : null,
     durationMin: dto.durationMin,
     memberIds: dto.memberIds,
+    machineId: dto.machineId,
+    subassemblyId: dto.subassemblyId,
   };
 }
 
@@ -57,23 +62,51 @@ export class Records {
 
   async updateSheet(id: string, body: unknown): Promise<RecordDto> {
     const current = await this.get(id);
-    const state = dtoToState(current);
-    if (current.type === "task") {
+    const target = parseSheetType(body) ?? current.type;
+    assertRetype({ ...current, attachments: current.attachments.length }, target);
+    const state = retypeState(dtoToState(current), target);
+    const next = await this.sheetState(current, state, body);
+    return this.records.update(id, next, current.memberIds, { retyped: target !== current.type });
+  }
+
+  // Aplica a ficha do tipo de destino (o tipo novo, quando a ficha troca o tipo).
+  private async sheetState(current: RecordDto, state: RecordState, body: unknown): Promise<RecordState> {
+    if (state.type === "task") {
       const input = parseTaskSheet(body);
       await Promise.all([this.assertMember(input.memberId), this.assertFactory(input.factoryId)]);
-      return this.records.update(id, applyTaskSheet(state, input), current.memberIds);
+      return applyTaskSheet(state, input);
     }
-    if (current.type === "feedback") {
+    if (state.type === "feedback") {
       const input = parseFeedbackSheet(body);
       await this.assertMember(input.memberId);
-      return this.records.update(id, applyFeedbackSheet(state, input), current.memberIds);
+      return applyFeedbackSheet(state, input);
     }
+    if (state.type === "entry") return applyEntrySheet(state, parseEntrySheet(body));
+    return this.problemState(current, state, body);
+  }
+
+  private async problemState(current: RecordDto, state: RecordState, body: unknown): Promise<RecordState> {
     if (current.origin !== "inbox") {
       throw new DomainError("wrong_origin", 400, "Altere este problema pelo chamado, pela ocorrência ou pelo RP.");
     }
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
-    return this.records.update(id, applyProblemSheet(state, input), current.memberIds);
+    const next = applyProblemSheet(state, input);
+    assertMachineSpot(next, await this.refs.machineSpot(next.machineId, next.subassemblyId), current.subassemblyId);
+    return next;
+  }
+
+  // Checklist de Registros: concluir/reabrir, arrastar para outro grupo de prazo e guardar a ordem do grupo.
+  async changeOnBoard(id: string, body: unknown, now: Date = new Date()): Promise<void> {
+    const change = parseBoardChange(id, body);
+    const record = await this.records.boardRecord(id);
+    if (!record) throw new DomainError("not_found", 404, "Registro não encontrado.");
+    assertBoardChange(record, change);
+    await this.records.applyBoard(id, {
+      status: change.status,
+      dueAt: change.target === null ? undefined : boardDueAt(change.target, now),
+      order: change.order,
+    });
   }
 
   // Todo registro pode ser excluído; o que tiver vínculo volta como aviso para o coordenador ler antes.

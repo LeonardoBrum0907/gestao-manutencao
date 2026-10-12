@@ -1,7 +1,7 @@
-import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority } from "@manutencao/shared";
+import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority, type RecordType } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
-import type { CaptureInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
+import type { CaptureInput, EntrySheetInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
 
 function parseTone(source: Record<string, unknown>): FeedbackTone | null {
   const tone = optionalString(source, "tone");
@@ -14,7 +14,7 @@ export function parseCapture(body: unknown): CaptureInput {
   const source = readObject(body);
   const type = requiredString(source, "type", "Escolha o tipo.");
   if (!isRecordType(type)) {
-    throw new DomainError("type", 400, "Escolha Tarefa, Feedback ou Problema.");
+    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Feedback ou Problema.");
   }
   return {
     type,
@@ -23,6 +23,17 @@ export function parseCapture(body: unknown): CaptureInput {
     memberId: optionalString(source, "memberId"),
     tone: parseTone(source),
   };
+}
+
+/**
+ * Tipo pedido na ficha: ausente mantém o atual; outro valor troca o tipo (veja assertRetype).
+ * Ex.: `parseSheetType({ type: "problem", body: "…" })` → `"problem"`
+ */
+export function parseSheetType(body: unknown): RecordType | null {
+  const type = optionalString(readObject(body), "type");
+  if (type === null) return null;
+  if (!isRecordType(type)) throw new DomainError("type", 400, `Tipo "${type}" inválido: use task, problem, feedback ou entry.`);
+  return type;
 }
 
 export function parseTaskSheet(body: unknown): TaskSheetInput {
@@ -56,6 +67,7 @@ export function parseFeedbackSheet(body: unknown): FeedbackSheetInput {
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
     tone: parseTone(source),
+    notes: optionalString(source, "notes"),
   };
 }
 
@@ -67,6 +79,17 @@ export function parseProblemSheet(body: unknown): ProblemSheetInput {
     memberId: optionalString(source, "memberId"),
     lineId: optionalString(source, "lineId"),
     lineLabel: optionalString(source, "lineLabel"),
+    machineId: optionalString(source, "machineId"),
+    subassemblyId: optionalString(source, "subassemblyId"),
+    notes: optionalString(source, "notes"),
+  };
+}
+
+export function parseEntrySheet(body: unknown): EntrySheetInput {
+  const source = readObject(body);
+  return {
+    body: requiredString(source, "body", "Escreva o texto do registro."),
+    occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     notes: optionalString(source, "notes"),
   };
 }

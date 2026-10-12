@@ -23,6 +23,6 @@ import { UserRepository } from "./infra/user.repository";
     CurrentSession,
     SessionGuard,
   ],
-  exports: [SessionGuard, CurrentSession],
+  exports: [SessionGuard, CurrentSession, UserRepository, PasswordHasher],
 })
 export class IdentityModule {}

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyScore, MemberMatrixDto, TeamMatrixDto } from "@manutencao/shared";
+import { COMPETENCY_LEVEL_EXPECTED, type CompetencyScore, type MemberMatrixDto, type TeamMatrixDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 export type SkillWrite = {
@@ -9,10 +9,20 @@ export type SkillWrite = {
   expected: CompetencyScore | null;
 };
 
+/**
+ * Busca a matriz do técnico. Uma API anterior ao esperado por grau (PR #40) não manda gradeName nem
+ * expectedByLevel: aí vale o esperado da dificuldade, para a tela não quebrar enquanto o servidor não é atualizado.
+ * @example memberMatrix(`/api/members/${memberId}/matrix`)
+ */
+export async function memberMatrix(path: string, init?: RequestInit): Promise<MemberMatrixDto> {
+  const matrix = await api<Partial<MemberMatrixDto> & Omit<MemberMatrixDto, "gradeName" | "expectedByLevel">>(path, init);
+  return { ...matrix, gradeName: matrix.gradeName ?? null, expectedByLevel: matrix.expectedByLevel ?? COMPETENCY_LEVEL_EXPECTED };
+}
+
 export function useMatrix(memberId: string | undefined) {
   return useQuery({
     queryKey: ["matrix", memberId],
-    queryFn: () => api<MemberMatrixDto>(`/api/members/${memberId}/matrix`),
+    queryFn: () => memberMatrix(`/api/members/${memberId}/matrix`),
     enabled: Boolean(memberId),
   });
 }
@@ -28,7 +38,7 @@ export function useSetMatrixEquipments(memberId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (equipments: string[]) =>
-      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/equipments`, {
+      memberMatrix(`/api/members/${memberId}/matrix/equipments`, {
         method: "PUT",
         body: JSON.stringify({ equipments }),
       }),
@@ -83,7 +93,7 @@ export function useSetSkill(memberId: string) {
   return useSkillWrite<SkillWrite>(
     memberId,
     ({ skillId, ...body }) =>
-      api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills/${skillId}`, { method: "PUT", body: JSON.stringify(body) }),
+      memberMatrix(`/api/members/${memberId}/matrix/skills/${skillId}`, { method: "PUT", body: JSON.stringify(body) }),
     (write) => [write],
   );
 }
@@ -92,7 +102,7 @@ export function useSetSkill(memberId: string) {
 export function useSetSkills(memberId: string) {
   return useSkillWrite<SkillWrite[]>(
     memberId,
-    (entries) => api<MemberMatrixDto>(`/api/members/${memberId}/matrix/skills`, { method: "PUT", body: JSON.stringify({ entries }) }),
+    (entries) => memberMatrix(`/api/members/${memberId}/matrix/skills`, { method: "PUT", body: JSON.stringify({ entries }) }),
     (writes) => writes,
   );
 }

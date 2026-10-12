@@ -5,6 +5,7 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
+import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { useCheckDuplicate, useSaveRp } from "../data/rp";
 import { bodyFromValues, formatRpDay, rpStatusOptions, type RpFormValues } from "../model/rp";
 
@@ -87,7 +88,12 @@ export function RpForm({
 
   function pickLine(lineId: string) {
     const line = lines.data?.find((item) => item.id === lineId);
-    setValues((current) => ({ ...current, lineId, factoryId: line ? line.factoryId : current.factoryId }));
+    setValues((current) => ({ ...current, lineId, machineId: "", subassemblyId: "", factoryId: line ? line.factoryId : current.factoryId }));
+    setDuplicates([]);
+  }
+
+  function pickMachine(machineId: string) {
+    setValues((current) => ({ ...current, machineId, subassemblyId: "" }));
     setDuplicates([]);
   }
 
@@ -176,6 +182,17 @@ export function RpForm({
               <TextInput value={values.tag} onChange={(event) => set("tag", event.target.value)} />
             </Field>
           </div>
+          {values.lineId ? (
+            <MachineFields
+              optional
+              lineId={values.lineId}
+              machineId={values.machineId}
+              subassemblyId={values.subassemblyId}
+              savedSubassemblyId={initial.subassemblyId}
+              onMachineChange={pickMachine}
+              onSubassemblyChange={(subassemblyId) => set("subassemblyId", subassemblyId)}
+            />
+          ) : null}
         </Section>
 
         <Section title="Problema">

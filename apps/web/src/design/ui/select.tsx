@@ -118,7 +118,8 @@ function useOutsideClose(open: boolean, refs: RefObject<HTMLElement | null>[], c
   }, [open]);
 }
 
-function Chevron({ open }: { open?: boolean }) {
+/** Seta para baixo que gira quando aberto. Ex.: <Chevron open={expanded} /> */
+export function Chevron({ open }: { open?: boolean }) {
   return (
     <svg
       width="16"
@@ -374,9 +375,25 @@ type SelectProps = {
   "aria-label"?: string;
   // Busca dentro da lista; por padrão aparece a partir de 9 opções.
   searchable?: boolean;
+  // "chip": botão pequeno de etiqueta (formulário rápido de adicionar), com ícone e sem seta.
+  variant?: "field" | "chip";
+  icon?: ReactNode;
 };
 
-export function SelectInput({ value, onChange, disabled, className = "", id, children, searchable, "aria-label": ariaLabel }: SelectProps) {
+const chipTrigger = "control-focus inline-flex max-w-[16rem] items-center gap-1.5 rounded-md px-2 py-1 text-[13px] transition hover:bg-chip";
+
+export function SelectInput({
+  value,
+  onChange,
+  disabled,
+  className = "",
+  id,
+  children,
+  searchable,
+  "aria-label": ariaLabel,
+  variant = "field",
+  icon,
+}: SelectProps) {
   const field = useContext(FieldLabelContext);
   const listId = useId();
   const valueId = useId();
@@ -454,12 +471,17 @@ export function SelectInput({ value, onChange, disabled, className = "", id, chi
         onClick={() => (open ? close() : setOpen(true))}
         onKeyDown={onKeyDown}
         onKeyUp={(event) => (event.key === " " ? event.preventDefault() : null)}
-        className={`${controlBase} control-focus flex w-full items-center justify-between gap-2 text-left ${open ? "control-open" : "hover:border-accent"} disabled:cursor-not-allowed disabled:bg-chip disabled:text-muted disabled:opacity-75 disabled:hover:border-line ${className}`}
+        className={
+          variant === "chip"
+            ? `${chipTrigger} ${className}`
+            : `${controlBase} control-focus flex w-full items-center justify-between gap-2 text-left ${open ? "control-open" : "hover:border-accent"} disabled:cursor-not-allowed disabled:bg-chip disabled:text-muted disabled:opacity-75 disabled:hover:border-line ${className}`
+        }
       >
+        {icon}
         <span id={valueId} className="min-w-0 truncate">
           {shown?.label ?? ""}
         </span>
-        <Chevron open={open} />
+        {variant === "chip" ? null : <Chevron open={open} />}
       </button>
       {open ? (
         <Panel

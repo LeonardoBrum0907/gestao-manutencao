@@ -11,7 +11,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("gestor@local");
   const [password, setPassword] = useState("");
 
-  if (session.data) return <Navigate to="/captura" replace />;
+  if (session.data) return <Navigate to="/entrada" replace />;
 
   function submit(event: FormEvent) {
     event.preventDefault();

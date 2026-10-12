@@ -123,6 +123,8 @@ export function noteOcorrencia(input: OcorrenciaInput, occurredAt: Date): Proble
     lineId: null,
     lineLabel: null,
     line: text(input.line, "Informe a linha."),
+    machineId: null,
+    subassemblyId: null,
     notes: null,
     dayNumber: null,
     openedAt: null,

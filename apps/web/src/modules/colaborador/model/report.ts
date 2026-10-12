@@ -19,7 +19,7 @@ export const REPORT_SECTIONS = [
   { key: "comportamento", label: "Comportamento", technicianOnly: false },
   { key: "desempenho", label: "Avaliação de desempenho", technicianOnly: true },
   { key: "matriz", label: "Matriz de competências", technicianOnly: true },
-  { key: "pdi", label: "PDI e feedback", technicianOnly: false },
+  { key: "pdi", label: "PDI", technicianOnly: false },
 ] as const;
 
 export type ReportSectionKey = (typeof REPORT_SECTIONS)[number]["key"];

@@ -71,10 +71,10 @@ export function DashboardPage() {
       {data ? (
         <div className="flex flex-col gap-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <CountLink to="/acompanhamento?status=open" label="Abertas" count={data.openCount} />
-            <CountLink to="/acompanhamento?due=overdue" label="Vencidas" count={data.overdueCount} tone="danger" />
-            <CountLink to="/acompanhamento?due=today" label="Vencem hoje" count={data.dueTodayCount} tone="today" />
-            <CountLink to="/acompanhamento?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
+            <CountLink to="/registros?status=open" label="Abertas" count={data.openCount} />
+            <CountLink to="/registros?due=overdue" label="Vencidas" count={data.overdueCount} tone="danger" />
+            <CountLink to="/registros?due=today" label="Vencem hoje" count={data.dueTodayCount} tone="today" />
+            <CountLink to="/registros?status=done" label="Concluídas" count={data.doneCount} tone="quiet" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <CountLink to="/configuracoes/fabricas" label="Linhas" count={data.lineCount} />

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
 import { captureRecord } from "./capture";
-import { applyProblemSheet, applyTaskSheet } from "./sheets";
+import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "./sheets";
 
 const when = new Date("2026-09-30T12:00:00.000Z");
 
@@ -23,10 +23,28 @@ describe("ficha", () => {
           memberId: null,
           lineId: "maq",
           lineLabel: "outra linha",
+          machineId: null,
+          subassemblyId: null,
           notes: null,
         }),
       (error: unknown) => error instanceof DomainError && error.code === "line_conflict",
     );
+  });
+
+  it("problema guarda máquina e subconjunto da ficha", () => {
+    const problem = captureRecord({ type: "problem", body: "Vazamento", occurredAt: when, memberId: null, tone: null });
+    const next = applyProblemSheet(problem, {
+      body: "Vazamento no cilindro",
+      occurredAt: when,
+      memberId: null,
+      lineId: "med-03",
+      lineLabel: null,
+      machineId: "encartuchadeira",
+      subassemblyId: "valvulas",
+      notes: null,
+    });
+    assert.equal(next.machineId, "encartuchadeira");
+    assert.equal(next.subassemblyId, "valvulas");
   });
 
   it("tarefa guarda prazo e prioridade sem anexo na captura", () => {
@@ -54,5 +72,19 @@ describe("ficha", () => {
     assert.equal(next.dueAt, due);
     assert.equal(next.status, "in_progress");
     assert.equal(next.tag, "TAG-1");
+  });
+
+  it("feedback guarda a observação", () => {
+    const feedback = captureRecord({ type: "feedback", body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive" });
+    const next = applyFeedbackSheet(feedback, { body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive", notes: "na reunião de segunda" });
+    assert.equal(next.notes, "na reunião de segunda");
+  });
+
+  it("rascunho da Entrada guarda texto e descrição e nada mais", () => {
+    const entry = { ...captureRecord({ type: "entry", body: "Ver vazamento", occurredAt: when, memberId: null, tone: null }), priority: "high" as const };
+    const next = applyEntrySheet(entry, { body: "Ver vazamento na MED 03", occurredAt: when, notes: "perto da esteira" });
+    assert.equal(next.body, "Ver vazamento na MED 03");
+    assert.equal(next.notes, "perto da esteira");
+    assert.equal(next.priority, null);
   });
 });

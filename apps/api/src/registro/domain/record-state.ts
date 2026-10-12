@@ -27,6 +27,8 @@ export type RecordState = {
   closedAt: Date | null;
   durationMin: number | null;
   memberIds: string[];
+  machineId: string | null;
+  subassemblyId: string | null;
 };
 
 export type CaptureInput = {
@@ -55,6 +57,7 @@ export type FeedbackSheetInput = {
   occurredAt: Date;
   memberId: string | null;
   tone: FeedbackTone | null;
+  notes: string | null;
 };
 
 export type ProblemSheetInput = {
@@ -63,5 +66,13 @@ export type ProblemSheetInput = {
   memberId: string | null;
   lineId: string | null;
   lineLabel: string | null;
+  machineId: string | null;
+  subassemblyId: string | null;
+  notes: string | null;
+};
+
+export type EntrySheetInput = {
+  body: string;
+  occurredAt: Date;
   notes: string | null;
 };

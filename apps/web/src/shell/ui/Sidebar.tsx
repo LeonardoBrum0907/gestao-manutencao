@@ -12,7 +12,7 @@ const groups: { title?: string; items: Entry[] }[] = [
   {
     items: [
       { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-      { to: "/acompanhamento", label: "Pendências", icon: "list" },
+      { to: "/registros", label: "Registros", icon: "list" },
     ],
   },
   {
@@ -77,13 +77,13 @@ export function Sidebar({
           <p className="text-[15px] font-semibold leading-tight">Gestão de Manutenção</p>
         </div>
         <NavLink
-          to="/captura"
+          to="/entrada"
           state={MENU_STATE}
           onClick={onClose}
           className="mt-4 flex items-center justify-center gap-2 rounded-control bg-accent px-3 py-2.5 text-sm font-semibold text-accent-contrast transition hover:brightness-90"
         >
-          <Icon name="plus" />
-          Registrar
+          <Icon name="inbox" />
+          Entrada
         </NavLink>
         <nav aria-label="Menu" className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
           {groups.map((group, index) => (
@@ -96,7 +96,7 @@ export function Sidebar({
                   <NavLink key={item.to} to={item.to} state={MENU_STATE} onClick={onClose} className={itemClass}>
                     <Icon name={item.icon} />
                     {item.label}
-                    {item.to === "/acompanhamento" ? <OverdueBadge /> : null}
+                    {item.to === "/registros" ? <OverdueBadge /> : null}
                   </NavLink>
                 ))}
               </div>

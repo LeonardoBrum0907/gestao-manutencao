@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { RpDraftDto, RpDto, RpDuplicateDto, RpMemberSummaryDto, RpPageDto } from "@manutencao/shared";
+import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
@@ -37,7 +38,7 @@ export class Rps {
 
   async create(body: unknown): Promise<RpDto> {
     const input = parseRp(body);
-    await this.assertRefs(input);
+    await this.assertRefs(input, null);
     if (input.chamadoId) await this.assertChamado(input.chamadoId);
     const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
     try {
@@ -51,7 +52,7 @@ export class Rps {
   async update(id: string, body: unknown): Promise<RpDto> {
     const current = await this.get(id);
     const input = parseRp(body);
-    await this.assertRefs(input);
+    await this.assertRefs(input, current.subassemblyId);
     let problemId = current.problemRecordId;
     if (problemId) {
       await this.problems.replace(problemId, () => mirrorProblem(input.fields, input.occurredAt));
@@ -109,7 +110,7 @@ export class Rps {
     if (state === "taken") throw new DomainError("chamado", 409, "Este chamado já tem RP.");
   }
 
-  private async assertRefs(input: RpInput): Promise<void> {
+  private async assertRefs(input: RpInput, savedSubassemblyId: string | null): Promise<void> {
     const { fields } = input;
     if (!(await this.refs.factoryExists(fields.factoryId))) {
       throw new DomainError("factory", 400, "Fábrica não encontrada.");
@@ -120,6 +121,7 @@ export class Rps {
     if (!(await this.refs.membersExist(fields.memberIds))) {
       throw new DomainError("member", 400, "Colaborador não encontrado.");
     }
+    assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), savedSubassemblyId);
   }
 }
 
@@ -138,6 +140,8 @@ function draft(
     lineId,
     line: report.line,
     tag: report.tag,
+    machineId: null,
+    subassemblyId: null,
     problem: report.problem,
     description: report.description,
     repeatedFailure: report.repeatedFailure,

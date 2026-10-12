@@ -1,4 +1,7 @@
-export const RECORD_TYPES = ["task", "feedback", "problem"] as const;
+import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
+
+// "entry" é o rascunho da Entrada: anotado rápido, vira tarefa, problema ou feedback quando o coordenador revisa.
+export const RECORD_TYPES = ["task", "feedback", "problem", "entry"] as const;
 export type RecordType = (typeof RECORD_TYPES)[number];
 
 export const RECORD_STATUSES = ["open", "in_progress", "done"] as const;
@@ -56,6 +59,7 @@ export const RECORD_TYPE_LABELS: Record<RecordType, { short: string; gestor: str
   task: { short: "Tarefa", gestor: "Pendências do dia a dia" },
   feedback: { short: "Feedback", gestor: "Pessoas" },
   problem: { short: "Problema", gestor: "Pendências Preventivas" },
+  entry: { short: "Entrada", gestor: "Entrada" },
 };
 
 export const RECORD_STATUS_LABELS: Record<RecordStatus, string> = {
@@ -206,6 +210,7 @@ export type MemberRoleDto = {
 export type MemberGradeDto = {
   id: string;
   name: string;
+  expected: GradeExpectedDto;
 };
 
 export type MemberDto = {
@@ -264,6 +269,9 @@ export type RecordDto = {
   closedAt: string | null;
   durationMin: number | null;
   memberIds: string[];
+  // Máquina (chamado, problema) e subconjunto do modelo dela (problema).
+  machineId: string | null;
+  subassemblyId: string | null;
   // Tarefa gerada de um chamado: aponta para ele.
   chamadoId: string | null;
   createdAt: string;
@@ -399,6 +407,54 @@ export type RecordPageDto = {
   nextCursor: string | null;
 };
 
+// Pendências em checklist. Tarefas: grupos por prazo, na ordem da tela.
+export const BOARD_GROUPS = ["overdue", "today", "upcoming", "undated", "done"] as const;
+export type BoardGroup = (typeof BOARD_GROUPS)[number];
+// Grupos que recebem um item arrastado: atrasada e concluída não são destino de arrastar.
+export const BOARD_TARGETS = ["today", "upcoming", "undated"] as const;
+export type BoardTarget = (typeof BOARD_TARGETS)[number];
+
+export function isBoardTarget(value: string): value is BoardTarget {
+  return (BOARD_TARGETS as readonly string[]).includes(value);
+}
+
+export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "occurredAt"> & {
+  group: BoardGroup;
+};
+
+export type BoardDto = {
+  today: string;
+  items: BoardItemDto[];
+};
+
+// Problemas e feedbacks não têm prazo: a tela agrupa como o gestor escolher (linha, situação, colaborador, tom…).
+export type ProblemBoardItemDto = Pick<
+  RecordDto,
+  "id" | "body" | "status" | "origin" | "occurredAt" | "lineId" | "machineId" | "subassemblyId"
+> & {
+  // Linha do cadastro, ou o texto da linha quando o problema veio sem cadastro.
+  lineName: string | null;
+  // Nome da máquina; a tela junta a linha ("MED 03 · Encartuchadeira"), porque o nome se repete entre linhas.
+  machineName: string | null;
+  subassemblyName: string | null;
+  // Problema espelho de RP fecha pelo RP: o círculo leva até ele.
+  rpId: string | null;
+};
+
+export type FeedbackBoardItemDto = Pick<RecordDto, "id" | "body" | "status" | "occurredAt" | "tone" | "memberId"> & {
+  memberName: string | null;
+};
+
+export type ProblemBoardDto = { items: ProblemBoardItemDto[] };
+export type FeedbackBoardDto = { items: FeedbackBoardItemDto[] };
+
+// Mudança feita no checklist: concluir/reabrir, levar para outro grupo e/ou a ordem do grupo de destino.
+export type BoardChangeDto = {
+  status?: RecordStatus;
+  group?: BoardTarget;
+  order?: string[];
+};
+
 export type SessionDto = {
   email: string;
 };
@@ -440,11 +496,11 @@ export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
 export type CompetencyScore = (typeof COMPETENCY_SCORES)[number];
 
 export const COMPETENCY_SCORE_LABELS: Record<CompetencyScore, { label: string; hint: string }> = {
-  0: { label: "Não apto", hint: "Não sabe executar a atividade, falta conhecimento." },
-  1: { label: "Em treinamento", hint: "Conhece a teoria, falta o treinamento prático." },
-  2: { label: "Treinado", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
-  3: { label: "Apto", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
-  4: { label: "Referência no tema", hint: "Consegue ensinar os demais e melhorar o processo." },
+  0: { label: "Sem experiência", hint: "Não sabe executar a atividade, falta conhecimento." },
+  1: { label: "Básico", hint: "Conhece a teoria, falta o treinamento prático." },
+  2: { label: "Intermediário", hint: "Em desenvolvimento, com teoria e prática no nível básico." },
+  3: { label: "Avançado", hint: "Amplo conhecimento teórico e prático, executa bem feito." },
+  4: { label: "Referência", hint: "Consegue ensinar os demais e melhorar o processo." },
 };
 
 export type CompetencyEntryDto = {
@@ -470,6 +526,9 @@ export type CompetencySummaryDto = {
 
 export type MemberMatrixDto = {
   memberId: string;
+  // Grau do colaborador e o esperado padrão que ele dá a cada dificuldade (o "padrão" do esp. na tela).
+  gradeName: string | null;
+  expectedByLevel: Record<CompetencyLevel, number>;
   equipments: string[];
   entries: CompetencyEntryDto[];
   summary: CompetencySummaryDto;
@@ -512,6 +571,9 @@ export type RpFields = {
   lineId: string | null;
   line: string | null;
   tag: string | null;
+  // Máquina da linha cadastrada e subconjunto do modelo dela, se souber.
+  machineId: string | null;
+  subassemblyId: string | null;
   problem: string;
   description: string | null;
   repeatedFailure: boolean;
@@ -560,6 +622,9 @@ export type RpDraftDto = {
   lineId: string | null;
   line: string | null;
   tag: string | null;
+  // O texto do WhatsApp não traz a máquina do cadastro: o gestor escolhe na ficha.
+  machineId: null;
+  subassemblyId: null;
   problem: string;
   description: string | null;
   repeatedFailure: boolean;
