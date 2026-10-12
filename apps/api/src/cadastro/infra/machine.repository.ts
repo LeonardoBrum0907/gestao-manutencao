@@ -55,6 +55,10 @@ export class MachineRepository {
     return this.prisma.postPreventive.count({ where: { machineId: id } });
   }
 
+  countTechCards(id: string) {
+    return this.prisma.techCard.count({ where: { machineId: id } });
+  }
+
   countByLine(lineId: string) {
     return this.prisma.machine.count({ where: { lineId } });
   }

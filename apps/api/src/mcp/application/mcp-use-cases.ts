@@ -13,6 +13,8 @@ import { Teams } from "../../cadastro/application/teams";
 import { MemberMatrix } from "../../competencia/application/member-matrix";
 import { TeamMatrix } from "../../competencia/application/team-matrix";
 import { ShowDashboard } from "../../dashboard/application/show-dashboard";
+import { TechCards } from "../../documentacao/application/tech-cards";
+import { TechDocuments } from "../../documentacao/application/tech-documents";
 import { PostPreventives } from "../../pos-preventiva/application/post-preventives";
 import { Records } from "../../registro/application/records";
 import { RecordsList } from "../../registro/application/records-list";
@@ -41,6 +43,8 @@ export class McpUseCases implements OnModuleInit {
   pdi!: MemberPdi;
   pdiItems!: MemberPdiItems;
   behavior!: MemberBehavior;
+  techCards!: TechCards;
+  techDocuments!: TechDocuments;
 
   constructor(private readonly modules: ModuleRef) {}
 
@@ -64,5 +68,7 @@ export class McpUseCases implements OnModuleInit {
     this.pdi = get(MemberPdi);
     this.pdiItems = get(MemberPdiItems);
     this.behavior = get(MemberBehavior);
+    this.techCards = get(TechCards);
+    this.techDocuments = get(TechDocuments);
   }
 }

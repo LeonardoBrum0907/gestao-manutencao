@@ -21,6 +21,8 @@ function Files({ member, pdi }: { member: MemberDto; pdi: MemberPdiDto }) {
             <a
               className="min-w-0 truncate font-medium text-accent hover:underline focus:underline"
               href={`/api/members/${member.id}/pdi/attachments/${attachment.id}`}
+              target="_blank"
+              rel="noopener"
             >
               {attachment.fileName}
             </a>

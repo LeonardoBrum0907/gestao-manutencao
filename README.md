@@ -39,9 +39,11 @@ Com o banco local vazio, o script tira um dump novo da VPS (o `DATABASE_URL` do 
 
 Parar sem perder dados: `docker compose -f docker-compose.yml -f docker-compose.servidor.yml --profile local-db stop`.
 
+O dump do banco não leva os anexos nem os PDFs da documentação técnica: eles ficam no volume `attachments` (`ATTACHMENT_DIR`, `/data/attachments` no container). Para um backup completo, copie essa pasta junto com o dump, por exemplo `docker compose cp api:/data/attachments backup-local\attachments`.
+
 ### IA (servidor MCP)
 
-A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências e pós-preventivas pelas mesmas regras das telas. São 20 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
+A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências, pós-preventivas e fichas de documentação técnica pelas mesmas regras das telas. São 24 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
 
 No `.env` do servidor:
 

@@ -1,6 +1,7 @@
 import { createReadStream } from "fs";
 import { Body, Controller, Delete, Get, Param, Post, Put, StreamableFile, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { inlineDisposition } from "../../http/file-disposition";
 import { memoryStorage } from "multer";
 import { MemberPdi } from "../application/member-pdi";
 
@@ -29,7 +30,7 @@ export class PdiController {
     const file = await this.pdi.openAttachment(memberId, attachmentId);
     return new StreamableFile(createReadStream(file.path), {
       type: file.mimeType,
-      disposition: `attachment; filename="${encodeURIComponent(file.fileName)}"`,
+      disposition: inlineDisposition(file.fileName),
     });
   }
 
