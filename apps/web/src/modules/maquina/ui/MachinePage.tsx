@@ -9,7 +9,7 @@ import { formatDay } from "../../colaborador/model/pdi-items";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
 import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
-import { AttentionChip } from "../../pos-preventiva/ui/PostPreventiveListPage";
+import { AttentionChip } from "../../pos-preventiva/ui/AttentionChip";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useChamadosOfLine } from "../../turno/data/shift";

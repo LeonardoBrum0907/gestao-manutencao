@@ -5,16 +5,9 @@ import { Icon } from "../../../design/ui/icons";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
 import { formatDay } from "../../colaborador/model/pdi-items";
 import { usePostPreventives, type PostPreventiveFilter } from "../data/post-preventives";
+import { AttentionChip } from "./AttentionChip";
 
 const FILTERS = ["lineId", "machineId", "subassemblyId", "memberId", "active", "from", "to"] as const;
-
-export function AttentionChip({ active }: { active: boolean }) {
-  return active ? (
-    <span className="rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">Ponto ativo</span>
-  ) : (
-    <span className="rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted">Ponto desligado</span>
-  );
-}
 
 export function PostPreventiveListPage() {
   const navigate = useNavigate();
