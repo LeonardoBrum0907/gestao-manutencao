@@ -39,7 +39,6 @@ function MatrixCell({ member, column, team, view }: CellProps) {
   const tone = cellTone(cell.adherence, cell.scored, team.qualifiedAdherence, view);
   // Na escala o que importa é quem está qualificado: o resto fica sem cor, para o ✓ saltar aos olhos.
   const color = view === "schedule" ? (tone === "qualified" ? "text-accent font-bold" : "text-muted") : toneClass[tone];
-  const faded = view === "training" && tone === "qualified" ? "opacity-60" : "";
   const label = `${member.name} em ${column.label}: ${cell.adherence === null ? "sem nota" : `${cell.adherence}%`}, ${stackTitle(cell)}`;
   return (
     <td className="border-t border-line px-1 py-1 text-center">
@@ -47,7 +46,7 @@ function MatrixCell({ member, column, team, view }: CellProps) {
         to={`/cadastro/colaboradores/${member.id}/matriz?equipamento=${encodeURIComponent(column.equipmentId)}`}
         aria-label={label}
         title={stackTitle(cell)}
-        className={`flex min-h-9 flex-col items-center justify-center gap-1.5 rounded-control px-2 py-1.5 text-sm font-semibold tabular-nums transition hover:ring-2 hover:ring-inset hover:ring-accent ${color} ${faded}`}
+        className={`flex min-h-9 flex-col items-center justify-center gap-1.5 rounded-control px-2 py-1.5 text-sm font-semibold tabular-nums transition hover:ring-2 hover:ring-inset hover:ring-accent ${color}`}
       >
         <CellContent cell={cell} tone={tone} view={view} />
       </Link>

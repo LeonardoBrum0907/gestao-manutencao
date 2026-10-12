@@ -6,22 +6,30 @@ export function stackTitle({ above, exact, below, applicable }: StackCounts): st
   return `${above} acima, ${exact} igual, ${below} abaixo do esperado, ${unscored} sem nota`;
 }
 
+const stackParts = [
+  { key: "above", fill: "bg-level-above" },
+  { key: "exact", fill: "bg-level-equal" },
+  { key: "below", fill: "bg-level-below" },
+] as const;
+
+// Pedaços por flex-grow (não por largura em %) para o respiro de 2px entre eles caber sem cortar o último;
+// pedaço vazio não entra, senão sobra um respiro solto. O "sem nota" é o trilho que aparece no fim.
 export function ScoreStack({ counts, className = "w-24" }: { counts: StackCounts; className?: string }) {
-  const total = counts.applicable || 1;
-  const part = (value: number) => ({ width: `${(value / total) * 100}%` });
+  const unscored = Math.max(0, counts.applicable - counts.above - counts.exact - counts.below);
+  const parts = [...stackParts.map((part) => ({ ...part, value: counts[part.key] })), { key: "unscored", fill: "", value: unscored }];
   return (
-    <span className={`flex h-2 shrink-0 overflow-hidden rounded-full bg-chip ${className}`} aria-hidden="true">
-      <span className="h-full bg-accent" style={part(counts.above)} />
-      <span className="h-full bg-equal" style={part(counts.exact)} />
-      <span className="h-full bg-danger" style={part(counts.below)} />
+    <span className={`flex h-2.5 shrink-0 gap-[2px] overflow-hidden rounded-full bg-chip ${className}`} aria-hidden="true">
+      {parts.filter((part) => part.value > 0).map((part) => (
+        <span key={part.key} className={`h-full ${part.fill}`} style={{ flex: `${part.value} 1 0` }} />
+      ))}
     </span>
   );
 }
 
 const legend = [
-  { key: "above", label: "acima", dot: "bg-accent" },
-  { key: "exact", label: "igual", dot: "bg-equal" },
-  { key: "below", label: "abaixo", dot: "bg-danger" },
+  { key: "above", label: "acima", dot: "bg-level-above" },
+  { key: "exact", label: "igual", dot: "bg-level-equal" },
+  { key: "below", label: "abaixo", dot: "bg-level-below" },
 ] as const;
 
 // Legenda das cores; com counts, mostra também quantas de cada.

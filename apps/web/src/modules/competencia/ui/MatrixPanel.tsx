@@ -66,9 +66,9 @@ const scoreButton = "relative grid h-8 w-8 shrink-0 place-items-center rounded-l
 
 // Nota escolhida, na cor do resultado; o esperado tem borda tracejada.
 function scoreTone(state: SkillState, picked: boolean, expected: boolean): string {
-  if (picked && state === "above") return "border-accent bg-accent text-accent-contrast";
-  if (picked && state === "equal") return "border-equal bg-equal text-equal-contrast";
-  if (picked && state === "below") return "border-danger bg-danger text-canvas";
+  if (picked && state === "above") return "border-level-above bg-level-above text-level-ink";
+  if (picked && state === "equal") return "border-level-equal bg-level-equal text-level-ink";
+  if (picked && state === "below") return "border-level-below bg-level-below text-level-ink";
   if (expected) return "border-2 border-dashed border-muted bg-surface text-app hover:bg-chip";
   return "border-line bg-surface text-muted hover:bg-chip hover:text-app";
 }
