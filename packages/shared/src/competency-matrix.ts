@@ -1,3 +1,4 @@
+import type { TeamLineDto, TeamMatrixLayoutDto } from "./team-matrix-layout";
 export const COMPETENCY_MATRIX_TITLE = "Check List de Conhecimento Específico Mecânico por Equipamento";
 
 // O catálogo (equipamentos e habilidades) é cadastro do coordenador e mora no banco.
@@ -92,6 +93,9 @@ export type TeamMemberDto = {
   name: string;
   shift: string;
   teamId: string | null;
+  // Para agrupar a Matriz da equipe por grau e por equipe; vazio quando o técnico não tem.
+  gradeName: string | null;
+  teamName: string | null;
   // Itens do PDI em aberto com prazo vencido.
   pdiOverdue: number;
   // Só os equipamentos marcados na matriz do técnico.
@@ -104,4 +108,7 @@ export type TeamMatrixDto = {
   qualifiedAdherence: number;
   equipments: TeamEquipmentDto[];
   members: TeamMemberDto[];
+  // Linhas cadastradas, para as colunas seguirem as linhas e máquinas do cadastro.
+  lines: TeamLineDto[];
+  layout: TeamMatrixLayoutDto;
 };
