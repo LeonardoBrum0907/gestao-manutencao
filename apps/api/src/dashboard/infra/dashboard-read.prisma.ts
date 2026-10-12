@@ -27,11 +27,13 @@ export class DashboardRead {
 
   async load(now: Date): Promise<DashboardSnapshot> {
     const notDone = { status: { not: "done" } } as const;
+    // Rascunho da Entrada ainda não é pendência: só conta depois de virar tarefa, problema ou feedback.
+    const reviewed = { type: { not: "entry" } } as const;
     const [openCount, overdueCount, dueTodayCount, doneCount, recent, lines, members, byLine, byMember] = await Promise.all([
-      this.prisma.record.count({ where: { status: "open", ...notChamado } }),
+      this.prisma.record.count({ where: { status: "open", ...notChamado, ...reviewed } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("overdue", now) } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("today", now) } }),
-      this.prisma.record.count({ where: { status: "done", ...notChamado } }),
+      this.prisma.record.count({ where: { status: "done", ...notChamado, ...reviewed } }),
       this.prisma.record.findMany({
         where: notChamado,
         select: { id: true, type: true, body: true, occurredAt: true, status: true },

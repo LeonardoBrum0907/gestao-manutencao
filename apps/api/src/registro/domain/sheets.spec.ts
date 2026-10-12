@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
 import { captureRecord } from "./capture";
-import { applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "./sheets";
+import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "./sheets";
 
 const when = new Date("2026-09-30T12:00:00.000Z");
 
@@ -78,5 +78,13 @@ describe("ficha", () => {
     const feedback = captureRecord({ type: "feedback", body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive" });
     const next = applyFeedbackSheet(feedback, { body: "Elogiar", occurredAt: when, memberId: "tec", tone: "positive", notes: "na reunião de segunda" });
     assert.equal(next.notes, "na reunião de segunda");
+  });
+
+  it("rascunho da Entrada guarda texto e descrição e nada mais", () => {
+    const entry = { ...captureRecord({ type: "entry", body: "Ver vazamento", occurredAt: when, memberId: null, tone: null }), priority: "high" as const };
+    const next = applyEntrySheet(entry, { body: "Ver vazamento na MED 03", occurredAt: when, notes: "perto da esteira" });
+    assert.equal(next.body, "Ver vazamento na MED 03");
+    assert.equal(next.notes, "perto da esteira");
+    assert.equal(next.priority, null);
   });
 });

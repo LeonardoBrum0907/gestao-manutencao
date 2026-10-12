@@ -28,10 +28,16 @@ function RpMirror({ recordId }: { recordId: string }) {
   );
 }
 
-const tabOf: Record<RecordType, string> = { task: "", problem: "tab=problemas&", feedback: "tab=feedbacks&" };
+// Onde o modal do registro abre: rascunho na Entrada, o resto na aba do tipo em Registros.
+const listOf: Record<RecordType, string> = {
+  entry: "/entrada?",
+  task: "/registros?",
+  problem: "/registros?tab=problemas&",
+  feedback: "/registros?tab=feedbacks&",
+};
 
 function inboxRecordHref(id: string, type: RecordType): string {
-  return `/registros?${tabOf[type]}registro=${id}`;
+  return `${listOf[type]}registro=${id}`;
 }
 
 // Problema de ocorrência ou de RP (o resto abre no modal de Registros ou na tela de Chamados).
@@ -45,7 +51,7 @@ export function RecordSheetPage() {
   const data = record.data;
   // Chamado tem tela própria: abre a lista do dia dele, com o painel aberto.
   if (data.origin === "chamado") return <Navigate to={chamadoHref({ id: data.id, day: dayOf(new Date(data.occurredAt)) })} replace />;
-  // Registro da Entrada abre no modal, por cima da aba do tipo dele em Registros.
+  // Registro lançado pela Entrada abre no modal, por cima da lista do tipo dele.
   if (data.origin === "inbox") return <Navigate to={inboxRecordHref(data.id, data.type)} replace />;
   return (
     <div className="mx-auto max-w-2xl">

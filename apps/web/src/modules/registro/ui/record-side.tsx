@@ -5,7 +5,7 @@ import { Icon } from "../../../design/ui/icons";
 import { useToast } from "../../../design/ui/toast";
 import { useFactories } from "../../cadastro/data/cadastro";
 import { useBoardChange } from "../data/board";
-import { dueAtOf, dueDay } from "../model/board";
+import { dueAtOf, dueDay, todayDay } from "../model/board";
 import { fromLocalInput, recordShortName, statusOptions, toLocalInput } from "../model/record";
 import { retypeBlock } from "../model/record-sheet";
 import { Chip, DueChip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
@@ -26,7 +26,16 @@ function SideRow({ label, children }: { label: string; children: ReactNode }) {
 function TypeRow({ record }: { record: RecordDto }) {
   const save = useRecordSave(record);
   const blocked = retypeBlock(record);
-  if (!blocked) return <TypeChip value={record.type} onChange={(type) => type !== record.type && save({}, type)} />;
+  const chip = <TypeChip value={record.type} onChange={(type) => type !== record.type && save({}, type)} />;
+  if (!blocked && record.type === "entry") {
+    return (
+      <span className="flex flex-col items-start gap-0.5">
+        {chip}
+        <span className="text-xs text-muted">Escolha Tarefa, Problema ou Feedback para levar a Registros.</span>
+      </span>
+    );
+  }
+  if (!blocked) return chip;
   return (
     <span className="flex flex-col gap-0.5 text-[13px]">
       <span className="text-app">{recordShortName(record.type)}</span>
@@ -68,7 +77,7 @@ function FactoryChip({ value, onChange }: { value: string; onChange: (value: str
 
 function TaskRows({ record }: { record: RecordDto }) {
   const save = useRecordSave(record);
-  const today = dueDay(new Date().toISOString());
+  const today = todayDay();
   return (
     <>
       <SideRow label="Prazo">

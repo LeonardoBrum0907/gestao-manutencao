@@ -138,6 +138,7 @@ export function PriorityChip({ value, onChange }: { value: RecordPriority | null
 export function TypeChip({ value, onChange }: { value: RecordType; onChange: (value: RecordType) => void }) {
   return (
     <Chip label="Tipo" value={value} icon={recordTypeIcon[value]} onChange={(next) => onChange(next as RecordType)}>
+      <option value="entry">{recordShortName("entry")}</option>
       <option value="task">{recordShortName("task")}</option>
       <option value="problem">{recordShortName("problem")}</option>
       <option value="feedback">{recordShortName("feedback")}</option>
