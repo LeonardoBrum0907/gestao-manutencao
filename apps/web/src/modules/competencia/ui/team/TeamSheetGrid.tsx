@@ -1,6 +1,7 @@
 import type { TeamMatrixDto, TeamMatrixView, TeamMemberDto } from "@manutencao/shared";
 import type { TeamColumn } from "../../model/team-columns";
 import type { TeamGrid } from "../../model/team-grid";
+import { sheetColumnPages } from "../../model/team-sheet-pages";
 import { cellTone, type CellTone } from "../../model/team-insights";
 import { blockQualified, cellOf, qualifiedCount, type TeamRowBlock } from "../../model/team-rows";
 
@@ -93,28 +94,42 @@ function SheetLegend({ cut, view }: { cut: number; view: TeamMatrixView }) {
 
 export type SheetGridParts = { subtotals: boolean; legend: boolean };
 
-// Grade da folha A4: as mesmas colunas, blocos e técnicos da tela, em tamanho de papel. Legível em preto e branco
-// (qualificado em negrito, perto do corte com contorno tracejado). Subtotais e legenda saem se o gestor pedir.
-export function TeamSheetGrid({ team, grid, view, parts }: { team: TeamMatrixDto; grid: TeamGrid; view: TeamMatrixView; parts: SheetGridParts }) {
+type SheetTableProps = { team: TeamMatrixDto; grid: TeamGrid; view: TeamMatrixView; subtotals: boolean };
+
+function SheetTable({ team, grid, view, subtotals }: SheetTableProps) {
   const width = grid.columns.length + 2;
   return (
+    <table className={`grid-sheet ${grid.columns.length >= MANY_COLUMNS ? "many" : ""}`}>
+      <Head team={team} grid={grid} />
+      <tbody>
+        {grid.rowBlocks.flatMap((block) => [
+          block.label ? (
+            <tr key={`g-${block.label}`} className="group">
+              <td colSpan={width}>
+                {block.label} · {block.members.length}
+              </td>
+            </tr>
+          ) : null,
+          ...block.members.map((member) => <MemberRow key={member.id} member={member} grid={grid} team={team} view={view} />),
+          block.label && subtotals ? <SubtotalRow key={`s-${block.label}`} block={block} grid={grid} cut={team.qualifiedAdherence} /> : null,
+        ])}
+      </tbody>
+    </table>
+  );
+}
+
+// Grade da folha A4: as mesmas colunas, blocos e técnicos da tela, em tamanho de papel. Legível em preto e branco
+// (qualificado em negrito, perto do corte com contorno tracejado). Subtotais e legenda saem se o gestor pedir.
+// Colunas demais para uma folha continuam na folha seguinte, repetindo os técnicos.
+export function TeamSheetGrid({ team, grid, view, parts }: { team: TeamMatrixDto; grid: TeamGrid; view: TeamMatrixView; parts: SheetGridParts }) {
+  const pages = sheetColumnPages(grid.columnBlocks);
+  return (
     <>
-      <table className={`grid-sheet ${grid.columns.length >= MANY_COLUMNS ? "many" : ""}`}>
-        <Head team={team} grid={grid} />
-        <tbody>
-          {grid.rowBlocks.flatMap((block) => [
-            block.label ? (
-              <tr key={`g-${block.label}`} className="group">
-                <td colSpan={width}>
-                  {block.label} · {block.members.length}
-                </td>
-              </tr>
-            ) : null,
-            ...block.members.map((member) => <MemberRow key={member.id} member={member} grid={grid} team={team} view={view} />),
-            block.label && parts.subtotals ? <SubtotalRow key={`s-${block.label}`} block={block} grid={grid} cut={team.qualifiedAdherence} /> : null,
-          ])}
-        </tbody>
-      </table>
+      {pages.map((page, index) => (
+        <div key={index} className={index ? "grid-sheet-page" : undefined}>
+          <SheetTable team={team} grid={{ ...grid, columnBlocks: page, columns: page.flatMap((block) => block.columns) }} view={view} subtotals={parts.subtotals} />
+        </div>
+      ))}
       {parts.legend ? <SheetLegend cut={team.qualifiedAdherence} view={view} /> : null}
     </>
   );

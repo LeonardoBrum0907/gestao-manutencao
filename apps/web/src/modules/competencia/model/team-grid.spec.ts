@@ -4,7 +4,7 @@ import { DEFAULT_TEAM_MATRIX_LAYOUT } from "@manutencao/shared";
 import { teamFixture } from "./team-fixture";
 import { canDragColumns, teamGrid, type TeamGridState } from "./team-grid";
 
-const base: TeamGridState = { layout: DEFAULT_TEAM_MATRIX_LAYOUT, shift: "", focus: null, lineIds: [], sort: { key: "name", dir: 1 } };
+const base: TeamGridState = { layout: DEFAULT_TEAM_MATRIX_LAYOUT, shift: "", focus: null, lineIds: [], memberIds: [], sort: { key: "name", dir: 1 } };
 
 describe("grade da Matriz da equipe", () => {
   it("filtra técnicos pelo turno e por PDI atrasado", () => {
@@ -12,6 +12,14 @@ describe("grade da Matriz da equipe", () => {
     const late = teamGrid(teamFixture(), { ...base, focus: "pdi" });
     assert.deepEqual(late.rowBlocks.flatMap((block) => block.members.map((member) => member.name)), ["Ana"]);
     assert.equal(late.columns.length, 4);
+  });
+
+  it("com técnicos escolhidos mostra só eles, ainda filtrados pelo turno", () => {
+    const team = teamFixture();
+    const [bia, ana] = team.members;
+    const chosen = teamGrid(team, { ...base, memberIds: [bia.id, ana.id] });
+    assert.deepEqual(chosen.rowBlocks.flatMap((block) => block.members.map((member) => member.name)), ["Ana", "Bia"]);
+    assert.equal(teamGrid(team, { ...base, memberIds: [bia.id, ana.id], shift: "first" }).memberCount, 1);
   });
 
   it("número do topo de cobertura filtra as colunas pelo status do modelo", () => {

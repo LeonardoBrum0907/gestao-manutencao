@@ -12,7 +12,7 @@ import {
   type TeamRowGroup,
 } from "@manutencao/shared";
 import type { ReactNode } from "react";
-import { Field, MultiSelect, SelectInput } from "../../../../design/ui/controls";
+import { Field, MultiSelect, SelectInput, type MultiOption } from "../../../../design/ui/controls";
 import type { TeamControls } from "./use-team-controls";
 
 function ViewSwitch({ controls }: { controls: TeamControls }) {
@@ -45,7 +45,12 @@ function Slot({ width, children }: { width: string; children: ReactNode }) {
   return <div className={`min-w-0 ${width}`}>{children}</div>;
 }
 
-// Barra da grade: visão, agrupamentos (salvos no sistema), turno e linhas (filtros da tela) e exportar.
+// Em ordem alfabética para achar o nome na lista, seja qual for a ordem da grade.
+function memberOptions(team: TeamMatrixDto): MultiOption[] {
+  return team.members.map((member) => ({ value: member.id, label: member.name })).sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+}
+
+// Barra da grade: visão, agrupamentos (salvos no sistema), turno, técnicos e linhas (filtros da tela) e exportar.
 export function TeamToolbar({ team, controls, exportButtons }: { team: TeamMatrixDto; controls: TeamControls; exportButtons: ReactNode }) {
   const { layout } = controls;
   const lineOptions = team.lines.map((line) => ({ value: line.id, label: line.name }));
@@ -85,6 +90,9 @@ export function TeamToolbar({ team, controls, exportButtons }: { team: TeamMatri
             ))}
           </SelectInput>
         </Field>
+      </Slot>
+      <Slot width="w-full sm:w-64">
+        <MultiSelect label="Técnicos" placeholder="Todos" options={memberOptions(team)} value={[...controls.memberIds]} onChange={(memberIds) => controls.setSearch({ memberIds })} />
       </Slot>
       {layout.columnGroup === "line" && lineOptions.length > 1 ? (
         <Slot width="w-full sm:w-64">

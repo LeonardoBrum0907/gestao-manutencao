@@ -3,9 +3,13 @@ import { viewPreset, type TeamFocus } from "./team-insights";
 import type { TeamSort, TeamSortKey } from "./team-rows";
 
 // Filtros da tela que não ficam salvos vão no endereço: voltar para a tela os mantém e a folha A4 abre igual.
-export type TeamSearchState = { shift: string; focus: TeamFocus | null; lineIds: string[]; sort: TeamSort };
+export type TeamSearchState = { shift: string; focus: TeamFocus | null; lineIds: string[]; memberIds: string[]; sort: TeamSort };
 
 const FOCUSES: readonly TeamFocus[] = ["none", "short", "single", "pdi"];
+
+function readList(search: URLSearchParams, name: string): string[] {
+  return (search.get(name) ?? "").split(",").filter(Boolean);
+}
 
 function readSortKey(value: string | null): TeamSortKey | null {
   if (value === "name" || value === "count") return value;
@@ -22,20 +26,22 @@ export function readTeamSearch(search: URLSearchParams, view: TeamMatrixView): T
   return {
     shift: search.get("turno") ?? "",
     focus: FOCUSES.includes(focus as TeamFocus) ? (focus as TeamFocus) : null,
-    lineIds: (search.get("linhas") ?? "").split(",").filter(Boolean),
+    lineIds: readList(search, "linhas"),
+    memberIds: readList(search, "tecnicos"),
     sort: key ? { key, dir: search.get("sentido") === "desc" ? -1 : 1 } : viewPreset(view).sort,
   };
 }
 
 /**
  * Grava os filtros no endereço, deixando de fora o que está vazio.
- * @example writeTeamSearch({ shift: "first", focus: null, lineIds: [], sort: { key: "name", dir: 1 } }).toString() // "turno=first&ordem=name&sentido=asc"
+ * @example writeTeamSearch({ shift: "first", focus: null, lineIds: [], memberIds: [], sort: { key: "name", dir: 1 } }).toString() // "turno=first&ordem=name&sentido=asc"
  */
 export function writeTeamSearch(state: TeamSearchState): URLSearchParams {
   const search = new URLSearchParams();
   if (state.shift) search.set("turno", state.shift);
   if (state.focus) search.set("foco", state.focus);
   if (state.lineIds.length) search.set("linhas", state.lineIds.join(","));
+  if (state.memberIds.length) search.set("tecnicos", state.memberIds.join(","));
   search.set("ordem", state.sort.key);
   search.set("sentido", state.sort.dir === -1 ? "desc" : "asc");
   return search;

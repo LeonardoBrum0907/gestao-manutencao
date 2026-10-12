@@ -7,7 +7,7 @@ import { teamMatrixTab, teamTrainingTab } from "./team-sheet";
 
 describe("planilha da Matriz da equipe", () => {
   const team = teamFixture();
-  const grid = teamGrid(team, { layout: DEFAULT_TEAM_MATRIX_LAYOUT, shift: "", focus: null, lineIds: [], sort: { key: "name", dir: 1 } });
+  const grid = teamGrid(team, { layout: DEFAULT_TEAM_MATRIX_LAYOUT, shift: "", focus: null, lineIds: [], memberIds: [], sort: { key: "name", dir: 1 } });
   const tab = teamMatrixTab(team, grid, "training", "12/10/2026");
 
   it("repete a grade da tela: linhas em cima, máquinas, e as mesmas colunas em todas as fileiras", () => {

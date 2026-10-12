@@ -26,4 +26,6 @@
 .team-sheet tr.group td { background: var(--group-bg) !important; text-align: left; font-weight: 700; border-top: 1.5px solid var(--text); }
 .team-sheet tr.subtotal td { background: var(--chip-bg) !important; font-weight: 600; color: var(--muted); }
 .team-sheet tr.subtotal td.zero { color: var(--danger); }
+/* Continuação das colunas: começa em folha nova e, na tela, separa da tabela anterior. */
+.team-sheet .grid-sheet-page { break-before: page; margin-top: 14px; }
 .team-sheet .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 9.5px; color: var(--muted); }
