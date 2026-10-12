@@ -75,7 +75,7 @@ export function MachineFields({
   const subassemblies = useSubassemblies();
   const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === lineId);
   const machine = machines.data?.find((item) => item.id === machineId);
-  const choices = subassemblyChoices(subassemblies.data ?? [], machine?.equipmentId ?? null, savedSubassemblyId);
+  const choices = subassemblyChoices(subassemblies.data ?? [], machine, savedSubassemblyId);
 
   return (
     <>

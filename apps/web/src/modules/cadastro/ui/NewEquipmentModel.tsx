@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { errorMessage } from "../../../app/http";
-import { Button, Notice, TextInput } from "../../../design/ui/controls";
+import { InlineCreate } from "../../../design/ui/inline-create";
 import { useSaveEquipment } from "../../competencia/data/catalog";
 
 /**
@@ -10,54 +8,14 @@ import { useSaveEquipment } from "../../competencia/data/catalog";
  */
 export function NewEquipmentModel({ onCreated }: { onCreated: (id: string) => void }) {
   const save = useSaveEquipment();
-  const [name, setName] = useState("");
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <button type="button" className="self-start text-sm font-semibold text-accent hover:underline" onClick={() => setOpen(true)}>
-        + Novo modelo
-      </button>
-    );
-  }
-
-  function create() {
-    save.mutate(
-      { name, archived: false },
-      {
-        onSuccess: (equipment) => {
-          onCreated(equipment.id);
-          setName("");
-          setOpen(false);
-        },
-      },
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <TextInput
-          autoFocus
-          aria-label="Nome do novo modelo"
-          value={name}
-          placeholder="Ex.: Balança OCS"
-          onChange={(event) => setName(event.target.value)}
-          // Enter aqui cria o modelo; sem isso enviaria o formulário da máquina.
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") return;
-            event.preventDefault();
-            create();
-          }}
-        />
-        <Button tone="ghost" disabled={save.isPending} onClick={create}>
-          Criar
-        </Button>
-        <Button tone="ghost" onClick={() => setOpen(false)}>
-          Cancelar
-        </Button>
-      </div>
-      {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-    </div>
+    <InlineCreate
+      label="+ Novo modelo"
+      inputLabel="Nome do novo modelo"
+      placeholder="Ex.: Balança OCS"
+      pending={save.isPending}
+      error={save.error}
+      onCreate={async (name) => onCreated((await save.mutateAsync({ name, archived: false })).id)}
+    />
   );
 }

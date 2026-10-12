@@ -5,6 +5,7 @@ import type { PostPreventiveDto } from "@manutencao/shared";
 import { Button, Card, Notice, PageTitle, SectionTitle } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
 import { useFactories, useLines, useMachines, useSubassemblies } from "../../cadastro/data/cadastro";
+import { useEquipmentVersions } from "../../cadastro/data/machine-parts";
 import { machineStatusClass, machineStatusLabel } from "../../cadastro/model/labels";
 import { MachineFormModal } from "../../cadastro/ui/MachineFormModal";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
@@ -80,6 +81,7 @@ export function MachinePage() {
   const factories = useFactories();
   const subassemblies = useSubassemblies();
   const catalog = useMatrixCatalog();
+  const versions = useEquipmentVersions();
   const records = usePostPreventives({ machineId: id });
   const [editing, setEditing] = useState(false);
 
@@ -90,6 +92,7 @@ export function MachinePage() {
 
   const factory = factories.data?.find((item) => item.id === line.factoryId);
   const model = catalog.data?.equipments.find((item) => item.id === machine.equipmentId);
+  const version = versions.data?.find((item) => item.id === machine.versionId);
   const items = records.data ?? [];
   const active = groupBySubassembly(
     items.filter((item) => item.attentionActive),
@@ -101,7 +104,7 @@ export function MachinePage() {
   const activeRows = active.flatMap((group) => group.items.map(toRow));
   const historyRows = items.map(toRow);
   const facts = [
-    model ? `Modelo ${model.name}` : "Sem modelo de equipamento",
+    model ? `Modelo ${model.name}${version ? ` · versão ${version.name}` : ""}` : "Sem modelo de equipamento",
     machine.tag ? `TAG ${machine.tag}` : null,
     machine.manufacturer,
   ].filter(Boolean);
@@ -177,7 +180,7 @@ export function MachinePage() {
           </Card>
         </div>
         <div className="flex flex-col gap-4 self-start">
-        <MachineSubassembliesCard machine={machine} model={model} subassemblies={subassemblies.data ?? []} onEdit={() => setEditing(true)} />
+        <MachineSubassembliesCard machine={machine} model={model} version={version} subassemblies={subassemblies.data ?? []} onEdit={() => setEditing(true)} />
         <MachineDocsCard machine={machine} />
         <Card>
           <SectionTitle
