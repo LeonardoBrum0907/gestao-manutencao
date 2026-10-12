@@ -1,10 +1,11 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { useFactories, useLines, useMachines } from "../../cadastro/data/cadastro";
-import { machineStatusClass, machineStatusLabel } from "../../cadastro/model/labels";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
+import { MACHINE_COLUMNS, machineStacked, type MachineTableRow } from "./machine-table";
 
 const FILTERS = ["q", "factoryId", "lineId", "points"] as const;
 
@@ -36,7 +37,11 @@ export function MachinesPage() {
   const factoryLines = (lines.data ?? []).filter((line) => !factoryId || line.factoryId === factoryId);
 
   const rows = (machines.data ?? [])
-    .map((machine) => ({ machine, line: lineById.get(machine.lineId) }))
+    .map((machine): MachineTableRow => {
+      const line = lineById.get(machine.lineId);
+      const place = [line ? factoryNames.get(line.factoryId) : null, line?.name].filter(Boolean).join(" · ") || "Sem linha";
+      return { machine, line, place, model: modelNames.get(machine.equipmentId ?? "") ?? null, points: pointCount.get(machine.id) ?? 0 };
+    })
     .filter(({ machine, line }) => {
       if (lineId && machine.lineId !== lineId) return false;
       if (factoryId && line?.factoryId !== factoryId) return false;
@@ -136,41 +141,17 @@ export function MachinesPage() {
         </Card>
       ) : null}
       {rows.length ? (
-        <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
-          <ul>
-            {rows.map(({ machine, line }) => {
-              const count = pointCount.get(machine.id) ?? 0;
-              const model = machine.equipmentId ? modelNames.get(machine.equipmentId) : null;
-              return (
-                <li key={machine.id} className="border-t border-t-line first:border-t-0">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/maquinas/${machine.id}`)}
-                    className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-accent-soft"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                        {[line ? factoryNames.get(line.factoryId) : null, line?.name].filter(Boolean).join(" · ")}
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-app">{machine.name}</p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {[model ?? "Sem modelo", machine.tag ? `TAG ${machine.tag}` : null].filter(Boolean).join(" · ")}
-                        {machine.status === "stopped" ? (
-                          <span className={machineStatusClass(machine.status)}> · {machineStatusLabel(machine.status)}</span>
-                        ) : null}
-                      </p>
-                    </div>
-                    {count ? (
-                      <span className="shrink-0 rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">
-                        {count} {count === 1 ? "ponto ativo" : "pontos ativos"}
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <DataTable
+          label="Máquinas"
+          rows={rows}
+          rowKey={(row) => row.machine.id}
+          columns={MACHINE_COLUMNS}
+          stacked={machineStacked}
+          groupBy={(row) => ({ key: row.machine.lineId, title: row.place })}
+          defaultSort={{ key: "name", direction: "asc" }}
+          countLabel={(count) => (count === 1 ? "1 máquina" : `${count} máquinas`)}
+          onOpen={(row) => navigate(`/maquinas/${row.machine.id}`)}
+        />
       ) : null}
     </div>
   );

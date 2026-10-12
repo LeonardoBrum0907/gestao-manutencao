@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { MemberDto, MemberPosition } from "@manutencao/shared";
 import { Button, Card, Field, PageTitle, SelectInput } from "../../../design/ui/controls";
-import { Icon } from "../../../design/ui/icons";
-import { RowMenu } from "../../../design/ui/row-menu";
+import { DataTable } from "../../../design/ui/data-table";
 import { useMembers, useTeams } from "../data/cadastro";
-import { memberStatusClass, memberStatusLabel, positionLabel, shiftLabel } from "../model/labels";
-import { teamsOf, teamText } from "../model/team";
+import { teamsOf } from "../model/team";
 import { MemberPanel } from "./MemberPanel";
+import { memberColumns, memberStacked } from "./member-table";
 
 const NO_TEAM = "none";
 
@@ -20,6 +19,7 @@ export function MembersPage() {
   const [positionFilter, setPositionFilter] = useState<MemberPosition | "">("");
   const [teamFilter, setTeamFilter] = useState("");
   const [open, setOpen] = useState<Open>(undefined);
+  const navigate = useNavigate();
 
   const allTeams = teams.data ?? [];
   const visible = members.data?.filter((member) => {
@@ -34,7 +34,7 @@ export function MembersPage() {
       <PageTitle
         eyebrow="Equipe"
         title="Colaboradores"
-        text="Clique numa pessoa para abrir a ficha completa (matriz, PDI e desempenho). O cadastro se edita pelo botão Editar da ficha ou pelo menu ⋯."
+        text="Clique numa pessoa para abrir a ficha completa (matriz, PDI e desempenho) e no título de uma coluna para ordenar. O cadastro se edita pelo botão Editar da ficha ou pelo menu ⋯."
         action={<Button onClick={() => setOpen({ member: null })}>Novo colaborador</Button>}
       />
       {members.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
@@ -63,33 +63,24 @@ export function MembersPage() {
       {members.data?.length === 0 ? <Card>Nenhum colaborador ainda.</Card> : null}
       {members.data?.length && visible?.length === 0 ? <Card>Ninguém com esse filtro.</Card> : null}
       {visible?.length ? (
-        <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-card">
-          {visible.map((member) => (
-            <li key={member.id} className={`flex items-center gap-1 pr-2 ${open?.member?.id === member.id ? "bg-accent-soft" : ""}`}>
-              <Link
-                to={`/cadastro/colaboradores/${member.id}`}
-                className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3 text-left transition hover:bg-accent-soft"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium text-app">{member.name}</span>
-                  <span className="mt-0.5 block text-sm text-muted">
-                    {[positionLabel(member.position), member.roleName, member.gradeName, shiftLabel(member.shift)].filter(Boolean).join(" · ")}
-                  </span>
-                </span>
-                <span className="hidden w-40 shrink-0 truncate text-sm text-app md:block">{teamText(member, allTeams) || "Sem equipe"}</span>
-                <span className={`w-20 shrink-0 text-sm ${memberStatusClass(member.status) || "text-app"}`}>{memberStatusLabel(member.status)}</span>
-                <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
-              </Link>
-              <RowMenu
-                label={`Mais ações de ${member.name}`}
-                items={[
-                  { label: "Editar", onSelect: () => setOpen({ member }) },
-                  { label: "Excluir…", danger: true, onSelect: () => setOpen({ member, removing: true }) },
-                ]}
-              />
-            </li>
-          ))}
-        </ul>
+        <DataTable
+          label="Colaboradores"
+          rows={visible}
+          rowKey={(member) => member.id}
+          columns={memberColumns(allTeams)}
+          stacked={(member) => memberStacked(member, allTeams)}
+          defaultSort={{ key: "name", direction: "asc" }}
+          countLabel={(count) => (count === 1 ? "1 pessoa" : `${count} pessoas`)}
+          selectedKey={open?.member?.id}
+          onOpen={(member) => navigate(`/cadastro/colaboradores/${member.id}`)}
+          menu={(member) => ({
+            label: `Mais ações de ${member.name}`,
+            items: [
+              { label: "Editar", onSelect: () => setOpen({ member }) },
+              { label: "Excluir…", danger: true, onSelect: () => setOpen({ member, removing: true }) },
+            ],
+          })}
+        />
       ) : null}
       {open ? (
         <MemberPanel
