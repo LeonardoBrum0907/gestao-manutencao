@@ -20,7 +20,7 @@ export function recordGestorName(type: RecordType): string {
 }
 
 // Ícone do tipo na Entrada, no modal e na etiqueta de tipo.
-export const recordTypeIcon: Record<RecordType, IconName> = { task: "list", problem: "alert", feedback: "user" };
+export const recordTypeIcon: Record<RecordType, IconName> = { task: "list", problem: "alert", feedback: "user", entry: "inbox" };
 
 export function recordShortName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].short;

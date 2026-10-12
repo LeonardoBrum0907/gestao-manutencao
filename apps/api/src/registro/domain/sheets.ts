@@ -1,5 +1,6 @@
 import { DomainError } from "../../kernel/domain-error";
 import type {
+  EntrySheetInput,
   FeedbackSheetInput,
   ProblemSheetInput,
   RecordState,
@@ -85,5 +86,30 @@ export function applyProblemSheet(state: RecordState, input: ProblemSheetInput):
     line: null,
     priority: null,
     dueAt: null,
+  };
+}
+
+/**
+ * Rascunho da Entrada: só texto, data e descrição; o resto fica para quando virar outro tipo.
+ * Ex.: `applyEntrySheet(entry, { body: "Ver vazamento na MED 03", occurredAt, notes: null })`
+ */
+export function applyEntrySheet(state: RecordState, input: EntrySheetInput): RecordState {
+  assertType(state, "entry");
+  return {
+    ...state,
+    body: requireBody(input.body),
+    occurredAt: input.occurredAt,
+    notes: input.notes,
+    memberId: null,
+    factoryId: null,
+    lineId: null,
+    lineLabel: null,
+    tag: null,
+    line: null,
+    priority: null,
+    tone: null,
+    dueAt: null,
+    machineId: null,
+    subassemblyId: null,
   };
 }
