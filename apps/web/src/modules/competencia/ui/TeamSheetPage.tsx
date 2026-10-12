@@ -9,6 +9,7 @@ import { useTeamMatrix } from "../data/matrix";
 import { teamGrid, type TeamGrid } from "../model/team-grid";
 import { teamKpis, trainingNeeds } from "../model/team-insights";
 import { readTeamSearch } from "../model/team-search";
+import { parseTeamSheetSections, type TeamSheetSection } from "../model/team-sheet-sections";
 import { TeamSheetGrid } from "./team/TeamSheetGrid";
 import "../../../design/ui/report.css";
 import "./team-sheet.css";
@@ -71,6 +72,27 @@ function subtitle(team: TeamMatrixDto, grid: TeamGrid, shift: string): string {
   return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]} · ${shiftText} · ${grid.memberCount} técnico(s) · qualificado com ${team.qualifiedAdherence}% ou mais`;
 }
 
+function SheetBody({ team, grid, sections }: { team: TeamMatrixDto; grid: TeamGrid; sections: readonly TeamSheetSection[] }) {
+  const has = (key: TeamSheetSection) => sections.includes(key);
+  return (
+    <div className="content">
+      {has("numeros") ? <Kpis team={team} /> : null}
+      {has("grade") ? (
+        <>
+          <h2>Grade</h2>
+          <TeamSheetGrid team={team} grid={grid} view={team.layout.view} parts={{ subtotals: has("subtotais"), legend: has("legenda") }} />
+        </>
+      ) : null}
+      {has("treino") ? (
+        <>
+          <h2>Quem treinar primeiro</h2>
+          <Training team={team} />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams }) {
   const state = readTeamSearch(search, team.layout.view);
   const grid = teamGrid(team, { layout: team.layout, ...state });
@@ -89,13 +111,7 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
         </div>
       </header>
       <div className="stripe" />
-      <div className="content">
-        <Kpis team={team} />
-        <h2>Grade</h2>
-        <TeamSheetGrid team={team} grid={grid} view={team.layout.view} />
-        <h2>Quem treinar primeiro</h2>
-        <Training team={team} />
-      </div>
+      <SheetBody team={team} grid={grid} sections={parseTeamSheetSections(search.get("secoes"))} />
       <footer>
         <span>Gestão de Manutenção · Matriz da equipe</span>
         <span>Gerado em {today}</span>
@@ -104,7 +120,8 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
   );
 }
 
-// Folha A4 deitada para a gerência: os números, a grade como está na tela (mesmos filtros, pelo endereço) e quem treinar.
+// Folha A4 deitada para a gerência: os números, a grade como está na tela (mesmos filtros, pelo endereço) e quem treinar,
+// cada parte só se o gestor marcou na janela de exportar (?secoes=).
 export function TeamSheetPage() {
   const [search] = useSearchParams();
   const team = useTeamMatrix();
