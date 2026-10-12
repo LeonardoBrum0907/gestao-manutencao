@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { MachineDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
+import { assertHideable, assertModelChangeAllowed, machineVersion } from "../domain/machine-model";
 import { requireMachineStatus, requireName } from "../domain/names";
 import { LineRepository } from "../infra/line.repository";
 import { MachineRepository } from "../infra/machine.repository";
@@ -45,6 +46,18 @@ export class Machines {
     await this.machines.remove(id);
   }
 
+  /**
+   * Subconjuntos do modelo (ou da versão) que esta máquina não tem. Recebe a lista inteira: { ids: string[] }.
+   * Ex.: PUT /api/machines/m1/hidden-subassemblies { "ids": ["s3"] }
+   */
+  async setHidden(id: string, body: unknown): Promise<MachineDto> {
+    const machine = await this.machines.findDto(id);
+    if (!machine) throw new DomainError("not_found", 404, "Máquina não encontrada.");
+    const ids = readIds(readObject(body).ids);
+    assertHideable(machine, ids, await this.machines.subassemblyScopes(ids));
+    return this.machines.setHidden(id, ids);
+  }
+
   private async write(body: unknown, id: string | null): Promise<MachineDto> {
     const current = id ? await this.machines.find(id) : null;
     if (id && !current) throw new DomainError("not_found", 404, "Máquina não encontrada.");
@@ -55,19 +68,38 @@ export class Machines {
     if (equipmentId && !(await this.subassemblies.equipmentExists(equipmentId))) {
       throw new DomainError("equipment", 400, "Modelo de equipamento não encontrado.");
     }
-    // Os subconjuntos das fichas vêm do modelo: trocar o modelo deixaria fichas apontando para outro equipamento.
-    if (id && current && current.equipmentId !== equipmentId && (await this.machines.countPostPreventives(id))) {
-      throw new DomainError("machine_model_locked", 409, "Esta máquina tem fichas pós-preventiva; o modelo de equipamento não pode mudar.");
-    }
+    const modelChanged = Boolean(current && current.equipmentId !== equipmentId);
+    if (id && current && modelChanged) await this.assertModelCanChange(id, current.equipmentId, equipmentId);
     const input = {
       lineId,
       equipmentId,
+      versionId: await this.versionOf(equipmentId, optionalString(source, "versionId"), current?.versionId ?? null),
       name: requireName(requiredString(source, "name", NAME_MESSAGE), NAME_MESSAGE),
       tag: optionalString(source, "tag"),
       manufacturer: optionalString(source, "manufacturer"),
       status: requireMachineStatus(requiredString(source, "status", "Escolha o status.")),
       notes: optionalString(source, "notes"),
     };
-    return id ? this.machines.update(id, input) : this.machines.create(input);
+    return id ? this.machines.update(id, input, modelChanged) : this.machines.create(input);
   }
+
+  // Os subconjuntos das fichas e os próprios da máquina vêm do modelo: trocar o modelo os deixaria apontando para outro equipamento.
+  private async assertModelCanChange(id: string, currentEquipmentId: string | null, nextEquipmentId: string | null): Promise<void> {
+    if (await this.machines.countPostPreventives(id)) {
+      throw new DomainError("machine_model_locked", 409, "Esta máquina tem fichas pós-preventiva; o modelo de equipamento não pode mudar.");
+    }
+    assertModelChangeAllowed(currentEquipmentId, nextEquipmentId, await this.machines.countOwnSubassemblies(id));
+  }
+
+  private async versionOf(equipmentId: string | null, versionId: string | null, currentVersionId: string | null): Promise<string | null> {
+    const version = versionId ? await this.machines.findVersion(versionId) : null;
+    return machineVersion(equipmentId, versionId, version, currentVersionId);
+  }
+}
+
+function readIds(value: unknown): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+    throw new DomainError("invalid", 400, `Esperava ids como lista de textos (recebido ${JSON.stringify(value)}).`);
+  }
+  return [...new Set(value as string[])];
 }

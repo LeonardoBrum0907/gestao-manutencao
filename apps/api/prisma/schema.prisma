@@ -84,46 +84,89 @@ model Line {
   @@index([factoryId])
 }
 
-// Máquina (equipamento) de uma linha: a Encartuchadeira da CAM 05. O modelo é o equipamento do catálogo da matriz.
+// Máquina (equipamento) de uma linha: a Encartuchadeira da CAM 05. O modelo é o equipamento do catálogo da matriz;
+// a versão (M092, NMX) fica abaixo do modelo, para a matriz dos técnicos não se dividir.
 model Machine {
-  id              String           @id @default(cuid())
-  lineId          String
-  line            Line             @relation(fields: [lineId], references: [id], onDelete: Restrict)
-  equipmentId     String?
-  equipment       MatrixEquipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
-  name            String
-  tag             String?
-  manufacturer    String?
-  status          String
-  notes           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  postPreventives PostPreventive[]
-  chamados        Record[]
-  rps             Rp[]
-  techCards       TechCard[]
+  id                  String                     @id @default(cuid())
+  lineId              String
+  line                Line                       @relation(fields: [lineId], references: [id], onDelete: Restrict)
+  equipmentId         String?
+  equipment           MatrixEquipment?           @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  versionId           String?
+  version             EquipmentVersion?          @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  name                String
+  tag                 String?
+  manufacturer        String?
+  status              String
+  notes               String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  postPreventives     PostPreventive[]
+  chamados            Record[]
+  rps                 Rp[]
+  techCards           TechCard[]
+  ownSubassemblies    Subassembly[]
+  hiddenSubassemblies MachineHiddenSubassembly[]
 
   @@index([lineId])
   @@index([equipmentId])
+  @@index([versionId])
 }
 
-// Subconjunto de um modelo de equipamento (Válvulas roletes da Encartuchadeira CAM). Vale para todas as máquinas do modelo.
+// Versão de um modelo de equipamento (M092 e NMX da Blistadeira Uhlmann). Arquivada sai das listas de escolha.
+model EquipmentVersion {
+  id            String          @id @default(cuid())
+  equipmentId   String
+  equipment     MatrixEquipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  name          String
+  position      Int
+  archived      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  machines      Machine[]
+  subassemblies Subassembly[]
+
+  @@unique([equipmentId, name])
+}
+
+// Subconjunto do modelo (ou da versão) que esta máquina não tem.
+model MachineHiddenSubassembly {
+  machineId     String
+  machine       Machine     @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  subassemblyId String
+  subassembly   Subassembly @relation(fields: [subassemblyId], references: [id], onDelete: Cascade)
+
+  @@id([machineId, subassemblyId])
+  @@index([subassemblyId])
+}
+
+// Subconjunto de um modelo de equipamento (Válvulas roletes da Encartuchadeira CAM). Sem versão nem máquina vale para
+// todas as máquinas do modelo; com versionId, só nas da versão; com machineId, só naquela máquina.
 // Arquivado sai das listas de escolha, mas o que já aponta para ele fica.
+// O nome é único entre os que aparecem juntos numa máquina; a regra fica na aplicação (scopesOverlap).
 model Subassembly {
-  id              String           @id @default(cuid())
+  id              String                     @id @default(cuid())
   equipmentId     String
-  equipment       MatrixEquipment  @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  equipment       MatrixEquipment            @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  versionId       String?
+  version         EquipmentVersion?          @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  // Subconjunto só desta máquina: sai junto com ela.
+  machineId       String?
+  machine         Machine?                   @relation(fields: [machineId], references: [id], onDelete: Cascade)
   name            String
   position        Int
-  archived        Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  archived        Boolean                    @default(false)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
   postPreventives PostPreventive[]
   records         Record[]
   rps             Rp[]
   techCards       TechCard[]
+  hiddenIn        MachineHiddenSubassembly[]
 
-  @@unique([equipmentId, name])
+  @@index([equipmentId])
+  @@index([versionId])
+  @@index([machineId])
 }
 
 model MemberRole {
@@ -325,6 +368,7 @@ model MatrixEquipment {
   members       MemberMatrixEquipment[]
   machines      Machine[]
   subassemblies Subassembly[]
+  versions      EquipmentVersion[]
   techDocuments TechDocument[]
   techCards     TechCard[]
 }
