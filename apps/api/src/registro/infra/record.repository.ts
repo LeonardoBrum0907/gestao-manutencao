@@ -16,6 +16,7 @@ import {
   type RecordDto,
   type RecordListItemDto,
   type RecordPageDto,
+  type RecordStatus,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -24,6 +25,7 @@ import { calendarDay, dueRange } from "../domain/follow-up";
 import type { RecordListFilter } from "../domain/record-list";
 import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
+import { completionStep } from "./record-completion";
 
 const include = {
   attachments: { orderBy: { createdAt: "asc" as const } },
@@ -244,7 +246,7 @@ function sortChecklist<T extends { id: string; status: string; boardPosition: nu
 const boardOrder: Record<BoardGroup, number> = { overdue: 0, today: 1, upcoming: 2, undated: 3, done: 4 };
 
 export type BoardWrite = {
-  status: string | null;
+  status: RecordStatus | null;
   // undefined = prazo não muda; null = sem prazo.
   dueAt: Date | null | undefined;
   order: string[] | null;
@@ -394,6 +396,7 @@ export class RecordRepository {
     if (write.dueAt !== undefined) data.dueAt = write.dueAt;
     const steps: Prisma.PrismaPromise<unknown>[] = [];
     if (Object.keys(data).length > 0) steps.push(this.prisma.record.update({ where: { id }, data }));
+    if (write.status !== null) steps.push(completionStep(this.prisma, id, write.status, new Date()));
     (write.order ?? []).forEach((recordId, index) => {
       steps.push(this.prisma.record.updateMany({ where: { id: recordId }, data: { boardPosition: index } }));
     });
@@ -437,8 +440,9 @@ export class RecordRepository {
   }
 
   async insert(state: RecordState): Promise<RecordDto> {
+    const completedAt = state.status === "done" ? new Date() : null;
     const row = await this.prisma.record.create({
-      data: { ...scalars(state), members: { create: memberRows(state.memberIds) } },
+      data: { ...scalars(state), completedAt, members: { create: memberRows(state.memberIds) } },
       include,
     });
     return toDto(row);
@@ -449,15 +453,18 @@ export class RecordRepository {
   async update(id: string, state: RecordState, previousMemberIds: string[], options: { retyped?: boolean } = {}): Promise<RecordDto> {
     const sameMembers =
       previousMemberIds.length === state.memberIds.length && previousMemberIds.every((memberId, index) => memberId === state.memberIds[index]);
-    const row = await this.prisma.record.update({
-      where: { id },
-      data: {
-        ...scalars(state),
-        ...(options.retyped ? { boardPosition: null } : {}),
-        ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
-      },
-      include,
-    });
+    const [row] = await this.prisma.$transaction([
+      this.prisma.record.update({
+        where: { id },
+        data: {
+          ...scalars(state),
+          ...(options.retyped ? { boardPosition: null } : {}),
+          ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
+        },
+        include,
+      }),
+      completionStep(this.prisma, id, state.status, new Date()),
+    ]);
     return toDto(row);
   }
 

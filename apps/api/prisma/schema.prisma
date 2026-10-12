@@ -403,6 +403,9 @@ model Record {
   rpOfChamado   Rp?                @relation("RpChamado")
   // Ordem no checklist de Pendências, dentro do grupo de prazo; nulo = nunca arrastado.
   boardPosition Float?
+  // Quando foi concluído (tarefa, problema, feedback): alimenta "concluídas por semana" no Dashboard.
+  // Reabrir apaga; concluídos antes de 2026-10-12 ganharam o updatedAt. Chamado usa closedAt.
+  completedAt   DateTime?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
@@ -415,6 +418,7 @@ model Record {
   @@index([machineId])
   @@index([subassemblyId])
   @@index([chamadoId])
+  @@index([completedAt])
 }
 
 model RecordMember {
