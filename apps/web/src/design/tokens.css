@@ -26,6 +26,13 @@
   --equal-contrast: #f4f8fc;
   --equal-soft: #e6eef5;
   --equal-text: #2e4a63;
+  /* Cores dos níveis acima / igual / abaixo do esperado (barrinha, legenda e nota escolhida nas matrizes).
+     Pastel no claro e vivas no escuro, a pedido do Léo: as antigas (accent, equal, danger) eram escuras e da
+     mesma claridade e viravam uma faixa só na barrinha. --level-ink é o texto em cima delas. */
+  --level-above: #5cc08b;
+  --level-equal: #86b4ea;
+  --level-below: #f08c84;
+  --level-ink: #1c2822;
   --chip-bg: #eef3f0;
   /* Títulos de grupo (subconjunto da matriz): faixa e linha mais fortes que chip/border, para separar do conteúdo. */
   --group-bg: #dbe4de;
@@ -65,6 +72,10 @@
   --equal-contrast: #0c1824;
   --equal-soft: #1f2d3a;
   --equal-text: #b3cde4;
+  --level-above: #4cc285;
+  --level-equal: #6fa8e8;
+  --level-below: #f07a70;
+  --level-ink: #0f1713;
   --chip-bg: #24302a;
   --group-bg: #2c3a33;
   --border-strong: #4f6358;
