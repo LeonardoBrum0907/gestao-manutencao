@@ -99,7 +99,7 @@ function RecordModal({ id, onClose }: { id: string; onClose: () => void }) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex h-[92dvh] w-full flex-col overflow-hidden rounded-t-xl border-t border-line bg-card shadow-card focus-visible:outline-none sm:h-[min(46rem,calc(100dvh-3rem))] sm:max-w-4xl sm:rounded-xl sm:border"
+        className="relative z-10 flex h-[92dvh] w-full flex-col overflow-hidden rounded-t-card border-t border-line bg-card shadow-card focus-visible:outline-none sm:h-[min(46rem,calc(100dvh-3rem))] sm:max-w-4xl sm:rounded-xl sm:border"
       >
         <ModalBar record={record.data} titleId={titleId} onRemove={() => setRemoving(true)} />
         {record.data ? <ModalBody record={record.data} /> : null}

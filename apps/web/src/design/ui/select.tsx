@@ -355,7 +355,7 @@ function Panel({
     <div
       ref={panelRef}
       style={{ left: place.left, width: place.width, top: place.top, bottom: place.bottom, maxHeight: place.maxHeight }}
-      className="fixed z-[60] flex flex-col rounded-xl border border-line bg-card shadow-[0_12px_32px_rgb(28_40_34_/_0.14)]"
+      className="fixed z-[60] flex flex-col rounded-card border border-line bg-card shadow-[0_12px_32px_rgb(28_40_34_/_0.14)]"
     >
       {search ? <div className="p-1 pb-0">{search}</div> : null}
       <div className="flex min-h-0 flex-col overflow-y-auto p-1">{children}</div>
