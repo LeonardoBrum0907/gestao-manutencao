@@ -68,8 +68,12 @@ export type TransferCandidateDto = {
   learningFrom: string | null;
 };
 
+export type TransferEquipmentOptionDto = { id: string; name: string };
+
 export type TransferSuggestionDto = {
   teacherId: string;
+  // Equipamentos da matriz de quem ensina, para escolher o foco.
+  teacherEquipments: TransferEquipmentOptionDto[];
   // Equipamentos considerados (os pedidos ou, sem pedido, todos os de quem ensina).
   equipmentIds: string[];
   mastered: number;

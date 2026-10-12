@@ -18,5 +18,7 @@ import { TeamLinesRepository } from "./infra/team-lines.repository";
   imports: [CadastroModule],
   controllers: [MatrixController, MatrixCatalogController, TeamMatrixController, MatrixSettingsController],
   providers: [MatrixRepository, MemberMatrix, CatalogRepository, MatrixCatalog, TeamMatrix, SettingsRepository, MatrixSettings, TeamLinesRepository, TeamLayoutRepository],
+  // O catálogo em memória é um só: o repasse lê o mesmo cache que a matriz limpa ao editar.
+  exports: [CatalogRepository],
 })
 export class CompetenciaModule {}
