@@ -36,6 +36,20 @@ export default {
         "line-strong": "var(--border-strong)",
         overlay: "var(--overlay)",
         chart: "var(--chart-1)",
+        "band-high": "var(--band-high)",
+        "band-good": "var(--band-good)",
+        "band-mid": "var(--band-mid)",
+        "band-low": "var(--band-low)",
+        "band-high-soft": "var(--band-high-soft)",
+        "band-low-soft": "var(--band-low-soft)",
+        "pill-ok": "var(--pill-ok-bg)",
+        "pill-ok-text": "var(--pill-ok-text)",
+        "pill-warn": "var(--pill-warn-bg)",
+        "pill-warn-text": "var(--pill-warn-text)",
+        "pill-bad": "var(--pill-bad-bg)",
+        "pill-bad-text": "var(--pill-bad-text)",
+        "pill-equal": "var(--pill-equal-bg)",
+        "report-good": "var(--report-good-text)",
       },
       borderRadius: {
         card: "var(--radius-card)",
@@ -43,6 +57,7 @@ export default {
       },
       boxShadow: {
         card: "var(--shadow-card)",
+        pop: "var(--shadow-pop)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

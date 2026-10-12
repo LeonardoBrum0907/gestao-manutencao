@@ -15,7 +15,7 @@
 .report .content { padding: 22px 32px 8px; }
 .report .muted { color: var(--muted); }
 .report .hero { display: flex; align-items: center; gap: 18px; padding: 24px 32px 20px; color: var(--accent-contrast); background: linear-gradient(120deg, var(--accent-deep), var(--accent)); }
-.report .stripe { height: 5px; background: linear-gradient(90deg, var(--accent), #84b81f); }
+.report .stripe { height: 5px; background: linear-gradient(90deg, var(--accent), var(--report-stripe-end)); }
 .report .avatar { flex: none; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: var(--accent-contrast); color: var(--accent-deep); font-size: 23px; font-weight: 700; }
 .report .brand { margin: 0 0 4px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.75; }
 .report h1 { margin: 0; font-size: 26px; line-height: 1.1; }
@@ -59,6 +59,7 @@
 .report footer { display: flex; justify-content: space-between; margin-top: 18px; padding: 10px 32px; border-top: 1px solid var(--border); color: var(--muted); font-size: 10.5px; }
 
 @media print {
+  /* Cores fixas aqui de propósito: a margem da página impressa (@page) não herda as variáveis do :root, e o papel é branco. */
   @page { size: A4; margin: 10mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; color: #5e6e64; } }
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   .app-shell, .app-shell > div { display: block !important; height: auto !important; overflow: visible !important; }
