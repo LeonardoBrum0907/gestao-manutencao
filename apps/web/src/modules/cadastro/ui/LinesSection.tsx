@@ -1,13 +1,12 @@
 import { useState } from "react";
 import type { LineDto } from "@manutencao/shared";
 import { Button, Card, SectionTitle } from "../../../design/ui/controls";
-import { Icon } from "../../../design/ui/icons";
+import { DataTable } from "../../../design/ui/data-table";
 import { RemoveDialog } from "../../../design/ui/removal";
-import { RowMenu } from "../../../design/ui/row-menu";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteLine, useFactories, useLines, useMachines } from "../data/cadastro";
-import { machineStatusClass, machineStatusLabel } from "../model/labels";
 import { LinePanel } from "./LinePanel";
+import { LINE_COLUMNS, lineStacked, type LineTableRow } from "./line-table";
 import { MachineFormModal } from "./MachineFormModal";
 
 // undefined: fechado; null: nova; linha: aberta.
@@ -25,6 +24,7 @@ export function LinesSection() {
   const factoryName = new Map(factories.data?.map((factory) => [factory.id, factory.name]));
   const machineCount = new Map<string, number>();
   for (const machine of machines.data ?? []) machineCount.set(machine.lineId, (machineCount.get(machine.lineId) ?? 0) + 1);
+  const rows: LineTableRow[] = (lines.data ?? []).map((line) => ({ line, factory: factoryName.get(line.factoryId) ?? "Fábrica", machines: machineCount.get(line.id) ?? 0 }));
 
   return (
     <div>
@@ -36,41 +36,26 @@ export function LinesSection() {
       {lines.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {lines.data?.length === 0 ? <Card>Nenhuma linha ainda.</Card> : null}
       {lines.data?.length ? (
-        <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-card shadow-card">
-          {lines.data.map((line) => {
-            const count = machineCount.get(line.id) ?? 0;
-            const marks = [line.internalCode ? `TAG ${line.internalCode}` : null, line.isDailyLine ? "Linha de GD" : null, line.isCritical ? "Apadrinhada" : null];
-            return (
-              <li key={line.id} className={`flex items-center gap-1 pr-2 ${open?.line?.id === line.id ? "bg-accent-soft" : ""}`}>
-                <button
-                  type="button"
-                  onClick={() => setOpen({ line })}
-                  className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3 text-left transition hover:bg-accent-soft"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium text-app">{line.name}</span>
-                    <span className="mt-0.5 block text-sm text-muted">
-                      {[factoryName.get(line.factoryId) ?? "Fábrica", ...marks].filter(Boolean).join(" · ")}
-                    </span>
-                  </span>
-                  <span className="hidden w-28 shrink-0 text-sm text-app sm:block">
-                    {count ? `${count} ${count === 1 ? "máquina" : "máquinas"}` : "Sem máquinas"}
-                  </span>
-                  <span className={`hidden w-32 shrink-0 text-sm sm:block ${machineStatusClass(line.status) || "text-app"}`}>{machineStatusLabel(line.status)}</span>
-                  <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
-                </button>
-                <RowMenu
-                  label={`Mais ações de ${line.name}`}
-                  items={[
-                    { label: "Editar", onSelect: () => setOpen({ line }) },
-                    { label: "+ Máquina nesta linha", onSelect: () => setAddingMachineTo(line) },
-                    { label: "Excluir…", danger: true, onSelect: () => setRemoving(line) },
-                  ]}
-                />
-              </li>
-            );
+        <DataTable
+          label="Linhas"
+          rows={rows}
+          rowKey={(row) => row.line.id}
+          columns={LINE_COLUMNS}
+          stacked={lineStacked}
+          groupBy={(row) => ({ key: row.line.factoryId, title: row.factory })}
+          defaultSort={{ key: "name", direction: "asc" }}
+          countLabel={(count) => `${count} ${count === 1 ? "linha" : "linhas"}`}
+          selectedKey={open?.line?.id ?? null}
+          onOpen={(row) => setOpen({ line: row.line })}
+          menu={(row) => ({
+            label: `Mais ações de ${row.line.name}`,
+            items: [
+              { label: "Editar", onSelect: () => setOpen({ line: row.line }) },
+              { label: "+ Máquina nesta linha", onSelect: () => setAddingMachineTo(row.line) },
+              { label: "Excluir…", danger: true, onSelect: () => setRemoving(row.line) },
+            ],
           })}
-        </ul>
+        />
       ) : null}
       {open ? <LinePanel key={open.line?.id ?? "nova"} line={open.line} onClose={() => setOpen(undefined)} /> : null}
       {addingMachineTo ? <MachineFormModal line={addingMachineTo} machine={null} onClose={() => setAddingMachineTo(null)} /> : null}

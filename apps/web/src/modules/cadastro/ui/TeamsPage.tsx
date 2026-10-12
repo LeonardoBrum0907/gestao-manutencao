@@ -1,13 +1,16 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { MemberDto, TeamDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { PanelFooter, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { RowMenu } from "../../../design/ui/row-menu";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteTeam, useMembers, useSaveTeam, useTeamMembership, useTeams, type TeamWrite } from "../data/cadastro";
-import { memberStatusClass, memberStatusLabel, shiftLabel } from "../model/labels";
+import { memberStatusClass, memberStatusLabel } from "../model/labels";
+import { TEAM_MEMBER_COLUMNS, teamMemberStacked } from "./member-table";
 
 const empty: TeamWrite = { name: "", description: "", supervisorId: null };
 
@@ -36,6 +39,15 @@ function TeamCard({
   const supervisor = team.supervisorId ? byId.get(team.supervisorId) : undefined;
   const candidates = members.filter((member) => member.position === "technician" && member.teamId !== team.id);
   const teamName = new Map(teams.map((item) => [item.id, item.name]));
+  const navigate = useNavigate();
+
+  function takeOut(member: MemberDto) {
+    const undo = () => membership.mutate({ teamId: team.id, memberId: member.id, action: "add" });
+    membership.mutate(
+      { teamId: team.id, memberId: member.id, action: "remove" },
+      { onSuccess: () => toast({ text: `${member.name} saiu de ${team.name}.`, action: { label: "Desfazer", run: undo } }) },
+    );
+  }
 
   return (
     <Card>
@@ -66,42 +78,23 @@ function TeamCard({
           ]}
         />
       </div>
-      <ul className="mt-4 flex flex-col">
-        {people.length === 0 ? <li className="text-sm text-muted">Nenhum técnico nesta equipe.</li> : null}
-        {people.map((member) => (
-          <li
-            key={member.id}
-            className="flex items-center justify-between gap-3 border-t border-t-line py-2 first:border-t-0 first:pt-0"
-          >
-            <p className="min-w-0 text-sm text-app">
-              {member.name}
-              <span className="text-muted">
-                {" · "}
-                {[member.roleName, shiftLabel(member.shift)].filter(Boolean).join(" · ")}
-              </span>
-            </p>
-            <Button
-              tone="ghost"
-              className="shrink-0 px-3 py-1.5"
-              disabled={membership.isPending}
-              onClick={() =>
-                membership.mutate(
-                  { teamId: team.id, memberId: member.id, action: "remove" },
-                  {
-                    onSuccess: () =>
-                      toast({
-                        text: `${member.name} saiu de ${team.name}.`,
-                        action: { label: "Desfazer", run: () => membership.mutate({ teamId: team.id, memberId: member.id, action: "add" }) },
-                      }),
-                  },
-                )
-              }
-            >
-              Tirar
-            </Button>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-4 overflow-hidden rounded-card border border-line">
+        {people.length ? (
+          <DataTable
+            plain
+            label={`Técnicos de ${team.name}`}
+            rows={people}
+            rowKey={(member) => member.id}
+            columns={TEAM_MEMBER_COLUMNS}
+            stacked={teamMemberStacked}
+            menu={(member) => ({ label: `Mais ações de ${member.name}`, items: [{ label: "Tirar da equipe", disabled: membership.isPending, onSelect: () => takeOut(member) }] })}
+            defaultSort={{ key: "name", direction: "asc" }}
+            onOpen={(member) => navigate(`/cadastro/colaboradores/${member.id}`)}
+          />
+        ) : (
+          <p className="px-4 py-3 text-sm text-muted">Nenhum técnico nesta equipe.</p>
+        )}
+      </div>
       {candidates.length ? (
         <div className="mt-3 sm:max-w-sm">
           <SelectInput

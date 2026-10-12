@@ -1,16 +1,16 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
-import type { MemberDto, RecordListItemDto, TeamDto } from "@manutencao/shared";
+import { Link, useNavigate } from "react-router-dom";
+import type { MemberDto, TeamDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Notice, Stat } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { memberStatusClass, memberStatusLabel, positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamsOf } from "../../cadastro/model/team";
 import { flattenPages } from "../../registro/data/records";
-import { formatWhen, originLabel, recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
-import { DueMark } from "../../registro/ui/RecordMarks";
 import { useMemberRp } from "../../rp/data/rp";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
+import { RP_COLUMNS, rpStacked, type RpTableRow } from "../../rp/ui/rp-table";
 import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
+import { MEMBER_RECORD_COLUMNS, memberRecordStacked } from "./record-table";
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -57,39 +57,6 @@ function TeamCard({ member, members, teams }: { member: MemberDto; members: Memb
   );
 }
 
-function RecordRow({ record }: { record: RecordListItemDto }) {
-  return (
-    <li>
-      <Link
-        to={`/registros/${record.id}`}
-        className="flex items-start justify-between gap-3 border-t border-t-line px-4 py-3 transition hover:bg-accent-soft"
-      >
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            {recordShortName(record.type)}
-            {record.origin !== "inbox" ? ` · ${originLabel(record.origin)}` : ""}
-          </p>
-          <p className="mt-1 line-clamp-2 text-sm text-app" title={record.body}>
-            {record.body}
-          </p>
-          <p className="mt-1 text-xs text-muted">
-            {formatWhen(record.occurredAt)}
-            {record.type === "task" && record.dueAt ? (
-              <>
-                {" · Prazo "}
-                <DueMark record={record} />
-              </>
-            ) : null}
-          </p>
-        </div>
-        {record.type !== "feedback" ? (
-          <span className={`shrink-0 ${statusChipClass(record.status)}`}>{statusLabel(record.status)}</span>
-        ) : null}
-      </Link>
-    </li>
-  );
-}
-
 function RecordList({
   title,
   total,
@@ -101,6 +68,7 @@ function RecordList({
   query: ReturnType<typeof useMemberRecordList>;
   empty: string;
 }) {
+  const navigate = useNavigate();
   const records = flattenPages(query.data?.pages);
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
@@ -112,11 +80,19 @@ function RecordList({
       {query.isSuccess && records.length === 0 ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">{empty}</p>
       ) : null}
-      <ul>
-        {records.map((record) => (
-          <RecordRow key={record.id} record={record} />
-        ))}
-      </ul>
+      {records.length ? (
+        <div className="border-t border-t-line">
+          <DataTable
+            plain
+            label={title}
+            rows={records}
+            rowKey={(record) => record.id}
+            columns={MEMBER_RECORD_COLUMNS}
+            stacked={memberRecordStacked}
+            onOpen={(record) => navigate(`/registros/${record.id}`)}
+          />
+        </div>
+      ) : null}
       {query.hasNextPage ? (
         <div className="flex justify-center border-t border-t-line px-4 py-3">
           <Button tone="ghost" onClick={() => void query.fetchNextPage()} disabled={query.isFetchingNextPage}>
@@ -128,9 +104,15 @@ function RecordList({
   );
 }
 
+// Os técnicos são a própria pessoa da ficha: a coluna sai.
+const MEMBER_RP_COLUMNS = RP_COLUMNS.filter((column) => column.key !== "technicians");
+const memberRpStacked = (row: RpTableRow) => ({ ...rpStacked(row), meta: null });
+
 function MemberRpList({ memberId }: { memberId: string }) {
   const rps = useMemberRp(memberId);
   const shown = rps.data?.items.length ?? 0;
+  const navigate = useNavigate();
+  const rows: RpTableRow[] = (rps.data?.items ?? []).map((rp) => ({ rp, place: [rp.line, rp.tag].filter((part): part is string => Boolean(part)), technicians: "" }));
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <h2 className="px-4 py-3 text-sm font-semibold text-app">
@@ -141,27 +123,20 @@ function MemberRpList({ memberId }: { memberId: string }) {
       {rps.isSuccess && shown === 0 ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">Nenhum RP com esta pessoa.</p>
       ) : null}
-      <ul>
-        {rps.data?.items.map((rp) => (
-          <li key={rp.id}>
-            <Link
-              to={`/rp/${rp.id}`}
-              className="flex items-start justify-between gap-3 border-t border-t-line px-4 py-3 transition hover:bg-accent-soft"
-            >
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                  {formatRpDay(rp.occurredAt)}
-                  {[rp.line, rp.tag].filter(Boolean).length ? ` · ${[rp.line, rp.tag].filter(Boolean).join(" · ")}` : ""}
-                </p>
-                <p className="mt-1 line-clamp-2 text-sm text-app" title={rp.problem}>
-                  {rp.problem}
-                </p>
-              </div>
-              <span className={`shrink-0 ${rpStatusChipClass(rp.status)}`}>{rpStatusLabel(rp.status)}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {rows.length ? (
+        <div className="border-t border-t-line">
+          <DataTable
+            plain
+            label="RPs"
+            rows={rows}
+            rowKey={(row) => row.rp.id}
+            columns={MEMBER_RP_COLUMNS}
+            stacked={memberRpStacked}
+            defaultSort={{ key: "date", direction: "desc" }}
+            onOpen={(row) => navigate(`/rp/${row.rp.id}`)}
+          />
+        </div>
+      ) : null}
       {rps.data && rps.data.count > rps.data.items.length ? (
         <div className="flex justify-center border-t border-t-line px-4 py-3">
           <Link to={`/rp?memberId=${memberId}`} className="text-sm font-semibold text-accent">

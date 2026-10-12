@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
+import type { PostPreventiveDto } from "@manutencao/shared";
 import { Button, Card, Notice, PageTitle, SectionTitle } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { useFactories, useLines, useMachines, useSubassemblies } from "../../cadastro/data/cadastro";
 import { machineStatusClass, machineStatusLabel } from "../../cadastro/model/labels";
 import { MachineFormModal } from "../../cadastro/ui/MachineFormModal";
-import { formatDay } from "../../colaborador/model/pdi-items";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
 import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
-import { AttentionChip } from "../../pos-preventiva/ui/PostPreventiveListPage";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useChamadosOfLine } from "../../turno/data/shift";
 import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, shortDay } from "../../turno/model/chamado";
+import { ATTENTION_COLUMNS, HISTORY_COLUMNS, attentionStacked, historyStacked, type MachineRecordRow } from "./machine-history-table";
 
 const linkButton =
   "inline-flex items-center justify-center rounded-control px-4 py-2.5 text-sm font-semibold transition";
@@ -93,6 +94,10 @@ export function MachinePage() {
     subassemblies.data ?? [],
   );
   const subassemblyNames = new Map(subassemblies.data?.map((item) => [item.id, item.name]));
+  const toRow = (item: PostPreventiveDto): MachineRecordRow => ({ item, subassembly: subassemblyNames.get(item.subassemblyId) ?? "Subconjunto" });
+  // Os ativos seguem a ordem dos subconjuntos no cadastro do modelo, que é a ordem das faixas.
+  const activeRows = active.flatMap((group) => group.items.map(toRow));
+  const historyRows = items.map(toRow);
   const facts = [
     model ? `Modelo ${model.name}` : "Sem modelo de equipamento",
     machine.tag ? `TAG ${machine.tag}` : null,
@@ -138,46 +143,35 @@ export function MachinePage() {
             <SectionTitle title="Pontos de atenção ativos" text="O que o técnico precisa conferir na próxima preventiva, por subconjunto." />
             {records.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
             {records.isSuccess && !active.length ? <p className="text-sm text-muted">Nenhum ponto de atenção ativo.</p> : null}
-            <div className="flex flex-col gap-4">
-              {active.map((group) => (
-                <div key={group.subassemblyId}>
-                  <h3 className="mb-2 rounded-control bg-accent-soft px-3 py-1.5 text-sm font-semibold text-accent">{group.name}</h3>
-                  <ul className="flex flex-col gap-2">
-                    {group.items.map((item) => (
-                      <li key={item.id} className="px-1">
-                        <Link to={`/pos-preventiva/${item.id}`} className="block text-sm font-medium text-app hover:text-accent">
-                          {item.attentionPoint}
-                        </Link>
-                        <p className="text-xs text-muted">
-                          Preventiva de {formatDay(item.preventiveDate)} · Ocorrência: {item.occurrence}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+            {activeRows.length ? (
+              <DataTable
+                plain
+                label="Pontos de atenção ativos"
+                rows={activeRows}
+                rowKey={(row) => row.item.id}
+                columns={ATTENTION_COLUMNS}
+                stacked={attentionStacked}
+                groupBy={(row) => ({ key: row.item.subassemblyId, title: row.subassembly })}
+                onOpen={(row) => navigate(`/pos-preventiva/${row.item.id}`)}
+              />
+            ) : null}
           </Card>
           <Card>
             <SectionTitle title="Histórico pós-preventiva" text="Todas as fichas desta máquina, da mais recente para a mais antiga." />
             {records.isSuccess && !items.length ? <p className="text-sm text-muted">Nenhuma ficha ainda.</p> : null}
-            <ul className="flex flex-col">
-              {items.map((item) => (
-                <li key={item.id} className="border-t border-t-line first:border-t-0">
-                  <Link to={`/pos-preventiva/${item.id}`} className="flex items-start justify-between gap-3 py-2 transition hover:text-accent">
-                    <span className="min-w-0">
-                      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                        {formatDay(item.preventiveDate)} · {subassemblyNames.get(item.subassemblyId) ?? "Subconjunto"}
-                      </span>
-                      <span className="mt-0.5 line-clamp-2 block text-sm text-app">{item.occurrence}</span>
-                    </span>
-                    <span className="shrink-0">
-                      <AttentionChip active={item.attentionActive} />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {historyRows.length ? (
+              <DataTable
+                plain
+                label="Histórico pós-preventiva"
+                rows={historyRows}
+                rowKey={(row) => row.item.id}
+                columns={HISTORY_COLUMNS}
+                stacked={historyStacked}
+                defaultSort={{ key: "date", direction: "desc" }}
+                countLabel={(count) => `${count} ${count === 1 ? "ficha" : "fichas"}`}
+                onOpen={(row) => navigate(`/pos-preventiva/${row.item.id}`)}
+              />
+            ) : null}
           </Card>
         </div>
         <Card className="self-start">

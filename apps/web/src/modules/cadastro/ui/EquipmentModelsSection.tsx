@@ -76,6 +76,7 @@ export function EquipmentModelsSection() {
         <div className="flex flex-col gap-4">
           <InlineNameList<MatrixEquipmentDto & { meta: string }>
             items={active.map((equipment) => ({ ...equipment, meta: meta(equipment) }))}
+            nameHeader="Modelo"
             emptyText="Nenhum modelo ativo."
             addLabel="Adicionar modelo"
             placeholder="Ex.: Encartuchadeira CAM"
@@ -100,6 +101,7 @@ export function EquipmentModelsSection() {
               <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Arquivados</h3>
               <InlineNameList<MatrixEquipmentDto & { meta: string; muted: boolean }>
                 items={archived.map((equipment) => ({ ...equipment, meta: meta(equipment), muted: true }))}
+                nameHeader="Modelo"
                 emptyText=""
                 menuItems={(equipment) => [{ label: "Reativar", onSelect: () => void setArchived(equipment, false) }]}
                 {...shared}

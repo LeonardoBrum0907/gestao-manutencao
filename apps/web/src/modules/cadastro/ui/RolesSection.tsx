@@ -19,6 +19,7 @@ export function RolesSection() {
       {roles.data ? (
         <InlineNameList<MemberRoleDto & { meta: string }>
           items={roles.data.map((role) => ({ ...role, meta: usageText(members.data?.filter((member) => member.roleId === role.id).length) }))}
+          nameHeader="Função"
           emptyText="Nenhuma função ainda."
           addLabel="Adicionar função"
           placeholder="Ex.: Caldeireiro"

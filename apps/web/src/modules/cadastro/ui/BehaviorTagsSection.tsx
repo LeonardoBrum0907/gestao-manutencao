@@ -42,6 +42,8 @@ function GroupList({ group, label, tags }: { group: BehaviorTagGroup; label: str
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</h3>
       <InlineNameList
         items={tags.map((tag) => ({ ...tag, muted: tag.archived, meta: tag.archived ? "Arquivada" : undefined }))}
+        nameHeader="Opção"
+        metaHeader="Situação"
         emptyText="Nenhuma opção nesta categoria."
         addLabel="Adicionar opção"
         placeholder={PLACEHOLDERS[group]}

@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { LineDto, MachineOperationalStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { PanelFooter, PanelSection, PanelTag, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
+import { DataTable } from "../../../design/ui/data-table";
 import { useToast } from "../../../design/ui/toast";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useDeleteLine, useFactories, useMachines, useSaveLine } from "../data/cadastro";
-import { machineStatusClass, machineStatusLabel, machineStatusOptions } from "../model/labels";
+import { machineStatusLabel, machineStatusOptions } from "../model/labels";
+import { lineMachineColumns } from "./line-table";
 import { MachineFormModal } from "./MachineFormModal";
 
 type Draft = Omit<LineDto, "id">;
@@ -62,6 +64,7 @@ export function LinePanel({ line, onClose }: { line: LineDto | null; onClose: ()
   const [draft, setDraft] = useState<Draft>(initial);
   const [removing, setRemoving] = useState(false);
   const [addingMachine, setAddingMachine] = useState(false);
+  const navigate = useNavigate();
   const mine = line ? (machines.data ?? []).filter((machine) => machine.lineId === line.id) : [];
   const modelName = new Map(catalog.data?.equipments.map((equipment) => [equipment.id, equipment.name]));
   const factoryName = factories.data?.find((factory) => factory.id === line?.factoryId)?.name;
@@ -196,26 +199,21 @@ export function LinePanel({ line, onClose }: { line: LineDto | null; onClose: ()
                 </Button>
               }
             >
-              <ul className="divide-y divide-line rounded-card border border-line">
-                {mine.length === 0 ? <li className="px-3 py-3 text-sm text-muted">Nenhuma máquina ainda.</li> : null}
-                {mine.map((machine) => (
-                  <li key={machine.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
-                    <span className="min-w-0">
-                      <span className="font-medium text-app">{machine.name}</span>
-                      <span className="text-muted">
-                        {" · "}
-                        {machine.equipmentId ? (modelName.get(machine.equipmentId) ?? "Modelo") : "Sem modelo"}
-                      </span>
-                      {machine.status === "stopped" ? (
-                        <span className={machineStatusClass(machine.status)}> · {machineStatusLabel(machine.status)}</span>
-                      ) : null}
-                    </span>
-                    <Link to={`/maquinas/${machine.id}`} className="shrink-0 font-semibold text-accent hover:underline">
-                      Abrir máquina →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {mine.length ? (
+                <div className="overflow-hidden rounded-card border border-line">
+                  <DataTable
+                    plain
+                    label="Máquinas desta linha"
+                    rows={mine}
+                    rowKey={(machine) => machine.id}
+                    columns={lineMachineColumns(modelName)}
+                    defaultSort={{ key: "name", direction: "asc" }}
+                    onOpen={(machine) => navigate(`/maquinas/${machine.id}`)}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-muted">Nenhuma máquina ainda.</p>
+              )}
             </PanelSection>
           ) : null}
           <Field label="Observações">

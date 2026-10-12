@@ -1,20 +1,13 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
+import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
-import { formatDay } from "../../colaborador/model/pdi-items";
 import { usePostPreventives, type PostPreventiveFilter } from "../data/post-preventives";
+import { POST_PREVENTIVE_COLUMNS, postPreventiveStacked, type PostPreventiveTableRow } from "./post-preventive-table";
 
 const FILTERS = ["lineId", "machineId", "subassemblyId", "memberId", "active", "from", "to"] as const;
-
-export function AttentionChip({ active }: { active: boolean }) {
-  return active ? (
-    <span className="rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">Ponto ativo</span>
-  ) : (
-    <span className="rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted">Ponto desligado</span>
-  );
-}
 
 export function PostPreventiveListPage() {
   const navigate = useNavigate();
@@ -34,6 +27,12 @@ export function PostPreventiveListPage() {
   const pickedMachine = filter.machineId ? machineById.get(filter.machineId) : undefined;
   const machineSubassemblies = (subassemblies.data ?? []).filter((item) => pickedMachine?.equipmentId && item.equipmentId === pickedMachine.equipmentId);
   const items = list.data ?? [];
+  const rows: PostPreventiveTableRow[] = items.map((item) => ({
+    item,
+    place: `${lineNames.get(item.lineId) ?? "Linha"} · ${machineById.get(item.machineId)?.name ?? "Máquina"}`,
+    subassembly: subassemblyNames.get(item.subassemblyId) ?? "Subconjunto",
+    technicians: item.memberIds.map((id) => memberNames.get(id)).filter(Boolean).join(", "),
+  }));
 
   // Trocar a linha ou a máquina limpa o que depende dela.
   function setFilter(key: (typeof FILTERS)[number], value: string) {
@@ -132,39 +131,17 @@ export function PostPreventiveListPage() {
         </Card>
       ) : null}
       {items.length ? (
-        <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
-          <ul>
-            {items.map((item) => {
-              const machine = machineById.get(item.machineId);
-              return (
-                <li key={item.id} className="border-t border-t-line first:border-t-0">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/pos-preventiva/${item.id}`)}
-                    className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-accent-soft"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                        {formatDay(item.preventiveDate)} · {lineNames.get(item.lineId) ?? "Linha"} · {machine?.name ?? "Máquina"} ·{" "}
-                        {subassemblyNames.get(item.subassemblyId) ?? "Subconjunto"}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-sm text-app" title={item.occurrence}>
-                        {item.occurrence}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted" title={item.attentionPoint}>
-                        Atenção: {item.attentionPoint}
-                      </p>
-                      <p className="mt-1 text-xs text-muted">{item.memberIds.map((id) => memberNames.get(id)).filter(Boolean).join(", ")}</p>
-                    </div>
-                    <div className="shrink-0">
-                      <AttentionChip active={item.attentionActive} />
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <DataTable
+          label="Fichas pós-preventiva"
+          rows={rows}
+          rowKey={(row) => row.item.id}
+          columns={POST_PREVENTIVE_COLUMNS}
+          stacked={postPreventiveStacked}
+          groupBy={(row) => ({ key: row.item.machineId, title: row.place })}
+          defaultSort={{ key: "date", direction: "desc" }}
+          countLabel={(count) => `${count} ${count === 1 ? "ocorrência" : "ocorrências"}`}
+          onOpen={(row) => navigate(`/pos-preventiva/${row.item.id}`)}
+        />
       ) : null}
     </div>
   );
