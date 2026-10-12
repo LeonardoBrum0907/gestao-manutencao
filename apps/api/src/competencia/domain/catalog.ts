@@ -19,7 +19,9 @@ export function assertEquipmentNameAvailable(ownerId: string | null, currentId: 
 }
 
 // Excluir só o que não deixa nada órfão; o resto se arquiva.
-export function assertEquipmentCanBeRemoved(usage: { skills: number; members: number; subassemblies: number; machines: number }): void {
+export type EquipmentUsage = { skills: number; members: number; subassemblies: number; machines: number; documents: number; techCards: number };
+
+export function assertEquipmentCanBeRemoved(usage: EquipmentUsage): void {
   // Sem esta trava, o banco apagaria o modelo das máquinas em silêncio.
   if (usage.machines > 0) {
     throw new DomainError("equipment_in_use", 409, "Há máquinas deste modelo. Arquive em vez de excluir.");
@@ -36,6 +38,9 @@ export function assertEquipmentCanBeRemoved(usage: { skills: number; members: nu
   }
   if (usage.subassemblies > 0) {
     throw new DomainError("equipment_in_use", 409, "Este equipamento tem subconjuntos cadastrados. Arquive em vez de excluir.");
+  }
+  if (usage.documents > 0 || usage.techCards > 0) {
+    throw new DomainError("equipment_in_use", 409, "Este modelo tem documentação técnica (documentos ou fichas). Arquive em vez de excluir.");
   }
 }
 

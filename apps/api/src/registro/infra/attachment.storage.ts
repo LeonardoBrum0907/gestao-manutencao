@@ -1,9 +1,13 @@
 import { randomUUID } from "crypto";
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { copyFile, mkdir, rename, unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "../../env.module";
 import { DomainError } from "../../kernel/domain-error";
+
+function safeFileName(originalName: string): string {
+  return originalName.replace(/[^\w.\- ()]/g, "_").slice(0, 180) || "anexo";
+}
 
 @Injectable()
 export class AttachmentStorage {
@@ -17,12 +21,25 @@ export class AttachmentStorage {
     await mkdir(this.env.attachmentDir, { recursive: true });
     const storageKey = randomUUID();
     await writeFile(join(this.env.attachmentDir, storageKey), file.buffer);
-    const fileName = file.originalname.replace(/[^\w.\- ()]/g, "_").slice(0, 180) || "anexo";
     return {
       storageKey,
-      fileName,
+      fileName: safeFileName(file.originalname),
       mimeType: file.mimetype || "application/octet-stream",
     };
+  }
+
+  // Arquivo grande que o multer já gravou em disco (documentos técnicos de até 200 MB): move em vez de
+  // passar pela memória. rename falha entre discos diferentes; aí copia e apaga o temporário.
+  async adopt(file: { path: string; originalname: string; mimetype: string }): Promise<{
+    storageKey: string;
+    fileName: string;
+    mimeType: string;
+  }> {
+    await mkdir(this.env.attachmentDir, { recursive: true });
+    const storageKey = randomUUID();
+    const target = join(this.env.attachmentDir, storageKey);
+    await rename(file.path, target).catch(() => copyFile(file.path, target).then(() => unlink(file.path)));
+    return { storageKey, fileName: safeFileName(file.originalname), mimeType: file.mimetype || "application/octet-stream" };
   }
 
   pathFor(storageKey: string): string {

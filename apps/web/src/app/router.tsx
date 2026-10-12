@@ -8,6 +8,7 @@ import { ReportPage } from "../modules/colaborador/ui/ReportPage";
 import { SettingsPage } from "../modules/configuracoes/ui/SettingsPage";
 import { DashboardPage } from "../modules/dashboard/ui/DashboardPage";
 import { AttentionSheetPage } from "../modules/maquina/ui/AttentionSheetPage";
+import { DocumentationPage } from "../modules/documentacao/ui/DocumentationPage";
 import { MachinePage } from "../modules/maquina/ui/MachinePage";
 import { MachinesPage } from "../modules/maquina/ui/MachinesPage";
 import { PostPreventiveListPage } from "../modules/pos-preventiva/ui/PostPreventiveListPage";
@@ -67,6 +68,7 @@ export function AppRouter() {
         <Route path="/maquinas" element={<MachinesPage />} />
         <Route path="/maquinas/:id" element={<MachinePage />} />
         <Route path="/maquinas/:id/folha" element={<AttentionSheetPage />} />
+        <Route path="/documentacao" element={<DocumentationPage />} />
         <Route path="/registros/:id" element={<RecordSheetPage />} />
         <Route path="/cadastro/colaboradores" element={<MembersPage />} />
         <Route path="/cadastro/colaboradores/:memberId/relatorio" element={<ReportPage />} />

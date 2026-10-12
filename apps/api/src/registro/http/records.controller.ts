@@ -13,6 +13,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { inlineDisposition } from "../../http/file-disposition";
 import { memoryStorage } from "multer";
 import { parseRecordList, type RecordListQuery } from "../application/parse-record-list";
 import { Records } from "../application/records";
@@ -90,7 +91,7 @@ export class RecordsController {
     const file = await this.records.openAttachment(id, attachmentId);
     return new StreamableFile(createReadStream(file.path), {
       type: file.mimeType,
-      disposition: `attachment; filename="${encodeURIComponent(file.fileName)}"`,
+      disposition: inlineDisposition(file.fileName),
     });
   }
 

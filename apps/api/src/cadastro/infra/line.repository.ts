@@ -71,6 +71,10 @@ export class LineRepository {
     return toDto(row);
   }
 
+  countTechCards(id: string) {
+    return this.prisma.techCard.count({ where: { lineId: id } });
+  }
+
   remove(id: string) {
     return this.prisma.line.delete({ where: { id } });
   }

@@ -124,7 +124,7 @@ function Attachments({ record }: { record: RecordDto }) {
       {record.attachments.map((attachment) => (
         <div key={attachment.id} className="flex items-center gap-2 text-sm">
           <Icon name="clip" className="h-4 w-4 text-muted" />
-          <a className="min-w-0 truncate text-accent hover:underline" href={`/api/records/${record.id}/attachments/${attachment.id}`}>
+          <a className="min-w-0 truncate text-accent hover:underline" href={`/api/records/${record.id}/attachments/${attachment.id}`} target="_blank" rel="noopener">
             {attachment.fileName}
           </a>
           <button type="button" aria-label={`Remover ${attachment.fileName}`} onClick={() => remove.mutate(attachment.id, fail)} className="ml-auto grid h-7 w-7 place-items-center rounded-md text-muted hover:bg-chip hover:text-danger">

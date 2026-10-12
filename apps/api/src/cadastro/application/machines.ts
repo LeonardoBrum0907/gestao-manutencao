@@ -35,6 +35,9 @@ export class Machines {
     if (await this.machines.countPostPreventives(id)) {
       throw new DomainError("machine_in_use", 409, "Esta máquina tem fichas pós-preventiva. Exclua as fichas antes.");
     }
+    if (await this.machines.countTechCards(id)) {
+      throw new DomainError("machine_in_use", 409, "Esta máquina tem fichas de documentação técnica. Exclua ou mude as fichas antes.");
+    }
   }
 
   async remove(id: string): Promise<void> {
