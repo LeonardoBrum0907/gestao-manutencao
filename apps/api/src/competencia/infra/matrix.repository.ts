@@ -1,9 +1,11 @@
 import { Injectable } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { expectedByLevel, GESTOR_TIME_ZONE } from "@manutencao/shared";
 import { gradeExpectedOf, GRADE_EXPECTED_SELECT } from "../../cadastro/infra/grade-expected";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import { isCompetencyScore, type ExpectedByLevel, type MatrixEntry } from "../domain/matrix";
+import { changedSkills, nextStates } from "../domain/skill-history";
 import type { TeamMemberInput } from "../domain/team";
 
 const dayFormat = new Intl.DateTimeFormat("en-CA", { timeZone: GESTOR_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
@@ -12,6 +14,17 @@ function score(value: number | null): MatrixEntry["score"] {
   if (value === null) return null;
   if (!isCompetencyScore(value)) throw new DomainError("invalid", 500, "Nota gravada está inválida.");
   return value;
+}
+
+async function upsertSkills(tx: Prisma.TransactionClient, memberId: string, entries: MatrixEntry[]): Promise<void> {
+  for (const entry of entries) {
+    const data = { score: entry.score, notApplicable: entry.notApplicable, expected: entry.expected };
+    await tx.memberSkill.upsert({
+      where: { memberId_skillId: { memberId, skillId: entry.skillId } },
+      create: { memberId, skillId: entry.skillId, ...data },
+      update: data,
+    });
+  }
 }
 
 @Injectable()
@@ -56,19 +69,19 @@ export class MatrixRepository {
     await this.saveSkills(memberId, [entry], []);
   }
 
-  // Tudo ou nada: ou entram todas as notas, ou nenhuma.
+  // Tudo ou nada: ou entram todas as notas, ou nenhuma. O que mudou de verdade vai também para o histórico.
   async saveSkills(memberId: string, entries: MatrixEntry[], clear: string[]): Promise<void> {
-    await this.prisma.$transaction([
-      ...entries.map((entry) => {
-        const data = { score: entry.score, notApplicable: entry.notApplicable, expected: entry.expected };
-        return this.prisma.memberSkill.upsert({
-          where: { memberId_skillId: { memberId, skillId: entry.skillId } },
-          create: { memberId, skillId: entry.skillId, ...data },
-          update: data,
-        });
-      }),
-      this.prisma.memberSkill.deleteMany({ where: { memberId, skillId: { in: clear } } }),
-    ]);
+    const skillIds = [...entries.map((entry) => entry.skillId), ...clear];
+    await this.prisma.$transaction(async (tx) => {
+      const previous = await tx.memberSkill.findMany({
+        where: { memberId, skillId: { in: skillIds } },
+        select: { skillId: true, score: true, notApplicable: true },
+      });
+      await upsertSkills(tx, memberId, entries);
+      await tx.memberSkill.deleteMany({ where: { memberId, skillId: { in: clear } } });
+      const changed = changedSkills(previous, nextStates(entries, clear));
+      await tx.memberSkillHistory.createMany({ data: changed.map((state) => ({ memberId, ...state })) });
+    });
   }
 
   async clearSkill(memberId: string, skillId: string): Promise<void> {
