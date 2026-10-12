@@ -11,11 +11,16 @@ export type TeamMemberInput = {
   name: string;
   shift: string;
   teamId: string | null;
+  gradeName: string | null;
+  teamName: string | null;
   equipments: readonly string[];
   entries: readonly MatrixEntry[];
   expectedByLevel: ExpectedByLevel;
   pdiOverdue: number;
 };
+
+// A matriz da equipe sem as linhas e a disposição salva, que vêm de outros cadastros.
+export type TeamCoverage = Omit<TeamMatrixDto, "lines" | "layout">;
 
 export function coverageStatus(qualified: number, minQualified: number): TeamCoverageStatus {
   if (qualified === 0) return "none";
@@ -26,7 +31,7 @@ export function coverageStatus(qualified: number, minQualified: number): TeamCov
 
 // Visão da equipe: para cada equipamento ativo, quantos técnicos o têm na matriz e quantos estão qualificados
 // (aderência a partir do corte configurado, 80% por padrão). Equipamento e habilidade arquivados ficam fora, como na matriz de cada técnico.
-export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly TeamMemberInput[], qualifiedAdherence: number): TeamMatrixDto {
+export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly TeamMemberInput[], qualifiedAdherence: number): TeamCoverage {
   const equipments = catalog.equipments.filter((equipment) => !equipment.archived);
   const skillsOf = (id: string) => catalog.skills.filter((skill) => !skill.archived && skill.equipmentId === id);
   const qualified = new Map<string, string[]>(equipments.map((equipment) => [equipment.id, []]));
@@ -48,7 +53,8 @@ export function buildTeamMatrix(catalog: MatrixCatalogDto, members: readonly Tea
           below: summary.below,
         };
       });
-    return { id: member.id, name: member.name, shift: member.shift, teamId: member.teamId, pdiOverdue: member.pdiOverdue, cells };
+    const { id, name, shift, teamId, gradeName, teamName, pdiOverdue } = member;
+    return { id, name, shift, teamId, gradeName, teamName, pdiOverdue, cells };
   });
 
   return {

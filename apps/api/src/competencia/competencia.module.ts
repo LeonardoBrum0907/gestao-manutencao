@@ -11,10 +11,12 @@ import { TeamMatrixController } from "./http/team-matrix.controller";
 import { CatalogRepository } from "./infra/catalog.repository";
 import { MatrixRepository } from "./infra/matrix.repository";
 import { SettingsRepository } from "./infra/settings.repository";
+import { TeamLayoutRepository } from "./infra/team-layout.repository";
+import { TeamLinesRepository } from "./infra/team-lines.repository";
 
 @Module({
   imports: [CadastroModule],
   controllers: [MatrixController, MatrixCatalogController, TeamMatrixController, MatrixSettingsController],
-  providers: [MatrixRepository, MemberMatrix, CatalogRepository, MatrixCatalog, TeamMatrix, SettingsRepository, MatrixSettings],
+  providers: [MatrixRepository, MemberMatrix, CatalogRepository, MatrixCatalog, TeamMatrix, SettingsRepository, MatrixSettings, TeamLinesRepository, TeamLayoutRepository],
 })
 export class CompetenciaModule {}

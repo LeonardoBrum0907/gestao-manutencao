@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation, useParams } from "react-router-do
 import { MembersPage } from "../modules/cadastro/ui/MembersPage";
 import { TeamsPage } from "../modules/cadastro/ui/TeamsPage";
 import { TeamMatrixPage } from "../modules/competencia/ui/TeamMatrixPage";
+import { TeamSheetPage } from "../modules/competencia/ui/TeamSheetPage";
 import { MemberPage } from "../modules/colaborador/ui/MemberPage";
 import { ReportPage } from "../modules/colaborador/ui/ReportPage";
 import { SettingsPage } from "../modules/configuracoes/ui/SettingsPage";
@@ -77,6 +78,7 @@ export function AppRouter() {
           <Route key={from} path={from} element={<Navigate to={`/configuracoes/${tab}`} replace />} />
         ))}
         <Route path="/competencias" element={<TeamMatrixPage />} />
+        <Route path="/competencias/folha" element={<TeamSheetPage />} />
         <Route path="/competencias/:memberId" element={<MatrixRedirect />} />
       </Route>
       <Route path="*" element={<Navigate to="/entrada" replace />} />

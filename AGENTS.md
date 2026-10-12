@@ -8,7 +8,7 @@ Base: "Clean Code para agentes de IA" de Fabio Akita (akitaonrails.com/2026/04/2
 
 ## Comandos
 
-- Testes: `pnpm test` na raiz. Builda `packages/shared` e roda os `*.spec.ts` da API e do web com `tsx --test`. No web, só funções puras têm teste (sem DOM).
+- Testes: `pnpm test` na raiz. Builda `packages/shared` e roda os `*.spec.ts` da API e do web com `tsx --test`. No web só as regras puras em `model/` têm teste (os `*.spec.ts` ficam fora do `tsconfig` do web).
 - Tipos da API: `pnpm --filter @manutencao/api exec tsc -p tsconfig.json --noEmit`
 - Tipos do web: `pnpm --filter @manutencao/web exec tsc -p tsconfig.json --noEmit`
 - Build de tudo: `pnpm build`

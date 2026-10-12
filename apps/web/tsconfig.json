@@ -10,7 +10,9 @@
     "noEmit": true,
     "isolatedModules": true,
     "useDefineForClassFields": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Os testes rodam com tsx (pnpm test) e usam node:test, que não tem tipos no web.
+  "exclude": ["src/**/*.spec.ts"]
 }
