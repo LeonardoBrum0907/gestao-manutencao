@@ -68,6 +68,9 @@
   /* Raios menores a pedido do Léo (eram 16px e 10px): os componentes pareciam redondos demais. */
   --radius-card: 10px;
   --radius-control: 6px;
+  /* Largura máxima das páginas comuns no computador. Era 64rem (max-w-5xl) e sobrava muito espaço nas laterais em
+     monitor largo. Só fica aqui: o tema escuro herda do :root. */
+  --page-max-width: 80rem;
   --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
