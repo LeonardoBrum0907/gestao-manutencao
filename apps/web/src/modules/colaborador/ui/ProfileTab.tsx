@@ -8,6 +8,7 @@ import { memberStatusClass, memberStatusLabel, positionLabel, shiftLabel } from 
 import { teamsOf } from "../../cadastro/model/team";
 import { flattenPages } from "../../registro/data/records";
 import { useMemberRp } from "../../rp/data/rp";
+import { MemberTransferCard } from "../../repasse/ui/MemberTransferCard";
 import { RP_COLUMNS, rpStacked, type RpTableRow } from "../../rp/ui/rp-table";
 import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
 import { MEMBER_RECORD_COLUMNS, memberRecordStacked } from "./record-table";
@@ -173,7 +174,10 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
           </dl>
           {member.notes ? <p className="mt-4 whitespace-pre-line text-sm text-muted">{member.notes}</p> : null}
         </Card>
-        <TeamCard member={member} members={members} teams={teams} />
+        <div className="flex flex-col gap-4">
+          <TeamCard member={member} members={members} teams={teams} />
+          {member.position === "technician" ? <MemberTransferCard member={member} /> : null}
+        </div>
       </div>
       {summary.isError ? <Notice>{errorMessage(summary.error)}</Notice> : null}
       {summary.isPending ? <p className="text-sm text-muted">Carregando registros…</p> : null}
