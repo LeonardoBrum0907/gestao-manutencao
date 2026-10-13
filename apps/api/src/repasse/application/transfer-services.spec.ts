@@ -44,9 +44,14 @@ describe("TransferPlanner.suggestions", () => {
     assert.deepEqual(result.candidates.map((item) => [item.member.name, item.progress.done]), [["Caio", 2], ["Bia", 1], ["Duda", 0]]);
   });
 
+  it("não sugere quem já faz quase tudo", async () => {
+    const result = await planner.suggestions("ana", ["e1"]);
+    assert.equal(result.candidates.some((item) => item.member.name === "Caio"), false);
+  });
+
   it("marca e põe no fim quem já aprende com alguém", async () => {
     store.rows.push({ id: "t0", teacherId: "duda", learnerId: "caio", equipmentIds: ["e1"], status: "active", startedAt: NOW, closedAt: null });
-    const result = await planner.suggestions("ana", ["e1"]);
+    const result = await planner.suggestions("ana", ["e1", "e2"]);
     assert.deepEqual(result.candidates.at(-1), { ...result.candidates.at(-1), learningFrom: "Duda" });
     assert.equal(result.candidates.at(-1)?.member.name, "Caio");
   });

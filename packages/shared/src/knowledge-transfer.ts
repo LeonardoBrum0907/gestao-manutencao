@@ -4,6 +4,9 @@
 /** Nota a partir da qual alguém domina uma habilidade: 3 (Avançado) ou 4 (Referência). */
 export const TRANSFER_MASTERY_SCORE = 3;
 
+/** Quem já faz este percentual ou mais do que quem ensina domina não entra na sugestão de quem aprende. */
+export const TRANSFER_SUGGEST_BELOW_PERCENT = 90;
+
 /** Dias sem nota nova de quem aprende, nos equipamentos do repasse, para ele contar como parado. */
 export const TRANSFER_STALE_DAYS = 60;
 

@@ -44,10 +44,10 @@ function sampleDates(startedAt: Date, now: Date): Date[] {
  * @example evolutionOf(mastered, history, new Date("2026-08-10"), new Date("2026-10-12")) // [{ date: "2026-08-10", percent: 40 }, ...]
  */
 export function evolutionOf(mastered: readonly MatrixSkillDto[], history: readonly ScoreChange[], startedAt: Date, now: Date): TransferPointDto[] {
-  return sampleDates(startedAt, now).map((date) => ({
-    date: dayFormat.format(date),
-    percent: progressOf(mastered, scoresAt(history, date)).percent ?? 0,
-  }));
+  const byDay = new Map<string, number>();
+  // Dois instantes no mesmo dia (repasse aberto hoje, ou hoje é dia 1) viram um ponto só, com o valor mais recente.
+  for (const date of sampleDates(startedAt, now)) byDay.set(dayFormat.format(date), progressOf(mastered, scoresAt(history, date)).percent ?? 0);
+  return [...byDay].map(([date, percent]) => ({ date, percent }));
 }
 
 /**

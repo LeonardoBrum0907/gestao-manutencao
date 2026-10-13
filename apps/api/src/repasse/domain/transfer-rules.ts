@@ -1,4 +1,4 @@
-import type { TransferCandidateDto, TransferPersonDto } from "@manutencao/shared";
+import { TRANSFER_SUGGEST_BELOW_PERCENT, type TransferCandidateDto, type TransferPersonDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
 /** Colaborador com o que importa para abrir um repasse. */
@@ -53,14 +53,17 @@ export function assertNewTransfer(check: NewTransferCheck): void {
 }
 
 /**
- * Sugestões de quem aprende: primeiro quem está livre, e entre esses quem já faz mais; empate pelo nome.
+ * Sugestões de quem aprende: fora quem já faz quase tudo (não teria o que aprender); primeiro quem está livre,
+ * e entre esses quem já faz mais; empate pelo nome.
  * @example rankCandidates(candidates)[0].member.name
  */
 export function rankCandidates(candidates: readonly TransferCandidateDto[]): TransferCandidateDto[] {
-  return [...candidates].sort(
-    (a, b) =>
-      Number(a.learningFrom !== null) - Number(b.learningFrom !== null) ||
-      b.progress.done - a.progress.done ||
-      a.member.name.localeCompare(b.member.name, "pt-BR"),
-  );
+  return candidates
+    .filter((candidate) => (candidate.progress.percent ?? 0) < TRANSFER_SUGGEST_BELOW_PERCENT)
+    .sort(
+      (a, b) =>
+        Number(a.learningFrom !== null) - Number(b.learningFrom !== null) ||
+        b.progress.done - a.progress.done ||
+        a.member.name.localeCompare(b.member.name, "pt-BR"),
+    );
 }

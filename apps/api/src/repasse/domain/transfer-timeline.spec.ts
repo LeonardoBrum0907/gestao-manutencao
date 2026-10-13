@@ -48,6 +48,7 @@ describe("evolutionOf", () => {
   it("repasse aberto hoje tem um ponto só", () => {
     const now = new Date("2026-10-12T15:00:00Z");
     assert.equal(evolutionOf(mastered, history, now, now).length, 1);
+    assert.equal(evolutionOf(mastered, history, new Date("2026-10-12T11:00:00Z"), now).length, 1);
   });
 });
 

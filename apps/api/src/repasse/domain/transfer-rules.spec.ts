@@ -51,8 +51,12 @@ describe("rankCandidates", () => {
     learningFrom,
   });
 
+  it("tira quem já faz 90% ou mais", () => {
+    assert.deepEqual(rankCandidates([candidate("Arlan", 9), candidate("Bia", 8)]).map((item) => item.member.name), ["Bia"]);
+  });
+
   it("livres primeiro, depois quem já faz mais, depois o nome", () => {
-    const ranked = rankCandidates([candidate("Caio", 9, "Ana"), candidate("Bia", 3), candidate("Duda", 7), candidate("Alan", 3)]);
+    const ranked = rankCandidates([candidate("Caio", 8, "Ana"), candidate("Bia", 3), candidate("Duda", 7), candidate("Alan", 3)]);
     assert.deepEqual(ranked.map((item) => item.member.name), ["Duda", "Alan", "Bia", "Caio"]);
   });
 });
