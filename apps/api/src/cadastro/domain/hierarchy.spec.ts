@@ -31,27 +31,41 @@ describe("exclusão de linha", () => {
 });
 
 describe("nome do subconjunto", () => {
+  const model = { machineId: null };
   const siblings = [
-    { id: "a", name: "Esteira de Saída" },
-    { id: "b", name: "Magazine de Cartucho" },
+    { id: "a", name: "Esteira de Saída", ...model },
+    { id: "b", name: "Magazine de Cartucho", ...model },
+    { id: "c", name: "Balança", machineId: "m1" },
   ];
 
   it("recusa repetido no mesmo modelo, ignorando acento e maiúsculas", () => {
-    refused(() => assertSubassemblyNameAvailable("esteira de  saida", siblings, null), "subassembly_name_taken");
+    refused(() => assertSubassemblyNameAvailable("esteira de  saida", model, siblings, null), "subassembly_name_taken");
   });
 
   it("aceita o próprio nome ao editar", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Esteira de Saída", siblings, "a"));
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Esteira de Saída", model, siblings, "a"));
   });
 
   it("aceita nome novo", () => {
-    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Válvulas roletes", siblings, null));
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Válvulas roletes", model, siblings, null));
+  });
+
+  it("aceita o mesmo nome só-desta-máquina em outra máquina", () => {
+    assert.doesNotThrow(() => assertSubassemblyNameAvailable("Balança", { machineId: "m2" }, siblings, null));
+  });
+
+  it("recusa o mesmo nome duas vezes na mesma máquina", () => {
+    refused(() => assertSubassemblyNameAvailable("balanca", { machineId: "m1" }, siblings, null), "subassembly_name_taken");
+  });
+
+  it("recusa no modelo um nome que já existe numa máquina dele", () => {
+    refused(() => assertSubassemblyNameAvailable("Balança", model, siblings, null), "subassembly_name_taken");
   });
 });
 
 describe("subconjunto da máquina", () => {
-  const machine = { equipmentId: "encartuchadeira-cam" };
-  const sub = { id: "s1", equipmentId: "encartuchadeira-cam", archived: false };
+  const machine = { id: "m1", equipmentId: "encartuchadeira-cam", hiddenSubassemblyIds: [] };
+  const sub = { id: "s1", equipmentId: "encartuchadeira-cam", machineId: null, archived: false };
 
   it("aceita subconjunto do modelo da máquina", () => {
     assert.doesNotThrow(() => assertSubassemblyFits(machine, sub, null));
@@ -62,7 +76,7 @@ describe("subconjunto da máquina", () => {
   });
 
   it("recusa máquina sem modelo", () => {
-    assert.throws(() => assertSubassemblyFits({ equipmentId: null }, sub, null), DomainError);
+    assert.throws(() => assertSubassemblyFits({ ...machine, equipmentId: null }, sub, null), DomainError);
   });
 
   it("arquivado só fica se a ficha já apontava para ele", () => {
@@ -70,11 +84,22 @@ describe("subconjunto da máquina", () => {
     refusedSaying(() => assertSubassemblyFits(machine, archived, null), "Este subconjunto está arquivado.");
     assert.doesNotThrow(() => assertSubassemblyFits(machine, archived, "s1"));
   });
+
+  it("aceita o da própria máquina, recusa o só de outra máquina", () => {
+    assert.doesNotThrow(() => assertSubassemblyFits(machine, { ...sub, machineId: "m1" }, null));
+    refusedSaying(() => assertSubassemblyFits(machine, { ...sub, machineId: "m2" }, null), "Este subconjunto é só de outra máquina.");
+  });
+
+  it("recusa o que a máquina desmarcou, a não ser que a ficha já apontasse para ele", () => {
+    const hiding = { ...machine, hiddenSubassemblyIds: ["s1"] };
+    refusedSaying(() => assertSubassemblyFits(hiding, sub, null), "Esta máquina não tem este subconjunto (está desmarcado na tela da máquina).");
+    assert.doesNotThrow(() => assertSubassemblyFits(hiding, sub, "s1"));
+  });
 });
 
 describe("máquina e subconjunto de uma ficha", () => {
-  const machine = { lineId: "med-03", equipmentId: "encartuchadeira-cam" };
-  const subassembly = { id: "s1", equipmentId: "encartuchadeira-cam", archived: false };
+  const machine = { id: "m1", lineId: "med-03", equipmentId: "encartuchadeira-cam", hiddenSubassemblyIds: [] };
+  const subassembly = { id: "s1", equipmentId: "encartuchadeira-cam", machineId: null, archived: false };
   const refs = { machine, subassembly };
 
   it("aceita ficha sem máquina", () => {

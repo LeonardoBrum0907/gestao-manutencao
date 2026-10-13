@@ -1,3 +1,4 @@
+import { scopesOverlap, subassemblyReaches } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
 // Linha com máquinas cadastradas não sai: as máquinas ficariam sem linha.
@@ -7,40 +8,63 @@ export function assertLineCanBeRemoved(machineCount: number): void {
   }
 }
 
-// Nome do subconjunto é único dentro do modelo, sem diferenciar maiúsculas e acentos.
-export function assertSubassemblyNameAvailable(name: string, siblings: { id: string; name: string }[], currentId: string | null): void {
-  const wanted = fold(name);
-  if (siblings.some((sibling) => sibling.id !== currentId && fold(sibling.name) === wanted)) {
-    throw new DomainError("subassembly_name_taken", 409, "Esse modelo já tem um subconjunto com esse nome.");
+export type SubassemblySibling = { id: string; name: string; machineId: string | null };
+export type SubassemblyPlace = Pick<SubassemblySibling, "machineId">;
+
+/**
+ * Nome do subconjunto não repete entre os que aparecem juntos numa máquina, sem diferenciar maiúsculas e acentos.
+ * Os "só desta máquina" de máquinas diferentes podem repetir (desde o PR #54, 2026-10-12).
+ * Ex.: `assertSubassemblyNameAvailable("Balança", { machineId: "m1" }, irmaos, null)`
+ */
+export function assertSubassemblyNameAvailable(
+  name: string,
+  place: SubassemblyPlace,
+  siblings: SubassemblySibling[],
+  currentId: string | null,
+): void {
+  const wanted = foldName(name);
+  const clash = siblings.some(
+    (sibling) => sibling.id !== currentId && foldName(sibling.name) === wanted && scopesOverlap(place, sibling),
+  );
+  if (clash) {
+    throw new DomainError("subassembly_name_taken", 409, `Já existe o subconjunto "${name}" nas mesmas máquinas deste modelo.`);
   }
 }
 
-// O subconjunto vem do modelo da máquina. Um subconjunto arquivado só fica se a ficha já apontava para ele.
-export function assertSubassemblyFits(
-  machine: { equipmentId: string | null },
-  subassembly: { id: string; equipmentId: string; archived: boolean },
-  currentSubassemblyId: string | null,
-): void {
+export type SpotMachine = { id: string; equipmentId: string | null; hiddenSubassemblyIds: string[] };
+export type SpotSubassembly = { id: string; equipmentId: string; machineId: string | null; archived: boolean };
+
+/**
+ * O subconjunto alcança a máquina (é do modelo ou só dela), está ativo e a máquina não o escondeu.
+ * O que a ficha já apontava (currentSubassemblyId) fica, mesmo arquivado, escondido ou só de outra máquina; de outro modelo, não.
+ * Ex.: `assertSubassemblyFits(maquina, subconjunto, ficha.subassemblyId)`
+ */
+export function assertSubassemblyFits(machine: SpotMachine, subassembly: SpotSubassembly, currentSubassemblyId: string | null): void {
   if (!machine.equipmentId) {
-    throw new DomainError("machine_without_model", 400, "Esta máquina não tem modelo de equipamento. Escolha o modelo no cadastro da linha.");
+    throw new DomainError("machine_without_model", 400, "Esta máquina não tem modelo de equipamento. Escolha o modelo no cadastro da máquina.");
   }
   if (subassembly.equipmentId !== machine.equipmentId) {
     throw new DomainError("subassembly", 400, "Este subconjunto não é do modelo desta máquina.");
   }
-  if (subassembly.archived && subassembly.id !== currentSubassemblyId) {
-    throw new DomainError("subassembly", 400, "Este subconjunto está arquivado.");
+  if (subassembly.id === currentSubassemblyId) return;
+  if (!subassemblyReaches(subassembly, machine)) {
+    throw new DomainError("subassembly", 400, "Este subconjunto é só de outra máquina.");
+  }
+  if (subassembly.archived) throw new DomainError("subassembly", 400, "Este subconjunto está arquivado.");
+  if (machine.hiddenSubassemblyIds.includes(subassembly.id)) {
+    throw new DomainError("subassembly", 400, "Esta máquina não tem este subconjunto (está desmarcado na tela da máquina).");
   }
 }
 
 export type MachineSpot = { lineId: string | null; machineId: string | null; subassemblyId: string | null };
 export type MachineSpotRefs = {
-  machine: { lineId: string; equipmentId: string | null } | null;
-  subassembly: { id: string; equipmentId: string; archived: boolean } | null;
+  machine: (SpotMachine & { lineId: string }) | null;
+  subassembly: SpotSubassembly | null;
 };
 
 /**
  * Máquina e subconjunto escolhidos numa ficha (problema, RP) batem com o cadastro: a máquina é da linha
- * e o subconjunto é do modelo dela. Os dois são opcionais, mas subconjunto pede máquina e máquina pede linha.
+ * e o subconjunto é dela. Os dois são opcionais, mas subconjunto pede máquina e máquina pede linha.
  * Ex.: `assertMachineSpot({ lineId: "l1", machineId: "m1", subassemblyId: null }, await refs.machineSpot("m1", null), null)`
  */
 export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, savedSubassemblyId: string | null): void {
@@ -54,7 +78,8 @@ export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, save
   assertSubassemblyFits(refs.machine, refs.subassembly, savedSubassemblyId);
 }
 
-function fold(text: string): string {
+// Nome para comparar: sem acento, minúsculo e com espaços simples.
+export function foldName(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")

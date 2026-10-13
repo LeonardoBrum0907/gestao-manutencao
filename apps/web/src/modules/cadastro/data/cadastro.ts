@@ -5,6 +5,7 @@ import {
   type GradeExpectedDto,
   type LineDto,
   type MachineDto,
+  type MachineWriteDto,
   type MemberDto,
   type MemberGradeDto,
   type MemberRoleDto,
@@ -13,6 +14,7 @@ import {
 } from "@manutencao/shared";
 import { removeById, REFERENCE_DATA, upsertByName } from "../../../app/cache";
 import { api } from "../../../app/http";
+import { withMachineDefaults, withSubassemblyDefaults } from "../model/machine-spot";
 
 export function useFactories() {
   return useQuery({
@@ -75,17 +77,19 @@ export function useMachines() {
   return useQuery({
     queryKey: ["machines"],
     ...REFERENCE_DATA,
-    queryFn: () => api<MachineDto[]>("/api/machines"),
+    queryFn: async () => (await api<MachineDto[]>("/api/machines")).map(withMachineDefaults),
   });
 }
 
 export function useSaveMachine() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id?: string; body: Omit<MachineDto, "id"> }) =>
-      input.id
-        ? api<MachineDto>(`/api/machines/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
-        : api<MachineDto>("/api/machines", { method: "POST", body: JSON.stringify(input.body) }),
+    mutationFn: async (input: { id?: string; body: MachineWriteDto }) =>
+      withMachineDefaults(
+        input.id
+          ? await api<MachineDto>(`/api/machines/${input.id}`, { method: "PATCH", body: JSON.stringify(input.body) })
+          : await api<MachineDto>("/api/machines", { method: "POST", body: JSON.stringify(input.body) }),
+      ),
     onSuccess: (machine) => upsertByName(client, ["machines"], machine),
   });
 }
@@ -103,23 +107,26 @@ export function useSubassemblies() {
   return useQuery({
     queryKey: ["subassemblies"],
     ...REFERENCE_DATA,
-    queryFn: () => api<SubassemblyDto[]>("/api/subassemblies"),
+    queryFn: async () => (await api<SubassemblyDto[]>("/api/subassemblies")).map(withSubassemblyDefaults),
   });
 }
 
 export function useSaveSubassembly() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id?: string; equipmentId: string; name: string; archived: boolean }) =>
-      input.id
-        ? api<SubassemblyDto>(`/api/subassemblies/${input.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ name: input.name, archived: input.archived }),
-          })
-        : api<SubassemblyDto>("/api/subassemblies", {
-            method: "POST",
-            body: JSON.stringify({ equipmentId: input.equipmentId, name: input.name }),
-          }),
+    // machineId só na criação: sem ele o subconjunto vale para o modelo todo.
+    mutationFn: async (input: { id?: string; equipmentId: string; machineId?: string | null; name: string; archived: boolean }) =>
+      withSubassemblyDefaults(
+        input.id
+          ? await api<SubassemblyDto>(`/api/subassemblies/${input.id}`, {
+              method: "PATCH",
+              body: JSON.stringify({ name: input.name, archived: input.archived }),
+            })
+          : await api<SubassemblyDto>("/api/subassemblies", {
+              method: "POST",
+              body: JSON.stringify({ equipmentId: input.equipmentId, machineId: input.machineId ?? null, name: input.name }),
+            }),
+      ),
     onSuccess: (item) =>
       client.setQueryData<SubassemblyDto[]>(["subassemblies"], (list) =>
         list?.some((current) => current.id === item.id)

@@ -183,7 +183,7 @@ export function PlaceChips({ value, onChange }: { value: PlaceValue; onChange: (
   const subassemblies = useSubassemblies();
   const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === value.lineId);
   const machine = lineMachines.find((item) => item.id === value.machineId);
-  const choices = subassemblyChoices(subassemblies.data ?? [], machine?.equipmentId ?? null, value.subassemblyId);
+  const choices = subassemblyChoices(subassemblies.data ?? [], machine, value.subassemblyId);
   const setLine = (lineId: string) => onChange({ lineId, machineId: "", subassemblyId: "" });
   const setMachine = (machineId: string) => onChange({ ...value, machineId, subassemblyId: "" });
   const setSubassembly = (subassemblyId: string) => onChange({ ...value, subassemblyId });

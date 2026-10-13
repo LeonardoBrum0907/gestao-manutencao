@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { Machines } from "../application/machines";
 import { removalCheck } from "../../kernel/removal";
 
@@ -19,6 +19,12 @@ export class MachinesController {
   @Patch(":id")
   update(@Param("id") id: string, @Body() body: unknown) {
     return this.machines.update(id, body);
+  }
+
+  // Subconjuntos do modelo que esta máquina não tem (lista inteira a cada gravação).
+  @Put(":id/hidden-subassemblies")
+  setHidden(@Param("id") id: string, @Body() body: unknown) {
+    return this.machines.setHidden(id, body);
   }
 
   @Get(":id/removal")

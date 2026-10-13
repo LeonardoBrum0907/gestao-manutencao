@@ -15,6 +15,7 @@ import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useChamadosOfLine } from "../../turno/data/shift";
 import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, shortDay } from "../../turno/model/chamado";
+import { MachineSubassembliesCard } from "./MachineSubassembliesCard";
 import { ATTENTION_COLUMNS, HISTORY_COLUMNS, attentionStacked, historyStacked, type MachineRecordRow } from "./machine-history-table";
 
 const linkButton =
@@ -176,6 +177,7 @@ export function MachinePage() {
           </Card>
         </div>
         <div className="flex flex-col gap-4 self-start">
+        <MachineSubassembliesCard machine={machine} model={model} subassemblies={subassemblies.data ?? []} onEdit={() => setEditing(true)} />
         <MachineDocsCard machine={machine} />
         <Card>
           <SectionTitle

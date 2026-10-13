@@ -56,7 +56,7 @@ const rpFields = {
   line: optionalText("linha como veio no texto, quando não está no cadastro"),
   tag: optionalText("TAG da máquina"),
   machineId: id("da máquina (tem de ser da linha escolhida)").nullable().optional(),
-  subassemblyId: id("do subconjunto (tem de ser do modelo da máquina)").nullable().optional(),
+  subassemblyId: id("do subconjunto (tem de ser da máquina: do modelo dela ou só dela, e não desmarcado nela)").nullable().optional(),
   description: optionalText("descrição da falha"),
   repeatedFailure: z.boolean().optional().describe("falha repetida"),
   repeatedTimes: optionalText("quantas vezes repetiu"),
@@ -454,7 +454,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
         lineId: id("da linha (problema)").nullable().optional(),
         lineLabel: optionalText("problema: linha em texto"),
         machineId: id("da máquina (problema; tem de ser da linha)").nullable().optional(),
-        subassemblyId: id("do subconjunto (problema; tem de ser do modelo da máquina)").nullable().optional(),
+        subassemblyId: id("do subconjunto (problema; tem de ser da máquina: do modelo dela ou só dela)").nullable().optional(),
         tone: z.enum(FEEDBACK_TONES).nullable().optional(),
         notes: optionalText("observações"),
       },
@@ -490,7 +490,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "lancar_pos_preventiva",
     {
       title: "Lançar pós-preventiva",
-      description: "Registra uma ocorrência que apareceu depois de uma preventiva. O subconjunto tem de ser do modelo da máquina (veja equipmentId em buscar_cadastro).",
+      description: "Registra uma ocorrência que apareceu depois de uma preventiva. O subconjunto tem de ser da máquina: mesmo equipmentId, machineId vazio ou igual ao id da máquina, e fora de hiddenSubassemblyIds da máquina (veja buscar_cadastro).",
       inputSchema: {
         preventiveDate: day("dia da preventiva"),
         occurrenceDate: day("dia da ocorrência").nullable().optional(),

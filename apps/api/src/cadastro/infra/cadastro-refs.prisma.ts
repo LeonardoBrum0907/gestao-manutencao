@@ -42,12 +42,22 @@ export class PrismaCadastroRefs implements CadastroRefs {
 
   async machineSpot(machineId: string | null, subassemblyId: string | null): Promise<MachineSpotRefs> {
     const [machine, subassembly] = await Promise.all([
-      machineId ? this.prisma.machine.findUnique({ where: { id: machineId }, select: { lineId: true, equipmentId: true } }) : null,
+      machineId
+        ? this.prisma.machine.findUnique({
+            where: { id: machineId },
+            select: { id: true, lineId: true, equipmentId: true, hiddenSubassemblies: { select: { subassemblyId: true } } },
+          })
+        : null,
       subassemblyId
-        ? this.prisma.subassembly.findUnique({ where: { id: subassemblyId }, select: { id: true, equipmentId: true, archived: true } })
+        ? this.prisma.subassembly.findUnique({
+            where: { id: subassemblyId },
+            select: { id: true, equipmentId: true, machineId: true, archived: true },
+          })
         : null,
     ]);
-    return { machine, subassembly };
+    if (!machine) return { machine: null, subassembly };
+    const { hiddenSubassemblies, ...rest } = machine;
+    return { machine: { ...rest, hiddenSubassemblyIds: hiddenSubassemblies.map((item) => item.subassemblyId) }, subassembly };
   }
 
   async memberDirectory() {
