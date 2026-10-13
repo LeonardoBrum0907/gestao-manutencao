@@ -30,10 +30,18 @@ export class TransferPlanner {
     const equipmentIds = focusEquipments(requested, teacherEquipments, teacher.name);
     const books = booksByMember(await this.store.scores([teacherId, ...technicians.map((member) => member.id)]));
     const mastered = masteredSkills(catalog, equipmentIds, books.get(teacherId) ?? EMPTY_BOOK);
-    const learningFrom = await this.learningFrom(transfers);
+    const teachersOf = await this.teachersOf(transfers);
     const candidates: TransferCandidateDto[] = technicians
       .filter((member) => member.id !== teacherId)
-      .map((member) => ({ member: { id: member.id, name: member.name, teamName: member.teamName }, progress: progressOf(mastered, books.get(member.id) ?? EMPTY_BOOK), learningFrom: learningFrom.get(member.id) ?? null }));
+      .map((member) => {
+        const teachers = teachersOf.get(member.id) ?? [];
+        return {
+          member: { id: member.id, name: member.name, teamName: member.teamName },
+          progress: progressOf(mastered, books.get(member.id) ?? EMPTY_BOOK),
+          learningFrom: teachers.map((item) => item.name),
+          withTeacher: teachers.some((item) => item.id === teacherId),
+        };
+      });
     return { teacherId, teacherEquipments: equipmentOptions(catalog, teacherEquipments), equipmentIds, mastered: mastered.length, candidates: rankCandidates(candidates) };
   }
 
@@ -50,8 +58,8 @@ export class TransferPlanner {
     const equipmentIds = focusEquipments(input.equipmentIds, teacherEquipments, teacher.name);
     const books = booksByMember(await this.store.scores([teacher.id, learner.id]));
     const mastered = masteredSkills(catalog, equipmentIds, books.get(teacher.id) ?? EMPTY_BOOK);
-    const learnerTeacherName = (await this.learningFrom(transfers)).get(learner.id) ?? null;
-    assertNewTransfer({ teacher, learner, learnerTeacherName, mastered: mastered.length });
+    const pairOpen = transfers.some((row) => row.status === "active" && row.teacherId === teacher.id && row.learnerId === learner.id);
+    assertNewTransfer({ teacher, learner, pairOpen, mastered: mastered.length });
     const row = await this.store.create({ teacherId: teacher.id, learnerId: learner.id, equipmentIds });
     const people = new Map(members.map((member) => [member.id, member]));
     return summaryOf(row, { catalog, people, books, history: new Map(), now });
@@ -69,12 +77,16 @@ export class TransferPlanner {
     await this.store.remove(id);
   }
 
-  // Quem aprende com quem nos repasses em andamento: id de quem aprende → nome de quem ensina.
-  private async learningFrom(transfers: readonly TransferRow[]): Promise<Map<string, string>> {
+  // Quem ensina cada pessoa nos repasses em andamento: id de quem aprende → quem ensina (id e nome).
+  private async teachersOf(transfers: readonly TransferRow[]): Promise<Map<string, { id: string; name: string }[]>> {
     const active = transfers.filter((row) => row.status === "active");
     const teachers = await this.store.members([...new Set(active.map((row) => row.teacherId))]);
     const names = new Map(teachers.map((member) => [member.id, member.name]));
-    return new Map(active.map((row) => [row.learnerId, names.get(row.teacherId) ?? "outro técnico"]));
+    const byLearner = new Map<string, { id: string; name: string }[]>();
+    for (const row of active) {
+      byLearner.set(row.learnerId, [...(byLearner.get(row.learnerId) ?? []), { id: row.teacherId, name: names.get(row.teacherId) ?? "outro técnico" }]);
+    }
+    return byLearner;
   }
 }
 

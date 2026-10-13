@@ -67,8 +67,11 @@ export type TransferDetailDto = TransferSummaryDto & {
 export type TransferCandidateDto = {
   member: TransferPersonDto;
   progress: TransferProgressDto;
-  // Nome de quem já ensina esta pessoa num repasse em andamento.
-  learningFrom: string | null;
+  // Nomes de quem já ensina esta pessoa em repasses em andamento. Repasse é N:N (pedido do Léo em 2026-10-13):
+  // dá para aprender um conjunto com uma pessoa e outro conjunto com outra.
+  learningFrom: string[];
+  // Já aprende com quem ensina num repasse em andamento: não dá para abrir o mesmo par de novo.
+  withTeacher: boolean;
 };
 
 export type TransferEquipmentOptionDto = { id: string; name: string };

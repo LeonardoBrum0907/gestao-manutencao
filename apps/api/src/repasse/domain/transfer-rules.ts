@@ -33,19 +33,20 @@ export function focusEquipments(requested: readonly string[], teacherEquipments:
 export type NewTransferCheck = {
   teacher: TransferMember;
   learner: TransferMember;
-  // Nome de quem já ensina quem aprende num repasse em andamento.
-  learnerTeacherName: string | null;
+  // Já existe repasse em andamento entre os dois (no mesmo sentido).
+  pairOpen: boolean;
   mastered: number;
 };
 
 /**
- * Regras para abrir: pessoas diferentes, quem aprende num repasse só por vez e quem ensina com algo a ensinar.
- * @example assertNewTransfer({ teacher, learner, learnerTeacherName: null, mastered: 46 })
+ * Regras para abrir: pessoas diferentes, par ainda não aberto e quem ensina com algo a ensinar. Os dois podem
+ * estar em outros repasses ao mesmo tempo (N:N).
+ * @example assertNewTransfer({ teacher, learner, pairOpen: false, mastered: 46 })
  */
 export function assertNewTransfer(check: NewTransferCheck): void {
   if (check.teacher.id === check.learner.id) throw new DomainError("invalid", 400, "Quem ensina e quem aprende precisam ser pessoas diferentes.");
-  if (check.learnerTeacherName) {
-    throw new DomainError("conflict", 409, `${check.learner.name} já aprende com ${check.learnerTeacherName}. Encerre aquele repasse antes de abrir outro.`);
+  if (check.pairOpen) {
+    throw new DomainError("conflict", 409, `${check.learner.name} já aprende com ${check.teacher.name} num repasse em andamento. Abra a tela dele em vez de criar outro.`);
   }
   if (check.mastered === 0) {
     throw new DomainError("invalid", 400, `${check.teacher.name} não tem nota 3 ou 4 nesses equipamentos: não há o que repassar.`);
@@ -53,8 +54,8 @@ export function assertNewTransfer(check: NewTransferCheck): void {
 }
 
 /**
- * Sugestões de quem aprende: fora quem já faz quase tudo (não teria o que aprender); primeiro quem está livre,
- * e entre esses quem já faz mais; empate pelo nome.
+ * Sugestões de quem aprende: fora quem já faz quase tudo (não teria o que aprender); quem já aprende com esta
+ * pessoa vai para o fim; o resto por quem já faz mais, empate pelo nome.
  * @example rankCandidates(candidates)[0].member.name
  */
 export function rankCandidates(candidates: readonly TransferCandidateDto[]): TransferCandidateDto[] {
@@ -62,7 +63,7 @@ export function rankCandidates(candidates: readonly TransferCandidateDto[]): Tra
     .filter((candidate) => (candidate.progress.percent ?? 0) < TRANSFER_SUGGEST_BELOW_PERCENT)
     .sort(
       (a, b) =>
-        Number(a.learningFrom !== null) - Number(b.learningFrom !== null) ||
+        Number(a.withTeacher) - Number(b.withTeacher) ||
         b.progress.done - a.progress.done ||
         a.member.name.localeCompare(b.member.name, "pt-BR"),
     );

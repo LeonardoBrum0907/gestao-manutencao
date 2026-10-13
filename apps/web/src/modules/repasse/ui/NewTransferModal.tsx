@@ -12,14 +12,21 @@ function technicians(members: MemberDto[] | undefined): MemberDto[] {
   return (members ?? []).filter((member) => member.position === "technician" && member.status !== "inactive");
 }
 
+// Embaixo do nome: com quem a pessoa já aprende (N:N), senão a equipe.
+function candidateNote(candidate: TransferCandidateDto): string {
+  if (candidate.withTeacher) return "já aprende com esta pessoa";
+  if (candidate.learningFrom.length) return `também aprende com ${candidate.learningFrom.map(shortName).join(", ")}`;
+  return candidate.member.teamName ?? "Sem equipe";
+}
+
 function CandidateRow({ candidate, checked, onPick }: { candidate: TransferCandidateDto; checked: boolean; onPick: () => void }) {
-  const busy = candidate.learningFrom !== null;
+  const busy = candidate.withTeacher;
   return (
     <label className={`flex items-center gap-3 border-t border-line px-3 py-2.5 first:border-t-0 ${busy ? "opacity-60" : "cursor-pointer hover:bg-chip"}`}>
       <input type="radio" name="learner" checked={checked} disabled={busy} onChange={onPick} className="accent-[var(--accent)]" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium text-app">{candidate.member.name}</span>
-        <span className="block text-xs text-muted">{busy ? `aprende com ${shortName(candidate.learningFrom ?? "")}` : candidate.member.teamName ?? "Sem equipe"}</span>
+        <span className="block text-xs text-muted">{candidateNote(candidate)}</span>
       </span>
       <TransferBar percent={candidate.progress.percent} className="w-16" />
       <span className="w-20 text-right text-xs tabular-nums text-muted">já faz {progressLabel(candidate.progress)}</span>

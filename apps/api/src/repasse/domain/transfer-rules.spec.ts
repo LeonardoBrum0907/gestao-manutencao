@@ -34,29 +34,30 @@ describe("assertNewTransfer", () => {
   const bia = member("m2", "Bia");
 
   it("passa num par livre com o que ensinar", () => {
-    assert.doesNotThrow(() => assertNewTransfer({ teacher: ana, learner: bia, learnerTeacherName: null, mastered: 5 }));
+    assert.doesNotThrow(() => assertNewTransfer({ teacher: ana, learner: bia, pairOpen: false, mastered: 5 }));
   });
 
-  it("recusa a mesma pessoa, quem já aprende com alguém e quem não domina nada", () => {
-    assert.throws(() => assertNewTransfer({ teacher: ana, learner: ana, learnerTeacherName: null, mastered: 5 }), /pessoas diferentes/);
-    assert.throws(() => assertNewTransfer({ teacher: ana, learner: bia, learnerTeacherName: "Caio", mastered: 5 }), /Bia já aprende com Caio/);
-    assert.throws(() => assertNewTransfer({ teacher: ana, learner: bia, learnerTeacherName: null, mastered: 0 }), /Ana não tem nota 3 ou 4/);
+  it("recusa a mesma pessoa, o par já aberto e quem não domina nada", () => {
+    assert.throws(() => assertNewTransfer({ teacher: ana, learner: ana, pairOpen: false, mastered: 5 }), /pessoas diferentes/);
+    assert.throws(() => assertNewTransfer({ teacher: ana, learner: bia, pairOpen: true, mastered: 5 }), /Bia já aprende com Ana/);
+    assert.throws(() => assertNewTransfer({ teacher: ana, learner: bia, pairOpen: false, mastered: 0 }), /Ana não tem nota 3 ou 4/);
   });
 });
 
 describe("rankCandidates", () => {
-  const candidate = (name: string, done: number, learningFrom: string | null = null): TransferCandidateDto => ({
+  const candidate = (name: string, done: number, withTeacher = false): TransferCandidateDto => ({
     member: { id: name, name, teamName: null },
     progress: { mastered: 10, done, near: 0, fromZero: 10 - done, percent: done * 10 },
-    learningFrom,
+    learningFrom: withTeacher ? ["Ana"] : [],
+    withTeacher,
   });
 
   it("tira quem já faz 90% ou mais", () => {
     assert.deepEqual(rankCandidates([candidate("Arlan", 9), candidate("Bia", 8)]).map((item) => item.member.name), ["Bia"]);
   });
 
-  it("livres primeiro, depois quem já faz mais, depois o nome", () => {
-    const ranked = rankCandidates([candidate("Caio", 8, "Ana"), candidate("Bia", 3), candidate("Duda", 7), candidate("Alan", 3)]);
+  it("quem já aprende com esta pessoa no fim; o resto por quem já faz mais, depois o nome", () => {
+    const ranked = rankCandidates([candidate("Caio", 8, true), candidate("Bia", 3), candidate("Duda", 7), candidate("Alan", 3)]);
     assert.deepEqual(ranked.map((item) => item.member.name), ["Duda", "Alan", "Bia", "Caio"]);
   });
 });

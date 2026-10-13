@@ -49,11 +49,17 @@ describe("TransferPlanner.suggestions", () => {
     assert.equal(result.candidates.some((item) => item.member.name === "Caio"), false);
   });
 
-  it("marca e põe no fim quem já aprende com alguém", async () => {
+  it("mostra com quem cada um já aprende sem tirar da ordem", async () => {
     store.rows.push({ id: "t0", teacherId: "duda", learnerId: "caio", equipmentIds: ["e1"], status: "active", startedAt: NOW, closedAt: null });
     const result = await planner.suggestions("ana", ["e1", "e2"]);
-    assert.deepEqual(result.candidates.at(-1), { ...result.candidates.at(-1), learningFrom: "Duda" });
-    assert.equal(result.candidates.at(-1)?.member.name, "Caio");
+    assert.deepEqual(result.candidates[0], { ...result.candidates[0], learningFrom: ["Duda"], withTeacher: false });
+    assert.equal(result.candidates[0]?.member.name, "Caio");
+  });
+
+  it("põe no fim quem já aprende com quem ensina", async () => {
+    await planner.create({ teacherId: "ana", learnerId: "caio" }, NOW);
+    const result = await planner.suggestions("ana", ["e1", "e2"]);
+    assert.deepEqual([result.candidates.at(-1)?.member.name, result.candidates.at(-1)?.withTeacher], ["Caio", true]);
   });
 });
 
@@ -64,17 +70,19 @@ describe("TransferPlanner.create", () => {
     assert.deepEqual(created.progress, { mastered: 3, done: 1, near: 1, fromZero: 1, percent: 33 });
   });
 
-  it("recusa quem já aprende com alguém", async () => {
+  it("quem aprende pode aprender com várias pessoas ao mesmo tempo (N:N)", async () => {
     await planner.create({ teacherId: "ana", learnerId: "bia" }, NOW);
-    await assert.rejects(planner.create({ teacherId: "caio", learnerId: "bia" }, NOW), /Bia já aprende com Ana/);
-  });
-
-  it("depois de encerrar, pode abrir outro", async () => {
-    const first = await planner.create({ teacherId: "ana", learnerId: "bia" }, NOW);
-    await planner.close(first.id, NOW);
     store.equipmentsByMember.set("caio", ["e1"]);
     const second = await planner.create({ teacherId: "caio", learnerId: "bia" }, NOW);
     assert.equal(second.teacher.name, "Caio");
+    assert.equal((await board.list(NOW)).teaching, 2);
+  });
+
+  it("recusa abrir o mesmo par duas vezes, mas reabre depois de encerrar", async () => {
+    const first = await planner.create({ teacherId: "ana", learnerId: "bia" }, NOW);
+    await assert.rejects(planner.create({ teacherId: "ana", learnerId: "bia" }, NOW), /Bia já aprende com Ana num repasse em andamento/);
+    await planner.close(first.id, NOW);
+    assert.equal((await planner.create({ teacherId: "ana", learnerId: "bia" }, NOW)).learner.name, "Bia");
   });
 });
 
