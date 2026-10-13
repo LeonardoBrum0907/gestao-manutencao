@@ -11,11 +11,14 @@ import { TeamLegend } from "./team/TeamLegend";
 import { TeamToolbar } from "./team/TeamToolbar";
 import { TeamTraining } from "./team/TeamTraining";
 import { useTeamControls } from "./team/use-team-controls";
+import { QuickTransferBar, QuickTransferButton } from "../../repasse/ui/QuickTransferBar";
+import { useQuickTransfer } from "../../repasse/ui/use-quick-transfer";
 
 // Uma tela para três usos: decidir quem treinar, montar a escala por turno e mostrar para a gerência.
 // Os números do topo filtram a grade; a visão, os agrupamentos e a ordem das colunas ficam salvos no sistema.
 function TeamMatrixContent({ team }: { team: TeamMatrixDto }) {
   const controls = useTeamControls(team);
+  const quick = useQuickTransfer(team);
   const grid = teamGrid(team, controls);
   const draggable = canDragColumns(controls);
   return (
@@ -24,9 +27,16 @@ function TeamMatrixContent({ team }: { team: TeamMatrixDto }) {
       {controls.saveFailed ? <Notice>Não foi possível salvar a disposição da matriz. A tela voltou ao que estava salvo.</Notice> : null}
       <Card className="flex flex-col gap-4 !p-0">
         <div className="px-4 pt-4 sm:px-5">
-          <TeamToolbar team={team} controls={controls} exportButtons={<TeamExport team={team} grid={grid} controls={controls} />} />
+          <TeamToolbar team={team} controls={controls} exportButtons={
+              <>
+                <QuickTransferButton quick={quick} />
+                <TeamExport team={team} grid={grid} controls={controls} />
+              </>
+            }
+          />
         </div>
-        <TeamGrid team={team} grid={grid} controls={controls} />
+        <QuickTransferBar quick={quick} />
+        <TeamGrid team={team} grid={grid} controls={controls} picker={quick.picker} />
         <div className="px-4 pb-4 sm:px-5">
           <TeamLegend view={controls.layout.view} cut={team.qualifiedAdherence} draggable={draggable} />
         </div>

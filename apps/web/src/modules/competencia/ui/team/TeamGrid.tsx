@@ -7,6 +7,7 @@ import type { TeamSortKey } from "../../model/team-rows";
 import { ariaSort, BlockHeader, ColumnHeader, SortButton } from "./TeamGridHead";
 import { TeamGridBody } from "./TeamGridBody";
 import type { TeamControls } from "./use-team-controls";
+import type { GridPicker } from "../../../repasse/ui/use-quick-transfer";
 
 function useColumnSensors() {
   return useSensors(
@@ -22,9 +23,10 @@ function siblingSets(grid: TeamGridModel): string[][] {
   return [lines, ...grid.columnBlocks.map((block) => block.columns.map((column) => column.id))];
 }
 
-type GridProps = { team: TeamMatrixDto; grid: TeamGridModel; controls: TeamControls };
+// picker: repasse rápido ligado; os cliques na grade escolhem quem ensina e quem aprende.
+type GridProps = { team: TeamMatrixDto; grid: TeamGridModel; controls: TeamControls; picker: GridPicker | null };
 
-export function TeamGrid({ team, grid, controls }: GridProps) {
+export function TeamGrid({ team, grid, controls, picker }: GridProps) {
   const sensors = useColumnSensors();
   const equipmentOf = new Map<string, TeamEquipmentDto>(team.equipments.map((equipment) => [equipment.id, equipment]));
   const draggable = canDragColumns(controls);
@@ -79,7 +81,7 @@ export function TeamGrid({ team, grid, controls }: GridProps) {
               </th>
             </tr>
           </thead>
-          <TeamGridBody team={team} columns={grid.columns} rowBlocks={grid.rowBlocks} view={controls.layout.view} />
+          <TeamGridBody team={team} columns={grid.columns} rowBlocks={grid.rowBlocks} view={controls.layout.view} picker={picker} />
         </table>
       </div>
     </DndContext>
