@@ -16,6 +16,8 @@ import { NewPostPreventivePage, PostPreventivePage } from "../modules/pos-preven
 import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
 import { InboxPage } from "../modules/registro/ui/InboxPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
+import { TransferPage } from "../modules/repasse/ui/TransferPage";
+import { TransfersPage } from "../modules/repasse/ui/TransfersPage";
 import { RpEditPage } from "../modules/rp/ui/RpEditPage";
 import { RpListPage } from "../modules/rp/ui/RpListPage";
 import { RpPastePage } from "../modules/rp/ui/RpPastePage";
@@ -75,6 +77,8 @@ export function AppRouter() {
         <Route path="/cadastro/colaboradores/:memberId/:tab?" element={<MemberPage />} />
         <Route path="/cadastro/tecnicos" element={<Navigate to="/cadastro/colaboradores" replace />} />
         <Route path="/cadastro/equipes" element={<TeamsPage />} />
+        <Route path="/repasses" element={<TransfersPage />} />
+        <Route path="/repasses/:id" element={<TransferPage />} />
         <Route path="/configuracoes/:tab?" element={<SettingsPage />} />
         {settingsRedirects.map(([from, tab]) => (
           <Route key={from} path={from} element={<Navigate to={`/configuracoes/${tab}`} replace />} />
