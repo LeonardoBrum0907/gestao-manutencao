@@ -7,6 +7,7 @@ import { useAddFeedback, useBoardChange, useFeedbackBoard } from "../data/board"
 import { toneLabel } from "../model/record";
 import { CheckRow, Checklist, GroupingPills, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
 import { MemberChip, ToneChip } from "./chips";
+import type { ChecklistColumn } from "./checklist-table";
 import { AddRow } from "./quick-add";
 import { useRecordLink } from "./record-link";
 
@@ -30,6 +31,17 @@ const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "shor
 
 function shortDay(iso: string) {
   return dayMonth.format(new Date(iso)).replace(".", "").replace(" de ", " ");
+}
+
+const FEEDBACK_COLUMNS: ChecklistColumn[] = [
+  { key: "colaborador", header: "Colaborador", width: "12rem" },
+  { key: "tom", header: "Tom", width: "7rem" },
+  { key: "data", header: "Data", width: "6.5rem" },
+];
+
+function pendingLine(count: number): string {
+  if (count === 0) return "Nada para conversar";
+  return count === 1 ? "1 para conversar" : `${count} para conversar`;
 }
 
 function memberOf(item: FeedbackBoardItemDto) {
@@ -168,18 +180,26 @@ export function FeedbackBoard() {
           <>
             <ToneMark tone={item.tone} />
             <span className="tabular-nums">{shortDay(item.occurredAt)}</span>
+            {mode !== "colaborador" || groupKey === "conversados" ? <span>{memberOf(item)}</span> : null}
           </>
         }
-        tag={mode !== "colaborador" || groupKey === "conversados" ? memberOf(item) : undefined}
+        cells={[
+          memberOf(item),
+          item.tone ? <ToneMark tone={item.tone} /> : <span className="text-muted">—</span>,
+          <span className="tabular-nums text-muted">{shortDay(item.occurredAt)}</span>,
+        ]}
       />
     );
   }
 
   return (
     <div>
-      <GroupingPills value={mode} options={modeOptions} onChange={setMode} />
-      {pending.length === 0 ? <p className="mb-2 text-sm text-muted">Nenhum feedback para conversar.</p> : null}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <GroupingPills value={mode} options={modeOptions} onChange={setMode} />
+        <span className="hidden text-sm text-muted md:inline">{pendingLine(pending.length)}</span>
+      </div>
       <Checklist
+        frame={{ itemHeader: "Feedback", columns: FEEDBACK_COLUMNS, summary: pendingLine(pending.length) }}
         key={mode}
         groups={groups}
         fading={fading}

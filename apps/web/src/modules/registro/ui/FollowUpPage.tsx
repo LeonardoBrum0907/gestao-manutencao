@@ -23,8 +23,8 @@ export function FollowUpPage() {
   const [params, setParams] = useSearchParams();
   const tab = tabOf(params);
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageTitle title="Registros" />
+    <div>
+      <PageTitle title="Registros" text="Tarefas, problemas e feedbacks que pedem acompanhamento. Arraste para reordenar ou mudar de grupo." />
       <div role="tablist" aria-label="Tipo de pendência" className="-mt-2 mb-6 flex gap-1 overflow-x-auto border-b border-line">
         {tabs.map((item) => (
           <button

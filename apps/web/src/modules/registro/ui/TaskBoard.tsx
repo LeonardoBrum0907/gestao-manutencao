@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import type { BoardGroup, BoardItemDto, BoardTarget, RecordPriority } from "@manutencao/shared";
+import { RECORD_PRIORITY_LABELS, type BoardGroup, type BoardItemDto, type BoardTarget, type RecordPriority } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
 import { changeOnBoard, refreshRecords, useAddTask, useBoardChange, useTaskBoard } from "../data/board";
 import { dueLabel, groupEmpty, isDropTarget, nextDay, todayTitle } from "../model/board";
 import { CheckRow, Checklist, InProgressChip, ringTone, scrollToGroup, useCompleting, type ChecklistGroup } from "./checklist";
+import type { ChecklistColumn } from "./checklist-table";
 import { DueChip, PriorityChip } from "./chips";
 import { AddRow } from "./quick-add";
 import { useRecordLink } from "./record-link";
@@ -27,6 +28,25 @@ function CalendarIcon() {
       <path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" />
     </svg>
   );
+}
+
+const TASK_COLUMNS: ChecklistColumn[] = [
+  { key: "prioridade", header: "Prioridade", width: "7rem" },
+  { key: "prazo", header: "Prazo", width: "8rem" },
+  { key: "situacao", header: "Situação", width: "8.5rem" },
+];
+
+const priorityTone: Record<RecordPriority, string> = { high: "font-semibold text-danger", medium: "font-semibold text-warn", low: "text-muted" };
+
+function PriorityCell({ priority }: { priority: RecordPriority | null }) {
+  if (!priority) return <span className="text-muted">—</span>;
+  return <span className={priorityTone[priority]}>{RECORD_PRIORITY_LABELS[priority]}</span>;
+}
+
+function StatusCell({ item, checked }: { item: BoardItemDto; checked: boolean }) {
+  if (item.status === "done" || checked) return <span className="text-muted">Concluída</span>;
+  if (item.status === "in_progress") return <InProgressChip />;
+  return <span className="text-muted">Aberta</span>;
 }
 
 function groupDay(group: BoardTarget, today: string): string | null {
@@ -119,6 +139,12 @@ export function TaskBoard() {
     const group = groupKey as BoardGroup;
     const checked = item.status === "done" || fading.has(id);
     const dueTone = group === "overdue" ? "text-danger" : group === "today" ? "text-accent" : "text-muted";
+    const due = item.dueAt ? (
+      <span className={`inline-flex items-center gap-1 tabular-nums ${dueTone}`}>
+        <CalendarIcon />
+        {dueLabel(item.dueAt, today)}
+      </span>
+    ) : null;
     return (
       <CheckRow
         checked={checked}
@@ -130,16 +156,12 @@ export function TaskBoard() {
         info={
           item.dueAt || (item.status === "in_progress" && !checked) ? (
             <>
-              {item.dueAt ? (
-                <span className={`inline-flex items-center gap-1 tabular-nums ${dueTone}`}>
-                  <CalendarIcon />
-                  {dueLabel(item.dueAt, today)}
-                </span>
-              ) : null}
+              {due}
               {item.status === "in_progress" && !checked ? <InProgressChip /> : null}
             </>
           ) : null
         }
+        cells={[<PriorityCell priority={item.priority} />, due ?? <span className="text-muted">—</span>, <StatusCell item={item} checked={checked} />]}
       />
     );
   }
@@ -172,19 +194,24 @@ export function TaskBoard() {
     }));
   const open = items.filter((item) => item.status !== "done").length;
 
+  const summary = (
+    <span className="flex flex-wrap gap-x-3">
+      <span>
+        {open} {open === 1 ? "aberta" : "abertas"}
+      </span>
+      {overdue.length ? (
+        <span className="text-danger">
+          {overdue.length} {overdue.length === 1 ? "atrasada" : "atrasadas"}
+        </span>
+      ) : null}
+    </span>
+  );
+
   return (
     <div>
-      <p className="mb-6 flex flex-wrap gap-x-4 text-sm text-muted">
-        <span>
-          {open} {open === 1 ? "aberta" : "abertas"}
-        </span>
-        {overdue.length ? (
-          <span className="text-danger">
-            {overdue.length} {overdue.length === 1 ? "atrasada" : "atrasadas"}
-          </span>
-        ) : null}
-      </p>
+      <p className="mb-3 hidden justify-end text-sm text-muted md:flex">{summary}</p>
       <Checklist
+        frame={{ itemHeader: "Tarefa", columns: TASK_COLUMNS, summary }}
         groups={groups}
         fading={fading}
         openKeys={target === "done" ? ["done"] : []}

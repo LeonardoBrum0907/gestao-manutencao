@@ -9,6 +9,7 @@ import { PROBLEM_MODES, placeGroups, placeTag, problemModeOptions, type ProblemM
 import { originLabel } from "../model/record";
 import { CheckRow, Checklist, GroupingPills, InProgressChip, useCompleting, useGrouping, type ChecklistGroup } from "./checklist";
 import { PlaceChips, type PlaceValue } from "./chips";
+import type { ChecklistColumn } from "./checklist-table";
 import { AddRow } from "./quick-add";
 import { useRecordLink } from "./record-link";
 
@@ -49,11 +50,33 @@ function AddProblem({ spot, inProgress, label = "Adicionar problema" }: { spot?:
   );
 }
 
+const PROBLEM_COLUMNS: ChecklistColumn[] = [
+  { key: "lugar", header: "Lugar", width: "15rem" },
+  { key: "origem", header: "Origem", width: "6.5rem" },
+  { key: "data", header: "Aberto em", width: "6.5rem" },
+  { key: "situacao", header: "Situação", width: "8.5rem" },
+];
+
+function Dash() {
+  return <span className="text-muted">—</span>;
+}
+
+function ProblemStatus({ item, checked }: { item: ProblemBoardItemDto; checked: boolean }) {
+  if (item.status === "done" || checked) return <span className="text-muted">Resolvido</span>;
+  if (item.status === "in_progress") return <InProgressChip />;
+  return <span className="text-muted">Aberto</span>;
+}
+
 const otherPlace: Record<Exclude<ProblemMode, "situacao">, string> = {
   linha: "Adicionar problema em outra linha",
   maquina: "Adicionar problema em outra máquina",
   conjunto: "Adicionar problema",
 };
+
+function openLine(count: number): string {
+  if (count === 0) return "Nenhum problema em aberto";
+  return count === 1 ? "1 problema em aberto" : `${count} problemas em aberto`;
+}
 
 export function ProblemBoard() {
   const board = useProblemBoard();
@@ -142,6 +165,7 @@ export function ProblemBoard() {
     const item = byId.get(id);
     if (!item) return null;
     const checked = item.status === "done" || fading.has(id);
+    const place = placeTag(item, mode, groupKey);
     return (
       <CheckRow
         checked={checked}
@@ -154,18 +178,27 @@ export function ProblemBoard() {
             <span className="tabular-nums">{shortDay(item.occurredAt)}</span>
             {item.origin !== "inbox" ? <span>{originLabel(item.origin)}</span> : null}
             {item.status === "in_progress" && !checked && mode !== "situacao" ? <InProgressChip /> : null}
+            {place ? <span>{place}</span> : null}
           </>
         }
-        tag={placeTag(item, mode, groupKey)}
+        cells={[
+          place ? <span className="text-muted">{place}</span> : <Dash />,
+          item.origin !== "inbox" ? originLabel(item.origin) : <Dash />,
+          <span className="tabular-nums text-muted">{shortDay(item.occurredAt)}</span>,
+          <ProblemStatus item={item} checked={checked} />,
+        ]}
       />
     );
   }
 
   return (
     <div>
-      <GroupingPills value={mode} options={problemModeOptions} onChange={setMode} />
-      {open.length === 0 && mode !== "situacao" ? <p className="mb-2 text-sm text-muted">Nenhum problema em aberto.</p> : null}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <GroupingPills value={mode} options={problemModeOptions} onChange={setMode} />
+        <span className="hidden text-sm text-muted md:inline">{openLine(open.length)}</span>
+      </div>
       <Checklist
+        frame={{ itemHeader: "Problema", columns: PROBLEM_COLUMNS, summary: openLine(open.length) }}
         key={mode}
         groups={groups}
         fading={fading}

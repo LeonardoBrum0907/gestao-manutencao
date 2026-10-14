@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ChecklistBox, FrameFooter, GroupBand, gridClass, gridStyle, useFrameColumns, type ChecklistFrame } from "./checklist-table";
 import type { RecordLink } from "./record-link";
 
 // Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
@@ -78,7 +79,7 @@ export function CheckRow({
   link,
   title,
   info,
-  tag,
+  cells = [],
 }: {
   checked: boolean;
   ring?: string;
@@ -86,12 +87,15 @@ export function CheckRow({
   onToggle?: () => void;
   link: RecordLink;
   title: string;
+  // Linha de informação embaixo do título, só no celular (no computador as células fazem esse papel).
   info?: ReactNode;
-  tag?: ReactNode;
+  // Uma célula por coluna do checklist, na mesma ordem do cabeçalho.
+  cells?: ReactNode[];
 }) {
+  const columns = useFrameColumns();
   const circle = checked ? "border-2 border-accent bg-accent text-canvas" : `text-transparent hover:bg-chip ${ring}`;
   return (
-    <div className="grid grid-cols-[22px_minmax(0,1fr)] gap-x-3 py-2.5 sm:grid-cols-[22px_minmax(0,1fr)_auto]">
+    <div style={gridStyle(columns)} className={`${gridClass} items-start px-3 py-2.5`}>
       <button
         type="button"
         onClick={onToggle}
@@ -114,9 +118,13 @@ export function CheckRow({
         >
           {title}
         </Link>
-        {info ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">{info}</div> : null}
+        {info ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted md:hidden">{info}</div> : null}
       </div>
-      {tag ? <div className="col-start-2 mt-1 text-[13px] text-muted sm:col-start-3 sm:mt-0 sm:self-end sm:text-right">{tag}</div> : null}
+      {columns.map((column, index) => (
+        <div key={column.key} className="hidden pt-0.5 text-sm text-app md:block">
+          {cells[index] ?? null}
+        </div>
+      ))}
     </div>
   );
 }
@@ -134,7 +142,7 @@ function SortableRow({ id, locked, fading, children }: { id: string; locked: boo
       {...attributes}
       {...listeners}
       aria-roledescription="item arrastável"
-      className={`border-b border-line bg-canvas outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+      className={`border-b border-line bg-card outline-none transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent ${
         locked ? "" : "cursor-grab active:cursor-grabbing"
       } ${isDragging ? "opacity-40" : ""} ${fading ? "opacity-0 transition-opacity delay-200 duration-200" : ""}`}
     >
@@ -153,7 +161,7 @@ function Column({ group, ids, fading, renderRow }: { group: ChecklistGroup; ids:
             {renderRow(id, group.key)}
           </SortableRow>
         ))}
-        {ids.length === 0 ? <li className="border-b border-line py-3 pl-[34px] text-sm text-muted">{group.empty}</li> : null}
+        {ids.length === 0 ? <li className="border-b border-line py-3 pl-[46px] pr-3 text-sm text-muted">{group.empty}</li> : null}
       </ul>
     </SortableContext>
   );
@@ -174,6 +182,7 @@ function columnsOf(groups: ChecklistGroup[]): Columns {
 }
 
 export function Checklist({
+  frame,
   groups,
   renderRow,
   renderOverlay,
@@ -182,6 +191,7 @@ export function Checklist({
   onDrop,
   openKeys = [],
 }: {
+  frame: ChecklistFrame;
   groups: ChecklistGroup[];
   renderRow: (id: string, group: string) => ReactNode;
   renderOverlay: (id: string, group: string) => ReactNode;
@@ -278,43 +288,26 @@ export function Checklist({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={cancel}>
+      <ChecklistBox frame={frame}>
       {groups.map((group) => {
         const ids = columns[group.key] ?? group.ids;
         const collapsed = Boolean(group.startCollapsed) !== toggled.has(group.key);
         return (
-          <section key={group.key} id={domId(group.key)} className="mt-7 scroll-mt-4 first:mt-0">
-            <div className="flex items-center gap-2 border-b border-line pb-2">
-              <h2 className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() => fold(group.key)}
-                  aria-expanded={!collapsed}
-                  className="-ml-0.5 flex items-center gap-2 rounded-md py-0.5 pl-0.5 pr-1.5 text-left text-[15px] font-semibold text-app hover:bg-chip"
-                >
-                  <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 text-muted transition ${collapsed ? "-rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 6l4 4 4-4" />
-                  </svg>
-                  <span className="min-w-0">
-                    {group.title}
-                    {group.sub ? <span className="font-medium text-muted"> · {group.sub}</span> : null}
-                  </span>
-                </button>
-              </h2>
-              {ids.length ? <span className="text-[13px] tabular-nums text-muted">{ids.length}</span> : null}
-              {group.action ? <div className="ml-auto shrink-0">{group.action}</div> : null}
-            </div>
+          <section key={group.key} id={domId(group.key)} className="scroll-mt-4">
+            <GroupBand title={group.title} sub={group.sub} count={ids.length} collapsed={collapsed} onFold={() => fold(group.key)} action={group.action} />
             {collapsed ? null : (
               <>
                 <Column group={group} ids={ids} fading={fading} renderRow={renderRow} />
-                {group.footer}
+                {group.footer ? <FrameFooter>{group.footer}</FrameFooter> : null}
               </>
             )}
           </section>
         );
       })}
       <DragOverlay>
-        {activeId && activeGroup ? <div className="rounded-lg bg-canvas px-2 shadow-card">{renderOverlay(activeId, activeGroup)}</div> : null}
+        {activeId && activeGroup ? <div className="rounded-control bg-card shadow-card">{renderOverlay(activeId, activeGroup)}</div> : null}
       </DragOverlay>
+      </ChecklistBox>
     </DndContext>
   );
 }
@@ -362,7 +355,7 @@ export function useGrouping<T extends string>(storageKey: string, options: reado
 
 export function GroupingPills<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
   return (
-    <div role="group" aria-label="Agrupar por" className="mb-6 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+    <div role="group" aria-label="Agrupar por" className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
       <span>Agrupar por</span>
       {options.map((option) => (
         <button
