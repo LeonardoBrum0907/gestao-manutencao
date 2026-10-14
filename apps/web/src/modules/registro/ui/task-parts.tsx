@@ -5,6 +5,7 @@ import { errorMessage } from "../../../app/http";
 import { useToast } from "../../../design/ui/toast";
 import { changeOnBoard, refreshRecords, useAddTask, useBoardChange } from "../data/board";
 import { dueLabel } from "../model/board";
+import { passToTodayChange } from "../model/my-day";
 import { InProgressChip, ringTone, useCompleting } from "./checklist";
 import { DueChip, PriorityChip } from "./chips";
 import { AddRow } from "./quick-add";
@@ -116,15 +117,15 @@ export function AddTask({ id, day: listDay, today, label = "Adicionar tarefa" }:
   );
 }
 
-/** "Passar para hoje" das atrasadas: leva todas para hoje de uma vez. */
-export function PassToToday({ ids }: { ids: string[] }) {
+/** "Passar para hoje" das atrasadas: leva todas para hoje de uma vez, cada uma no horário que já tinha. */
+export function PassToToday({ ids, today }: { ids: string[]; today: string }) {
   const client = useQueryClient();
   const toast = useToast();
   const [passing, setPassing] = useState(false);
   async function pass() {
     setPassing(true);
     try {
-      await Promise.all(ids.map((id) => changeOnBoard(id, { group: "today" })));
+      await Promise.all(ids.map((id) => changeOnBoard(id, passToTodayChange(today))));
       toast({ text: ids.length === 1 ? "1 tarefa passou para hoje." : `${ids.length} tarefas passaram para hoje.` });
     } catch (error) {
       toast({ text: errorMessage(error) });
