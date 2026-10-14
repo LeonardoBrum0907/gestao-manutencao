@@ -783,4 +783,5 @@ export type ChamadoTaskBody = {
 };
 
 export * from "./tech-docs";
+export * from "./knowledge-transfer";
 export * from "./machine-parts";
