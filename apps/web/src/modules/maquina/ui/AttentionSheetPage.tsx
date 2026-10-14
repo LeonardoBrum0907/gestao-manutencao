@@ -154,7 +154,7 @@ export function AttentionSheetPage() {
             <article className="report attention-sheet" data-theme="light">
               <header className="hero">
                 <div>
-                  <p className="brand">Gestão de Manutenção · {recordId ? "Ficha pós-preventiva" : "Pontos de atenção para a preventiva"}</p>
+                  <p className="brand">Caderno do Gestor · {recordId ? "Ficha pós-preventiva" : "Pontos de atenção para a preventiva"}</p>
                   <h1>{machine.name}</h1>
                   <p className="sub">{[line.name, machine.tag ? `TAG ${machine.tag}` : null, model?.name].filter(Boolean).join(" · ")}</p>
                 </div>
@@ -181,7 +181,7 @@ export function AttentionSheetPage() {
               </div>
               <footer>
                 <span>
-                  Gestão de Manutenção · {line.name} · {machine.name}
+                  Caderno do Gestor · {line.name} · {machine.name}
                 </span>
                 <span>Gerado em {dateFormat.format(new Date())}</span>
               </footer>
