@@ -42,7 +42,7 @@ describe("parseRpText com relatórios reais do WhatsApp", () => {
     assert.equal(rp.tag, "EBS-ONC-02");
     assert.equal(rp.problem, "Deformação de bolhas durante corte da faca.");
     assert.equal(rp.causes.machine.marked, true);
-    assert.equal(rp.causes.machine.text, "X (FERRAMENTAL)");
+    assert.equal(rp.causes.machine.text, "FERRAMENTAL");
     assert.equal(rp.causes.material.marked, false);
     assert.equal(rp.causes.method.marked, false);
     assert.equal(rp.causes.labor.marked, false);
@@ -66,7 +66,7 @@ describe("parseRpText com relatórios reais do WhatsApp", () => {
     assert.equal(rp.causes.machine.marked, false);
     assert.equal(rp.causes.method.marked, false);
     assert.equal(rp.causes.labor.marked, true);
-    assert.equal(rp.causes.labor.text, "sim");
+    assert.equal(rp.causes.labor.text, null);
     assert.ok(rp.rootCause?.startsWith("motor com baixa tensão"));
     assert.ok(!rp.rootCause?.includes("por que aconteceu"));
     assert.equal(rp.corrective?.split("\n").length, 3);
