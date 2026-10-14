@@ -9,17 +9,19 @@ type SectionPickerProps<K extends string> = {
   allLabel: string;
   confirmLabel: string;
   sections: readonly PickerSection<K>[];
+  /** Seções que já abrem marcadas; sem isso, abrem todas. */
+  initial?: readonly K[];
   onConfirm: (selected: K[]) => void;
   onClose: () => void;
 };
 
 /**
- * Janela de "o que entra no PDF": uma caixa por seção, abre com todas marcadas. Seção com `disabledWhen` só vale
+ * Janela de "o que entra no PDF": uma caixa por seção, abre com todas marcadas (ou só as de `initial`). Seção com `disabledWhen` só vale
  * se a seção que ela depende estiver marcada (ex.: legenda da grade sem a grade).
  * @example <SectionPickerModal title="Relatório PDF" sections={sections} onConfirm={(keys) => navigate(path(keys))} … />
  */
-export function SectionPickerModal<K extends string>({ title, intro, allLabel, confirmLabel, sections, onConfirm, onClose }: SectionPickerProps<K>) {
-  const [selected, setSelected] = useState<K[]>(sections.map((section) => section.key));
+export function SectionPickerModal<K extends string>({ title, intro, allLabel, confirmLabel, sections, initial, onConfirm, onClose }: SectionPickerProps<K>) {
+  const [selected, setSelected] = useState<K[]>(initial ? [...initial] : sections.map((section) => section.key));
   const toggle = (key: K) => setSelected((current) => (current.includes(key) ? current.filter((item) => item !== key) : [...current, key]));
   const isOff = (section: PickerSection<K>) => Boolean(section.disabledWhen && !selected.includes(section.disabledWhen));
   const ordered = sections.filter((section) => selected.includes(section.key) && !isOff(section)).map((section) => section.key);

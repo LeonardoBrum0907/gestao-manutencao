@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { errorMessage } from "../../../app/http";
 import { Button, Notice, PageTitle } from "../../../design/ui/controls";
 import { useMachines } from "../../cadastro/data/cadastro";
+import { AttentionSheetOptions } from "../../maquina/ui/AttentionSheetOptions";
 import { todayIso } from "../../colaborador/model/pdi-items";
 import { useDeletePostPreventive, usePostPreventive } from "../data/post-preventives";
 import { emptyValues, valuesFromDto } from "../model/post-preventive";
@@ -41,6 +42,7 @@ export function PostPreventivePage() {
   const item = usePostPreventive(id);
   const remove = useDeletePostPreventive();
   const [confirming, setConfirming] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   if (item.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!item.data) return <p className="text-sm text-danger">Ficha não encontrada.</p>;
@@ -61,12 +63,9 @@ export function PostPreventivePage() {
         onSaved={() => undefined}
         extraActions={
           <>
-            <Link
-              to={`/maquinas/${data.machineId}/folha?ficha=${data.id}`}
-              className="inline-flex items-center justify-center rounded-control border border-line bg-chip px-4 py-2.5 text-sm font-semibold text-app transition hover:bg-accent-soft"
-            >
+            <Button tone="ghost" onClick={() => setExporting(true)}>
               Exportar
-            </Link>
+            </Button>
             {confirming ? (
               <span className="flex items-center gap-2 text-sm text-app">
                 Excluir esta ficha?
@@ -85,6 +84,7 @@ export function PostPreventivePage() {
           </>
         }
       />
+      {exporting ? <AttentionSheetOptions machineId={data.machineId} recordId={data.id} onClose={() => setExporting(false)} /> : null}
       {remove.isError ? (
         <div className="mt-4">
           <Notice>{errorMessage(remove.error)}</Notice>
