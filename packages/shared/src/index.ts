@@ -474,6 +474,8 @@ export type FeedbackBoardDto = { items: FeedbackBoardItemDto[] };
 export type BoardChangeDto = {
   status?: RecordStatus;
   group?: BoardTarget;
+  // Dia novo do prazo (AAAA-MM-DD) mantendo o horário, como no arrastar da Agenda. Não vai junto com group.
+  day?: string;
   order?: string[];
 };
 

@@ -3,6 +3,7 @@ import { Link, Navigate, Outlet, useMatch } from "react-router-dom";
 import { MENU_STATE } from "../../app/nav-trail";
 import { useSession } from "../data/session";
 import { Icon } from "../../design/ui/icons";
+import { NotebookIcon } from "../../design/ui/brand-mark";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell() {
@@ -21,14 +22,17 @@ export function AppShell() {
       <Sidebar open={open} email={session.data.email} onClose={() => setOpen(false)} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="app-chrome flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-3 py-2 lg:hidden">
-          <button
-            type="button"
-            aria-label="Abrir menu"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-control text-app transition hover:bg-chip"
-            onClick={() => setOpen(true)}
-          >
-            <Icon name="menu" className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Abrir menu"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-control text-app transition hover:bg-chip"
+              onClick={() => setOpen(true)}
+            >
+              <Icon name="menu" className="h-6 w-6" />
+            </button>
+            <NotebookIcon className="h-7 w-7 rounded-control" />
+          </div>
           <Link
             to="/entrada"
             state={MENU_STATE}

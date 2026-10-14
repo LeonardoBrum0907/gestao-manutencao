@@ -595,7 +595,7 @@ export function ReportPage() {
                   {initials(member.name)}
                 </div>
                 <div>
-                  <p className="brand">Gestão de Manutenção · Avaliação de colaborador</p>
+                  <p className="brand">Caderno do Gestor · Avaliação de colaborador</p>
                   <h1>{member.name}</h1>
                   <p className="sub">{member.roleName ?? positionLabel(member.position)}</p>
                 </div>
@@ -624,7 +624,7 @@ export function ReportPage() {
                 {has("pdi") ? <Pdi memberId={member.id} isTechnician={isTechnician} year={year} /> : null}
               </div>
               <footer>
-                <span>Gestão de Manutenção · {member.name}</span>
+                <span>Caderno do Gestor · {member.name}</span>
                 <span>Gerado em {dateFormat.format(new Date())}</span>
               </footer>
             </article>

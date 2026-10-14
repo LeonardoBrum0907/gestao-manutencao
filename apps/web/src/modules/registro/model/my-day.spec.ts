@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { BoardItemDto } from "@manutencao/shared";
-import { myDayDate, myDayGroups } from "./my-day";
+import { myDayDate, myDayGroups, passToTodayChange } from "./my-day";
 
 function task(id: string, partial: Partial<BoardItemDto>): BoardItemDto {
   return {
@@ -38,5 +38,10 @@ describe("Meu Dia", () => {
 
   it("escreve a data por extenso", () => {
     assert.equal(myDayDate(today), "Terça-feira, 13 de outubro");
+  });
+
+  it("passa a atrasada para hoje pelo dia, para o prazo manter o horário", () => {
+    // Regressão: com { group: "today" } a API punha meio-dia e "13/10 às 15h" virava "hoje às 12h".
+    assert.deepEqual(passToTodayChange(today), { day: today });
   });
 });

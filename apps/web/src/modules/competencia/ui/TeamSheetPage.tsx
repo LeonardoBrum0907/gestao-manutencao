@@ -101,7 +101,7 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
     <article className="report team-sheet" data-theme="light">
       <header className="hero">
         <div>
-          <p className="brand">Gestão de Manutenção · Matriz da equipe</p>
+          <p className="brand">Caderno do Gestor · Matriz da equipe</p>
           <h1>Matriz da equipe</h1>
           <p className="sub">{subtitle(team, grid, state.shift)}</p>
         </div>
@@ -113,7 +113,7 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
       <div className="stripe" />
       <SheetBody team={team} grid={grid} sections={parseTeamSheetSections(search.get("secoes"))} />
       <footer>
-        <span>Gestão de Manutenção · Matriz da equipe</span>
+        <span>Caderno do Gestor · Matriz da equipe</span>
         <span>Gerado em {today}</span>
       </footer>
     </article>

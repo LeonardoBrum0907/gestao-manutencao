@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Gestão de Manutenção",
-  "short_name": "Gestão",
+  "name": "Caderno do Gestor",
+  "short_name": "Caderno",
   "description": "Caderno do gestor de manutenção: tarefas, chamados, RPs e equipe.",
   "lang": "pt-BR",
   "start_url": "/",

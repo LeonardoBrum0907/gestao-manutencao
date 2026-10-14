@@ -74,3 +74,14 @@ export function niceCeiling(max: number): number {
   const step = [1, 2, 5, 10].find((factor) => factor * power >= max) ?? 10;
   return step * power;
 }
+
+/**
+ * Marcas do eixo vertical de um gráfico com topo `top`: zero, o meio e o topo.
+ * Os gráficos contam tarefas e chamados, então o meio só entra quando é inteiro (nada de "2.5").
+ * @example axisTicks(10) // [0, 5, 10]
+ * @example axisTicks(5) // [0, 5]
+ */
+export function axisTicks(top: number): number[] {
+  const middle = top / 2;
+  return Number.isInteger(middle) ? [0, middle, top] : [0, top];
+}
