@@ -76,6 +76,8 @@
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
   --font-mono: "Source Code Pro", Consolas, monospace;
+  /* Altura do "x" em relação ao tamanho da fonte, igual à da IBM Plex Sans usada antes (ver index.css). */
+  --font-size-adjust: 0.52;
 }
 
 [data-theme="dark"] {
