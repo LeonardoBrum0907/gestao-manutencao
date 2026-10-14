@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { BoardChangeDto, BoardDto, FeedbackBoardDto, FeedbackTone, ProblemBoardDto, RecordDto, RecordPriority } from "@manutencao/shared";
+import type { BoardChangeDto, BoardDto, FeedbackTone, RecordDto, RecordPriority } from "@manutencao/shared";
 import { api } from "../../../app/http";
 import { dueAtOf } from "../model/board";
 import type { ProblemSheetBody, TaskSheetBody } from "./records";
@@ -7,14 +7,6 @@ import type { ProblemSheetBody, TaskSheetBody } from "./records";
 // Os checklists de Registros vêm inteiros (abertos + concluídos recentes): são dezenas, não milhares.
 export function useTaskBoard() {
   return useQuery({ queryKey: ["records", "board", "tasks"], queryFn: () => api<BoardDto>("/api/records/board/tasks") });
-}
-
-export function useProblemBoard() {
-  return useQuery({ queryKey: ["records", "board", "problems"], queryFn: () => api<ProblemBoardDto>("/api/records/board/problems") });
-}
-
-export function useFeedbackBoard() {
-  return useQuery({ queryKey: ["records", "board", "feedbacks"], queryFn: () => api<FeedbackBoardDto>("/api/records/board/feedbacks") });
 }
 
 export function changeOnBoard(id: string, change: BoardChangeDto) {

@@ -147,10 +147,6 @@ function domId(key: string) {
   return `grupo-${key.replace(/[^a-z0-9-]/gi, "-")}`;
 }
 
-export function scrollToGroup(key: string) {
-  document.getElementById(domId(key))?.scrollIntoView({ block: "start" });
-}
-
 export function Checklist({
   frame,
   groups,
@@ -229,46 +225,4 @@ export function useCompleting() {
     );
   }
   return { fading, complete };
-}
-
-// "Agrupar por": a escolha fica guardada no aparelho.
-export function useGrouping<T extends string>(storageKey: string, options: readonly T[], fallback: T): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      return stored && (options as readonly string[]).includes(stored) ? (stored as T) : fallback;
-    } catch {
-      return fallback;
-    }
-  });
-  function choose(next: T) {
-    setValue(next);
-    try {
-      localStorage.setItem(storageKey, next);
-    } catch {
-      // Sem armazenamento (aba anônima): a escolha vale só nesta visita.
-    }
-  }
-  return [value, choose];
-}
-
-export function GroupingPills<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
-  return (
-    <div role="group" aria-label="Agrupar por" className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
-      <span>Agrupar por</span>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={`rounded-full border px-3 py-1 text-[13px] transition ${
-            value === option.value ? "border-accent bg-accent-soft font-semibold text-app" : "border-line text-app hover:bg-chip"
-          }`}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
 }
