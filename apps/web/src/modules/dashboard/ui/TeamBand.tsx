@@ -83,7 +83,7 @@ function People({ people, pdiOverdue }: { people: DashboardPeopleDto; pdiOverdue
         <Fact label={`Sem avaliação no ${quarter}`} value={`${evaluation.missing} de ${evaluation.technicians}`} to="/cadastro/colaboradores" alert={evaluation.missing > 0} />
         <Fact label={`Abaixo da meta ${evaluation.target} no ${evaluation.quarter}º trimestre`} value={String(evaluation.belowTarget)} to="/cadastro/colaboradores" />
         {pdiOverdue !== null ? <Fact label="Itens de PDI vencidos" value={String(pdiOverdue)} to="/competencias?foco=pdi" alert={pdiOverdue > 0} /> : null}
-        <Fact label="Sem feedback há mais de 60 dias" value={String(people.silentFeedback.length)} to="/registros" />
+        <Fact label="Sem feedback há mais de 60 dias" value={String(people.silentFeedback.length)} to="/registros?tipo=feedbacks" />
         <Fact label="De férias ou afastados" value={String(people.away.length)} to="/cadastro/colaboradores" />
       </ul>
       {people.silentFeedback.length ? <p className="text-xs text-muted">Sem feedback: {names(people.silentFeedback)}.</p> : null}

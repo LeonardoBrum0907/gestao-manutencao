@@ -12,8 +12,8 @@ function NowKpis({ now, at }: { now: DashboardNowDto; at: Date }) {
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
       <Kpi to="/turno/chamados" label="Chamados abertos" value={now.openChamados.length} sub={long ? `${long} há mais de 2 h` : "nenhum há mais de 2 h"} tone={long ? "warn" : "neutral"} />
-      <Kpi to="/registros?due=overdue" label="Tarefas vencidas" value={now.overdueTasks} sub={`${now.overdueHighTasks} de alta prioridade`} tone={now.overdueTasks ? "danger" : "neutral"} />
-      <Kpi to="/registros?due=today" label="Vencem hoje" value={now.dueTodayTasks} tone="today" />
+      <Kpi to="/meu-dia" label="Tarefas vencidas" value={now.overdueTasks} sub={`${now.overdueHighTasks} de alta prioridade`} tone={now.overdueTasks ? "danger" : "neutral"} />
+      <Kpi to="/meu-dia" label="Vencem hoje" value={now.dueTodayTasks} tone="today" />
       <Kpi to="/configuracoes/fabricas" label="Linhas paradas" value={now.stoppedLines.length} sub={`${stopped || "nenhuma"}${settingUp}`} tone={now.stoppedLines.length ? "danger" : "neutral"} />
       <Kpi to="/rp?status=analysis" label="RPs em análise" value={now.rpsInAnalysis} sub={`${now.rpsWithoutRootCause} sem causa raiz`} />
       <Kpi to="/entrada" label="Rascunhos na Entrada" value={now.drafts} sub={now.oldestDraftAt ? `o mais antigo de ${shortDate(now.oldestDraftAt)}` : "nada para triar"} />
