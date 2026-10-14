@@ -4,7 +4,6 @@ import {
   RECORD_ORIGIN_LABELS,
   RECORD_PRIORITIES,
   RECORD_PRIORITY_LABELS,
-  RECORD_STATUSES,
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
   type FeedbackTone,
@@ -34,6 +33,21 @@ export function statusLabel(status: RecordStatus): string {
   return RECORD_STATUS_LABELS[status];
 }
 
+const statusByType: Record<RecordType, Record<RecordStatus, string>> = {
+  task: { open: "Aberta", in_progress: "Em andamento", done: "Concluída" },
+  problem: { open: "Aberto", in_progress: "Em andamento", done: "Resolvido" },
+  feedback: { open: "A conversar", in_progress: "A conversar", done: "Conversado" },
+  entry: { open: "Rascunho", in_progress: "Rascunho", done: "Concluído" },
+};
+
+/**
+ * Situação com a palavra do tipo: tarefa é "Aberta"/"Concluída", problema é "Resolvido", feedback é "A conversar".
+ * @example recordStatusLabel("task", "done") // "Concluída"
+ */
+export function recordStatusLabel(type: RecordType, status: RecordStatus): string {
+  return statusByType[type][status];
+}
+
 export function statusChipClass(status: RecordStatus): string {
   if (status === "in_progress") return "rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent";
   if (status === "done") return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
@@ -55,11 +69,6 @@ export function toneChipClass(tone: FeedbackTone | null): string {
   if (tone === "negative") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-danger";
   return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
 }
-
-export const statusOptions = RECORD_STATUSES.map((status) => ({
-  value: status,
-  label: RECORD_STATUS_LABELS[status],
-}));
 
 export const priorityOptions = RECORD_PRIORITIES.map((priority) => ({
   value: priority,

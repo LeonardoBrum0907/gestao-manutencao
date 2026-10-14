@@ -1,17 +1,9 @@
-import type { RecordStatus, RecordType } from "@manutencao/shared";
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
 import { dueDay, dueLabel, todayDay } from "../model/board";
-import { originLabel, recordShortName } from "../model/record";
+import { originLabel, recordShortName, recordStatusLabel } from "../model/record";
 import { placeLabel, type RecordRow } from "../model/records-table";
 
 // Colunas da tabela de Registros (computador) e a versão empilhada do celular.
-
-const statusText: Record<RecordType, Record<RecordStatus, string>> = {
-  task: { open: "Aberta", in_progress: "Em andamento", done: "Concluída" },
-  problem: { open: "Aberto", in_progress: "Em andamento", done: "Resolvido" },
-  feedback: { open: "A conversar", in_progress: "A conversar", done: "Conversado" },
-  entry: { open: "Rascunho", in_progress: "Rascunho", done: "Concluído" },
-};
 
 const dayMonth = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "short" });
 
@@ -24,7 +16,7 @@ function Dash() {
 }
 
 function StatusChip({ row }: { row: RecordRow }) {
-  const text = statusText[row.type][row.status];
+  const text = recordStatusLabel(row.type, row.status);
   if (row.status === "in_progress") return <span className="rounded-md bg-accent-soft px-1.5 py-px text-xs font-semibold text-accent">{text}</span>;
   return <span className={row.status === "done" ? "text-muted" : "text-app"}>{text}</span>;
 }
