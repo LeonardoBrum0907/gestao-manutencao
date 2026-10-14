@@ -403,9 +403,22 @@ export type MemberRecordSummaryDto = {
 };
 
 // O que a lista precisa para desenhar a linha: sem anexos, observações e técnicos do chamado.
+// machineId, subassemblyId e memberId deixam a tela Registros mostrar lugar e pessoa sem abrir a ficha.
 export type RecordListItemDto = Pick<
   RecordDto,
-  "id" | "type" | "body" | "occurredAt" | "status" | "origin" | "priority" | "tone" | "dueAt" | "lineId"
+  | "id"
+  | "type"
+  | "body"
+  | "occurredAt"
+  | "status"
+  | "origin"
+  | "priority"
+  | "tone"
+  | "dueAt"
+  | "lineId"
+  | "machineId"
+  | "subassemblyId"
+  | "memberId"
 >;
 
 // Lista paginada por cursor: nextCursor vem nulo na última página.
@@ -427,6 +440,8 @@ export function isBoardTarget(value: string): value is BoardTarget {
 
 export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "occurredAt"> & {
   group: BoardGroup;
+  // Quando foi concluída: o Meu Dia mostra só as concluídas hoje.
+  completedAt: string | null;
 };
 
 export type BoardDto = {

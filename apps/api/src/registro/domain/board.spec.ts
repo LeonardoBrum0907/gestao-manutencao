@@ -58,8 +58,14 @@ describe("ordem dentro do grupo", () => {
 
 describe("mudança pelo checklist", () => {
   it("aceita status, grupo de destino e ordem", () => {
-    assert.deepEqual(parseBoardChange("a", { status: "done" }), { status: "done", target: null, order: null });
-    assert.deepEqual(parseBoardChange("a", { group: "today", order: ["b", "a"] }), { status: null, target: "today", order: ["b", "a"] });
+    assert.deepEqual(parseBoardChange("a", { status: "done" }), { status: "done", target: null, day: null, order: null });
+    assert.deepEqual(parseBoardChange("a", { group: "today", order: ["b", "a"] }), { status: null, target: "today", day: null, order: ["b", "a"] });
+  });
+
+  it("aceita um dia da Agenda, mas não junto com o grupo", () => {
+    assert.deepEqual(parseBoardChange("a", { day: "2026-10-16", order: ["a"] }), { status: null, target: null, day: "2026-10-16", order: ["a"] });
+    assert.throws(() => parseBoardChange("a", { group: "today", day: "2026-10-16" }), DomainError);
+    assert.throws(() => parseBoardChange("a", { day: "amanhã" }), DomainError);
   });
 
   it("recusa levar para Atrasadas ou Concluídas, ordem sem o item e pedido vazio", () => {
@@ -83,5 +89,8 @@ describe("mudança pelo checklist", () => {
     assert.doesNotThrow(() => assertBoardChange({ type: "task", origin: "inbox" }, move));
     assert.doesNotThrow(() => assertBoardChange({ type: "problem", origin: "inbox" }, close));
     assert.doesNotThrow(() => assertBoardChange({ type: "task", origin: "inbox" }, close));
+    const toDay = parseBoardChange("a", { day: "2026-10-16" });
+    assert.throws(() => assertBoardChange({ type: "problem", origin: "inbox" }, toDay), DomainError);
+    assert.doesNotThrow(() => assertBoardChange({ type: "task", origin: "inbox" }, toDay));
   });
 });

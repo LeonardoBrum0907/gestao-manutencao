@@ -3,7 +3,8 @@ import type { AttachmentDto, RecordDto, RemovalCheckDto } from "@manutencao/shar
 import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
-import { assertBoardChange, boardDueAt, parseBoardChange } from "../domain/board";
+import { dueAtOnDay } from "../domain/agenda-day";
+import { assertBoardChange, boardDueAt, parseBoardChange, type BoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
 import { recordRemovalWarnings } from "../domain/record-removal";
 import { assertRetype, retypeState } from "../domain/retype";
@@ -38,6 +39,13 @@ function dtoToState(dto: RecordDto): RecordState {
     machineId: dto.machineId,
     subassemblyId: dto.subassemblyId,
   };
+}
+
+// Prazo novo de uma mudança no checklist ou na Agenda; undefined quando o prazo não muda.
+function boardDue(change: BoardChange, current: Date | null, now: Date): Date | null | undefined {
+  if (change.day !== null) return dueAtOnDay(change.day, current);
+  if (change.target !== null) return boardDueAt(change.target, now);
+  return undefined;
 }
 
 @Injectable()
@@ -104,7 +112,7 @@ export class Records {
     assertBoardChange(record, change);
     await this.records.applyBoard(id, {
       status: change.status,
-      dueAt: change.target === null ? undefined : boardDueAt(change.target, now),
+      dueAt: boardDue(change, record.dueAt, now),
       order: change.order,
     });
   }
