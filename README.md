@@ -41,6 +41,19 @@ Parar sem perder dados: `docker compose -f docker-compose.yml -f docker-compose.
 
 O dump do banco não leva os anexos nem os PDFs da documentação técnica: eles ficam no volume `attachments` (`ATTACHMENT_DIR`, `/data/attachments` no container). Para um backup completo, copie essa pasta junto com o dump, por exemplo `docker compose cp api:/data/attachments backup-local\attachments`.
 
+### VPS como servidor
+
+Postgres, API e Caddy numa máquina só (`docker-compose.vps.yml`). O Caddy tira e renova sozinho o certificado HTTPS para `API_DOMAIN`, e só ele abre porta (80 e 443): o banco e a API ficam na rede interna do compose. O arquivo não vai por cima do `docker-compose.yml` porque o Docker publica portas por fora do firewall `ufw`.
+
+No `.env` da VPS, além de `SESSION_SECRET`, `GESTOR_PASSWORD` e `PUBLIC_URL`: `API_DOMAIN` (o nome que aponta para o IP da VPS) e `POSTGRES_PASSWORD`. O `DATABASE_URL` do `.env` é ignorado aqui.
+
+```bash
+docker compose -f docker-compose.vps.yml up -d --build
+curl -s https://$API_DOMAIN/health
+```
+
+Atualizar depois de um merge: `git pull` e `docker compose -f docker-compose.vps.yml up -d --build --no-deps api`. O `vercel.json` repassa `/api`, `/health` e as rotas do MCP para `https://<API_DOMAIN>`.
+
 ### IA (servidor MCP)
 
 A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências, pós-preventivas e fichas de documentação técnica pelas mesmas regras das telas. São 24 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
