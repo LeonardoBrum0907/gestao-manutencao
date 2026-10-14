@@ -68,8 +68,9 @@ export function AgendaList({
 }
 
 const columnShape = "min-w-0 scroll-mt-4 md:w-[16.5rem] md:shrink-0";
-// No celular a coluna é uma caixa de lista; no computador, só o espaço da coluna.
-const boxShape = "overflow-hidden rounded-card border border-line bg-card shadow-card md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:shadow-none";
+// No celular a coluna é uma caixa de lista; no computador, uma faixa com fundo próprio, para cada dia
+// ficar bem separado do vizinho (os cartões brancos se destacam sobre ela).
+const boxShape = "overflow-hidden rounded-card border border-line bg-card shadow-card md:overflow-visible md:bg-chip md:p-2 md:shadow-none";
 const headShape = "flex items-baseline gap-2 border-b border-line-strong bg-group px-3 py-2 md:mb-2 md:border-line md:bg-transparent md:px-1";
 
 /** Coluna de um dia: cabeçalho, os cartões e o adicionar. */
