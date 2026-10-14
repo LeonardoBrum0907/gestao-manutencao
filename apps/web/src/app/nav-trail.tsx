@@ -44,8 +44,6 @@ function routeLabel(url: string): string {
   if (path.startsWith("/pos-preventiva")) return "Pós-preventiva";
   if (path.startsWith("/documentacao")) return "Documentação";
   if (path.startsWith("/cadastro/colaboradores/")) return "Colaborador";
-  if (path.startsWith("/repasses/")) return "Repasse";
-  if (path.startsWith("/repasses")) return "Repasses";
   if (path.startsWith("/turno")) return "Chamados";
   if (path.startsWith("/configuracoes")) return "Configurações";
   return "Tela anterior";
