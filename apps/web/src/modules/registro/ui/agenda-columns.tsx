@@ -72,19 +72,17 @@ const columnShape = "min-w-0 scroll-mt-4 md:w-[16.5rem] md:shrink-0";
 const boxShape = "overflow-hidden rounded-card border border-line bg-card shadow-card md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:shadow-none";
 const headShape = "flex items-baseline gap-2 border-b border-line-strong bg-group px-3 py-2 md:mb-2 md:border-line md:bg-transparent md:px-1";
 
-/** Coluna de um dia: cabeçalho, (em hoje) as atrasadas recolhíveis, os cartões e o adicionar. */
+/** Coluna de um dia: cabeçalho, os cartões e o adicionar. */
 export function AgendaDayColumn({
   day,
   today,
   count,
-  overdue,
   children,
   footer,
 }: {
   day: string;
   today: string;
   count: number;
-  overdue?: ReactNode;
   children: ReactNode;
   footer: ReactNode;
 }) {
@@ -97,32 +95,35 @@ export function AgendaDayColumn({
         </span>
         {count ? <span className="text-[13px] tabular-nums text-muted">{count}</span> : null}
       </h2>
-      {overdue}
       {children}
       <div className="border-b border-line px-3 md:border-0 md:px-1">{footer}</div>
     </section>
   );
 }
 
-/** Atrasadas no topo de hoje: linha vermelha, recolhe pelo nome e tem o "Passar para hoje". */
-export function OverdueSection({ count, action, children }: { count: number; action: ReactNode; children: ReactNode }) {
+/**
+ * Atrasadas numa coluna própria, antes de hoje (como no Todoist): não se misturam com o que vence hoje.
+ * Recolhe pelo nome e tem o "Passar para hoje".
+ */
+export function OverdueColumn({ count, action, children }: { count: number; action: ReactNode; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <div className="border-b border-line md:mb-3 md:border-0">
-      <div className="flex items-center gap-2 border-t-2 border-danger px-3 py-1.5 md:px-1">
+    <section id={agendaDomId("atrasadas")} aria-label="Atrasadas" className={`${columnShape} ${boxShape} ${collapsed ? "md:w-44" : ""}`}>
+      <h2 className={headShape}>
         <button
           type="button"
           onClick={() => setCollapsed((value) => !value)}
           aria-expanded={!collapsed}
-          className="-ml-1 flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-bold uppercase tracking-[0.07em] text-danger hover:bg-chip"
+          className="-ml-1 flex items-center gap-1.5 rounded-md px-1 text-[13.5px] font-bold text-danger hover:bg-chip"
         >
           <Chevron collapsed={collapsed} />
-          Atrasadas · {count}
+          Atrasadas
         </button>
-        <div className="ml-auto">{action}</div>
-      </div>
+        <span className="text-[13px] tabular-nums text-muted">{count}</span>
+        {collapsed ? null : <span className="ml-auto">{action}</span>}
+      </h2>
       {collapsed ? null : children}
-    </div>
+    </section>
   );
 }
 

@@ -7,7 +7,7 @@ import { useToast } from "../../../design/ui/toast";
 import { useBoardChange, useTaskBoard } from "../data/board";
 import { dayLabel } from "../model/board";
 import { AGENDA_DAYS, OVERDUE_KEY, UNDATED_KEY, addDays, agendaLists, agendaMonth, agendaWeek, dayKey, dayOfKey } from "../model/agenda";
-import { AgendaDayColumn, AgendaList, OverdueSection, UndatedColumn, agendaDomId } from "./agenda-columns";
+import { AgendaDayColumn, AgendaList, OverdueColumn, UndatedColumn, agendaDomId } from "./agenda-columns";
 import { CheckRow, InProgressChip } from "./checklist";
 import { useColumnsDnd, type ColumnDrop, type DndColumn } from "./columns-dnd";
 import { RecordModalHost } from "./RecordModal";
@@ -16,7 +16,7 @@ import { AddTask, DueText, PassToToday, dueClock, taskRing, useTaskToggle } from
 
 const navButton = "grid h-9 min-w-9 place-items-center rounded-control border border-line bg-surface px-2 text-sm text-app transition hover:bg-chip disabled:opacity-40";
 
-// Semana a semana a partir de hoje; voltar para antes de hoje não tem o que mostrar (as atrasadas ficam em hoje).
+// Semana a semana a partir de hoje; voltar para antes de hoje não tem o que mostrar (as atrasadas têm coluna própria).
 function WeekNav({ week, onChange }: { week: number; onChange: (week: number) => void }) {
   return (
     <div className="flex items-center gap-1">
@@ -126,22 +126,19 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
       <DayStrip days={days} today={today} lists={lists} />
       <DndContext {...dnd.context} collisionDetection={closestCorners}>
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-4 md:overflow-x-auto md:pb-6">
+          {ids(OVERDUE_KEY).length ? (
+            <OverdueColumn count={ids(OVERDUE_KEY).length} action={<PassToToday ids={ids(OVERDUE_KEY)} />}>
+              <AgendaList listKey={OVERDUE_KEY} ids={ids(OVERDUE_KEY)} accepts={false} renderCard={card} />
+            </OverdueColumn>
+          ) : null}
           {days.map((day) => {
             const key = dayKey(day);
-            const overdueIds = day === today ? ids(OVERDUE_KEY) : [];
             return (
               <AgendaDayColumn
                 key={day}
                 day={day}
                 today={today}
-                count={ids(key).length + overdueIds.length}
-                overdue={
-                  overdueIds.length ? (
-                    <OverdueSection count={overdueIds.length} action={<PassToToday ids={overdueIds} />}>
-                      <AgendaList listKey={OVERDUE_KEY} ids={overdueIds} accepts={false} renderCard={card} />
-                    </OverdueSection>
-                  ) : null
-                }
+                count={ids(key).length}
                 footer={<AddTask id={`nova-tarefa-${day}`} day={day} today={today} label="Adicionar" />}
               >
                 <AgendaList listKey={key} ids={ids(key)} accepts renderCard={card} />
