@@ -16,19 +16,19 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://cage-qualify-right-ages.trycloudflare.com/api/:path*"
+      "destination": "https://photographers-domain-ipod-various.trycloudflare.com/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://cage-qualify-right-ages.trycloudflare.com/health"
+      "destination": "https://photographers-domain-ipod-various.trycloudflare.com/health"
     },
     {
       "source": "/:route(mcp|authorize|token|register|revoke)",
-      "destination": "https://cage-qualify-right-ages.trycloudflare.com/:route"
+      "destination": "https://photographers-domain-ipod-various.trycloudflare.com/:route"
     },
     {
       "source": "/.well-known/:path*",
-      "destination": "https://cage-qualify-right-ages.trycloudflare.com/.well-known/:path*"
+      "destination": "https://photographers-domain-ipod-various.trycloudflare.com/.well-known/:path*"
     },
     {
       "source": "/(.*)",
