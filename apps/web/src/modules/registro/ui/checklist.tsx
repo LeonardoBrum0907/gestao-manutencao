@@ -62,13 +62,14 @@ export function CheckRow({
   onToggle?: () => void;
   link: RecordLink;
   title: string;
-  // Linha de informação embaixo do título, só no celular (no computador as células fazem esse papel).
+  // Linha de informação embaixo do título. Com colunas, só no celular (no computador as células fazem esse papel).
   info?: ReactNode;
   // Uma célula por coluna do checklist, na mesma ordem do cabeçalho.
   cells?: ReactNode[];
 }) {
   const columns = useFrameColumns();
   const circle = checked ? "border-2 border-accent bg-accent text-canvas" : `text-transparent hover:bg-chip ${ring}`;
+  // O círculo tem a altura da primeira linha do título (20px, leading-5): fica centrado nela, como no Todoist.
   return (
     <div style={gridStyle(columns)} className={`${gridClass} items-start px-3 py-2.5`}>
       <button
@@ -77,7 +78,7 @@ export function CheckRow({
         onKeyDown={keepKeys}
         disabled={!onToggle}
         aria-label={label}
-        className={`mt-0.5 grid h-5 w-5 place-items-center rounded-full transition ${circle}`}
+        className={`grid h-5 w-5 place-items-center rounded-full transition ${circle}`}
       >
         <CheckIcon />
       </button>
@@ -87,16 +88,16 @@ export function CheckRow({
           state={link.state}
           data-record-id={link.recordId}
           onKeyDown={keepKeys}
-          className={`block whitespace-pre-line break-words text-[15px] leading-snug hover:underline hover:decoration-line hover:underline-offset-4 ${
+          className={`block whitespace-pre-line break-words text-[15px] leading-5 hover:underline hover:decoration-line hover:underline-offset-4 ${
             checked ? "text-muted line-through" : "text-app"
           }`}
         >
           {title}
         </Link>
-        {info ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted md:hidden">{info}</div> : null}
+        {info ? <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted ${columns.length ? "md:hidden" : ""}`}>{info}</div> : null}
       </div>
       {columns.map((column, index) => (
-        <div key={column.key} className="hidden pt-0.5 text-sm text-app md:block">
+        <div key={column.key} className="hidden text-sm leading-5 text-app md:block">
           {cells[index] ?? null}
         </div>
       ))}
