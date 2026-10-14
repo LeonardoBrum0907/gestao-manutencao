@@ -42,7 +42,11 @@ describe("números do Dashboard", () => {
 
   it("marca zero, o meio e o topo do eixo", () => {
     assert.deepEqual(axisTicks(10), [0, 5, 10]);
-    assert.deepEqual(axisTicks(5), [0, 2.5, 5]);
-    assert.deepEqual(axisTicks(1), [0, 0.5, 1]);
+    assert.deepEqual(axisTicks(2), [0, 1, 2]);
+  });
+
+  it("não marca meia tarefa nem meio chamado no eixo", () => {
+    assert.deepEqual(axisTicks(5), [0, 5]);
+    assert.deepEqual(axisTicks(1), [0, 1]);
   });
 });
