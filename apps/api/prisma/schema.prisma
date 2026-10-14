@@ -209,9 +209,6 @@ model Member {
   pdiAttachments      MemberAttachment[]
   pdiItems            MemberPdiItem[]         @relation("PdiItemMember")
   pdiResponsible      MemberPdiItem[]         @relation("PdiItemResponsible")
-  skillHistory        MemberSkillHistory[]
-  transfersTeaching   KnowledgeTransfer[]     @relation("TransferTeacher")
-  transfersLearning   KnowledgeTransfer[]     @relation("TransferLearner")
 
   @@index([roleId])
   @@index([gradeId])
@@ -364,7 +361,6 @@ model MatrixSkill {
   archived    Boolean              @default(false)
   scores      MemberSkill[]
   pdiItems    MemberPdiItem[]
-  history     MemberSkillHistory[]
 
   @@index([equipmentId])
 }
@@ -636,39 +632,4 @@ model TechCard {
   @@index([type])
   // Trigram: a busca "contém" acha código, nº de peça e termo original em qualquer parte do texto.
   @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "TechCard_searchText_trgm_idx")
-}
-
-// Cada mudança de nota da matriz (nota, "não se aplica" ou nota apagada), para desenhar a evolução de quem aprende num repasse.
-// A migração copia a nota atual de cada habilidade como primeiro registro, com a data da última mudança.
-model MemberSkillHistory {
-  id            String      @id @default(cuid())
-  memberId      String
-  skillId       String
-  score         Int?
-  notApplicable Boolean     @default(false)
-  changedAt     DateTime    @default(now())
-  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  skill         MatrixSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
-
-  @@index([memberId, changedAt])
-  @@index([skillId])
-}
-
-// Repasse: um técnico (teacher) ensina outro (learner) a fazer o que ele faz nos equipamentos em foco.
-// Sem grau nem promoção. "active" em andamento; "closed" encerrado, fica no histórico.
-model KnowledgeTransfer {
-  id           String    @id @default(cuid())
-  teacherId    String
-  learnerId    String
-  equipmentIds String[]  @default([])
-  status       String    @default("active")
-  startedAt    DateTime  @default(now())
-  closedAt     DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  teacher      Member    @relation("TransferTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
-  learner      Member    @relation("TransferLearner", fields: [learnerId], references: [id], onDelete: Cascade)
-
-  @@index([teacherId])
-  @@index([learnerId])
 }
