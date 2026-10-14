@@ -1,4 +1,4 @@
-import { niceCeiling, weekLabel } from "../model/overview-format";
+import { axisTicks, niceCeiling, weekLabel } from "../model/overview-format";
 
 export type ColumnSeries = { label: string; fill: string; swatch: string; values: number[] };
 
@@ -18,7 +18,7 @@ export function ColumnChart({ weeks, series, label }: { weeks: string[]; series:
     <div className="flex flex-col gap-2">
       {series.length > 1 ? <Legend series={series} /> : null}
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label={label}>
-        {[0, top / 2, top].map((tick) => (
+        {axisTicks(top).map((tick) => (
           <g key={tick}>
             <line x1={LEFT} x2={WIDTH} y1={y(tick)} y2={y(tick)} className="stroke-line" strokeWidth={1} />
             <text x={LEFT - 6} y={y(tick) + 4} textAnchor="end" className="fill-muted text-[10px]">

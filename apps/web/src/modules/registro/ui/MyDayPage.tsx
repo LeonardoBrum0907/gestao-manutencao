@@ -68,7 +68,7 @@ export function MyDayPage() {
 
   const groups: ChecklistGroup[] = [
     ...(parts.overdue.length
-      ? [{ key: "overdue", title: "Atrasadas", ids: parts.overdue, empty: "Nada atrasado.", action: <PassToToday ids={parts.overdue} /> }]
+      ? [{ key: "overdue", title: "Atrasadas", ids: parts.overdue, empty: "Nada atrasado.", action: <PassToToday ids={parts.overdue} today={today} /> }]
       : []),
     {
       key: "today",

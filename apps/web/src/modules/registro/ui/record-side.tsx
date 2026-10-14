@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import type { RecordDto, RecordStatus } from "@manutencao/shared";
+import { RECORD_STATUSES, type RecordDto, type RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Icon } from "../../../design/ui/icons";
 import { useToast } from "../../../design/ui/toast";
 import { useFactories } from "../../cadastro/data/cadastro";
 import { useBoardChange } from "../data/board";
 import { dueAtOf, dueDay, todayDay } from "../model/board";
-import { fromLocalInput, recordShortName, statusOptions, toLocalInput } from "../model/record";
+import { fromLocalInput, recordShortName, recordStatusLabel, toLocalInput } from "../model/record";
 import { retypeBlock } from "../model/record-sheet";
 import { Chip, DueChip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
 import { InlineText } from "./record-main";
@@ -52,9 +52,9 @@ function StatusChip({ record }: { record: RecordDto }) {
     change.mutate({ id: record.id, change: { status: status as RecordStatus } }, { onError: (error) => toast({ text: errorMessage(error) }) });
   return (
     <Chip label="Situação" value={record.status} icon="list" tone={record.status === "in_progress" ? "text-accent" : "text-app"} onChange={pick}>
-      {statusOptions.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
+      {RECORD_STATUSES.map((status) => (
+        <option key={status} value={status}>
+          {recordStatusLabel(record.type, status)}
         </option>
       ))}
     </Chip>

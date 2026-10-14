@@ -1,4 +1,4 @@
-import type { BoardItemDto } from "@manutencao/shared";
+import type { BoardChangeDto, BoardItemDto } from "@manutencao/shared";
 import { dueDay } from "./board";
 
 export type MyDayGroups = { overdue: string[]; today: string[]; doneToday: string[] };
@@ -23,4 +23,13 @@ const longDay = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", weekday: "lo
 export function myDayDate(today: string): string {
   const text = longDay.format(new Date(`${today}T12:00:00Z`));
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * Mudança que o "Passar para hoje" manda para cada atrasada: o dia vira hoje e o horário do prazo fica.
+ * Com o grupo "today" a API marcava meio-dia e uma tarefa "até 15h" perdia o horário.
+ * @example passToTodayChange("2026-10-14") // { day: "2026-10-14" }
+ */
+export function passToTodayChange(today: string): BoardChangeDto {
+  return { day: today };
 }
