@@ -10,7 +10,7 @@ import { useLines, useMachines, useMembers } from "../../cadastro/data/cadastro"
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { useDeleteRecord } from "../../registro/data/records";
 import { formatDueDay } from "../../registro/model/follow-up";
-import { priorityOptions, statusChipClass, statusLabel } from "../../registro/model/record";
+import { priorityOptions, recordStatusLabel, statusChipClass } from "../../registro/model/record";
 import { rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useAddChamadoTask, useSaveChamado } from "../data/shift";
 import {
@@ -202,7 +202,7 @@ function AfterChamado({ chamado }: { chamado: ChamadoDto }) {
             <span className="block text-xs font-semibold text-muted">Pendência gerada{task.dueAt ? ` · prazo ${formatDueDay(task.dueAt)}` : ""}</span>
             <span className="mt-0.5 line-clamp-2 block font-medium text-app">{task.body}</span>
           </span>
-          <span className={`${statusChipClass(task.status)} shrink-0`}>{statusLabel(task.status)}</span>
+          <span className={`${statusChipClass(task.status)} shrink-0`}>{recordStatusLabel("task", task.status)}</span>
         </Link>
       ))}
       {adding ? (
