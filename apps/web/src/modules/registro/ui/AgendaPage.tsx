@@ -127,7 +127,7 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
       <DndContext {...dnd.context} collisionDetection={closestCorners}>
         <div className="flex flex-col gap-5 md:flex-row md:items-stretch md:gap-3 md:overflow-x-auto md:pb-6">
           {ids(OVERDUE_KEY).length ? (
-            <OverdueColumn count={ids(OVERDUE_KEY).length} action={<PassToToday ids={ids(OVERDUE_KEY)} />}>
+            <OverdueColumn count={ids(OVERDUE_KEY).length} action={<PassToToday ids={ids(OVERDUE_KEY)} today={today} />}>
               <AgendaList listKey={OVERDUE_KEY} ids={ids(OVERDUE_KEY)} accepts={false} renderCard={card} />
             </OverdueColumn>
           ) : null}
