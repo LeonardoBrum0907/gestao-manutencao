@@ -52,7 +52,16 @@ function DraftChips({ draft, today, onChange }: { draft: InboxDraft; today: stri
  * revisado; escolhendo outro tipo, o registro vai direto para Registros. Depois de adicionar, o texto limpa e as
  * etiquetas ficam, para lançar várias coisas parecidas em sequência.
  */
-export function InboxAdd({ today }: { today: string }) {
+export function InboxAdd({
+  today,
+  quick = false,
+  onCancel,
+}: {
+  today: string;
+  // Aberto pelo botão rápido do Meu Dia: já com o cursor no texto e avisando que o rascunho foi para a Entrada.
+  quick?: boolean;
+  onCancel?: () => void;
+}) {
   const toast = useToast();
   const addEntry = useAddEntry();
   const addTask = useAddTask();
@@ -62,7 +71,7 @@ export function InboxAdd({ today }: { today: string }) {
   const pending = addEntry.isPending || addTask.isPending || addProblem.isPending || addFeedback.isPending;
 
   function done(clear: () => void) {
-    const sent = draft.type === "entry" ? null : `Foi para Registros como ${recordShortName(draft.type).toLowerCase()}.`;
+    const sent = draft.type !== "entry" ? `Foi para Registros como ${recordShortName(draft.type).toLowerCase()}.` : quick ? "Anotado na Entrada." : null;
     return {
       onSuccess: () => {
         clear();
@@ -90,7 +99,8 @@ export function InboxAdd({ today }: { today: string }) {
       label="Adicionar"
       placeholder={placeholders[draft.type]}
       pending={pending}
-      autoFocus={false}
+      autoFocus={quick}
+      onCancel={onCancel}
       chips={<DraftChips draft={draft} today={today} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />}
       onAdd={add}
     />

@@ -9,6 +9,7 @@ import {
   type RecordType,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
+import { parseDueDay } from "./agenda-day";
 import { calendarDay, nextCalendarDay, startOfDay, taskDueWindow } from "./follow-up";
 
 // Concluída some do checklist depois de uma semana (feedback conversado, depois de um mês); o histórico
@@ -70,6 +71,8 @@ export function compareBoard(a: BoardSortable, b: BoardSortable): number {
 export type BoardChange = {
   status: RecordStatus | null;
   target: BoardTarget | null;
+  // Dia da Agenda ("AAAA-MM-DD"); não vem junto com target.
+  day: string | null;
   order: string[] | null;
 };
 
@@ -92,6 +95,11 @@ export function parseBoardChange(id: string, body: unknown): BoardChange {
     }
     target = source.group;
   }
+  let day: string | null = null;
+  if (source.day !== undefined) {
+    if (target !== null) throw new DomainError("day", 400, "Escolha o grupo ou o dia, não os dois.");
+    day = parseDueDay(source.day);
+  }
   let order: string[] | null = null;
   if (source.order !== undefined) {
     const list = source.order;
@@ -103,10 +111,10 @@ export function parseBoardChange(id: string, body: unknown): BoardChange {
     }
     order = list as string[];
   }
-  if (status === null && target === null && order === null) {
+  if (status === null && target === null && day === null && order === null) {
     throw new DomainError("invalid", 400, "Nada para mudar.");
   }
-  return { status, target, order };
+  return { status, target, day, order };
 }
 
 export type BoardRecord = {
@@ -115,7 +123,7 @@ export type BoardRecord = {
 };
 
 export function assertBoardChange(record: BoardRecord, change: BoardChange): void {
-  if (change.target !== null && record.type !== "task") {
+  if ((change.target !== null || change.day !== null) && record.type !== "task") {
     throw new DomainError("wrong_type", 400, "Só tarefa tem prazo.");
   }
   if (change.status !== null && record.origin === "rp") {

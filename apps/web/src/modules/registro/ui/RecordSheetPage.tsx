@@ -28,12 +28,12 @@ function RpMirror({ recordId }: { recordId: string }) {
   );
 }
 
-// Onde o modal do registro abre: rascunho na Entrada, o resto na aba do tipo em Registros.
+// Onde o modal do registro abre: rascunho na Entrada, o resto em Registros, já no tipo dele.
 const listOf: Record<RecordType, string> = {
   entry: "/entrada?",
-  task: "/registros?",
-  problem: "/registros?tab=problemas&",
-  feedback: "/registros?tab=feedbacks&",
+  task: "/registros?tipo=tarefas&situacao=todos&",
+  problem: "/registros?tipo=problemas&situacao=todos&",
+  feedback: "/registros?tipo=feedbacks&situacao=todos&",
 };
 
 function inboxRecordHref(id: string, type: RecordType): string {

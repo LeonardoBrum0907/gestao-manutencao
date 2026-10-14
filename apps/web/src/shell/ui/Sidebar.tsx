@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../../design/ui/icons";
 import { MENU_STATE } from "../../app/nav-trail";
-import { useOverdueCount } from "../../modules/dashboard/data/dashboard";
 import { useLogout } from "../data/session";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -11,8 +10,10 @@ type Entry = { to: string; label: string; icon: IconName };
 const groups: { title?: string; items: Entry[] }[] = [
   {
     items: [
-      { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
+      { to: "/meu-dia", label: "Meu Dia", icon: "sun" },
+      { to: "/agenda", label: "Agenda", icon: "calendar" },
       { to: "/registros", label: "Registros", icon: "list" },
+      { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
     ],
   },
   {
@@ -39,17 +40,6 @@ const itemClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-control px-3 py-2 text-sm font-medium ${
     isActive ? "bg-sidebar-active text-sidebar-text" : "text-sidebar-muted transition hover:bg-chip"
   }`;
-
-function OverdueBadge() {
-  const overdueCount = useOverdueCount();
-  const overdue = overdueCount.data?.overdueCount ?? 0;
-  if (!overdue) return null;
-  return (
-    <span className="ml-auto rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-danger">
-      {overdue} {overdue === 1 ? "vencida" : "vencidas"}
-    </span>
-  );
-}
 
 export function Sidebar({
   open,
@@ -97,7 +87,6 @@ export function Sidebar({
                   <NavLink key={item.to} to={item.to} state={MENU_STATE} onClick={onClose} className={itemClass}>
                     <Icon name={item.icon} />
                     {item.label}
-                    {item.to === "/registros" ? <OverdueBadge /> : null}
                   </NavLink>
                 ))}
               </div>

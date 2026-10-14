@@ -152,6 +152,9 @@ const listSelect = {
   tone: true,
   dueAt: true,
   lineId: true,
+  machineId: true,
+  subassemblyId: true,
+  memberId: true,
 } as const;
 
 function toListItem(row: {
@@ -165,6 +168,9 @@ function toListItem(row: {
   tone: string | null;
   dueAt: Date | null;
   lineId: string | null;
+  machineId: string | null;
+  subassemblyId: string | null;
+  memberId: string | null;
 }): RecordListItemDto {
   if (!isRecordType(row.type) || !isRecordStatus(row.status) || !isRecordOrigin(row.origin)) {
     throw new DomainError("invalid", 500, "Registro gravado está inválido.");
@@ -186,6 +192,9 @@ function toListItem(row: {
     tone: row.tone,
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
     lineId: row.lineId,
+    machineId: row.machineId,
+    subassemblyId: row.subassemblyId,
+    memberId: row.memberId,
   };
 }
 
@@ -226,6 +235,7 @@ const boardSelect = {
   dueAt: true,
   boardPosition: true,
   updatedAt: true,
+  completedAt: true,
 } as const;
 
 function openOrDoneSince(since: Date): Prisma.RecordWhereInput {
@@ -278,7 +288,7 @@ export class RecordRepository {
     return {
       today: calendarDay(now),
       items: placed.map(({ row, group }) => {
-        const item = toListItem({ ...row, tone: null, lineId: null });
+        const item = toListItem({ ...row, tone: null, lineId: null, machineId: null, subassemblyId: null, memberId: null });
         return {
           id: item.id,
           type: item.type,
@@ -289,6 +299,7 @@ export class RecordRepository {
           dueAt: item.dueAt,
           occurredAt: item.occurredAt,
           group,
+          completedAt: row.completedAt ? row.completedAt.toISOString() : null,
         };
       }),
     };
@@ -381,12 +392,12 @@ export class RecordRepository {
   }
 
   async boardRecord(id: string) {
-    const row = await this.prisma.record.findUnique({ where: { id }, select: { type: true, origin: true } });
+    const row = await this.prisma.record.findUnique({ where: { id }, select: { type: true, origin: true, dueAt: true } });
     if (!row) return null;
     if (!isRecordType(row.type) || !isRecordOrigin(row.origin)) {
       throw new DomainError("invalid", 500, "Registro gravado está inválido.");
     }
-    return { type: row.type, origin: row.origin };
+    return { type: row.type, origin: row.origin, dueAt: row.dueAt };
   }
 
   // Uma transação: o item muda de status/prazo e o grupo de destino recebe a ordem nova (0, 1, 2…).

@@ -13,9 +13,11 @@ import { MachinePage } from "../modules/maquina/ui/MachinePage";
 import { MachinesPage } from "../modules/maquina/ui/MachinesPage";
 import { PostPreventiveListPage } from "../modules/pos-preventiva/ui/PostPreventiveListPage";
 import { NewPostPreventivePage, PostPreventivePage } from "../modules/pos-preventiva/ui/PostPreventivePage";
-import { FollowUpPage } from "../modules/registro/ui/FollowUpPage";
+import { AgendaPage } from "../modules/registro/ui/AgendaPage";
 import { InboxPage } from "../modules/registro/ui/InboxPage";
+import { MyDayPage } from "../modules/registro/ui/MyDayPage";
 import { RecordSheetPage } from "../modules/registro/ui/RecordSheetPage";
+import { RecordsPage } from "../modules/registro/ui/RecordsPage";
 import { RpEditPage } from "../modules/rp/ui/RpEditPage";
 import { RpListPage } from "../modules/rp/ui/RpListPage";
 import { RpPastePage } from "../modules/rp/ui/RpPastePage";
@@ -29,10 +31,25 @@ function MatrixRedirect() {
   return <Navigate to={`/cadastro/colaboradores/${memberId}/matriz`} replace />;
 }
 
-// Pendências virou Registros: o endereço antigo (links do painel, favoritos) leva junto o filtro da URL.
-function FollowUpRedirect() {
+// Endereços antigos de Registros (abas e filtros de prazo de antes do Meu Dia e da Agenda) e de Pendências.
+// Vencidas e "vencem hoje" agora estão no Meu Dia; as abas viraram o filtro de tipo de Registros.
+function RegistrosRedirect() {
   const { search } = useLocation();
-  return <Navigate to={`/registros${search}`} replace />;
+  const params = new URLSearchParams(search);
+  if (params.has("due") || params.get("status") === "done") return <Navigate to="/meu-dia" replace />;
+  const tab = params.get("tab");
+  const record = params.get("registro");
+  const next = new URLSearchParams();
+  if (tab === "problemas" || tab === "feedbacks") next.set("tipo", tab);
+  if (record) next.set("registro", record);
+  const query = next.toString();
+  return <Navigate to={`/registros${query ? `?${query}` : ""}`} replace />;
+}
+
+function RegistrosRoute() {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  return params.has("tab") || params.has("due") || params.get("status") === "done" ? <RegistrosRedirect /> : <RecordsPage />;
 }
 
 // Endereços antigos dos cadastros, que foram para Configurações.
@@ -53,8 +70,10 @@ export function AppRouter() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/entrada" element={<InboxPage />} />
         <Route path="/captura" element={<Navigate to="/entrada" replace />} />
-        <Route path="/registros" element={<FollowUpPage />} />
-        <Route path="/acompanhamento" element={<FollowUpRedirect />} />
+        <Route path="/meu-dia" element={<MyDayPage />} />
+        <Route path="/agenda" element={<AgendaPage />} />
+        <Route path="/registros" element={<RegistrosRoute />} />
+        <Route path="/acompanhamento" element={<RegistrosRedirect />} />
         <Route path="/turno/chamados" element={<ChamadosPage />} />
         <Route path="/turno/chamado" element={<Navigate to="/turno/chamados?abrir=novo" replace />} />
         {/* Ocorrência saiu do menu: anotar um problema rápido é na Entrada. */}
@@ -83,7 +102,7 @@ export function AppRouter() {
         <Route path="/competencias/folha" element={<TeamSheetPage />} />
         <Route path="/competencias/:memberId" element={<MatrixRedirect />} />
       </Route>
-      <Route path="*" element={<Navigate to="/entrada" replace />} />
+      <Route path="*" element={<Navigate to="/meu-dia" replace />} />
     </Routes>
   );
 }

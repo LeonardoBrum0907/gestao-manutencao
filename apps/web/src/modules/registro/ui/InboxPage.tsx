@@ -6,13 +6,16 @@ import { useBoardChange } from "../data/board";
 import { useEntries } from "../data/entries";
 import { dayLabel, dueDay, todayDay } from "../model/board";
 import { CheckRow, ringTone, useCompleting } from "./checklist";
+import { ChecklistBox, type ChecklistColumn } from "./checklist-table";
 import { InboxAdd } from "./InboxAdd";
 import { RecordModalHost } from "./RecordModal";
 import { useRecordLink } from "./record-link";
 
+const ENTRY_COLUMNS: ChecklistColumn[] = [{ key: "anotado", header: "Anotado", width: "9rem" }];
+
 function pendingLine(count: number): string {
-  if (count === 0) return "Nada para revisar.";
-  return count === 1 ? "1 rascunho para revisar." : `${count} rascunhos para revisar.`;
+  if (count === 0) return "Nada para revisar";
+  return count === 1 ? "1 rascunho para revisar" : `${count} rascunhos para revisar`;
 }
 
 /**
@@ -46,30 +49,40 @@ export function InboxPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageTitle title="Entrada" />
-      <p className="-mt-2 mb-4 text-sm text-muted">
-        {pendingLine(items.length)} {items.length ? "Abra um e escolha o tipo para mandá-lo a Registros." : ""}
-      </p>
-      {items.length ? (
-        <ul className="border-t border-line">
-          {items.map((item) => (
-            <li key={item.id} className={`border-b border-line ${fading.has(item.id) ? "opacity-0 transition-opacity delay-200 duration-200" : ""}`}>
-              <CheckRow
-                checked={fading.has(item.id)}
-                ring={ringTone.plain}
-                label={`Concluir: ${item.body}`}
-                onToggle={() => finish(item)}
-                link={linkOf({ id: item.id, origin: item.origin })}
-                title={item.body}
-                info={<span className="tabular-nums">Anotado {dayLabel(dueDay(item.occurredAt), today).toLowerCase()}</span>}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="border-b border-line pb-4 text-sm text-muted">Anote aqui o que aparecer no turno. Depois, com calma, defina se cada um é tarefa, problema ou feedback.</p>
-      )}
+    <div>
+      <PageTitle
+        title="Entrada"
+        text="Anote aqui o que aparecer no turno. Depois, com calma, abra cada rascunho e escolha se é tarefa, problema ou feedback: aí ele vai para Registros."
+      />
+      <p className="mb-3 hidden justify-end text-sm text-muted md:flex">{pendingLine(items.length)}</p>
+      <ChecklistBox frame={{ itemHeader: "Rascunho", columns: ENTRY_COLUMNS, summary: pendingLine(items.length) }}>
+        {items.length ? (
+          <ul>
+            {items.map((item) => {
+              const noted = `Anotado ${dayLabel(dueDay(item.occurredAt), today).toLowerCase()}`;
+              return (
+                <li
+                  key={item.id}
+                  className={`border-b border-line bg-card transition-colors hover:bg-accent-soft ${fading.has(item.id) ? "opacity-0 transition-opacity delay-200 duration-200" : ""}`}
+                >
+                  <CheckRow
+                    checked={fading.has(item.id)}
+                    ring={ringTone.plain}
+                    label={`Concluir: ${item.body}`}
+                    onToggle={() => finish(item)}
+                    link={linkOf({ id: item.id, origin: item.origin })}
+                    title={item.body}
+                    info={<span className="tabular-nums">{noted}</span>}
+                    cells={[<span className="tabular-nums text-muted">{dayLabel(dueDay(item.occurredAt), today)}</span>]}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="border-b border-line px-3 py-4 text-sm text-muted">Nada para revisar. O que você anotar aparece aqui.</p>
+        )}
+      </ChecklistBox>
       <div className="mt-4">
         <InboxAdd today={today} />
       </div>

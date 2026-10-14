@@ -1,28 +1,14 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCorners,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
-  type UniqueIdentifier,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DndContext, DragOverlay, closestCorners, useDroppable } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { columnDropId, useColumnsDnd, type ColumnDrop } from "./columns-dnd";
+import { ChecklistBox, FrameFooter, GroupBand, gridClass, gridStyle, useFrameColumns, type ChecklistFrame } from "./checklist-table";
 import type { RecordLink } from "./record-link";
 
 // Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
 // para concluir e arrastar para reordenar ou levar a outro grupo.
-
-const COLUMN = "col:";
 
 export type ChecklistGroup = {
   key: string;
@@ -39,17 +25,7 @@ export type ChecklistGroup = {
   footer?: ReactNode;
 };
 
-export type ChecklistDrop = { id: string; from: string; to: string; order: string[] };
-
-// Arrastar começa só depois de mexer o mouse um pouco (clique continua clique) ou de segurar o dedo
-// um instante (rolar a tela continua rolando). Pelo teclado: foco no item, espaço, setas, espaço.
-function useChecklistSensors() {
-  return useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-}
+export type ChecklistDrop = ColumnDrop;
 
 // Teclas dentro do círculo e do título são deles: não começam um arrastar na linha.
 function keepKeys(event: ReactKeyboardEvent) {
@@ -78,7 +54,7 @@ export function CheckRow({
   link,
   title,
   info,
-  tag,
+  cells = [],
 }: {
   checked: boolean;
   ring?: string;
@@ -86,19 +62,23 @@ export function CheckRow({
   onToggle?: () => void;
   link: RecordLink;
   title: string;
+  // Linha de informação embaixo do título. Com colunas, só no celular (no computador as células fazem esse papel).
   info?: ReactNode;
-  tag?: ReactNode;
+  // Uma célula por coluna do checklist, na mesma ordem do cabeçalho.
+  cells?: ReactNode[];
 }) {
+  const columns = useFrameColumns();
   const circle = checked ? "border-2 border-accent bg-accent text-canvas" : `text-transparent hover:bg-chip ${ring}`;
+  // O círculo tem a altura da primeira linha do título (20px, leading-5): fica centrado nela, como no Todoist.
   return (
-    <div className="grid grid-cols-[22px_minmax(0,1fr)] gap-x-3 py-2.5 sm:grid-cols-[22px_minmax(0,1fr)_auto]">
+    <div style={gridStyle(columns)} className={`${gridClass} items-start px-3 py-2.5`}>
       <button
         type="button"
         onClick={onToggle}
         onKeyDown={keepKeys}
         disabled={!onToggle}
         aria-label={label}
-        className={`mt-0.5 grid h-5 w-5 place-items-center rounded-full transition ${circle}`}
+        className={`grid h-5 w-5 place-items-center rounded-full transition ${circle}`}
       >
         <CheckIcon />
       </button>
@@ -108,15 +88,19 @@ export function CheckRow({
           state={link.state}
           data-record-id={link.recordId}
           onKeyDown={keepKeys}
-          className={`block whitespace-pre-line break-words text-[15px] leading-snug hover:underline hover:decoration-line hover:underline-offset-4 ${
+          className={`block whitespace-pre-line break-words text-[15px] leading-5 hover:underline hover:decoration-line hover:underline-offset-4 ${
             checked ? "text-muted line-through" : "text-app"
           }`}
         >
           {title}
         </Link>
-        {info ? <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">{info}</div> : null}
+        {info ? <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted ${columns.length ? "md:hidden" : ""}`}>{info}</div> : null}
       </div>
-      {tag ? <div className="col-start-2 mt-1 text-[13px] text-muted sm:col-start-3 sm:mt-0 sm:self-end sm:text-right">{tag}</div> : null}
+      {columns.map((column, index) => (
+        <div key={column.key} className="hidden text-sm leading-5 text-app md:block">
+          {cells[index] ?? null}
+        </div>
+      ))}
     </div>
   );
 }
@@ -134,7 +118,7 @@ function SortableRow({ id, locked, fading, children }: { id: string; locked: boo
       {...attributes}
       {...listeners}
       aria-roledescription="item arrastável"
-      className={`border-b border-line bg-canvas outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+      className={`border-b border-line bg-card outline-none transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent ${
         locked ? "" : "cursor-grab active:cursor-grabbing"
       } ${isDragging ? "opacity-40" : ""} ${fading ? "opacity-0 transition-opacity delay-200 duration-200" : ""}`}
     >
@@ -144,7 +128,7 @@ function SortableRow({ id, locked, fading, children }: { id: string; locked: boo
 }
 
 function Column({ group, ids, fading, renderRow }: { group: ChecklistGroup; ids: string[]; fading: Set<string>; renderRow: (id: string, group: string) => ReactNode }) {
-  const { setNodeRef } = useDroppable({ id: `${COLUMN}${group.key}`, disabled: !group.accepts });
+  const { setNodeRef } = useDroppable({ id: columnDropId(group.key), disabled: !group.accepts });
   return (
     <SortableContext id={group.key} items={ids} strategy={verticalListSortingStrategy}>
       <ul ref={setNodeRef} className="min-h-2">
@@ -153,7 +137,7 @@ function Column({ group, ids, fading, renderRow }: { group: ChecklistGroup; ids:
             {renderRow(id, group.key)}
           </SortableRow>
         ))}
-        {ids.length === 0 ? <li className="border-b border-line py-3 pl-[34px] text-sm text-muted">{group.empty}</li> : null}
+        {ids.length === 0 ? <li className="border-b border-line py-3 pl-[46px] pr-3 text-sm text-muted">{group.empty}</li> : null}
       </ul>
     </SortableContext>
   );
@@ -163,17 +147,8 @@ function domId(key: string) {
   return `grupo-${key.replace(/[^a-z0-9-]/gi, "-")}`;
 }
 
-export function scrollToGroup(key: string) {
-  document.getElementById(domId(key))?.scrollIntoView({ block: "start" });
-}
-
-type Columns = Record<string, string[]>;
-
-function columnsOf(groups: ChecklistGroup[]): Columns {
-  return Object.fromEntries(groups.map((group) => [group.key, group.ids]));
-}
-
 export function Checklist({
+  frame,
   groups,
   renderRow,
   renderOverlay,
@@ -182,6 +157,7 @@ export function Checklist({
   onDrop,
   openKeys = [],
 }: {
+  frame: ChecklistFrame;
   groups: ChecklistGroup[];
   renderRow: (id: string, group: string) => ReactNode;
   renderOverlay: (id: string, group: string) => ReactNode;
@@ -191,79 +167,8 @@ export function Checklist({
   onDrop: (drop: ChecklistDrop) => Promise<unknown>;
   openKeys?: string[];
 }) {
-  const sensors = useChecklistSensors();
-  const [columns, setColumns] = useState<Columns>(() => columnsOf(groups));
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const origin = useRef<string | null>(null);
+  const dnd = useColumnsDnd({ lists: groups, canMove, onDrop });
   const [toggled, setToggled] = useState<Set<string>>(() => new Set(openKeys));
-  const signature = JSON.stringify(groups.map((group) => [group.key, group.ids]));
-  const latest = useRef(groups);
-  latest.current = groups;
-
-  // A lista segue os dados, menos durante um arrastar (aí ela é a prévia do lugar novo). Depois de
-  // soltar, a prévia fica até os dados novos chegarem, sem piscar a ordem antiga.
-  useEffect(() => {
-    if (!origin.current) setColumns(columnsOf(latest.current));
-  }, [signature]);
-
-  const byKey = new Map(groups.map((group) => [group.key, group]));
-
-  function findGroup(id: UniqueIdentifier): string | null {
-    const key = String(id);
-    if (key.startsWith(COLUMN)) return key.slice(COLUMN.length);
-    return Object.keys(columns).find((group) => columns[group]?.includes(key)) ?? null;
-  }
-
-  function cancel() {
-    origin.current = null;
-    setActiveId(null);
-    setColumns(columnsOf(latest.current));
-  }
-
-  function onDragStart(event: DragStartEvent) {
-    setActiveId(String(event.active.id));
-    origin.current = findGroup(event.active.id);
-  }
-
-  // Passar por cima de outro grupo já mostra o item lá, se o grupo recebe e o item pode ir.
-  function onDragOver({ active, over }: DragOverEvent) {
-    if (!over) return;
-    const id = String(active.id);
-    const from = findGroup(active.id);
-    const to = findGroup(over.id);
-    if (!from || !to || from === to || !byKey.get(to)?.accepts || !origin.current || !canMove(id, origin.current, to)) return;
-    setColumns((current) => {
-      const target = current[to] ?? [];
-      const overIndex = target.indexOf(String(over.id));
-      const index = overIndex >= 0 ? overIndex : target.length;
-      return {
-        ...current,
-        [from]: (current[from] ?? []).filter((item) => item !== id),
-        [to]: [...target.slice(0, index), id, ...target.slice(index)],
-      };
-    });
-  }
-
-  function onDragEnd({ active, over }: DragEndEvent) {
-    const id = String(active.id);
-    const from = origin.current;
-    const group = findGroup(active.id);
-    const overGroup = over ? findGroup(over.id) : null;
-    if (!from || !group || overGroup !== group) {
-      cancel();
-      return;
-    }
-    origin.current = null;
-    const list = columns[group] ?? [];
-    const oldIndex = list.indexOf(id);
-    const overIndex = list.indexOf(String(over?.id));
-    const newIndex = overIndex >= 0 ? overIndex : list.length - 1;
-    const order = oldIndex === newIndex ? list : arrayMove(list, oldIndex, newIndex);
-    setColumns({ ...columns, [group]: order });
-    setActiveId(null);
-    if (group === from && order === list) return;
-    onDrop({ id, from, to: group, order }).catch(() => setColumns(columnsOf(latest.current)));
-  }
 
   function fold(key: string) {
     setToggled((current) => {
@@ -274,47 +179,30 @@ export function Checklist({
     });
   }
 
-  const activeGroup = activeId ? findGroup(activeId) : null;
+  const { activeId, activeColumn: activeGroup, columns } = dnd;
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={cancel}>
+    <DndContext {...dnd.context} collisionDetection={closestCorners}>
+      <ChecklistBox frame={frame}>
       {groups.map((group) => {
         const ids = columns[group.key] ?? group.ids;
         const collapsed = Boolean(group.startCollapsed) !== toggled.has(group.key);
         return (
-          <section key={group.key} id={domId(group.key)} className="mt-7 scroll-mt-4 first:mt-0">
-            <div className="flex items-center gap-2 border-b border-line pb-2">
-              <h2 className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() => fold(group.key)}
-                  aria-expanded={!collapsed}
-                  className="-ml-0.5 flex items-center gap-2 rounded-md py-0.5 pl-0.5 pr-1.5 text-left text-[15px] font-semibold text-app hover:bg-chip"
-                >
-                  <svg viewBox="0 0 16 16" aria-hidden="true" className={`h-3.5 w-3.5 shrink-0 text-muted transition ${collapsed ? "-rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 6l4 4 4-4" />
-                  </svg>
-                  <span className="min-w-0">
-                    {group.title}
-                    {group.sub ? <span className="font-medium text-muted"> · {group.sub}</span> : null}
-                  </span>
-                </button>
-              </h2>
-              {ids.length ? <span className="text-[13px] tabular-nums text-muted">{ids.length}</span> : null}
-              {group.action ? <div className="ml-auto shrink-0">{group.action}</div> : null}
-            </div>
+          <section key={group.key} id={domId(group.key)} className="scroll-mt-4">
+            <GroupBand title={group.title} sub={group.sub} count={ids.length} collapsed={collapsed} onFold={() => fold(group.key)} action={group.action} />
             {collapsed ? null : (
               <>
                 <Column group={group} ids={ids} fading={fading} renderRow={renderRow} />
-                {group.footer}
+                {group.footer ? <FrameFooter>{group.footer}</FrameFooter> : null}
               </>
             )}
           </section>
         );
       })}
       <DragOverlay>
-        {activeId && activeGroup ? <div className="rounded-lg bg-canvas px-2 shadow-card">{renderOverlay(activeId, activeGroup)}</div> : null}
+        {activeId && activeGroup ? <div className="rounded-control bg-card shadow-card">{renderOverlay(activeId, activeGroup)}</div> : null}
       </DragOverlay>
+      </ChecklistBox>
     </DndContext>
   );
 }
@@ -337,46 +225,4 @@ export function useCompleting() {
     );
   }
   return { fading, complete };
-}
-
-// "Agrupar por": a escolha fica guardada no aparelho.
-export function useGrouping<T extends string>(storageKey: string, options: readonly T[], fallback: T): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      return stored && (options as readonly string[]).includes(stored) ? (stored as T) : fallback;
-    } catch {
-      return fallback;
-    }
-  });
-  function choose(next: T) {
-    setValue(next);
-    try {
-      localStorage.setItem(storageKey, next);
-    } catch {
-      // Sem armazenamento (aba anônima): a escolha vale só nesta visita.
-    }
-  }
-  return [value, choose];
-}
-
-export function GroupingPills<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
-  return (
-    <div role="group" aria-label="Agrupar por" className="mb-6 flex flex-wrap items-center gap-2 text-[13px] text-muted">
-      <span>Agrupar por</span>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          onClick={() => onChange(option.value)}
-          className={`rounded-full border px-3 py-1 text-[13px] transition ${
-            value === option.value ? "border-accent bg-accent-soft font-semibold text-app" : "border-line text-app hover:bg-chip"
-          }`}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
 }
