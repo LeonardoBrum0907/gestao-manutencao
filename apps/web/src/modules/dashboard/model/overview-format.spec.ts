@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { barShare, compareTo, niceCeiling, formatDuration, minutesSince, shortDate, weekLabel } from "./overview-format";
+import { axisTicks, barShare, compareTo, niceCeiling, formatDuration, minutesSince, shortDate, weekLabel } from "./overview-format";
 
 describe("números do Dashboard", () => {
   it("conta minutos desde a abertura, sem negativo", () => {
@@ -38,5 +38,15 @@ describe("números do Dashboard", () => {
     assert.equal(niceCeiling(5), 5);
     assert.equal(niceCeiling(51), 100);
     assert.equal(niceCeiling(0), 1);
+  });
+
+  it("marca zero, o meio e o topo do eixo", () => {
+    assert.deepEqual(axisTicks(10), [0, 5, 10]);
+    assert.deepEqual(axisTicks(2), [0, 1, 2]);
+  });
+
+  it("não marca meia tarefa nem meio chamado no eixo", () => {
+    assert.deepEqual(axisTicks(5), [0, 5]);
+    assert.deepEqual(axisTicks(1), [0, 1]);
   });
 });
