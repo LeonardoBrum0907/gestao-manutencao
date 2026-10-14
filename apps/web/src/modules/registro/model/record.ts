@@ -4,7 +4,6 @@ import {
   RECORD_ORIGIN_LABELS,
   RECORD_PRIORITIES,
   RECORD_PRIORITY_LABELS,
-  RECORD_STATUSES,
   RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
   type FeedbackTone,
@@ -70,11 +69,6 @@ export function toneChipClass(tone: FeedbackTone | null): string {
   if (tone === "negative") return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-danger";
   return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
 }
-
-export const statusOptions = RECORD_STATUSES.map((status) => ({
-  value: status,
-  label: RECORD_STATUS_LABELS[status],
-}));
 
 export const priorityOptions = RECORD_PRIORITIES.map((priority) => ({
   value: priority,
