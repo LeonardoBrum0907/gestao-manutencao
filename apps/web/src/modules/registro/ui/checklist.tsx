@@ -1,29 +1,14 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCorners,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
-  type UniqueIdentifier,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DndContext, DragOverlay, closestCorners, useDroppable } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { columnDropId, useColumnsDnd, type ColumnDrop } from "./columns-dnd";
 import { ChecklistBox, FrameFooter, GroupBand, gridClass, gridStyle, useFrameColumns, type ChecklistFrame } from "./checklist-table";
 import type { RecordLink } from "./record-link";
 
 // Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
 // para concluir e arrastar para reordenar ou levar a outro grupo.
-
-const COLUMN = "col:";
 
 export type ChecklistGroup = {
   key: string;
@@ -40,17 +25,7 @@ export type ChecklistGroup = {
   footer?: ReactNode;
 };
 
-export type ChecklistDrop = { id: string; from: string; to: string; order: string[] };
-
-// Arrastar começa só depois de mexer o mouse um pouco (clique continua clique) ou de segurar o dedo
-// um instante (rolar a tela continua rolando). Pelo teclado: foco no item, espaço, setas, espaço.
-function useChecklistSensors() {
-  return useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-}
+export type ChecklistDrop = ColumnDrop;
 
 // Teclas dentro do círculo e do título são deles: não começam um arrastar na linha.
 function keepKeys(event: ReactKeyboardEvent) {
@@ -152,7 +127,7 @@ function SortableRow({ id, locked, fading, children }: { id: string; locked: boo
 }
 
 function Column({ group, ids, fading, renderRow }: { group: ChecklistGroup; ids: string[]; fading: Set<string>; renderRow: (id: string, group: string) => ReactNode }) {
-  const { setNodeRef } = useDroppable({ id: `${COLUMN}${group.key}`, disabled: !group.accepts });
+  const { setNodeRef } = useDroppable({ id: columnDropId(group.key), disabled: !group.accepts });
   return (
     <SortableContext id={group.key} items={ids} strategy={verticalListSortingStrategy}>
       <ul ref={setNodeRef} className="min-h-2">
@@ -175,12 +150,6 @@ export function scrollToGroup(key: string) {
   document.getElementById(domId(key))?.scrollIntoView({ block: "start" });
 }
 
-type Columns = Record<string, string[]>;
-
-function columnsOf(groups: ChecklistGroup[]): Columns {
-  return Object.fromEntries(groups.map((group) => [group.key, group.ids]));
-}
-
 export function Checklist({
   frame,
   groups,
@@ -201,79 +170,8 @@ export function Checklist({
   onDrop: (drop: ChecklistDrop) => Promise<unknown>;
   openKeys?: string[];
 }) {
-  const sensors = useChecklistSensors();
-  const [columns, setColumns] = useState<Columns>(() => columnsOf(groups));
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const origin = useRef<string | null>(null);
+  const dnd = useColumnsDnd({ lists: groups, canMove, onDrop });
   const [toggled, setToggled] = useState<Set<string>>(() => new Set(openKeys));
-  const signature = JSON.stringify(groups.map((group) => [group.key, group.ids]));
-  const latest = useRef(groups);
-  latest.current = groups;
-
-  // A lista segue os dados, menos durante um arrastar (aí ela é a prévia do lugar novo). Depois de
-  // soltar, a prévia fica até os dados novos chegarem, sem piscar a ordem antiga.
-  useEffect(() => {
-    if (!origin.current) setColumns(columnsOf(latest.current));
-  }, [signature]);
-
-  const byKey = new Map(groups.map((group) => [group.key, group]));
-
-  function findGroup(id: UniqueIdentifier): string | null {
-    const key = String(id);
-    if (key.startsWith(COLUMN)) return key.slice(COLUMN.length);
-    return Object.keys(columns).find((group) => columns[group]?.includes(key)) ?? null;
-  }
-
-  function cancel() {
-    origin.current = null;
-    setActiveId(null);
-    setColumns(columnsOf(latest.current));
-  }
-
-  function onDragStart(event: DragStartEvent) {
-    setActiveId(String(event.active.id));
-    origin.current = findGroup(event.active.id);
-  }
-
-  // Passar por cima de outro grupo já mostra o item lá, se o grupo recebe e o item pode ir.
-  function onDragOver({ active, over }: DragOverEvent) {
-    if (!over) return;
-    const id = String(active.id);
-    const from = findGroup(active.id);
-    const to = findGroup(over.id);
-    if (!from || !to || from === to || !byKey.get(to)?.accepts || !origin.current || !canMove(id, origin.current, to)) return;
-    setColumns((current) => {
-      const target = current[to] ?? [];
-      const overIndex = target.indexOf(String(over.id));
-      const index = overIndex >= 0 ? overIndex : target.length;
-      return {
-        ...current,
-        [from]: (current[from] ?? []).filter((item) => item !== id),
-        [to]: [...target.slice(0, index), id, ...target.slice(index)],
-      };
-    });
-  }
-
-  function onDragEnd({ active, over }: DragEndEvent) {
-    const id = String(active.id);
-    const from = origin.current;
-    const group = findGroup(active.id);
-    const overGroup = over ? findGroup(over.id) : null;
-    if (!from || !group || overGroup !== group) {
-      cancel();
-      return;
-    }
-    origin.current = null;
-    const list = columns[group] ?? [];
-    const oldIndex = list.indexOf(id);
-    const overIndex = list.indexOf(String(over?.id));
-    const newIndex = overIndex >= 0 ? overIndex : list.length - 1;
-    const order = oldIndex === newIndex ? list : arrayMove(list, oldIndex, newIndex);
-    setColumns({ ...columns, [group]: order });
-    setActiveId(null);
-    if (group === from && order === list) return;
-    onDrop({ id, from, to: group, order }).catch(() => setColumns(columnsOf(latest.current)));
-  }
 
   function fold(key: string) {
     setToggled((current) => {
@@ -284,10 +182,10 @@ export function Checklist({
     });
   }
 
-  const activeGroup = activeId ? findGroup(activeId) : null;
+  const { activeId, activeColumn: activeGroup, columns } = dnd;
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={cancel}>
+    <DndContext {...dnd.context} collisionDetection={closestCorners}>
       <ChecklistBox frame={frame}>
       {groups.map((group) => {
         const ids = columns[group.key] ?? group.ids;
