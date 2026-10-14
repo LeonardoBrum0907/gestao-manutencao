@@ -9,33 +9,61 @@ import { formatDay } from "../../colaborador/model/pdi-items";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventive, usePostPreventives } from "../../pos-preventiva/data/post-preventives";
 import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
+import { parseAttentionSections, type AttentionSheetSection } from "../model/attention-sheet-sections";
 import "../../../design/ui/report.css";
 import "./attention-sheet.css";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
+const POINT_LINES: readonly AttentionSheetSection[] = ["ponto", "ocorrencia", "acao", "feito", "tecnicos"];
 
-function Point({ item, memberNames, full }: { item: PostPreventiveDto; memberNames: Map<string, string>; full: boolean }) {
+// Quadro em branco no fim da folha para o técnico preencher à mão.
+function TechnicianCheck() {
+  return (
+    <>
+      <h2>Conferência do técnico</h2>
+      <div className="sign">
+        <div>
+          <small>Técnico(s)</small>
+        </div>
+        <div>
+          <small>Assinatura</small>
+        </div>
+        <div className="wide">
+          <small>Observações</small>
+        </div>
+      </div>
+    </>
+  );
+}
+
+type PointProps = { item: PostPreventiveDto; memberNames: Map<string, string>; parts: ReadonlySet<AttentionSheetSection> };
+
+function Point({ item, memberNames, parts }: PointProps) {
   return (
     <div className="point">
       <span className="box" aria-hidden />
       <div>
-        <p className="attention">{item.attentionPoint}</p>
-        <p className="muted">
-          <b>Ocorrência:</b> {item.occurrence} (preventiva de {formatDay(item.preventiveDate)}
-          {item.occurrenceDate ? `, ocorreu em ${formatDay(item.occurrenceDate)}` : ""})
-        </p>
-        <p className="muted">
-          <b>Ação preventiva:</b> {item.preventiveAction}
-        </p>
-        {full ? (
-          <>
-            <p className="muted">
-              <b>O que foi feito na preventiva:</b> {item.done}
-            </p>
-            <p className="muted">
-              <b>Técnicos:</b> {item.memberIds.map((id) => memberNames.get(id)).filter(Boolean).join(", ") || "—"}
-            </p>
-          </>
+        {parts.has("ponto") ? <p className="attention">{item.attentionPoint}</p> : null}
+        {parts.has("ocorrencia") ? (
+          <p className="muted">
+            <b>Ocorrência:</b> {item.occurrence} (preventiva de {formatDay(item.preventiveDate)}
+            {item.occurrenceDate ? `, ocorreu em ${formatDay(item.occurrenceDate)}` : ""})
+          </p>
+        ) : null}
+        {parts.has("acao") ? (
+          <p className="muted">
+            <b>Ação preventiva:</b> {item.preventiveAction}
+          </p>
+        ) : null}
+        {parts.has("feito") ? (
+          <p className="muted">
+            <b>O que foi feito na preventiva:</b> {item.done}
+          </p>
+        ) : null}
+        {parts.has("tecnicos") ? (
+          <p className="muted">
+            <b>Técnicos:</b> {item.memberIds.map((id) => memberNames.get(id)).filter(Boolean).join(", ") || "—"}
+          </p>
         ) : null}
       </div>
     </div>
@@ -43,7 +71,8 @@ function Point({ item, memberNames, full }: { item: PostPreventiveDto; memberNam
 }
 
 // Folha A4 da máquina para o técnico levar na próxima preventiva: os pontos de atenção ativos por subconjunto.
-// Com ?ficha= sai uma ficha só (ativa ou não), com o que foi feito e os técnicos.
+// Com ?ficha= sai uma ficha só (ativa ou não), com o que foi feito e os técnicos. ?secoes= escolhe as linhas de
+// cada ponto e a conferência (janela de exportar).
 export function AttentionSheetPage() {
   const { id = "" } = useParams();
   const [search, setSearch] = useSearchParams();
@@ -63,6 +92,8 @@ export function AttentionSheetPage() {
   const groups = groupBySubassembly(items, subassemblies.data ?? []);
   const skipped = new Set((search.get("sem") ?? "").split(",").filter(Boolean));
   const shown = groups.filter((group) => !skipped.has(group.subassemblyId));
+  const parts = new Set(parseAttentionSections(search.get("secoes"), Boolean(recordId)));
+  const hasPointLines = POINT_LINES.some((key) => parts.has(key));
   const memberNames = new Map(members.data?.map((member) => [member.id, member.name]));
   const loading = machines.isPending || lines.isPending || (recordId ? single.isPending : active.isPending);
   const { fit } = preview;
@@ -134,30 +165,19 @@ export function AttentionSheetPage() {
               </header>
               <div className="stripe" />
               <div className="content">
-                {shown.length ? (
+                {!hasPointLines ? null : shown.length ? (
                   shown.map((group) => (
                     <section key={group.subassemblyId}>
                       <h2>{group.name}</h2>
                       {group.items.map((item) => (
-                        <Point key={item.id} item={item} memberNames={memberNames} full={Boolean(recordId)} />
+                        <Point key={item.id} item={item} memberNames={memberNames} parts={parts} />
                       ))}
                     </section>
                   ))
                 ) : (
                   <p className="muted">Nenhum ponto de atenção ativo nesta máquina.</p>
                 )}
-                <h2>Conferência do técnico</h2>
-                <div className="sign">
-                  <div>
-                    <small>Técnico(s)</small>
-                  </div>
-                  <div>
-                    <small>Assinatura</small>
-                  </div>
-                  <div className="wide">
-                    <small>Observações</small>
-                  </div>
-                </div>
+                {parts.has("conferencia") ? <TechnicianCheck /> : null}
               </div>
               <footer>
                 <span>

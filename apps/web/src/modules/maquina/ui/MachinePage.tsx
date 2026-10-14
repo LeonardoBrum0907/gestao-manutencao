@@ -15,6 +15,7 @@ import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useChamadosOfLine } from "../../turno/data/shift";
 import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, shortDay } from "../../turno/model/chamado";
+import { AttentionSheetOptions } from "./AttentionSheetOptions";
 import { MachineSubassembliesCard } from "./MachineSubassembliesCard";
 import { ATTENTION_COLUMNS, HISTORY_COLUMNS, attentionStacked, historyStacked, type MachineRecordRow } from "./machine-history-table";
 
@@ -82,6 +83,7 @@ export function MachinePage() {
   const catalog = useMatrixCatalog();
   const records = usePostPreventives({ machineId: id });
   const [editing, setEditing] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   if (machines.isPending || lines.isPending) return <p className="text-sm text-muted">Carregando máquina…</p>;
   const machine = machines.data?.find((item) => item.id === id);
@@ -118,9 +120,9 @@ export function MachinePage() {
             <Button tone="ghost" onClick={() => setEditing(true)}>
               Editar
             </Button>
-            <Link to={`/maquinas/${machine.id}/folha`} className={`${linkButton} border border-line bg-chip text-app hover:bg-accent-soft`}>
+            <Button tone="ghost" onClick={() => setExporting(true)}>
               Exportar folha
-            </Link>
+            </Button>
             <Link to={`/pos-preventiva/nova?maquina=${machine.id}`} className={`${linkButton} bg-accent text-accent-contrast hover:brightness-90`}>
               Nova ficha
             </Link>
@@ -203,6 +205,7 @@ export function MachinePage() {
         </Card>
         </div>
       </div>
+      {exporting ? <AttentionSheetOptions machineId={machine.id} recordId={null} onClose={() => setExporting(false)} /> : null}
       {editing ? (
         <MachineFormModal line={line} machine={machine} onClose={() => setEditing(false)} onDeleted={() => navigate("/maquinas", { replace: true })} />
       ) : null}
