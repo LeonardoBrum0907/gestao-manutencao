@@ -502,6 +502,7 @@ export function SelectInput({
 export type MultiOption = { value: string; label: string };
 
 // Várias escolhas (técnicos): cada uma vira uma etiqueta; o que não cabe numa linha vira "+N".
+// actions={false} tira o rodapé Limpar/Pronto (Comportamento, que grava a cada marcação).
 export function MultiSelect({
   label,
   options,
@@ -509,6 +510,7 @@ export function MultiSelect({
   onChange,
   placeholder = "Selecione",
   emptyText = "Nada para escolher.",
+  actions = true,
 }: {
   label: string;
   options: MultiOption[];
@@ -516,6 +518,7 @@ export function MultiSelect({
   onChange: (next: string[]) => void;
   placeholder?: string;
   emptyText?: string;
+  actions?: boolean;
 }) {
   const labelId = useId();
   const countId = useId();
@@ -711,7 +714,7 @@ export function MultiSelect({
           panelRef={panelRef}
           title={label}
           onClose={() => close()}
-          footer={footer}
+          footer={actions ? footer : undefined}
           search={withSearch ? <SearchBox list={list} label={label} listId={listId} autoFocus={!phone} onKeyDown={onKeyDown} /> : null}
         >
           {choices.length ? (

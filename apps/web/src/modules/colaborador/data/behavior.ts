@@ -13,7 +13,9 @@ export function useBehavior(memberId: string) {
 
 export function useSaveBehavior(memberId: string) {
   const client = useQueryClient();
+  const mutationKey = ["save-behavior", memberId];
   return useMutation({
+    mutationKey,
     mutationFn: (body: BehaviorWrite) =>
       api<MemberBehaviorDto>(`/api/members/${memberId}/behavior`, { method: "PUT", body: JSON.stringify(body) }),
     // Marca na hora; se a API recusar, volta ao que estava.
@@ -26,6 +28,11 @@ export function useSaveBehavior(memberId: string) {
     onError: (_error, _body, context) => {
       if (context?.previous) client.setQueryData(["behavior", memberId], context.previous);
     },
-    onSuccess: (behavior) => client.setQueryData(["behavior", memberId], behavior),
+    // Com a lista aberta dá para marcar várias seguidas: a resposta de uma gravação antiga
+    // apagaria as marcações mais novas, então só a última a terminar escreve o que a API devolveu.
+    onSuccess: (behavior) => {
+      if (client.isMutating({ mutationKey }) > 1) return;
+      client.setQueryData(["behavior", memberId], behavior);
+    },
   });
 }
