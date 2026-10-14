@@ -124,8 +124,6 @@ const paths = {
     </>
   ),
   send: <path d="M12 19V5M6 11l6-6 6 6" />,
-  // Repasse: o que vai de um técnico para o outro.
-  handoff: <path d="M4 8h14l-3-3M20 16H6l3 3" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   up: <path d="M6 15l6-6 6 6" />,
   down: <path d="M6 9l6 6 6-6" />,

@@ -31,7 +31,6 @@ const groups: { title?: string; items: Entry[] }[] = [
       { to: "/cadastro/colaboradores", label: "Colaboradores", icon: "user" },
       { to: "/cadastro/equipes", label: "Equipes", icon: "users" },
       { to: "/competencias", label: "Matriz da equipe", icon: "matrix" },
-      { to: "/repasses", label: "Repasses", icon: "handoff" },
     ],
   },
 ];
