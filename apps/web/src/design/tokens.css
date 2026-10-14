@@ -71,7 +71,11 @@
   /* Largura máxima das páginas comuns no computador. Era 64rem (max-w-5xl) e sobrava muito espaço nas laterais em
      monitor largo. Só fica aqui: o tema escuro herda do :root. */
   --page-max-width: 80rem;
-  --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+  /* Fontes da marca Caderno do Gestor (Léo, 2026-10-14): família Source, com cara de documentação técnica.
+     Serifa só na marca e nos títulos; texto e códigos sem serifa. */
+  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono: "Source Code Pro", Consolas, monospace;
 }
 
 [data-theme="dark"] {
@@ -112,5 +116,5 @@
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.28);
   --radius-card: 10px;
   --radius-control: 6px;
-  --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
 }

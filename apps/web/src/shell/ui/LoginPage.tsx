@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { errorMessage } from "../../app/http";
 import { Button, Card, Field, Notice, TextInput } from "../../design/ui/controls";
 import { useLogin, useSession } from "../data/session";
+import { BrandMark } from "../../design/ui/brand-mark";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function LoginPage() {
@@ -21,9 +22,9 @@ export function LoginPage() {
   return (
     <div className="flex h-full items-center justify-center overflow-y-auto bg-canvas px-4 py-10">
       <div className="w-full max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">SIGEM</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-app">Gestão de Manutenção</h1>
-        <p className="mt-2 text-sm text-muted">Caderno do gestor. Registre rápido, organize depois.</p>
+        <h1 className="sr-only">Caderno do Gestor</h1>
+        <BrandMark size="large" />
+        <p className="mt-3 text-[15px] text-muted">Registre rápido, organize depois.</p>
         <Card className="mt-6">
           <form className="flex flex-col gap-4" onSubmit={submit}>
             <Field label="E-mail">

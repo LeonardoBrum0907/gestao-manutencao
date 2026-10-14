@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../../design/ui/icons";
 import { MENU_STATE } from "../../app/nav-trail";
 import { useLogout } from "../data/session";
+import { BrandMark } from "../../design/ui/brand-mark";
 import { ThemeToggle } from "./ThemeToggle";
 
 type Entry = { to: string; label: string; icon: IconName };
@@ -61,11 +62,8 @@ export function Sidebar({
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center gap-2.5 px-2">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-accent text-sm font-bold text-accent-contrast" aria-hidden="true">
-            G
-          </span>
-          <p className="text-[15px] font-semibold leading-tight">Gestão de Manutenção</p>
+        <div className="px-2">
+          <BrandMark />
         </div>
         <NavLink
           to="/entrada"

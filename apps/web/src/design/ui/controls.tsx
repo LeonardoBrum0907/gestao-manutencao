@@ -101,7 +101,7 @@ export function PageTitle({
           {eyebrow ? (
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{eyebrow}</p>
           ) : null}
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-app">{title}</h1>
+          <h1 className="mt-1 font-serif text-[28px] font-semibold leading-tight text-app">{title}</h1>
           {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
@@ -115,7 +115,7 @@ export function SectionTitle({ title, text, action }: { title: string; text?: st
   return (
     <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold tracking-tight text-app">{title}</h2>
+        <h2 className="font-serif text-xl font-semibold text-app">{title}</h2>
         {text ? <p className="mt-1 max-w-2xl text-sm text-muted">{text}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
@@ -152,7 +152,7 @@ export function Modal({
         className="relative z-10 max-h-[min(40rem,calc(100vh-2rem))] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-card p-4 shadow-card sm:p-5"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
-          <h2 id={titleId} className="text-lg font-semibold text-app">
+          <h2 id={titleId} className="font-serif text-xl font-semibold text-app">
             {title}
           </h2>
           <button
