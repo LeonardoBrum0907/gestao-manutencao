@@ -85,6 +85,23 @@ export function valuesFromCard(card: TechCardFields, machineLineId: string): Tec
   };
 }
 
+/**
+ * Troca o "Vale para" de uma vez só: o alvo, o subconjunto e o documento da escolha anterior não servem mais.
+ * Tudo numa troca porque vários set() seguidos partem dos mesmos valores e o último desfaz os outros.
+ * @example withScopeKind(values, "machine") // { ...values, scopeKind: "machine", targetId: "" }
+ */
+export function withScopeKind(values: TechCardFormValues, scopeKind: ScopeKind): TechCardFormValues {
+  return { ...values, scopeKind, targetId: "", subassemblyId: "", documentId: "" };
+}
+
+/**
+ * Troca a linha de uma ficha "Só esta máquina": a máquina escolhida era da linha anterior.
+ * @example withMachineLine(values, line.id) // { ...values, lineId: line.id, targetId: "" }
+ */
+export function withMachineLine(values: TechCardFormValues, lineId: string): TechCardFormValues {
+  return { ...values, lineId, targetId: "" };
+}
+
 const orNull = (value: string): string | null => value.trim() || null;
 
 /**
