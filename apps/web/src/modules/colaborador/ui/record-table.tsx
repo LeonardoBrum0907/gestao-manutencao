@@ -1,7 +1,8 @@
 import type { RecordListItemDto } from "@manutencao/shared";
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
-import { formatWhen, originLabel, recordShortName, statusChipClass, statusLabel } from "../../registro/model/record";
+import { formatWhen, originLabel, recordShortName, statusChipClass } from "../../registro/model/record";
 import { DueMark } from "../../registro/ui/RecordMarks";
+import { memberRecordStatus } from "../model/record-status";
 
 // Tipo e, quando não veio da Entrada, de onde veio (RP, chamado): é o que diz o que o registro é.
 function kindText(record: RecordListItemDto): string {
@@ -10,12 +11,13 @@ function kindText(record: RecordListItemDto): string {
 
 // Feedback não tem status; a coluna fica vazia em vez de mostrar um "Aberto" que não quer dizer nada.
 function StatusChip({ record }: { record: RecordListItemDto }) {
-  if (record.type === "feedback") return null;
-  return <span className={statusChipClass(record.status)}>{statusLabel(record.status)}</span>;
+  const text = memberRecordStatus(record);
+  if (!text) return null;
+  return <span className={statusChipClass(record.status)}>{text}</span>;
 }
 
 /**
- * Registros na ficha do colaborador (em aberto e concluídos): tipo, texto, data, prazo e status.
+ * Registros na ficha do colaborador (em aberto e concluídos): tipo, texto, data, prazo e situação.
  * @example <DataTable plain columns={MEMBER_RECORD_COLUMNS} stacked={memberRecordStacked} ... />
  */
 export const MEMBER_RECORD_COLUMNS: TableColumn<RecordListItemDto>[] = [
@@ -23,11 +25,11 @@ export const MEMBER_RECORD_COLUMNS: TableColumn<RecordListItemDto>[] = [
   { key: "body", header: "Registro", cell: (record) => <span title={record.body}>{record.body}</span>, wrap: "long" },
   { key: "when", header: "Quando", cell: (record) => formatWhen(record.occurredAt), sortValue: (record) => record.occurredAt },
   { key: "due", header: "Prazo", cell: (record) => <DueMark record={record} />, sortValue: (record) => (record.type === "task" ? record.dueAt : null) },
-  { key: "status", header: "Status", cell: (record) => <StatusChip record={record} />, sortValue: (record) => (record.type === "feedback" ? null : statusLabel(record.status)) },
+  { key: "status", header: "Situação", cell: (record) => <StatusChip record={record} />, sortValue: memberRecordStatus },
 ];
 
 /**
- * O registro no celular: tipo e data em cima, o texto no meio, o status embaixo.
+ * O registro no celular: tipo e data em cima, o texto no meio, a situação embaixo.
  * @example stacked={memberRecordStacked}
  */
 export function memberRecordStacked(record: RecordListItemDto): StackedRow {
