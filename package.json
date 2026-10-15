@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "pnpm -r build",
-    "test": "pnpm --filter @manutencao/shared build && pnpm --filter @manutencao/api test && pnpm --filter @manutencao/web test",
+    "test": "pnpm --filter @manutencao/shared build && pnpm --filter @manutencao/shared test && pnpm --filter @manutencao/api test && pnpm --filter @manutencao/web test",
     "dev": "pnpm -r --parallel dev"
   }
 }
