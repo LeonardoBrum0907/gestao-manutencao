@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { DashboardChamadoDto, DashboardFlowWeekDto, DashboardNowDto } from "@manutencao/shared";
 import { dayOf } from "../../turno/model/chamado";
 import { formatDuration, LONG_OPEN_MINUTES, minutesSince, shortDate } from "../model/overview-format";
+import { openChamadosLink } from "../model/open-chamados-link";
 import { Band, Kpi, Panel } from "./band";
 import { ColumnChart } from "./ColumnChart";
 
@@ -11,7 +12,7 @@ function NowKpis({ now, at }: { now: DashboardNowDto; at: Date }) {
   const settingUp = now.settingUpLines ? ` · ${now.settingUpLines} em ajuste` : "";
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
-      <Kpi to="/turno/chamados" label="Chamados abertos" value={now.openChamados.length} sub={long ? `${long} há mais de 2 h` : "nenhum há mais de 2 h"} tone={long ? "warn" : "neutral"} />
+      <Kpi to={openChamadosLink(now.openChamados)} label="Chamados abertos" value={now.openChamados.length} sub={long ? `${long} há mais de 2 h` : "nenhum há mais de 2 h"} tone={long ? "warn" : "neutral"} />
       <Kpi to="/meu-dia" label="Tarefas vencidas" value={now.overdueTasks} sub={`${now.overdueHighTasks} de alta prioridade`} tone={now.overdueTasks ? "danger" : "neutral"} />
       <Kpi to="/meu-dia" label="Vencem hoje" value={now.dueTodayTasks} tone="today" />
       <Kpi to="/configuracoes/fabricas" label="Linhas paradas" value={now.stoppedLines.length} sub={`${stopped || "nenhuma"}${settingUp}`} tone={now.stoppedLines.length ? "danger" : "neutral"} />
@@ -41,7 +42,7 @@ function ChamadoLine({ chamado, at }: { chamado: DashboardChamadoDto; at: Date }
 
 function OpenChamados({ chamados, at }: { chamados: DashboardChamadoDto[]; at: Date }) {
   return (
-    <Panel title="Chamados em aberto" action={<Link to="/turno/chamados" className="text-xs text-accent hover:underline">Ver chamados</Link>}>
+    <Panel title="Chamados em aberto" action={<Link to={openChamadosLink(chamados)} className="text-xs text-accent hover:underline">Ver chamados</Link>}>
       {chamados.length ? (
         <ol className="flex flex-col">
           {chamados.slice(0, 6).map((chamado) => (
