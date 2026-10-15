@@ -66,12 +66,32 @@ describe("ficha", () => {
       line: "Linha A",
       priority: "high",
       dueAt: due,
+      dueHasTime: true,
       notes: "Peça a caminho",
     });
     assert.equal(next.priority, "high");
     assert.equal(next.dueAt, due);
+    assert.equal(next.dueHasTime, true);
     assert.equal(next.status, "in_progress");
     assert.equal(next.tag, "TAG-1");
+  });
+
+  it("sem prazo, o horário do prazo some junto", () => {
+    const task = captureRecord({ type: "task", body: "Lubrificar", occurredAt: when, memberId: null, tone: null });
+    const next = applyTaskSheet(task, {
+      body: "Lubrificar",
+      occurredAt: when,
+      status: "open",
+      memberId: null,
+      factoryId: null,
+      tag: null,
+      line: null,
+      priority: null,
+      dueAt: null,
+      dueHasTime: true,
+      notes: null,
+    });
+    assert.equal(next.dueHasTime, false);
   });
 
   it("feedback guarda a observação", () => {

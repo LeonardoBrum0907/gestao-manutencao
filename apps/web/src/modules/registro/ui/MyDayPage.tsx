@@ -122,7 +122,7 @@ function MyDayRow({
   onToggle: () => void;
   link: RecordLink;
 }) {
-  const due = item.dueAt ? <DueText dueAt={item.dueAt} today={today} overdue={overdue} /> : <span className="text-muted">—</span>;
+  const due = item.dueAt ? <DueText dueAt={item.dueAt} hasTime={item.dueHasTime} today={today} overdue={overdue} /> : <span className="text-muted">—</span>;
   return (
     <CheckRow
       checked={checked}

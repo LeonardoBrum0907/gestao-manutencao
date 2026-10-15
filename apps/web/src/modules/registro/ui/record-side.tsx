@@ -5,11 +5,12 @@ import { Icon } from "../../../design/ui/icons";
 import { useToast } from "../../../design/ui/toast";
 import { useFactories } from "../../cadastro/data/cadastro";
 import { useBoardChange } from "../data/board";
-import { dueAtOf, dueDay, todayDay } from "../model/board";
 import { fromLocalInput, recordShortName, recordStatusLabel, toLocalInput } from "../model/record";
 import { retypeBlock } from "../model/record-sheet";
-import { Chip, DueChip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
+import { Chip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
+import { DueRow } from "./due-row";
 import { InlineText } from "./record-main";
+import { ReminderRow } from "./reminder-row";
 import { useRecordSave } from "./record-save";
 
 // Coluna lateral do modal do registro (como a do Todoist): cada campo grava assim que muda.
@@ -77,11 +78,13 @@ function FactoryChip({ value, onChange }: { value: string; onChange: (value: str
 
 function TaskRows({ record }: { record: RecordDto }) {
   const save = useRecordSave(record);
-  const today = todayDay();
   return (
     <>
       <SideRow label="Prazo">
-        <DueChip day={record.dueAt ? dueDay(record.dueAt) : null} today={today} onChange={(day) => save({ dueAt: day ? dueAtOf(day) : null })} />
+        <DueRow record={record} onChange={(due) => save(due)} />
+      </SideRow>
+      <SideRow label="Lembretes">
+        <ReminderRow record={record} />
       </SideRow>
       <SideRow label="Prioridade">
         <PriorityChip value={record.priority} onChange={(priority) => save({ priority })} />

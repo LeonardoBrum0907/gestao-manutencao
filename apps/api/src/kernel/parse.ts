@@ -61,3 +61,14 @@ export function requiredBoolean(source: Record<string, unknown>, key: string): b
   }
   return value;
 }
+
+/**
+ * Campo de sim/não que pode faltar (falta = falso), para quem ainda não manda o campo.
+ * @example optionalBoolean({ dueHasTime: true }, "dueHasTime") // true
+ */
+export function optionalBoolean(source: Record<string, unknown>, key: string): boolean {
+  const value = source[key];
+  if (value === undefined || value === null) return false;
+  if (typeof value === "boolean") return value;
+  throw new DomainError("invalid", 400, `${key} precisa ser true ou false (recebido: ${JSON.stringify(value)}).`);
+}

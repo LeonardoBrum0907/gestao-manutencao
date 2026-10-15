@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { assertBoardChange, boardDueAt, boardGroup, compareBoard, parseBoardChange, type BoardSortable } from "./board";
+import { assertBoardChange, boardDueAt, boardDueHasTime, boardGroup, compareBoard, parseBoardChange, type BoardSortable } from "./board";
 
 // 30/09 às 12h em São Paulo.
 const now = new Date("2026-09-30T15:00:00.000Z");
@@ -32,6 +32,16 @@ describe("prazo ao arrastar", () => {
   it("à noite em São Paulo, hoje ainda é o dia local", () => {
     const lateNight = new Date("2026-10-01T02:30:00.000Z");
     assert.equal(boardDueAt("today", lateNight)?.toISOString(), "2026-09-30T15:00:00.000Z");
+  });
+});
+
+describe("horário do prazo ao arrastar", () => {
+  const change = { status: null, target: null, day: null, order: null };
+
+  it("outro dia da Agenda mantém o horário; grupo do checklist volta a valer só o dia", () => {
+    assert.equal(boardDueHasTime({ ...change, day: "2026-10-16" }, true), true);
+    assert.equal(boardDueHasTime({ ...change, target: "today" }, true), false);
+    assert.equal(boardDueHasTime({ ...change, status: "done" }, true), true);
   });
 });
 

@@ -1,6 +1,6 @@
 import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority, type RecordType } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
-import { optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
+import { optionalBoolean, optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
 import type { CaptureInput, EntrySheetInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
 
 function parseTone(source: Record<string, unknown>): FeedbackTone | null {
@@ -56,6 +56,7 @@ export function parseTaskSheet(body: unknown): TaskSheetInput {
     line: optionalString(source, "line"),
     priority,
     dueAt: optionalDate(source, "dueAt"),
+    dueHasTime: optionalBoolean(source, "dueHasTime"),
     notes: optionalString(source, "notes"),
   };
 }

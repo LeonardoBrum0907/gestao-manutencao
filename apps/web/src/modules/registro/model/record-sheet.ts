@@ -17,6 +17,7 @@ function currentFields(record: RecordDto): SheetFields {
     line: record.line,
     priority: record.priority,
     dueAt: record.dueAt,
+    dueHasTime: record.dueHasTime,
     notes: record.notes,
     tone: record.tone,
     lineId: record.lineId,
@@ -27,8 +28,8 @@ function currentFields(record: RecordDto): SheetFields {
 }
 
 function taskBody(fields: SheetFields): TaskSheetBody {
-  const { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, notes } = fields;
-  return { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, notes };
+  const { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes } = fields;
+  return { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes };
 }
 
 function feedbackBody(fields: SheetFields): FeedbackSheetBody {

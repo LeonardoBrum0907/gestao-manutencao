@@ -1,6 +1,6 @@
 import { isChamadoShift, isRecordPriority, isRecordStatus, type RecordStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
-import { optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
+import { optionalBoolean, optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
 import type { ChamadoInput, ChamadoTaskInput, OcorrenciaInput } from "../domain/shift";
 
 function stringList(source: Record<string, unknown>, key: string): string[] {
@@ -39,6 +39,7 @@ export function parseChamadoTask(body: unknown): ChamadoTaskInput {
   return {
     body: requiredString(source, "body", "Escreva o que falta fazer."),
     dueAt: requiredDate(source, "dueAt", "Informe o prazo."),
+    dueHasTime: optionalBoolean(source, "dueHasTime"),
     memberId: optionalString(source, "memberId"),
     priority,
   };

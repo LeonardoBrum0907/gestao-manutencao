@@ -17,6 +17,7 @@ import {
   type RecordListItemDto,
   type RecordPageDto,
   type RecordStatus,
+  type TaskReminderBody,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -25,6 +26,7 @@ import { calendarDay, dueRange } from "../domain/follow-up";
 import type { RecordListFilter } from "../domain/record-list";
 import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
+import { reminderWrite } from "../../lembrete/domain/reminder-input";
 import { completionStep } from "./record-completion";
 
 const include = {
@@ -47,6 +49,7 @@ type Row = {
   priority: string | null;
   tone: string | null;
   dueAt: Date | null;
+  dueHasTime: boolean;
   notes: string | null;
   origin: string;
   dayNumber: number | null;
@@ -92,6 +95,7 @@ function toDto(row: Row): RecordDto {
     priority: row.priority,
     tone: row.tone,
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
+    dueHasTime: row.dueHasTime,
     notes: row.notes,
     origin: row.origin,
     dayNumber: row.dayNumber,
@@ -130,6 +134,7 @@ function scalars(state: RecordState) {
     priority: state.priority,
     tone: state.tone,
     dueAt: state.dueAt,
+    dueHasTime: state.dueHasTime,
     notes: state.notes,
     origin: state.origin,
     dayNumber: state.dayNumber,
@@ -151,6 +156,7 @@ const listSelect = {
   priority: true,
   tone: true,
   dueAt: true,
+  dueHasTime: true,
   lineId: true,
   machineId: true,
   subassemblyId: true,
@@ -167,6 +173,7 @@ function toListItem(row: {
   priority: string | null;
   tone: string | null;
   dueAt: Date | null;
+  dueHasTime: boolean;
   lineId: string | null;
   machineId: string | null;
   subassemblyId: string | null;
@@ -191,6 +198,7 @@ function toListItem(row: {
     priority: row.priority,
     tone: row.tone,
     dueAt: row.dueAt ? row.dueAt.toISOString() : null,
+    dueHasTime: row.dueHasTime,
     lineId: row.lineId,
     machineId: row.machineId,
     subassemblyId: row.subassemblyId,
@@ -233,6 +241,7 @@ const boardSelect = {
   origin: true,
   priority: true,
   dueAt: true,
+  dueHasTime: true,
   boardPosition: true,
   updatedAt: true,
   completedAt: true,
@@ -259,6 +268,7 @@ export type BoardWrite = {
   status: RecordStatus | null;
   // undefined = prazo não muda; null = sem prazo.
   dueAt: Date | null | undefined;
+  dueHasTime: boolean;
   order: string[] | null;
 };
 
@@ -297,6 +307,7 @@ export class RecordRepository {
           origin: item.origin,
           priority: item.priority,
           dueAt: item.dueAt,
+          dueHasTime: item.dueHasTime,
           occurredAt: item.occurredAt,
           group,
           completedAt: row.completedAt ? row.completedAt.toISOString() : null,
@@ -392,19 +403,22 @@ export class RecordRepository {
   }
 
   async boardRecord(id: string) {
-    const row = await this.prisma.record.findUnique({ where: { id }, select: { type: true, origin: true, dueAt: true } });
+    const row = await this.prisma.record.findUnique({ where: { id }, select: { type: true, origin: true, dueAt: true, dueHasTime: true } });
     if (!row) return null;
     if (!isRecordType(row.type) || !isRecordOrigin(row.origin)) {
       throw new DomainError("invalid", 500, "Registro gravado está inválido.");
     }
-    return { type: row.type, origin: row.origin, dueAt: row.dueAt };
+    return { type: row.type, origin: row.origin, dueAt: row.dueAt, dueHasTime: row.dueHasTime };
   }
 
   // Uma transação: o item muda de status/prazo e o grupo de destino recebe a ordem nova (0, 1, 2…).
   async applyBoard(id: string, write: BoardWrite): Promise<void> {
     const data: Prisma.RecordUpdateInput = {};
     if (write.status !== null) data.status = write.status;
-    if (write.dueAt !== undefined) data.dueAt = write.dueAt;
+    if (write.dueAt !== undefined) {
+      data.dueAt = write.dueAt;
+      data.dueHasTime = write.dueAt !== null && write.dueHasTime;
+    }
     const steps: Prisma.PrismaPromise<unknown>[] = [];
     if (Object.keys(data).length > 0) steps.push(this.prisma.record.update({ where: { id }, data }));
     if (write.status !== null) steps.push(completionStep(this.prisma, id, write.status, new Date()));
@@ -461,7 +475,16 @@ export class RecordRepository {
 
   // Com os mesmos técnicos de antes, só o registro muda: um UPDATE, sem transação para refazer os vínculos.
   // Registro que trocou de tipo vai para outra lista do checklist: a posição da lista antiga não vale lá.
-  async update(id: string, state: RecordState, previousMemberIds: string[], options: { retyped?: boolean } = {}): Promise<RecordDto> {
+  async reminderCount(id: string): Promise<number> {
+    return this.prisma.taskReminder.count({ where: { recordId: id } });
+  }
+
+  async update(
+    id: string,
+    state: RecordState,
+    previousMemberIds: string[],
+    options: { retyped?: boolean; reminders?: TaskReminderBody[] } = {},
+  ): Promise<RecordDto> {
     const sameMembers =
       previousMemberIds.length === state.memberIds.length && previousMemberIds.every((memberId, index) => memberId === state.memberIds[index]);
     const [row] = await this.prisma.$transaction([
@@ -471,6 +494,7 @@ export class RecordRepository {
           ...scalars(state),
           ...(options.retyped ? { boardPosition: null } : {}),
           ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
+          ...(options.reminders?.length ? { reminders: { create: options.reminders.map(reminderWrite) } } : {}),
         },
         include,
       }),

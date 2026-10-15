@@ -4,8 +4,9 @@ import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { dueAtOnDay } from "../domain/agenda-day";
-import { assertBoardChange, boardDueAt, parseBoardChange, type BoardChange } from "../domain/board";
+import { assertBoardChange, boardDueAt, boardDueHasTime, parseBoardChange, type BoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
+import { priorityReminders } from "../domain/priority-reminders";
 import { recordRemovalWarnings } from "../domain/record-removal";
 import { assertRetype, retypeState } from "../domain/retype";
 import type { RecordState } from "../domain/record-state";
@@ -29,6 +30,7 @@ function dtoToState(dto: RecordDto): RecordState {
     priority: dto.priority,
     tone: dto.tone,
     dueAt: dto.dueAt ? new Date(dto.dueAt) : null,
+    dueHasTime: dto.dueHasTime,
     notes: dto.notes,
     origin: dto.origin,
     dayNumber: dto.dayNumber,
@@ -74,7 +76,8 @@ export class Records {
     assertRetype({ ...current, attachments: current.attachments.length }, target);
     const state = retypeState(dtoToState(current), target);
     const next = await this.sheetState(current, state, body);
-    return this.records.update(id, next, current.memberIds, { retyped: target !== current.type });
+    const reminders = priorityReminders(current.priority, next, await this.records.reminderCount(id));
+    return this.records.update(id, next, current.memberIds, { retyped: target !== current.type, reminders });
   }
 
   // Aplica a ficha do tipo de destino (o tipo novo, quando a ficha troca o tipo).
@@ -113,6 +116,7 @@ export class Records {
     await this.records.applyBoard(id, {
       status: change.status,
       dueAt: boardDue(change, record.dueAt, now),
+      dueHasTime: boardDueHasTime(change, record.dueHasTime),
       order: change.order,
     });
   }

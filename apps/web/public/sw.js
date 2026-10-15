@@ -47,18 +47,32 @@ self.addEventListener("push", (event) => {
       tag: message.tag,
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-96.png",
-      data: { url: message.url },
+      // Android mostra os botões (Concluir, Adiar 1 h); o resto ignora e fica só o toque.
+      actions: message.actions.map((item) => ({ action: item.action, title: item.title })),
+      data: { url: message.url, actions: message.actions },
     }),
   );
 });
 
 // Tocar no aviso abre a tela dele: reaproveita uma janela do app que já esteja aberta.
+// Tocar num botão chama a API com o cookie da sessão; se falhar (sessão vencida, sem rede), abre a tela.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(openApp(appUrl(event.notification.data && event.notification.data.url)));
+  const data = event.notification.data || {};
+  const url = appUrl(data.url);
+  const action = (data.actions || []).find((item) => item.action === event.action);
+  event.waitUntil(action ? runAction(action).catch(() => openApp(url)) : openApp(url));
 });
 
-const FALLBACK_MESSAGE = { title: "Caderno do Gestor", body: "Você tem um aviso novo.", url: "/", tag: undefined };
+function runAction(action) {
+  const init = { method: action.method, credentials: "same-origin", headers: { "Content-Type": "application/json" } };
+  if (action.body) init.body = JSON.stringify(action.body);
+  return fetch(action.path, init).then((response) => {
+    if (!response.ok) throw new Error(`A API respondeu ${response.status} em ${action.path}.`);
+  });
+}
+
+const FALLBACK_MESSAGE = { title: "Caderno do Gestor", body: "Você tem um aviso novo.", url: "/", tag: undefined, actions: [] };
 
 function readPushMessage(data) {
   let message = null;
@@ -68,7 +82,18 @@ function readPushMessage(data) {
     message = null;
   }
   if (!message || typeof message.title !== "string") return FALLBACK_MESSAGE;
-  return { title: message.title, body: String(message.body || ""), url: message.url, tag: message.tag || undefined };
+  return { title: message.title, body: String(message.body || ""), url: message.url, tag: message.tag || undefined, actions: readActions(message.actions) };
+}
+
+// Só rotas /api/ do próprio app, com PATCH ou POST: o aviso não manda o service worker chamar outro lugar.
+function readActions(actions) {
+  if (!Array.isArray(actions)) return [];
+  return actions.filter(isSafeAction).slice(0, 2);
+}
+
+function isSafeAction(item) {
+  if (!item || typeof item.action !== "string" || typeof item.title !== "string") return false;
+  return (item.method === "POST" || item.method === "PATCH") && typeof item.path === "string" && item.path.startsWith("/api/");
 }
 
 // Só telas do próprio app: um endereço de fora no aviso vira a tela inicial.

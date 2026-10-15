@@ -68,7 +68,7 @@ describe("chamado", () => {
 
   it("a pendência gerada precisa de texto", () => {
     assert.throws(
-      () => chamadoTask({ body: "  ", dueAt: now, memberId: null, priority: null }),
+      () => chamadoTask({ body: "  ", dueAt: now, dueHasTime: false, memberId: null, priority: null }),
       (error: unknown) => error instanceof DomainError && error.code === "empty_body",
     );
   });

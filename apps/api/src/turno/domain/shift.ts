@@ -102,6 +102,8 @@ export function nextDayNumber(used: (number | null)[]): number {
 export type ChamadoTaskInput = {
   body: string;
   dueAt: Date;
+  // O prazo tem horário escolhido; falta = só o dia (como a tela manda hoje).
+  dueHasTime: boolean;
   memberId: string | null;
   priority: RecordPriority | null;
 };

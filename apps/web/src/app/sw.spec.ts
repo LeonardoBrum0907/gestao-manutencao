@@ -70,7 +70,19 @@ class FakeExtendableEvent<T> {
 
 type Worker = { listeners: Map<string, Listener>; registration: FakeRegistration; clients: FakeClients };
 
-function loadWorker(network: () => Promise<Response>, windows: FakeWindowClient[] = []): Worker {
+// Rede falsa que guarda cada chamada do service worker à API (botões da notificação).
+class FakeApiNetwork {
+  calls: Array<{ path: string; method: string; body: string | undefined }> = [];
+  constructor(private readonly status: number) {}
+  fetch = (path: string, init: { method: string; body?: string }): Promise<Response> => {
+    this.calls.push({ path, method: init.method, body: init.body });
+    return Promise.resolve(new Response(null, { status: this.status }));
+  };
+}
+
+type Network = (path: string, init: { method: string; body?: string }) => Promise<Response>;
+
+function loadWorker(network: Network, windows: FakeWindowClient[] = []): Worker {
   const listeners = new Map<string, Listener>();
   const registration = new FakeRegistration();
   const clients = new FakeClients(windows);
@@ -97,10 +109,10 @@ async function receivePush(data: { json: () => unknown } | null): Promise<FakeRe
   return worker.registration;
 }
 
-async function tapNotification(url: unknown, windows: FakeWindowClient[]): Promise<FakeClients> {
-  const worker = loadWorker(online, windows);
-  const notification = { data: { url }, close: () => undefined };
-  const event = Object.assign(new FakeExtendableEvent({}), { notification });
+async function tapNotification(url: unknown, windows: FakeWindowClient[], tap: { action?: string; actions?: unknown[]; network?: Network } = {}): Promise<FakeClients> {
+  const worker = loadWorker(tap.network ?? online, windows);
+  const notification = { data: { url, actions: tap.actions ?? [] }, close: () => undefined };
+  const event = Object.assign(new FakeExtendableEvent({}), { notification, action: tap.action ?? "" });
   dispatch(worker, "notificationclick", event);
   await event.pending;
   return worker.clients;
@@ -143,7 +155,7 @@ describe("sw.js: avisos", () => {
     assert.equal(registration.shown[0]?.options.body, "Chegou.");
     assert.equal(registration.shown[0]?.options.tag, "teste");
     // O objeto nasce dentro do vm (outro "realm"), então a comparação vai pelo JSON.
-    assert.equal(JSON.stringify(registration.shown[0]?.options.data), JSON.stringify({ url: "/configuracoes/avisos" }));
+    assert.equal(JSON.stringify(registration.shown[0]?.options.data), JSON.stringify({ url: "/configuracoes/avisos", actions: [] }));
   });
 
   it("aviso sem conteúdo ou com JSON quebrado ainda aparece, com texto padrão", async () => {
@@ -164,5 +176,31 @@ describe("sw.js: avisos", () => {
     assert.deepEqual((await tapNotification("/turno/chamados", [])).opened, [`${ORIGIN}/turno/chamados`]);
     assert.deepEqual((await tapNotification("https://golpe.exemplo/x", [])).opened, [`${ORIGIN}/`]);
     assert.deepEqual((await tapNotification("//golpe.exemplo/x", [])).opened, [`${ORIGIN}/`]);
+  });
+});
+
+const COMPLETE = { action: "complete", title: "Concluir", method: "PATCH", path: "/api/records/t1/board", body: { status: "done" } };
+const SNOOZE = { action: "snooze", title: "Adiar 1 h", method: "POST", path: "/api/reminders/r1/snooze" };
+
+describe("sw.js: botões do lembrete", () => {
+  it("mostra só botões que chamam a API do app, até dois", async () => {
+    const evil = { action: "x", title: "Golpe", method: "POST", path: "https://golpe.exemplo/api" };
+    const message = { title: "Trocar correia", body: "Prazo hoje às 14:30", url: "/registros/t1", tag: "lembrete:t1", actions: [evil, COMPLETE, SNOOZE] };
+    const registration = await receivePush({ json: () => message });
+    assert.equal(JSON.stringify(registration.shown[0]?.options.actions), JSON.stringify([{ action: "complete", title: "Concluir" }, { action: "snooze", title: "Adiar 1 h" }]));
+  });
+
+  it("Concluir chama a API com o corpo do botão e não abre o app", async () => {
+    const network = new FakeApiNetwork(200);
+    const clients = await tapNotification("/registros/t1", [], { action: "complete", actions: [COMPLETE, SNOOZE], network: network.fetch });
+    assert.deepEqual(network.calls, [{ path: "/api/records/t1/board", method: "PATCH", body: JSON.stringify({ status: "done" }) }]);
+    assert.deepEqual(clients.opened, []);
+  });
+
+  it("se a API recusar (sessão vencida), abre a tarefa no app", async () => {
+    const network = new FakeApiNetwork(401);
+    const clients = await tapNotification("/registros/t1", [], { action: "snooze", actions: [COMPLETE, SNOOZE], network: network.fetch });
+    assert.equal(network.calls[0]?.path, "/api/reminders/r1/snooze");
+    assert.deepEqual(clients.opened, [`${ORIGIN}/registros/t1`]);
   });
 });

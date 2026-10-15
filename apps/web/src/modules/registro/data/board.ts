@@ -56,6 +56,7 @@ export function useAddTask() {
         line: null,
         priority,
         dueAt: day ? dueAtOf(day) : null,
+        dueHasTime: false,
         notes: null,
       };
       return api<RecordDto>(`/api/records/${record.id}`, { method: "PATCH", body: JSON.stringify(sheet) });
