@@ -1,5 +1,6 @@
 import type { RpFourM, RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
+import { causeDetail } from "./rp-cause";
 
 // Lê o texto do Relatório Padrão que circula no WhatsApp. Função pura: nunca grava nada e nunca
 // falha por texto estranho, só devolve o que achou e uma lista de avisos para o gestor conferir.
@@ -287,7 +288,7 @@ function parseChunk(lines: string[]): ParsedRp {
   const causes = {} as Record<RpFourM, ParsedRpCause>;
   for (const key of ["material", "machine", "method", "labor"] as const) {
     const value = text(key);
-    causes[key] = { marked: !isEmptyValue(value), text: isEmptyValue(value) ? null : value };
+    causes[key] = isEmptyValue(value) ? { marked: false, text: null } : { marked: true, text: causeDetail(value) };
   }
 
   const status = parseStatus(lineOf("status"));
