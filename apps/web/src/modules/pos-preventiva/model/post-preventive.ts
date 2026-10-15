@@ -1,4 +1,4 @@
-import type { PostPreventiveDto, PostPreventiveFields, SubassemblyDto } from "@manutencao/shared";
+import { subassemblyReaches, type PostPreventiveDto, type PostPreventiveFields, type SubassemblyDto, type SubassemblyHolder } from "@manutencao/shared";
 
 export type PostPreventiveFormValues = {
   preventiveDate: string;
@@ -78,4 +78,14 @@ export function groupBySubassembly(items: PostPreventiveDto[], subassemblies: Su
     groups.set(item.subassemblyId, group);
   }
   return [...groups.values()].sort((a, b) => (order.get(a.subassemblyId) ?? Infinity) - (order.get(b.subassemblyId) ?? Infinity));
+}
+
+/**
+ * Opções do filtro Subconjunto da lista: só os que alcançam a máquina escolhida (do modelo dela ou só dela).
+ * Arquivados e desmarcados continuam, porque fichas antigas podem usá-los.
+ * @example subassemblyFilterOptions(todos, maquina) // sem os subconjuntos só de outra máquina do modelo
+ */
+export function subassemblyFilterOptions(subassemblies: SubassemblyDto[], machine: SubassemblyHolder | undefined): SubassemblyDto[] {
+  if (!machine) return [];
+  return subassemblies.filter((item) => subassemblyReaches(item, machine));
 }

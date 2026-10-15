@@ -5,6 +5,7 @@ import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
 import { usePostPreventives, type PostPreventiveFilter } from "../data/post-preventives";
+import { subassemblyFilterOptions } from "../model/post-preventive";
 import { POST_PREVENTIVE_COLUMNS, postPreventiveStacked, type PostPreventiveTableRow } from "./post-preventive-table";
 
 const FILTERS = ["lineId", "machineId", "subassemblyId", "memberId", "active", "from", "to"] as const;
@@ -25,7 +26,7 @@ export function PostPreventiveListPage() {
   const filtered = FILTERS.some((key) => params.get(key));
   const lineMachines = (machines.data ?? []).filter((machine) => !filter.lineId || machine.lineId === filter.lineId);
   const pickedMachine = filter.machineId ? machineById.get(filter.machineId) : undefined;
-  const machineSubassemblies = (subassemblies.data ?? []).filter((item) => pickedMachine?.equipmentId && item.equipmentId === pickedMachine.equipmentId);
+  const machineSubassemblies = subassemblyFilterOptions(subassemblies.data ?? [], pickedMachine);
   const items = list.data ?? [];
   const rows: PostPreventiveTableRow[] = items.map((item) => ({
     item,
