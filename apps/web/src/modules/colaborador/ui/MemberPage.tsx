@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, PageTitle } from "../../../design/ui/controls";
+import { TabBar } from "../../../design/ui/tab-bar";
 import { useMembers, useTeams } from "../../cadastro/data/cadastro";
 import { positionLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamText } from "../../cadastro/model/team";
@@ -62,20 +63,11 @@ export function MemberPage() {
           </div>
         }
       />
-      <nav aria-label="Abas da ficha" className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
-        {tabsFor(member.position).map((item) => (
-          <Link
-            key={item.key}
-            to={`/cadastro/colaboradores/${member.id}/${item.key}`}
-            aria-current={current === item.key ? "page" : undefined}
-            className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition ${
-              current === item.key ? "border-accent text-app" : "border-transparent text-muted hover:text-app"
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <TabBar
+        label="Abas da ficha"
+        tabs={tabsFor(member.position).map((item) => ({ key: item.key, label: item.label, to: `/cadastro/colaboradores/${member.id}/${item.key}` }))}
+        current={current}
+      />
       {current === "perfil" ? <ProfileTab member={member} members={members.data ?? []} teams={allTeams} /> : null}
       {current === "comportamento" ? <BehaviorTab member={member} /> : null}
       {current === "desempenho" ? <PerformanceTab member={member} /> : null}
