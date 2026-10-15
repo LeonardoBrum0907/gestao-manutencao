@@ -81,7 +81,7 @@ export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
   high: "Alta",
 };
 
-export const GESTOR_TIME_ZONE = "America/Sao_Paulo";
+export { GESTOR_TIME_ZONE } from "./time-zone";
 
 export const DUE_WINDOWS = ["overdue", "today", "tomorrow"] as const;
 export type DueWindow = (typeof DUE_WINDOWS)[number];
