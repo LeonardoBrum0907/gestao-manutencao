@@ -193,8 +193,12 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
           <RecordList title="Em aberto" total={summary.data.open} query={open} empty="Nada em aberto com esta pessoa." />
           <MemberRpList memberId={member.id} />
           <details className="group" onToggle={(event) => event.currentTarget.open && setShowDone(true)}>
+            {/* Aberto, o cartão abaixo já mostra "Concluídos (n)": o resumo vira só o botão de fechar. */}
             <summary className="cursor-pointer text-sm font-semibold text-app">
-              Concluídos <span className="font-normal text-muted">({summary.data.done})</span>
+              <span className="group-open:hidden">
+                Mostrar concluídos <span className="font-normal text-muted">({summary.data.done})</span>
+              </span>
+              <span className="hidden group-open:inline">Esconder concluídos</span>
             </summary>
             <div className="mt-3">
               <RecordList title="Concluídos" total={summary.data.done} query={done} empty="Nada concluído ainda." />
