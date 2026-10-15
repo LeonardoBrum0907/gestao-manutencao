@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
+import { AvisosSection } from "../../aviso/ui/AvisosSection";
 import { BehaviorTagsSection } from "../../cadastro/ui/BehaviorTagsSection";
 import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
 import { EquipmentModelsSection } from "../../cadastro/ui/EquipmentModelsSection";
@@ -17,6 +18,7 @@ export const SETTINGS_TABS = [
   { key: "fabricas", label: "Fábricas, linhas e máquinas" },
   { key: "funcoes", label: "Funções e graus" },
   { key: "avaliacao", label: "Avaliação" },
+  { key: "avisos", label: "Avisos" },
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
@@ -68,6 +70,7 @@ export function SettingsPage() {
             <MatrixCatalogSection />
           </>
         ) : null}
+        {current === "avisos" ? <AvisosSection /> : null}
       </div>
     </div>
   );
