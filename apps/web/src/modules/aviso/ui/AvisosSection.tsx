@@ -28,7 +28,7 @@ export function AvisosSection() {
       <div>
         <SectionTitle
           title="Avisos no celular"
-          text="Os avisos chegam como notificação, mesmo com o app fechado. Por enquanto só existe o aviso de teste; o resumo das 6h30 e os alertas vêm nas próximas versões."
+          text="Os avisos chegam como notificação, mesmo com o app fechado. Chegam os lembretes das tarefas (na ficha da tarefa, em Lembretes); o resumo das 6h30 e os alertas vêm nas próximas versões."
         />
         {config.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
         {config.error ? <Notice>{errorMessage(config.error)}</Notice> : null}

@@ -64,6 +64,8 @@ No `.env` do servidor:
 - `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`: o par de chaves do servidor. Gere uma vez com `pnpm --filter @manutencao/api exec web-push generate-vapid-keys` (ou `docker compose exec api npx web-push generate-vapid-keys` no servidor) e reinicie a API. Sem as duas, a API sobe e a tela de Avisos avisa que faltam as chaves. Trocar o par desliga os aparelhos já inscritos: cada um precisa tocar em Receber avisos de novo.
 - `VAPID_SUBJECT` (opcional): contato que o serviço de push vê, `https:` ou `mailto:`. Vazio, usa o `PUBLIC_URL`.
 
+Lembretes das tarefas: na ficha da tarefa, em Lembretes, numa data e hora fixa ou um tempo antes do prazo (prazo sem horário: 7h do dia ou da véspera). Tarefa que vira prioridade alta ganha "1 h antes". A API confere a cada minuto e manda o aviso com os botões Concluir e Adiar 1 h. Lembrete que passou há mais de 3 h (API parada) não toca mais.
+
 ### Desenvolvimento
 
 Recarrega ao salvar: a API recompila com `tsc --watch` e reinicia, e o `web` roda o Vite. O `docker-compose.dev.yml` vai por cima do principal e monta `apps/api/src`, `apps/web/src` e `apps/web/index.html` no container. O `web` continua na frente da API.

@@ -5,6 +5,7 @@ import { errorMessage } from "../../../app/http";
 import { useToast } from "../../../design/ui/toast";
 import { changeOnBoard, refreshRecords, useAddTask, useBoardChange } from "../data/board";
 import { dueLabel } from "../model/board";
+import { dueClockOf } from "../model/due-time";
 import { passToTodayChange } from "../model/my-day";
 import { InProgressChip, ringTone, useCompleting } from "./checklist";
 import { DueChip, PriorityChip } from "./chips";
@@ -41,19 +42,16 @@ export function TaskStatusCell({ item, checked }: { item: BoardItemDto; checked:
   return <span className="text-muted">Aberta</span>;
 }
 
-const clock = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
-
-/** Horário do prazo, quando não é o meio-dia que a tela marca ao escolher só o dia. Ex.: "15:00". */
-export function dueClock(dueAt: string): string | null {
-  const text = clock.format(new Date(dueAt));
-  return text === "12:00" ? null : text;
+/** Horário do prazo, quando ele tem horário escolhido (sem horário vale o dia). Ex.: "15:00". */
+export function dueClock(dueAt: string, hasTime: boolean): string | null {
+  return hasTime ? dueClockOf(dueAt) : null;
 }
 
 /** Prazo com ícone: vermelho se atrasada, verde se hoje. Ex.: "📅 10 out". */
-export function DueText({ dueAt, today, overdue }: { dueAt: string; today: string; overdue: boolean }) {
+export function DueText({ dueAt, hasTime, today, overdue }: { dueAt: string; hasTime: boolean; today: string; overdue: boolean }) {
   const label = dueLabel(dueAt, today);
   const tone = overdue ? "text-danger" : label === "Hoje" ? "text-accent" : "text-muted";
-  const time = dueClock(dueAt);
+  const time = dueClock(dueAt, hasTime);
   return (
     <span className={`inline-flex items-center gap-1 tabular-nums ${tone}`}>
       <CalendarIcon />
