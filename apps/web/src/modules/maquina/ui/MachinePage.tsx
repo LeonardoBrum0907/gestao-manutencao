@@ -123,8 +123,9 @@ export function MachinePage() {
             <Button tone="ghost" onClick={() => setExporting(true)}>
               Exportar folha
             </Button>
+            {/* Diz o tipo porque o bloco Documentação técnica, nesta mesma tela, tem o seu "Nova ficha". */}
             <Link to={`/pos-preventiva/nova?maquina=${machine.id}`} className={`${linkButton} bg-accent text-accent-contrast hover:brightness-90`}>
-              Nova ficha
+              Nova ficha pós-preventiva
             </Link>
           </div>
         }
