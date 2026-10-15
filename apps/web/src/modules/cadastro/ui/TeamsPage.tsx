@@ -10,6 +10,7 @@ import { RowMenu } from "../../../design/ui/row-menu";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteTeam, useMembers, useSaveTeam, useTeamMembership, useTeams, type TeamWrite } from "../data/cadastro";
 import { memberStatusClass, memberStatusLabel } from "../model/labels";
+import { teamCandidateLabel } from "../model/team";
 import { TEAM_MEMBER_COLUMNS, teamMemberStacked } from "./member-table";
 
 const empty: TeamWrite = { name: "", description: "", supervisorId: null };
@@ -108,8 +109,7 @@ function TeamCard({
             <option value="">Adicionar técnico…</option>
             {candidates.map((member) => (
               <option key={member.id} value={member.id}>
-                {member.name}
-                {member.teamId ? ` (sai de ${teamName.get(member.teamId) ?? "outra equipe"})` : ""}
+                {teamCandidateLabel(member, member.teamId ? (teamName.get(member.teamId) ?? "outra equipe") : null)}
               </option>
             ))}
           </SelectInput>
