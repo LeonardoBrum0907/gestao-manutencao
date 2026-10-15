@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { RP_FOUR_M, RP_FOUR_M_LABELS, type DashboardMachinesDto } from "@manutencao/shared";
-import { compareTo, formatDuration, type Trend } from "../model/overview-format";
+import { compareTo, formatDuration, paretoEmptyText, type Trend } from "../model/overview-format";
 import { Band, BarList, Panel, type BarRow } from "./band";
 import { ColumnChart } from "./ColumnChart";
 
@@ -74,7 +74,7 @@ export function MachinesBand({ machines }: { machines: DashboardMachinesDto }) {
       <Totals machines={machines} />
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         <Panel title="Máquinas com mais chamados">
-          <BarList rows={paretoRows(machines)} unit="chamados" empty="Nenhum chamado no período." />
+          <BarList rows={paretoRows(machines)} unit="chamados" empty={paretoEmptyText(machines.chamados)} />
           <p className="text-xs text-muted">Barra = chamados; ao lado, o tempo somado entre abrir e fechar.</p>
         </Panel>
         <Panel title="Chamados por semana">

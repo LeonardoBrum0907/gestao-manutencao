@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { axisTicks, barShare, compareTo, niceCeiling, formatDuration, minutesSince, shortDate, weekLabel } from "./overview-format";
+import { axisTicks, barShare, compareTo, niceCeiling, formatDuration, minutesSince, paretoEmptyText, shortDate, weekLabel } from "./overview-format";
 
 describe("números do Dashboard", () => {
   it("conta minutos desde a abertura, sem negativo", () => {
@@ -48,5 +48,11 @@ describe("números do Dashboard", () => {
   it("não marca meia tarefa nem meio chamado no eixo", () => {
     assert.deepEqual(axisTicks(5), [0, 5]);
     assert.deepEqual(axisTicks(1), [0, 1]);
+  });
+
+  it("só diz que não houve chamado quando o período não teve nenhum", () => {
+    assert.equal(paretoEmptyText(0), "Nenhum chamado no período.");
+    assert.equal(paretoEmptyText(1), "O chamado do período não diz a máquina nem a linha.");
+    assert.equal(paretoEmptyText(3), "Os 3 chamados do período não dizem a máquina nem a linha.");
   });
 });
