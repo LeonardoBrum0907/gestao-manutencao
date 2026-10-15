@@ -17,6 +17,7 @@ export function problemFromShift(write: ProblemWrite): RecordState {
     line: write.line,
     priority: null,
     dueAt: null,
+    dueHasTime: false,
     notes: write.notes,
     dayNumber: write.dayNumber,
     openedAt: write.openedAt,

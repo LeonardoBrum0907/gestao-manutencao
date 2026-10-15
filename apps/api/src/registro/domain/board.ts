@@ -122,6 +122,16 @@ export type BoardRecord = {
   origin: RecordOrigin;
 };
 
+/**
+ * Se o prazo segue com horário depois da mudança: levar para outro dia da Agenda mantém o horário;
+ * levar para Hoje, Próximos dias ou Sem prazo põe o prazo no meio-dia (só o dia vale).
+ * @example boardDueHasTime({ status: null, target: "today", day: null, order: null }, true) // false
+ */
+export function boardDueHasTime(change: BoardChange, current: boolean): boolean {
+  if (change.day !== null) return current;
+  return change.target === null ? current : false;
+}
+
 export function assertBoardChange(record: BoardRecord, change: BoardChange): void {
   if ((change.target !== null || change.day !== null) && record.type !== "task") {
     throw new DomainError("wrong_type", 400, "Só tarefa tem prazo.");

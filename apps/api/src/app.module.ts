@@ -6,6 +6,7 @@ import { AvisoModule } from "./aviso/aviso.module";
 import { CompetenciaModule } from "./competencia/competencia.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DocumentacaoModule } from "./documentacao/documentacao.module";
+import { LembreteModule } from "./lembrete/lembrete.module";
 import { EnvModule } from "./env.module";
 import { HealthModule } from "./health/health.module";
 import { DomainExceptionFilter } from "./http/domain-exception.filter";
@@ -19,7 +20,7 @@ import { RpModule } from "./rp/rp.module";
 import { TurnoModule } from "./turno/turno.module";
 
 @Module({
-  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, CompetenciaModule, AvaliacaoModule, RegistroModule, TurnoModule, RpModule, PosPreventivaModule, DashboardModule, DocumentacaoModule, McpModule, AvisoModule],
+  imports: [EnvModule, PrismaModule, HealthModule, IdentityModule, CadastroModule, CompetenciaModule, AvaliacaoModule, RegistroModule, TurnoModule, RpModule, PosPreventivaModule, DashboardModule, DocumentacaoModule, McpModule, AvisoModule, LembreteModule],
   providers: [
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_FILTER, useClass: DomainExceptionFilter },

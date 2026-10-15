@@ -20,6 +20,8 @@ export type RecordState = {
   priority: RecordPriority | null;
   tone: FeedbackTone | null;
   dueAt: Date | null;
+  // O prazo tem horário escolhido; falso também quando não há prazo.
+  dueHasTime: boolean;
   notes: string | null;
   origin: RecordOrigin;
   dayNumber: number | null;
@@ -49,6 +51,7 @@ export type TaskSheetInput = {
   line: string | null;
   priority: RecordPriority | null;
   dueAt: Date | null;
+  dueHasTime: boolean;
   notes: string | null;
 };
 

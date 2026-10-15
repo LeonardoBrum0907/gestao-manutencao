@@ -32,6 +32,7 @@ export function applyTaskSheet(state: RecordState, input: TaskSheetInput): Recor
     line: input.line,
     priority: input.priority,
     dueAt: input.dueAt,
+    dueHasTime: input.dueAt !== null && input.dueHasTime,
     notes: input.notes,
     lineId: null,
     lineLabel: null,
