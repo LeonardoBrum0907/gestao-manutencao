@@ -1,0 +1,75 @@
+# VPS como servidor: Postgres, API e Caddy (HTTPS automático) numa máquina só.
+# Arquivo independente do docker-compose.yml de propósito: o Docker abre as portas
+# publicadas por fora do firewall (ufw), então aqui só o Caddy publica porta.
+# Banco e API ficam na rede interna do compose.
+#
+# Subir: docker compose -f docker-compose.vps.yml up -d --build
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: manutencao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: manutencao
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U manutencao -d manutencao"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://manutencao:${POSTGRES_PASSWORD}@db:5432/manutencao?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:?Defina SESSION_SECRET no .env}
+      COOKIE_SECURE: "true"
+      ATTACHMENT_DIR: /data/attachments
+      PORT: "3000"
+    volumes:
+      - attachments:/data/attachments
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: "${API_DOMAIN:?Defina API_DOMAIN no .env, por exemplo srv123456.hstgr.cloud}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/vps/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  attachments:
+  caddy_data:
+  caddy_config:
