@@ -3,7 +3,7 @@ import { Field, SelectInput, TextArea, TextInput } from "../../../design/ui/cont
 import { useLines, useMachines, useSubassemblies } from "../../cadastro/data/cadastro";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useTechDocuments } from "../data/tech-docs";
-import { SCOPE_KINDS, SCOPE_KIND_LABELS, type ScopeKind, type TechCardFormValues } from "../model/tech-card";
+import { SCOPE_KINDS, SCOPE_KIND_LABELS, withMachineLine, withScopeKind, type ScopeKind, type TechCardFormValues } from "../model/tech-card";
 
 type Props = {
   values: TechCardFormValues;
@@ -20,24 +20,17 @@ function useModelOf(values: TechCardFormValues): string {
   return "";
 }
 
-function ScopeFields({ values, set }: { values: TechCardFormValues; set: Setter }) {
+function ScopeFields({ values, set, onChange }: { values: TechCardFormValues; set: Setter; onChange: Props["onChange"] }) {
   const lines = useLines();
   const machines = useMachines();
   const catalog = useMatrixCatalog();
   const lineMachines = (machines.data ?? []).filter((machine) => machine.lineId === values.lineId);
   const equipments = (catalog.data?.equipments ?? []).filter((equipment) => !equipment.archived || equipment.id === values.targetId);
 
-  function pickScope(scopeKind: ScopeKind) {
-    set("scopeKind", scopeKind);
-    set("targetId", "");
-    set("subassemblyId", "");
-    set("documentId", "");
-  }
-
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Vale para">
-        <SelectInput value={values.scopeKind} onChange={(event) => pickScope(event.target.value as ScopeKind)}>
+        <SelectInput value={values.scopeKind} onChange={(event) => onChange(withScopeKind(values, event.target.value as ScopeKind))}>
           {SCOPE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
               {SCOPE_KIND_LABELS[kind]}
@@ -62,10 +55,7 @@ function ScopeFields({ values, set }: { values: TechCardFormValues; set: Setter 
             value={values.scopeKind === "line" ? values.targetId : values.lineId}
             onChange={(event) => {
               if (values.scopeKind === "line") set("targetId", event.target.value);
-              else {
-                set("lineId", event.target.value);
-                set("targetId", "");
-              }
+              else onChange(withMachineLine(values, event.target.value));
             }}
           >
             <option value="">Escolha a linha</option>
@@ -186,7 +176,7 @@ export function TechCardForm({ values, onChange }: Props) {
           ))}
         </SelectInput>
       </Field>
-      <ScopeFields values={values} set={set} />
+      <ScopeFields values={values} set={set} onChange={onChange} />
       <SubassemblyField values={values} set={set} equipmentId={equipmentId} />
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <Field label={codeLabel[values.type]}>
