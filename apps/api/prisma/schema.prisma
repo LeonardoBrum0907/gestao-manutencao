@@ -405,6 +405,9 @@ model Record {
   priority      String?
   tone          String?
   dueAt         DateTime?
+  // O prazo tem horário escolhido. Falso: vale só o dia (dueAt ao meio-dia de Brasília). Os prazos de antes
+  // de 2026-10-15 ficam falsos: até ali a tela só escolhia o dia.
+  dueHasTime    Boolean            @default(false)
   notes         String?
   origin        String
   dayNumber     Int?
@@ -432,6 +435,7 @@ model Record {
   // Quando foi concluído (tarefa, problema, feedback): alimenta "concluídas por semana" no Dashboard.
   // Reabrir apaga; concluídos antes de 2026-10-12 ganharam o updatedAt. Chamado usa closedAt.
   completedAt   DateTime?
+  reminders     TaskReminder[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
@@ -632,4 +636,37 @@ model TechCard {
   @@index([type])
   // Trigram: a busca "contém" acha código, nº de peça e termo original em qualquer parte do texto.
   @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "TechCard_searchText_trgm_idx")
+}
+
+// ---- Avisos no celular (thread "Sistema de notificações", 2026-10-14) ----
+
+// Aparelho que aceitou receber avisos (Web Push). O navegador entrega o endereço do serviço de push e as duas
+// chaves da inscrição; o servidor só guarda e usa para enviar. Endereço que o serviço diz não existir mais sai.
+model PushDevice {
+  id         String    @id @default(cuid())
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  // Navegador e sistema do aparelho, para você reconhecer na lista.
+  label      String?
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime?
+}
+
+// Lembrete de uma tarefa (como no Todoist): "at" toca numa data e hora fixa; "before" toca um tempo antes do
+// prazo (prazo só com dia: 7h do dia ou de dias antes). O relógio da API confere a cada minuto.
+model TaskReminder {
+  id            String    @id @default(cuid())
+  recordId      String
+  record        Record    @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  kind          String
+  at            DateTime?
+  minutesBefore Int?
+  // "Adiar 1 h" na notificação: toca de novo neste horário.
+  snoozedUntil  DateTime?
+  // Horário do último toque enviado. Se o prazo mudar, a hora de tocar muda e o lembrete toca de novo.
+  sentFor       DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([recordId])
 }

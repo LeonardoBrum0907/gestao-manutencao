@@ -1,5 +1,6 @@
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
 import { dueDay, dueLabel, todayDay } from "../model/board";
+import { dueClockOf } from "../model/due-time";
 import { originLabel, recordShortName, recordStatusLabel } from "../model/record";
 import { placeLabel, type RecordRow } from "../model/records-table";
 
@@ -25,7 +26,8 @@ function DueCell({ row }: { row: RecordRow }) {
   if (!row.dueAt) return <Dash />;
   const today = todayDay();
   const late = row.status !== "done" && dueDay(row.dueAt) < today;
-  return <span className={`tabular-nums ${late ? "font-semibold text-danger" : "text-app"}`}>{dueLabel(row.dueAt, today)}</span>;
+  const time = row.dueHasTime ? ` ${dueClockOf(row.dueAt)}` : "";
+  return <span className={`tabular-nums ${late ? "font-semibold text-danger" : "text-app"}`}>{dueLabel(row.dueAt, today)}{time}</span>;
 }
 
 export const RECORD_COLUMNS: TableColumn<RecordRow>[] = [

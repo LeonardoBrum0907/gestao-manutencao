@@ -1,5 +1,5 @@
 import { Global, Injectable, Module } from "@nestjs/common";
-import { AppEnv, loadEnv } from "./env";
+import { AppEnv, loadEnv, type VapidKeys } from "./env";
 
 @Injectable()
 export class EnvService implements AppEnv {
@@ -11,6 +11,7 @@ export class EnvService implements AppEnv {
   readonly publicUrl: string;
   readonly mcpToken: string | null;
   readonly gestorPassword: string | null;
+  readonly vapid: VapidKeys | null;
 
   constructor() {
     const env = loadEnv();
@@ -22,6 +23,7 @@ export class EnvService implements AppEnv {
     this.publicUrl = env.publicUrl;
     this.mcpToken = env.mcpToken;
     this.gestorPassword = env.gestorPassword;
+    this.vapid = env.vapid;
   }
 }
 

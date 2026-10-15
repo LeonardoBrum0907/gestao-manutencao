@@ -12,6 +12,7 @@ import {
 import * as z from "zod";
 import { DomainError } from "../../kernel/domain-error";
 import { parseRecordList } from "../../registro/application/parse-record-list";
+import { mcpDue, mcpDueChange } from "../domain/due";
 import { matches, overlay } from "../domain/merge";
 import { registerDocTools } from "./mcp-doc-tools";
 import { answer, CHANGE, CREATE, id, optionalText, READ, toolWriter, type ToolLog } from "./mcp-tool-kit";
@@ -32,6 +33,9 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 const day = (what: string) => z.string().regex(DAY, "Use AAAA-MM-DD.").describe(what);
 const dateTime = (what: string) => z.string().min(1).describe(`${what}, ISO 8601 com fuso (ex.: 2026-10-11T14:30:00-03:00)`);
+// Prazo de tarefa: o dia sozinho vale o dia; com horário, o lembrete "antes do prazo" conta a partir da hora.
+const dueDate = (what: string) =>
+  z.string().min(1).describe(`${what}: AAAA-MM-DD se for só o dia, ou ISO 8601 com fuso se tiver horário (ex.: 2026-10-11T14:30:00-03:00)`);
 
 const CADASTRO_KINDS = ["fabricas", "linhas", "maquinas", "subconjuntos", "colaboradores", "equipes"] as const;
 const SEARCH_LIMIT = 100;
@@ -408,13 +412,13 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
       inputSchema: {
         chamadoId: id("do chamado"),
         body: z.string().min(1).describe("o que falta fazer"),
-        dueAt: dateTime("prazo"),
+        dueAt: dueDate("prazo"),
         memberId: id("do responsável").nullable().optional(),
         priority: z.enum(RECORD_PRIORITIES).nullable().optional().describe("low = baixa, medium = média, high = alta"),
       },
       annotations: CREATE,
     },
-    write("gerar_pendencia", ({ chamadoId, ...task }) => uc.chamados.addTask(chamadoId, task)),
+    write("gerar_pendencia", ({ chamadoId, dueAt, ...task }) => uc.chamados.addTask(chamadoId, { ...task, ...mcpDue(dueAt) })),
   );
 
   server.registerTool(
@@ -446,7 +450,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
         occurredAt: dateTime("quando aconteceu").optional(),
         status: z.enum(RECORD_STATUSES).optional().describe("tarefa: open, in_progress, done"),
         memberId: id("do colaborador").nullable().optional(),
-        dueAt: dateTime("prazo").nullable().optional(),
+        dueAt: dueDate("prazo").nullable().optional(),
         priority: z.enum(RECORD_PRIORITIES).nullable().optional(),
         factoryId: id("da fábrica").nullable().optional(),
         line: optionalText("tarefa: linha em texto"),
@@ -460,7 +464,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
       },
       annotations: CHANGE,
     },
-    write("atualizar_registro", async ({ id: recordId, ...changes }) => {
+    write("atualizar_registro", async ({ id: recordId, dueAt, ...changes }) => {
       const current = await uc.records.get(recordId);
       const body = overlay(
         {
@@ -469,6 +473,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
           status: current.status,
           memberId: current.memberId,
           dueAt: current.dueAt,
+          dueHasTime: current.dueHasTime,
           priority: current.priority,
           factoryId: current.factoryId,
           line: current.line,
@@ -480,7 +485,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
           tone: current.tone,
           notes: current.notes,
         },
-        changes,
+        { ...changes, ...mcpDueChange(dueAt) },
       );
       return uc.records.updateSheet(recordId, body);
     }),

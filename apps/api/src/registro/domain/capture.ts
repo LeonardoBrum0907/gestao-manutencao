@@ -30,6 +30,7 @@ export function captureRecord(input: CaptureInput): RecordState {
     priority: null,
     tone: input.tone,
     dueAt: null,
+    dueHasTime: false,
     notes: null,
     origin: "inbox",
     dayNumber: null,

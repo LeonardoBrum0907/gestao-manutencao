@@ -37,7 +37,8 @@ function QuickEntry({ today }: { today: string }) {
     );
   }
   return (
-    <div className="w-full sm:w-[30rem]">
+    // w-full aqui não servia: o espaço da ação no PageTitle tem a largura do conteúdo, e a caixa encolhia no celular.
+    <div className="w-[30rem] max-w-full">
       <InboxAdd today={today} quick onCancel={() => setOpen(false)} />
     </div>
   );
@@ -122,7 +123,7 @@ function MyDayRow({
   onToggle: () => void;
   link: RecordLink;
 }) {
-  const due = item.dueAt ? <DueText dueAt={item.dueAt} today={today} overdue={overdue} /> : <span className="text-muted">—</span>;
+  const due = item.dueAt ? <DueText dueAt={item.dueAt} hasTime={item.dueHasTime} today={today} overdue={overdue} /> : <span className="text-muted">—</span>;
   return (
     <CheckRow
       checked={checked}

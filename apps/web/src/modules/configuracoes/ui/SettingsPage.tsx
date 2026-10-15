@@ -1,5 +1,7 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
+import { TabBar } from "../../../design/ui/tab-bar";
+import { AvisosSection } from "../../aviso/ui/AvisosSection";
 import { BehaviorTagsSection } from "../../cadastro/ui/BehaviorTagsSection";
 import { CompetenciesSection } from "../../cadastro/ui/CompetenciesSection";
 import { EquipmentModelsSection } from "../../cadastro/ui/EquipmentModelsSection";
@@ -17,6 +19,7 @@ export const SETTINGS_TABS = [
   { key: "fabricas", label: "Fábricas, linhas e máquinas" },
   { key: "funcoes", label: "Funções e graus" },
   { key: "avaliacao", label: "Avaliação" },
+  { key: "avisos", label: "Avisos" },
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
@@ -30,20 +33,11 @@ export function SettingsPage() {
   return (
     <div>
       <PageTitle title="Configurações" text="Os cadastros de apoio: o que se arruma uma vez e pouco muda." />
-      <nav aria-label="Abas de configurações" className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
-        {SETTINGS_TABS.map((tab) => (
-          <Link
-            key={tab.key}
-            to={`/configuracoes/${tab.key}`}
-            aria-current={current === tab.key ? "page" : undefined}
-            className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition ${
-              current === tab.key ? "border-accent text-app" : "border-transparent text-muted hover:text-app"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
+      <TabBar
+        label="Abas de configurações"
+        tabs={SETTINGS_TABS.map((tab) => ({ key: tab.key, label: tab.label, to: `/configuracoes/${tab.key}` }))}
+        current={current}
+      />
       <div className="flex flex-col gap-12">
         {current === "fabricas" ? (
           <>
@@ -68,6 +62,7 @@ export function SettingsPage() {
             <MatrixCatalogSection />
           </>
         ) : null}
+        {current === "avisos" ? <AvisosSection /> : null}
       </div>
     </div>
   );

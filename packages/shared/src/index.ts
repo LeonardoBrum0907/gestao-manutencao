@@ -81,7 +81,7 @@ export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
   high: "Alta",
 };
 
-export const GESTOR_TIME_ZONE = "America/Sao_Paulo";
+export { GESTOR_TIME_ZONE } from "./time-zone";
 
 export const DUE_WINDOWS = ["overdue", "today", "tomorrow"] as const;
 export type DueWindow = (typeof DUE_WINDOWS)[number];
@@ -269,6 +269,8 @@ export type RecordDto = {
   priority: RecordPriority | null;
   tone: FeedbackTone | null;
   dueAt: string | null;
+  // O prazo tem horário escolhido. Falso: vale o dia (o dueAt fica ao meio-dia de Brasília).
+  dueHasTime: boolean;
   notes: string | null;
   origin: RecordOrigin;
   dayNumber: number | null;
@@ -415,6 +417,7 @@ export type RecordListItemDto = Pick<
   | "priority"
   | "tone"
   | "dueAt"
+  | "dueHasTime"
   | "lineId"
   | "machineId"
   | "subassemblyId"
@@ -438,7 +441,7 @@ export function isBoardTarget(value: string): value is BoardTarget {
   return (BOARD_TARGETS as readonly string[]).includes(value);
 }
 
-export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "occurredAt"> & {
+export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "dueHasTime" | "occurredAt"> & {
   group: BoardGroup;
   // Quando foi concluída: o Meu Dia mostra só as concluídas hoje.
   completedAt: string | null;
@@ -801,3 +804,5 @@ export type ChamadoTaskBody = {
 
 export * from "./tech-docs";
 export * from "./machine-parts";
+export * from "./push";
+export * from "./reminder";

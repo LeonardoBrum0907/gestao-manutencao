@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
-import { isChamadoShift, isRecordStatus, isRpStatus, type ChamadoDto } from "@manutencao/shared";
+import { defaultTaskReminders, isChamadoShift, isRecordStatus, isRpStatus, type ChamadoDto } from "@manutencao/shared";
+import { reminderWrite } from "../../lembrete/domain/reminder-input";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import { calendarDay, nextCalendarDay, startOfDay } from "../../registro/domain/follow-up";
@@ -170,9 +171,12 @@ export class ChamadoRepository {
         memberId: input.memberId,
         priority: input.priority,
         dueAt: input.dueAt,
+        dueHasTime: input.dueHasTime,
         factoryId: line?.factoryId ?? null,
         line: line?.name ?? current.lineLabel,
         chamadoId: current.id,
+        // Tarefa alta nasce com lembrete 1 h antes (decisão N dos avisos).
+        reminders: { create: defaultTaskReminders(input.priority).map(reminderWrite) },
       },
     });
     const row = await this.prisma.record.findUniqueOrThrow({ where: { id: current.id }, select });

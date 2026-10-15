@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TechCardHit } from "@manutencao/shared";
-import { bodyFromValues, emptyCardValues, formatBytes, sourceLabel, valuesFromCard } from "./tech-card";
+import { bodyFromValues, emptyCardValues, formatBytes, sourceLabel, valuesFromCard, withMachineLine, withScopeKind } from "./tech-card";
 
 const card: TechCardHit = {
   id: "c1",
@@ -62,6 +62,21 @@ describe("formulário da ficha", () => {
     assert.deepEqual(body.details, { meaning: "Sem resposta" });
     assert.deepEqual(body.tags, ["Rede", "rede", "Elétrica"]);
     assert.equal(body.page, null);
+  });
+
+  // Regressão: o "Vale para" voltava para Modelo porque a troca era feita em quatro set() seguidos.
+  it("trocar o Vale para muda o escopo e limpa o que era da escolha anterior", () => {
+    const before = { ...emptyCardValues({ targetId: "e1" }), subassemblyId: "s1", documentId: "d1", title: "Servomotor" };
+    const after = withScopeKind(before, "machine");
+    assert.equal(after.scopeKind, "machine");
+    assert.deepEqual([after.targetId, after.subassemblyId, after.documentId], ["", "", ""]);
+    assert.equal(after.title, "Servomotor");
+  });
+
+  it("trocar a linha da máquina guarda a linha e solta a máquina da linha anterior", () => {
+    const before = emptyCardValues({ scopeKind: "machine", targetId: "m1", lineId: "l1" });
+    const after = withMachineLine(before, "l2");
+    assert.deepEqual([after.scopeKind, after.lineId, after.targetId], ["machine", "l2", ""]);
   });
 
   it("fonte e tamanho legíveis", () => {

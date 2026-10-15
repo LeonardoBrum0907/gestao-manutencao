@@ -104,7 +104,8 @@ export function PageTitle({
           <h1 className="mt-1 font-serif text-[28px] font-semibold leading-tight text-app">{title}</h1>
           {text ? <p className="mt-2 max-w-2xl text-sm text-muted">{text}</p> : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {/* max-w-full: uma ação larga (a caixa de anotar do Meu Dia) desce para a linha de baixo e cabe na tela. */}
+        {action ? <div className="max-w-full shrink-0">{action}</div> : null}
       </header>
     </>
   );

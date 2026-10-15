@@ -99,10 +99,10 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
     const item = byId.get(id);
     if (!item) return null;
     const checked = fading.has(id);
-    const time = item.dueAt && listKey !== OVERDUE_KEY ? dueClock(item.dueAt) : null;
+    const time = item.dueAt && listKey !== OVERDUE_KEY ? dueClock(item.dueAt, item.dueHasTime) : null;
     const info = (
       <>
-        {listKey === OVERDUE_KEY && item.dueAt ? <DueText dueAt={item.dueAt} today={today} overdue /> : null}
+        {listKey === OVERDUE_KEY && item.dueAt ? <DueText dueAt={item.dueAt} hasTime={item.dueHasTime} today={today} overdue /> : null}
         {time ? <span className="tabular-nums">{time}</span> : null}
         {item.status === "in_progress" && !checked ? <InProgressChip /> : null}
       </>

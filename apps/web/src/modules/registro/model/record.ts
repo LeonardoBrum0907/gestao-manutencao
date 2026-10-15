@@ -4,7 +4,6 @@ import {
   RECORD_ORIGIN_LABELS,
   RECORD_PRIORITIES,
   RECORD_PRIORITY_LABELS,
-  RECORD_STATUS_LABELS,
   RECORD_TYPE_LABELS,
   type FeedbackTone,
   type RecordOrigin,
@@ -27,10 +26,6 @@ export function recordShortName(type: RecordType): string {
 
 export function originLabel(origin: RecordOrigin): string {
   return RECORD_ORIGIN_LABELS[origin];
-}
-
-export function statusLabel(status: RecordStatus): string {
-  return RECORD_STATUS_LABELS[status];
 }
 
 const statusByType: Record<RecordType, Record<RecordStatus, string>> = {

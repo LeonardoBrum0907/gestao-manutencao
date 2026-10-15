@@ -91,22 +91,26 @@ export function InlineNameList<T extends InlineItem>(props: InlineNameListProps<
 function inlineColumns<T extends InlineItem>(props: InlineNameListProps<T>, edit: InlineEdit): TableColumn<T>[] {
   const columns: TableColumn<T>[] = [];
   if (props.leading) columns.push({ key: "leading", header: "", cell: (item) => props.leading?.(item, props.items.indexOf(item)), className: "w-px pr-0" });
-  columns.push({ key: "name", header: props.nameHeader ?? "Nome", cell: (item) => <NameButton item={item} edit={edit} /> });
-  if (props.items.some((item) => item.meta)) columns.push({ key: "meta", header: props.metaHeader ?? "Em uso", cell: (item) => <span className="text-muted">{item.meta}</span>, className: "w-40" });
+  // No celular o nome quebra linha e a meta desce para baixo dele: assim a linha cabe na tela com os botões à vista.
+  columns.push({ key: "name", header: props.nameHeader ?? "Nome", cell: (item) => <NameCell item={item} edit={edit} />, className: "!whitespace-normal" });
+  if (props.items.some((item) => item.meta)) columns.push({ key: "meta", header: props.metaHeader ?? "Em uso", cell: (item) => <span className="text-muted">{item.meta}</span>, className: "w-40", phoneHidden: true });
   columns.push({ key: "actions", header: "", cell: (item) => <RowActions item={item} props={props} edit={edit} />, align: "right", className: "w-px pr-2" });
   return columns;
 }
 
-function NameButton({ item, edit }: { item: InlineItem; edit: InlineEdit }) {
+function NameCell({ item, edit }: { item: InlineItem; edit: InlineEdit }) {
   return (
-    <button
-      type="button"
-      title="Clique para renomear"
-      onClick={() => edit.start({ kind: "edit", id: item.id }, item.name)}
-      className={`max-w-full truncate py-1 text-left transition hover:text-accent ${item.muted ? "text-muted" : "text-app"}`}
-    >
-      {item.name}
-    </button>
+    <>
+      <button
+        type="button"
+        title="Clique para renomear"
+        onClick={() => edit.start({ kind: "edit", id: item.id }, item.name)}
+        className={`max-w-full break-words py-1 text-left transition hover:text-accent ${item.muted ? "text-muted" : "text-app"}`}
+      >
+        {item.name}
+      </button>
+      {item.meta ? <span className="block text-[13px] text-muted sm:hidden">{item.meta}</span> : null}
+    </>
   );
 }
 

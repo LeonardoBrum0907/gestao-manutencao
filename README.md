@@ -68,6 +68,17 @@ Conectar no claude.ai: Configurações › Conectores › Adicionar conector per
 
 Conectar no Claude Code: `claude mcp add --transport http gestao https://<domínio da Vercel>/mcp`, que abre o mesmo login, ou com a chave fixa: `claude mcp add --transport http gestao http://localhost:3000/mcp --header "Authorization: Bearer <MCP_TOKEN>"`.
 
+### Avisos no celular (Web Push)
+
+Configurações › Avisos inscreve o aparelho (Android com Chrome, ou iPhone com o app instalado na Tela de Início) e manda um aviso de teste. A API envia direto para o serviço de push do navegador, então o túnel ou o domínio mudar não afeta a entrega.
+
+No `.env` do servidor:
+
+- `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`: o par de chaves do servidor. Gere uma vez com `pnpm --filter @manutencao/api exec web-push generate-vapid-keys` (ou `docker compose exec api npx web-push generate-vapid-keys` no servidor) e reinicie a API. Sem as duas, a API sobe e a tela de Avisos avisa que faltam as chaves. Trocar o par desliga os aparelhos já inscritos: cada um precisa tocar em Receber avisos de novo.
+- `VAPID_SUBJECT` (opcional): contato que o serviço de push vê, `https:` ou `mailto:`. Vazio, usa o `PUBLIC_URL`.
+
+Lembretes das tarefas: na ficha da tarefa, em Lembretes, numa data e hora fixa ou um tempo antes do prazo (prazo sem horário: 7h do dia ou da véspera). Tarefa que vira prioridade alta ganha "1 h antes". A API confere a cada minuto e manda o aviso com os botões Concluir e Adiar 1 h. Lembrete que passou há mais de 3 h (API parada) não toca mais.
+
 ### Desenvolvimento
 
 Recarrega ao salvar: a API recompila com `tsc --watch` e reinicia, e o `web` roda o Vite. O `docker-compose.dev.yml` vai por cima do principal e monta `apps/api/src`, `apps/web/src` e `apps/web/index.html` no container. O `web` continua na frente da API.

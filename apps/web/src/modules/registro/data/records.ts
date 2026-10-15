@@ -54,6 +54,8 @@ export function invalidateRecords(client: QueryClient, savedId?: string) {
   void client.invalidateQueries({ queryKey: ["dashboard"] });
   // Chamado é registro: excluir ou mexer numa pendência dele muda a tela de Chamados.
   void client.invalidateQueries({ queryKey: ["chamados"] });
+  // Tarefa que vira prioridade alta ganha o lembrete "1 h antes" na API.
+  void client.invalidateQueries({ queryKey: ["reminders"] });
 }
 
 export function useCaptureRecord() {
@@ -75,6 +77,7 @@ export type TaskSheetBody = {
   line: string | null;
   priority: RecordPriority | null;
   dueAt: string | null;
+  dueHasTime: boolean;
   notes: string | null;
 };
 
