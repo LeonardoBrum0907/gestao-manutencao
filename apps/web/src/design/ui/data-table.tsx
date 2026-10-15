@@ -14,6 +14,8 @@ export type TableColumn<T> = {
   // ocorrência), "short" para listas curtas (nomes dos técnicos), "rich" para texto longo com marcas
   // embaixo (chamado com RP e pendências): a célula corta o próprio texto para as marcas não sumirem.
   wrap?: "long" | "short" | "rich";
+  // Coluna que some no celular (cabeçalho e células), quando a linha já mostra o mesmo texto de outro jeito.
+  phoneHidden?: boolean;
   className?: string;
 };
 
@@ -115,11 +117,12 @@ function TableHead<T>({ columns, menu, sort, setSort }: Shared<T>) {
 }
 
 const headText = "text-xs font-semibold uppercase tracking-[0.08em]";
+const phoneHiddenCell = "hidden sm:table-cell";
 
 function HeaderCell<T>({ column, sort, onSort }: { column: TableColumn<T>; sort: SortState | null; onSort: () => void }) {
   const active = sort?.key === column.key;
   const ariaSort = active ? (sort.direction === "asc" ? "ascending" : "descending") : undefined;
-  const align = column.align === "right" ? "text-right" : "text-left";
+  const align = `${column.align === "right" ? "text-right" : "text-left"} ${column.phoneHidden ? phoneHiddenCell : ""}`;
   if (!column.sortValue) return <th className={`whitespace-nowrap px-3 py-2.5 text-accent-ink ${headText} ${align}`}>{column.header}</th>;
   return (
     <th aria-sort={ariaSort} className={`whitespace-nowrap px-1.5 py-1 ${align}`}>
@@ -187,7 +190,7 @@ function BodyCell<T>({ column, row, openLabel }: { column: TableColumn<T>; row: 
   const content = clamp ? <span className="line-clamp-2">{column.cell(row)}</span> : column.cell(row);
   const shape = column.wrap ? WRAP_SHAPE[column.wrap] : "whitespace-nowrap";
   return (
-    <td className={`px-3 py-2.5 align-middle text-app ${shape} ${column.align === "right" ? "text-right tabular-nums" : ""} ${column.className ?? ""}`}>
+    <td className={`px-3 py-2.5 align-middle text-app ${shape} ${column.align === "right" ? "text-right tabular-nums" : ""} ${column.phoneHidden ? phoneHiddenCell : ""} ${column.className ?? ""}`}>
       {openLabel ? (
         // O primeiro campo é o botão de abrir para quem usa teclado; o mouse abre pela linha toda.
         <button type="button" onClick={openLabel} className="control-focus rounded text-left font-medium hover:underline">
