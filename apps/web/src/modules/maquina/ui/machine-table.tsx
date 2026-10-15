@@ -1,6 +1,7 @@
 import type { LineDto, MachineDto } from "@manutencao/shared";
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
 import { machineStatusClass, machineStatusLabel } from "../../cadastro/model/labels";
+import { machineBadges, type MachineBadge } from "../model/machine-badges";
 
 // Uma linha da tabela de máquinas, já com os nomes que vêm de outros cadastros.
 export type MachineTableRow = { machine: MachineDto; line: LineDto | undefined; place: string; model: string | null; points: number };
@@ -31,15 +32,24 @@ export const MACHINE_COLUMNS: TableColumn<MachineTableRow>[] = [
   { key: "points", header: "Pontos de atenção", cell: (row) => <PointsChip count={row.points} />, sortValue: (row) => row.points || null, align: "right" },
 ];
 
+// Parada e pontos ativos, um embaixo do outro; antes a parada sumia quando a máquina também tinha ponto.
+function StackedBadges({ row, badges }: { row: MachineTableRow; badges: MachineBadge[] }) {
+  return (
+    <span className="flex flex-col items-end gap-1">
+      {badges.map((badge) => (badge === "stopped" ? <StatusText key={badge} machine={row.machine} /> : <PointsChip key={badge} count={row.points} />))}
+    </span>
+  );
+}
+
 /**
- * A máquina no celular: nome, modelo e TAG; os pontos ativos e a parada ficam à direita.
+ * A máquina no celular: nome, modelo e TAG; a parada e os pontos ativos ficam à direita.
  * @example stacked={machineStacked}
  */
 export function machineStacked(row: MachineTableRow): StackedRow {
-  const stopped = row.machine.status === "stopped" ? <StatusText machine={row.machine} /> : null;
+  const badges = machineBadges(row.machine.status, row.points);
   return {
     title: row.machine.name,
     meta: [row.model ?? "Sem modelo", row.machine.tag ? `TAG ${row.machine.tag}` : null].filter(Boolean).join(" · "),
-    side: row.points ? <PointsChip count={row.points} /> : stopped,
+    side: badges.length ? <StackedBadges row={row} badges={badges} /> : null,
   };
 }
