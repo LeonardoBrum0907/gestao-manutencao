@@ -6,6 +6,7 @@ import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "
 import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
 import { useLines, useMachines } from "../../cadastro/data/cadastro";
+import { formatDay } from "../../colaborador/model/pdi-items";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
 import { useTechCardSearch, type TechCardFilter } from "../data/tech-docs";
@@ -49,7 +50,7 @@ function PostPreventiveHits({ ids }: { ids: string[] }) {
         {hits.map((item) => (
           <li key={item.id} className="border-t border-line py-2 first:border-t-0">
             <Link to={`/pos-preventiva/${item.id}`} className="text-sm text-app hover:text-accent">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{item.preventiveDate}</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{formatDay(item.preventiveDate)}</span>
               <span className="block">{item.occurrence}</span>
             </Link>
           </li>
