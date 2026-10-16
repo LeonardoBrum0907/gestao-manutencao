@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
 import { Icon } from "../../../design/ui/icons";
+import { moreFiltersLabel } from "../../../design/more-filters";
 import { useLines, useMachines, useMembers, useSubassemblies } from "../../cadastro/data/cadastro";
 import { usePostPreventives, type PostPreventiveFilter } from "../data/post-preventives";
 import { subassemblyFilterOptions } from "../model/post-preventive";
@@ -24,6 +26,8 @@ export function PostPreventiveListPage() {
   const subassemblyNames = new Map(subassemblies.data?.map((item) => [item.id, item.name]));
   const memberNames = new Map(members.data?.map((member) => [member.id, member.name]));
   const filtered = FILTERS.some((key) => params.get(key));
+  const hiddenInUse = FILTERS.filter((key) => key !== "lineId" && key !== "machineId" && params.get(key)).length;
+  const [moreOpen, setMoreOpen] = useState(false);
   const lineMachines = (machines.data ?? []).filter((machine) => !filter.lineId || machine.lineId === filter.lineId);
   const pickedMachine = filter.machineId ? machineById.get(filter.machineId) : undefined;
   const machineSubassemblies = subassemblyFilterOptions(subassemblies.data ?? [], pickedMachine);
@@ -62,7 +66,9 @@ export function PostPreventiveListPage() {
         }
       />
       <Card className="mb-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* No celular os 7 filtros empilhados empurravam a primeira ficha para baixo da primeira tela: fechado, ali
+            só Linha e Máquina ficam à vista; os outros aparecem em "Mais filtros", como no RP (PR #86). */}
+        <div id="pos-preventiva-filtros" className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${moreOpen ? "" : "max-sm:[&>label:nth-of-type(n+3)]:hidden"}`}>
           <Field label="Linha">
             <SelectInput value={filter.lineId} onChange={(event) => setFilter("lineId", event.target.value)}>
               <option value="">Todas</option>
@@ -83,6 +89,15 @@ export function PostPreventiveListPage() {
               ))}
             </SelectInput>
           </Field>
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-controls="pos-preventiva-filtros"
+            onClick={() => setMoreOpen((open) => !open)}
+            className="order-last justify-self-start text-sm font-semibold text-accent hover:underline sm:hidden"
+          >
+            {moreOpen ? "Menos filtros" : moreFiltersLabel(hiddenInUse)}
+          </button>
           <Field label="Subconjunto">
             <SelectInput value={filter.subassemblyId} disabled={!pickedMachine} onChange={(event) => setFilter("subassemblyId", event.target.value)}>
               <option value="">{pickedMachine ? "Todos" : "Escolha a máquina antes"}</option>

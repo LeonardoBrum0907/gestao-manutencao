@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { moreFiltersLabel } from "./rp-filters";
+import { moreFiltersLabel } from "./more-filters";
 
-describe("botão dos filtros do RP no celular", () => {
+describe("botão \"Mais filtros\" das listas no celular", () => {
   it("sem filtro em uso, só o nome do botão", () => {
     assert.equal(moreFiltersLabel(0), "Mais filtros");
   });
