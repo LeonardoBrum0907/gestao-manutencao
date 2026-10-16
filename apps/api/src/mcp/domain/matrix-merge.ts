@@ -47,16 +47,18 @@ export function equipmentsToMark(marked: readonly string[], entries: readonly Sc
   return [...new Set(wanted)];
 }
 
-export type SkillDraft = { equipmentId: string; subgroup: string; text: string };
+export type SkillDraft = { equipmentId: string; subgroup: string; text: string; category: string };
 
 /**
- * Habilidade já cadastrada no mesmo equipamento e subconjunto com o mesmo texto (sem ligar para acento e caixa).
- * @example findSameSkill(catalog.skills, { equipmentId: "e1", subgroup: "Cabeçote", text: "trocar faca" })
+ * Habilidade já cadastrada no mesmo equipamento, subconjunto e categoria com o mesmo texto (sem ligar para acento e caixa).
+ * O mesmo texto em outra categoria é outra linha: a do eletricista não repete a do mecânico.
+ * @example findSameSkill(catalog.skills, { equipmentId: "e1", subgroup: "Cabeçote", text: "trocar faca", category: "mechanical" })
  */
 export function findSameSkill(skills: readonly MatrixSkillDto[], draft: SkillDraft): MatrixSkillDto | undefined {
   return skills.find(
     (skill) =>
       skill.equipmentId === draft.equipmentId &&
+      skill.category === draft.category &&
       normalize(skill.subgroup) === normalize(draft.subgroup) &&
       normalize(skill.text) === normalize(draft.text),
   );

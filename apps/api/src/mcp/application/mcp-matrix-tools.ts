@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { COMPETENCY_LEVELS, type MatrixCatalogDto, type MatrixSkillDto } from "@manutencao/shared";
+import { COMPETENCY_LEVELS, DEFAULT_MATRIX_CATEGORY, MATRIX_CATEGORIES, type MatrixCatalogDto, type MatrixSkillDto } from "@manutencao/shared";
 import * as z from "zod";
 import { MAX_BULK_ENTRIES } from "../../competencia/application/parse-matrix";
 import { DomainError } from "../../kernel/domain-error";
@@ -14,6 +14,7 @@ import { answer, CHANGE, CREATE, id, READ, toolWriter, type ToolLog } from "./mc
 const MAX_NEW_SKILLS = 50;
 
 const levelHelp = "basic = básico, intermediate = intermediário, advanced = avançado";
+const categoryHelp = "mechanical = Mecânico, electrical = Eletricista";
 const scoreHelp = "0 sem experiência, 1 básico, 2 intermediário, 3 avançado, 4 referência";
 
 const skillFields = {
@@ -21,6 +22,7 @@ const skillFields = {
   subgroup: z.string().trim().min(1).describe("subconjunto onde a habilidade aparece (ex.: Cabeçote); use um que já existe no equipamento quando couber"),
   text: z.string().trim().min(1).describe("a habilidade, como o técnico lê na matriz"),
   level: z.enum(COMPETENCY_LEVELS).describe(`dificuldade: ${levelHelp}`),
+  category: z.enum(MATRIX_CATEGORIES).describe(`de quem é a habilidade: ${categoryHelp}`),
 };
 
 const scoreChange = z.object({
@@ -56,21 +58,22 @@ function registerCatalogQuery(server: McpServer, uc: McpUseCases): void {
     "catalogo_da_matriz",
     {
       title: "Catálogo da matriz",
-      description: "Equipamentos e habilidades da matriz de competências, com ids, subconjunto e dificuldade. Use para achar o skillId antes de dar_nota_matriz e para ler os nomes das habilidades que ficha_colaborador e matriz_da_equipe mostram só por id.",
+      description: "Equipamentos e habilidades da matriz de competências, com ids, subconjunto, dificuldade e categoria (mechanical = Mecânico, electrical = Eletricista). Use para achar o skillId antes de dar_nota_matriz e para ler os nomes das habilidades que ficha_colaborador e matriz_da_equipe mostram só por id.",
       inputSchema: {
         equipmentId: id("do equipamento").optional(),
+        categoria: z.enum(MATRIX_CATEGORIES).optional().describe(`só as habilidades desta categoria: ${categoryHelp}`),
         busca: z.string().optional().describe("parte do texto da habilidade, do subconjunto ou do nome do equipamento"),
         incluirArquivadas: z.boolean().optional().describe("traz também equipamentos e habilidades arquivados"),
       },
       annotations: READ,
     },
-    ({ equipmentId, busca, incluirArquivadas }) =>
+    ({ equipmentId, categoria, busca, incluirArquivadas }) =>
       answer(async () => {
         const catalog = await uc.matrixCatalog.show();
         const names = equipmentNames(catalog);
         const visible = (archived: boolean) => incluirArquivadas || !archived;
         const habilidades = catalog.skills
-          .filter((skill) => visible(skill.archived) && (!equipmentId || skill.equipmentId === equipmentId))
+          .filter((skill) => visible(skill.archived) && (!equipmentId || skill.equipmentId === equipmentId) && (!categoria || skill.category === categoria))
           .filter((skill) => matches(busca, skill.text, skill.subgroup, names.get(skill.equipmentId)))
           .map((skill) => describeSkill(skill, names));
         return { equipamentos: catalog.equipments.filter((equipment) => visible(equipment.archived)), habilidades };
@@ -83,9 +86,9 @@ function registerSkillCreation(server: McpServer, uc: McpUseCases, log: ToolLog)
     "cadastrar_habilidades",
     {
       title: "Cadastrar habilidades na matriz",
-      description: `Cadastra até ${MAX_NEW_SKILLS} habilidades de uma vez, cada uma no fim do seu equipamento. Pula a que já existe com o mesmo texto no mesmo equipamento e subconjunto (devolve em puladas); repita com confirmDuplicate true se o gestor quiser a repetida.`,
+      description: `Cadastra até ${MAX_NEW_SKILLS} habilidades de uma vez, cada uma no fim do seu equipamento. Pula a que já existe com o mesmo texto no mesmo equipamento, subconjunto e categoria (devolve em puladas); repita com confirmDuplicate true se o gestor quiser a repetida.`,
       inputSchema: {
-        habilidades: z.array(z.object(skillFields)).min(1).max(MAX_NEW_SKILLS),
+        habilidades: z.array(z.object({ ...skillFields, category: skillFields.category.optional().describe(`${categoryHelp}; sem ela: mechanical`) })).min(1).max(MAX_NEW_SKILLS),
         confirmDuplicate: z.boolean().optional().describe("cadastra mesmo havendo igual"),
       },
       annotations: CREATE,
@@ -96,7 +99,8 @@ function registerSkillCreation(server: McpServer, uc: McpUseCases, log: ToolLog)
       const names = equipmentNames(catalog);
       const criadas: ReturnType<typeof describeSkill>[] = [];
       const puladas: ReturnType<typeof describeSkill>[] = [];
-      for (const draft of habilidades) {
+      for (const { category = DEFAULT_MATRIX_CATEGORY, ...fields } of habilidades) {
+        const draft = { ...fields, category };
         const known = [...catalog.skills, ...criadas];
         const subgroup = canonicalSubgroup(known, draft.equipmentId, draft.subgroup);
         const same = confirmDuplicate ? undefined : findSameSkill(known, { ...draft, subgroup });
@@ -120,6 +124,7 @@ function registerSkillEdit(server: McpServer, uc: McpUseCases, log: ToolLog): vo
         subgroup: skillFields.subgroup.optional(),
         text: skillFields.text.optional(),
         level: skillFields.level.optional(),
+        category: skillFields.category.optional(),
         archived: z.boolean().optional().describe("true arquiva, false reativa"),
       },
       annotations: CHANGE,
@@ -127,8 +132,8 @@ function registerSkillEdit(server: McpServer, uc: McpUseCases, log: ToolLog): vo
     toolWriter(log)("editar_habilidade", async ({ id: skillId, ...changes }) => {
       const current = (await uc.matrixCatalog.show()).skills.find((skill) => skill.id === skillId);
       if (!current) throw new DomainError("not_found", 404, `Habilidade não encontrada: ${skillId}. Use os ids de catalogo_da_matriz.`);
-      const { equipmentId, subgroup, text, level, archived } = current;
-      return uc.matrixCatalog.updateSkill(skillId, overlay({ equipmentId, subgroup, text, level, archived }, changes));
+      const { equipmentId, subgroup, text, level, category, archived } = current;
+      return uc.matrixCatalog.updateSkill(skillId, overlay({ equipmentId, subgroup, text, level, category, archived }, changes));
     }),
   );
 }
@@ -138,7 +143,7 @@ function registerScoring(server: McpServer, uc: McpUseCases, log: ToolLog): void
     "dar_nota_matriz",
     {
       title: "Dar nota na matriz do colaborador",
-      description: `Lança notas de um técnico na matriz de competências (até ${MAX_BULK_ENTRIES} habilidades de uma vez). Mande por habilidade só o que muda: score, notApplicable ou expected; o que não vier fica como está. Marca sozinho no técnico o equipamento que ainda não estava marcado, para a nota entrar na matriz. Só vale para colaborador com cargo técnico.`,
+      description: `Lança notas de um técnico na matriz de competências (até ${MAX_BULK_ENTRIES} habilidades de uma vez). Mande por habilidade só o que muda: score, notApplicable ou expected; o que não vier fica como está. Marca sozinho no técnico o equipamento que ainda não estava marcado, para a nota entrar na matriz. Só vale para colaborador com cargo técnico, e só em habilidade da categoria da função dele (Mecânico ou Eletricista; função sem categoria vê as duas): habilidade de outra categoria recusa o lote inteiro.`,
       inputSchema: {
         memberId: id("do técnico"),
         notas: z.array(scoreChange).min(1).max(MAX_BULK_ENTRIES),

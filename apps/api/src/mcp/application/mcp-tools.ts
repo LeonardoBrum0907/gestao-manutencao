@@ -3,6 +3,7 @@ import {
   CHAMADO_SHIFTS,
   DUE_WINDOWS,
   FEEDBACK_TONES,
+  MATRIX_CATEGORIES,
   GESTOR_TIME_ZONE,
   RECORD_PRIORITIES,
   RECORD_STATUSES,
@@ -28,7 +29,7 @@ export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábri
 - Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com o ponto de atenção para a próxima.
 - Antes de qualquer ferramenta que grava, mostre ao gestor o que vai gravar.
 - Documentação técnica: fichas curtas tiradas dos manuais (código de erro, interface entre máquinas, sinal, peça, parâmetro, procedimento), cada uma com a fonte. Antes de responder sobre um alarme, uma peça ou a ligação entre máquinas, use buscar_documentacao. Ao ler um PDF enviado pelo gestor, crie uma ficha por fato com criar_ficha, citando documentId (listar_documentos) e página ou folha; marque reviewNeeded quando a leitura ficou em dúvida.
-- Matriz de competências: habilidades por equipamento e subconjunto, nota de 0 a 4 por técnico. Ache os ids em catalogo_da_matriz, cadastre com cadastrar_habilidades e lance com dar_nota_matriz.
+- Matriz de competências: habilidades por equipamento e subconjunto, nota de 0 a 4 por técnico. Cada habilidade é de mecânico (mechanical) ou de eletricista (electrical); o técnico só recebe nota nas da categoria da função dele. Ache os ids em catalogo_da_matriz, cadastre com cadastrar_habilidades e lance com dar_nota_matriz.
 - Não há ferramenta de excluir: exclusão é feita na tela.`;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -305,8 +306,13 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
 
   server.registerTool(
     "matriz_da_equipe",
-    { title: "Matriz da equipe", description: "Matriz de competências de todos os técnicos, por equipamento, contra o esperado.", annotations: READ },
-    () => answer(() => uc.teamMatrix.show()),
+    {
+      title: "Matriz da equipe",
+      description: "Matriz de competências de todos os técnicos, por equipamento, contra o esperado. Sem categoria, cada técnico conta a categoria da função dele.",
+      inputSchema: { categoria: z.enum(MATRIX_CATEGORIES).optional().describe("mechanical = só mecânicos, electrical = só eletricistas") },
+      annotations: READ,
+    },
+    ({ categoria }) => answer(() => uc.teamMatrix.show(categoria ?? null)),
   );
 
   server.registerTool(

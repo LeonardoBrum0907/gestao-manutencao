@@ -9,6 +9,7 @@ const skill = (id: string, equipmentId: string, subgroup: string, text: string):
   subgroup,
   text,
   level: "basic",
+  category: "mechanical",
   archived: false,
 });
 
@@ -64,8 +65,12 @@ describe("equipamentos a marcar", () => {
 
 describe("habilidade repetida", () => {
   it("acha a mesma habilidade sem ligar para acento e caixa", () => {
-    assert.equal(findSameSkill(catalog.skills, { equipmentId: "e1", subgroup: "cabecote", text: " TROCAR A FACA" })?.id, "s1");
-    assert.equal(findSameSkill(catalog.skills, { equipmentId: "e2", subgroup: "Cabeçote", text: "Trocar a faca" }), undefined);
+    assert.equal(findSameSkill(catalog.skills, { equipmentId: "e1", subgroup: "cabecote", text: " TROCAR A FACA", category: "mechanical" })?.id, "s1");
+    assert.equal(findSameSkill(catalog.skills, { equipmentId: "e2", subgroup: "Cabeçote", text: "Trocar a faca", category: "mechanical" }), undefined);
+  });
+
+  it("o mesmo texto em outra categoria não é repetido", () => {
+    assert.equal(findSameSkill(catalog.skills, { equipmentId: "e1", subgroup: "Cabeçote", text: "Trocar a faca", category: "electrical" }), undefined);
   });
 
   it("reaproveita a grafia do subconjunto que já existe no equipamento", () => {
