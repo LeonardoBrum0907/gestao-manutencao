@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   COMPETENCY_LEVEL_EXPECTED,
   DEFAULT_TEAM_MATRIX_LAYOUT,
   type CompetencyScore,
+  type MatrixCategory,
   type MemberMatrixDto,
   type TeamMatrixDto,
   type TeamMatrixLayoutDto,
@@ -17,14 +18,22 @@ export type SkillWrite = {
   expected: CompetencyScore | null;
 };
 
+type OlderMemberMatrix = Partial<MemberMatrixDto> & Omit<MemberMatrixDto, "gradeName" | "expectedByLevel" | "matrixCategory">;
+
 /**
  * Busca a matriz do técnico. Uma API anterior ao esperado por grau (PR #40) não manda gradeName nem
  * expectedByLevel: aí vale o esperado da dificuldade, para a tela não quebrar enquanto o servidor não é atualizado.
+ * Uma anterior à categoria não manda matrixCategory: aí a pessoa vê as duas, como antes.
  * @example memberMatrix(`/api/members/${memberId}/matrix`)
  */
 export async function memberMatrix(path: string, init?: RequestInit): Promise<MemberMatrixDto> {
-  const matrix = await api<Partial<MemberMatrixDto> & Omit<MemberMatrixDto, "gradeName" | "expectedByLevel">>(path, init);
-  return { ...matrix, gradeName: matrix.gradeName ?? null, expectedByLevel: matrix.expectedByLevel ?? COMPETENCY_LEVEL_EXPECTED };
+  const matrix = await api<OlderMemberMatrix>(path, init);
+  return {
+    ...matrix,
+    gradeName: matrix.gradeName ?? null,
+    expectedByLevel: matrix.expectedByLevel ?? COMPETENCY_LEVEL_EXPECTED,
+    matrixCategory: matrix.matrixCategory ?? null,
+  };
 }
 
 export function useMatrix(memberId: string | undefined) {
@@ -39,12 +48,13 @@ type OlderTeamMatrix = Omit<TeamMatrixDto, "lines" | "layout" | "members"> &
   Partial<Pick<TeamMatrixDto, "lines" | "layout">> & { members: (Omit<TeamMemberDto, "gradeName" | "teamName"> & Partial<TeamMemberDto>)[] };
 
 /**
- * Busca a matriz da equipe. A tela publica na Vercel antes do deploy da API no PC: uma API anterior às linhas e à
- * disposição salva não manda lines, layout, gradeName nem teamName, e aí valem os padrões (vazio e a disposição padrão).
- * @example teamMatrix() // { equipments, members, lines, layout, qualifiedAdherence }
+ * Busca a matriz da equipe, só de uma categoria quando ela vem. A tela publica na Vercel antes do deploy da API: uma API
+ * anterior às linhas e à disposição salva não manda lines, layout, gradeName nem teamName, e aí valem os padrões
+ * (vazio e a disposição padrão). Uma anterior à categoria ignora o filtro e devolve a equipe toda.
+ * @example teamMatrix("electrical") // { equipments, members, lines, layout, qualifiedAdherence }
  */
-export async function teamMatrix(): Promise<TeamMatrixDto> {
-  const team = await api<OlderTeamMatrix>("/api/team-matrix");
+export async function teamMatrix(category: MatrixCategory | null = null): Promise<TeamMatrixDto> {
+  const team = await api<OlderTeamMatrix>(category ? `/api/team-matrix?categoria=${category}` : "/api/team-matrix");
   return {
     ...team,
     lines: team.lines ?? [],
@@ -53,8 +63,10 @@ export async function teamMatrix(): Promise<TeamMatrixDto> {
   };
 }
 
-export function useTeamMatrix() {
-  return useQuery({ queryKey: ["team-matrix"], queryFn: teamMatrix });
+// A chave começa por "team-matrix": quem invalida ["team-matrix"] recarrega todas as categorias.
+// Trocar a categoria mantém a grade anterior na tela até a nova chegar (sem piscar o "Carregando…").
+export function useTeamMatrix(category: MatrixCategory | null = null) {
+  return useQuery({ queryKey: ["team-matrix", category], queryFn: () => teamMatrix(category), placeholderData: keepPreviousData });
 }
 
 // Cada mudança de visão, agrupamento ou coluna arrastada grava a disposição inteira. A tela muda na hora;
@@ -64,7 +76,8 @@ export function useSaveTeamLayout() {
   return useMutation({
     scope: { id: "team-matrix-layout" },
     mutationFn: (layout: TeamMatrixLayoutDto) => api<TeamMatrixLayoutDto>("/api/team-matrix/layout", { method: "PUT", body: JSON.stringify(layout) }),
-    onMutate: (layout) => client.setQueryData<TeamMatrixDto>(["team-matrix"], (team) => (team ? { ...team, layout } : team)),
+    // A disposição é a mesma em todas as categorias: atualiza todas as que estão em cache.
+    onMutate: (layout) => client.setQueriesData<TeamMatrixDto>({ queryKey: ["team-matrix"] }, (team) => (team ? { ...team, layout } : team)),
     onError: () => client.invalidateQueries({ queryKey: ["team-matrix"] }),
   });
 }

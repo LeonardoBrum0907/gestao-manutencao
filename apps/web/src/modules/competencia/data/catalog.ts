@@ -1,13 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CompetencyLevel, MatrixCatalogDto, MatrixEquipmentDto, MatrixSettingsDto, MatrixSkillDto } from "@manutencao/shared";
+import {
+  DEFAULT_MATRIX_CATEGORY,
+  type CompetencyLevel,
+  type MatrixCatalogDto,
+  type MatrixCategory,
+  type MatrixEquipmentDto,
+  type MatrixSettingsDto,
+  type MatrixSkillDto,
+} from "@manutencao/shared";
 import { REFERENCE_DATA } from "../../../app/cache";
 import { api } from "../../../app/http";
+
+type OlderCatalog = Omit<MatrixCatalogDto, "skills"> & { skills: (Omit<MatrixSkillDto, "category"> & Partial<MatrixSkillDto>)[] };
+
+/**
+ * Busca o cadastro da matriz. A tela publica antes do deploy da API: uma API anterior à categoria não manda
+ * category, e aí toda habilidade é de mecânico (como eram as do SIGEM).
+ * @example await matrixCatalog() // { equipments, skills: [{ ..., category: "mechanical" }] }
+ */
+export async function matrixCatalog(): Promise<MatrixCatalogDto> {
+  const catalog = await api<OlderCatalog>("/api/matrix-catalog");
+  return { ...catalog, skills: catalog.skills.map((skill) => ({ ...skill, category: skill.category ?? DEFAULT_MATRIX_CATEGORY })) };
+}
 
 export function useMatrixCatalog() {
   return useQuery({
     queryKey: ["matrix-catalog"],
     ...REFERENCE_DATA,
-    queryFn: () => api<MatrixCatalogDto>("/api/matrix-catalog"),
+    queryFn: matrixCatalog,
   });
 }
 
@@ -45,7 +65,14 @@ export function useReorderEquipments() {
   );
 }
 
-export type SkillInput = { equipmentId: string; subgroup: string; text: string; level: CompetencyLevel; archived: boolean };
+export type SkillInput = {
+  equipmentId: string;
+  subgroup: string;
+  text: string;
+  level: CompetencyLevel;
+  category: MatrixCategory;
+  archived: boolean;
+};
 
 export function useSaveSkill() {
   return useCatalogMutation((input: SkillInput & { id?: string }) =>

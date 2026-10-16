@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MEMBER_SHIFT_LABELS, TEAM_MATRIX_VIEW_LABELS, type MemberShift, type TeamMatrixDto } from "@manutencao/shared";
+import { MATRIX_CATEGORY_LABELS, MEMBER_SHIFT_LABELS, TEAM_MATRIX_VIEW_LABELS, type MatrixCategory, type MemberShift, type TeamMatrixDto } from "@manutencao/shared";
 import { Button, Card, Notice } from "../../../design/ui/controls";
 import { NavTrail } from "../../../design/ui/nav-trail";
 import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
@@ -8,7 +8,7 @@ import { errorMessage } from "../../../app/http";
 import { useTeamMatrix } from "../data/matrix";
 import { teamGrid, type TeamGrid } from "../model/team-grid";
 import { teamKpis, trainingNeeds } from "../model/team-insights";
-import { readTeamSearch } from "../model/team-search";
+import { readTeamCategory, readTeamSearch } from "../model/team-search";
 import { parseTeamSheetSections, type TeamSheetSection } from "../model/team-sheet-sections";
 import { TeamSheetGrid } from "./team/TeamSheetGrid";
 import "../../../design/ui/report.css";
@@ -67,9 +67,10 @@ function Training({ team }: { team: TeamMatrixDto }) {
   );
 }
 
-function subtitle(team: TeamMatrixDto, grid: TeamGrid, shift: string): string {
+function subtitle(team: TeamMatrixDto, grid: TeamGrid, shift: string, category: MatrixCategory | null): string {
   const shiftText = shift ? (MEMBER_SHIFT_LABELS[shift as MemberShift] ?? shift) : "todos os turnos";
-  return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]} · ${shiftText} · ${grid.memberCount} técnico(s) · qualificado com ${team.qualifiedAdherence}% ou mais`;
+  const categoryText = category ? ` · só ${MATRIX_CATEGORY_LABELS[category]}` : "";
+  return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]}${categoryText} · ${shiftText} · ${grid.memberCount} técnico(s) · qualificado com ${team.qualifiedAdherence}% ou mais`;
 }
 
 function SheetBody({ team, grid, sections }: { team: TeamMatrixDto; grid: TeamGrid; sections: readonly TeamSheetSection[] }) {
@@ -103,7 +104,7 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
         <div>
           <p className="brand">Caderno do Gestor · Matriz da equipe</p>
           <h1>Matriz da equipe</h1>
-          <p className="sub">{subtitle(team, grid, state.shift)}</p>
+          <p className="sub">{subtitle(team, grid, state.shift, state.category)}</p>
         </div>
         <div className="meta">
           <b>{today}</b>
@@ -124,7 +125,7 @@ function Sheet({ team, search }: { team: TeamMatrixDto; search: URLSearchParams 
 // cada parte só se o gestor marcou na janela de exportar (?secoes=).
 export function TeamSheetPage() {
   const [search] = useSearchParams();
-  const team = useTeamMatrix();
+  const team = useTeamMatrix(readTeamCategory(search));
   const preview = usePreviewZoom();
   const { fit } = preview;
   const ready = Boolean(team.data);

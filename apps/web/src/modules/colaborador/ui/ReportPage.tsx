@@ -1,6 +1,7 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { type ReactNode } from "react";
 import {
+  catalogForCategory,
   DEFAULT_PERFORMANCE_TARGET,
   BEHAVIOR_RATING_LABELS,
   PDI_ITEM_STATUS_LABELS,
@@ -8,6 +9,7 @@ import {
   COMPETENCY_SCORE_LABELS,
   PRODUCTIVITY_LEVEL_LABELS,
   QUARTERS,
+  skillFitsCategory,
   type MemberDto,
   type PdiItemDto,
 } from "@manutencao/shared";
@@ -254,8 +256,9 @@ function Matrix({ memberId }: { memberId: string }) {
   const summary = matrix.data.summary;
   const entries = entriesById(matrix.data.entries);
   const byLevel = matrix.data.expectedByLevel;
+  const own = catalogForCategory(catalog.data, matrix.data.matrixCategory);
   const groups = matrix.data.equipments.map((equipmentId) => {
-    const skills = skillsOf(catalog.data, equipmentId).filter((skill) => {
+    const skills = skillsOf(own, equipmentId).filter((skill) => {
       const entry = entries.get(skill.id);
       return entry && (entry.score !== null || entry.notApplicable);
     });
@@ -385,6 +388,7 @@ function PdiGaps({ memberId, year, items }: { memberId: string; year: number; it
     matrix.data && catalog.data
       ? catalog.data.skills
           .filter((skill) => !skill.archived && matrix.data.equipments.includes(skill.equipmentId))
+          .filter((skill) => skillFitsCategory(skill, matrix.data.matrixCategory))
           .filter((skill) => skillState(skill, entries.get(skill.id), matrix.data.expectedByLevel) === "below")
           .map((skill) => {
             const entry = entries.get(skill.id);
