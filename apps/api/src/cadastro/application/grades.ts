@@ -5,7 +5,7 @@ import { readObject, requiredString } from "../../kernel/parse";
 import { requireGradeExpected } from "../domain/grade-expected";
 import { assertGradeNameAvailable } from "../domain/grade-name";
 import { assertGradeCanBeRemoved } from "../domain/grade-removal";
-import { requireName } from "../domain/names";
+import { nameOwner, requireName } from "../domain/names";
 import { GradeRepository } from "../infra/grade.repository";
 
 @Injectable()
@@ -18,7 +18,7 @@ export class Grades {
 
   async create(body: unknown): Promise<MemberGradeDto> {
     const name = requireName(requiredString(readObject(body), "name", "Informe o nome do grau."), "Informe o nome do grau.");
-    const owner = await this.grades.findByName(name);
+    const owner = nameOwner(await this.grades.list(), name);
     assertGradeNameAvailable(owner?.id ?? null, null);
     return this.grades.create(name);
   }
@@ -27,7 +27,7 @@ export class Grades {
     const current = await this.grades.find(id);
     if (!current) throw new DomainError("not_found", 404, "Grau não encontrado.");
     const name = requireName(requiredString(readObject(body), "name", "Informe o nome do grau."), "Informe o nome do grau.");
-    const owner = await this.grades.findByName(name);
+    const owner = nameOwner(await this.grades.list(), name);
     assertGradeNameAvailable(owner?.id ?? null, id);
     return this.grades.rename(id, name);
   }

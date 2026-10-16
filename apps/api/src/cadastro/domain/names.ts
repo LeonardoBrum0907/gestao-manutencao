@@ -14,6 +14,15 @@ export function requireName(value: string, message: string): string {
   return name;
 }
 
+/**
+ * Acha o item que já usa o nome, sem diferenciar maiúscula de minúscula: "Mecânico" e "mecânico" são a mesma função.
+ * Acento continua contando ("mecanico" é outro nome).
+ * @example nameOwner([{ id: "r1", name: "mecânico" }], "Mecânico") // { id: "r1", name: "mecânico" }
+ */
+export function nameOwner<T extends { name: string }>(items: readonly T[], name: string): T | undefined {
+  return items.find((item) => item.name.localeCompare(name, "pt-BR", { sensitivity: "accent" }) === 0);
+}
+
 export function requireMachineStatus(value: string): MachineOperationalStatus {
   if (!isMachineStatus(value)) {
     throw new DomainError("invalid", 400, "Status da máquina inválido.");
