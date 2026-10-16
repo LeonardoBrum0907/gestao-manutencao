@@ -85,3 +85,15 @@ export function axisTicks(top: number): number[] {
   const middle = top / 2;
   return Number.isInteger(middle) ? [0, middle, top] : [0, top];
 }
+
+/**
+ * Texto do Pareto vazio. Chamado sem máquina nem linha fica fora do Pareto (paretoOf na API), então "nenhum
+ * chamado" só vale quando o período não teve chamado; senão o quadro contradiz o total ao lado.
+ * @example paretoEmptyText(0) // "Nenhum chamado no período."
+ * @example paretoEmptyText(2) // "Os 2 chamados do período não dizem a máquina nem a linha."
+ */
+export function paretoEmptyText(chamados: number): string {
+  if (chamados <= 0) return "Nenhum chamado no período.";
+  if (chamados === 1) return "O chamado do período não diz a máquina nem a linha.";
+  return `Os ${chamados} chamados do período não dizem a máquina nem a linha.`;
+}
