@@ -5,6 +5,7 @@ import type { RecordListItemDto, RecordStatus, RecordType } from "@manutencao/sh
 export type RecordRow = RecordListItemDto & {
   lineName: string | null;
   machineName: string | null;
+  machineTag: string | null;
   subassemblyName: string | null;
   memberName: string | null;
 };
@@ -12,17 +13,20 @@ export type RecordRow = RecordListItemDto & {
 export type RecordNames = {
   lines: Map<string, string>;
   machines: Map<string, string>;
+  // TAG da máquina (ex.: EBS-BLI-01): é como o turno chama a máquina, então a busca precisa achar por ela.
+  tags: Map<string, string>;
   subassemblies: Map<string, string>;
   members: Map<string, string>;
 };
 
-/** Junta à linha os nomes do cadastro (linha, máquina, subconjunto, pessoa), para mostrar e procurar. */
+/** Junta à linha os nomes do cadastro (linha, máquina e TAG, subconjunto, pessoa), para mostrar e procurar. */
 export function withNames(item: RecordListItemDto, names: RecordNames): RecordRow {
   const name = (map: Map<string, string>, id: string | null) => (id ? map.get(id) ?? null : null);
   return {
     ...item,
     lineName: name(names.lines, item.lineId),
     machineName: name(names.machines, item.machineId),
+    machineTag: name(names.tags, item.machineId),
     subassemblyName: name(names.subassemblies, item.subassemblyId),
     memberName: name(names.members, item.memberId),
   };
@@ -54,11 +58,11 @@ function inScope(status: RecordStatus, scope: StatusScope): boolean {
   return scope === "concluidos" ? status === "done" : status !== "done";
 }
 
-/** Busca no texto, no lugar e na pessoa; todas as palavras precisam aparecer. Ex.: "med01 correia". */
+/** Busca no texto, no lugar (com a TAG da máquina) e na pessoa; todas as palavras precisam aparecer. Ex.: "med correia", "bli-01". */
 export function matchesSearch(row: RecordRow, q: string): boolean {
   const words = plain(q).split(/\s+/).filter(Boolean);
   if (!words.length) return true;
-  const haystack = plain([row.body, placeLabel(row), row.memberName ?? ""].join(" "));
+  const haystack = plain([row.body, placeLabel(row), row.machineTag ?? "", row.memberName ?? ""].join(" "));
   return words.every((word) => haystack.includes(word));
 }
 
