@@ -54,6 +54,14 @@ curl -s https://$API_DOMAIN/health
 
 Atualizar depois de um merge: `git pull` e `docker compose -f docker-compose.vps.yml up -d --build --no-deps api`. O `vercel.json` repassa `/api`, `/health` e as rotas do MCP para `https://<API_DOMAIN>`.
 
+Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>/` o dump do banco e um `attachments.tar.gz` com os anexos, e apaga as pastas com mais de 14 dias. Roda pelo cron do usuário da VPS (`crontab -e`):
+
+```
+0 6 * * * /home/leo/caderno-gestor/deploy/vps/backup.sh >> /home/leo/backups/backup.log 2>&1
+```
+
+O horário do cron é UTC (6h = 3h de Brasília). No PC, `scripts/puxar-backup-vps.sh` copia essa pasta para `~/Backups/caderno-gestor` usando a chave `~/.ssh/id_backup`, que na VPS só consegue ler os backups (linha do `authorized_keys` com `restrict,command="tar -C /home/leo/backups -cf - ."`). Restaurar: `pg_restore --clean --no-owner` do `manutencao.dump` e `tar -xzf attachments.tar.gz` dentro de `/data` no container da API.
+
 ### IA (servidor MCP)
 
 A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências, pós-preventivas e fichas de documentação técnica pelas mesmas regras das telas. São 24 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
