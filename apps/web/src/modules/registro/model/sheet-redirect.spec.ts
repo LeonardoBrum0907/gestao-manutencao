@@ -14,8 +14,16 @@ describe("para onde a ficha do registro manda", () => {
     assert.equal(sheetRedirect({ id: "e1", type: "entry", origin: "inbox", occurredAt }), "/entrada?registro=e1");
   });
 
-  it("ocorrência e RP ficam na própria ficha", () => {
+  it("ocorrência fica na própria ficha", () => {
     assert.equal(sheetRedirect({ id: "o1", type: "problem", origin: "ocorrencia", occurredAt }), null);
+  });
+
+  // Antes, o problema de RP parava numa página "RP" sem o texto do problema, só com o link "Abrir o RP".
+  it("problema de RP abre direto a ficha do RP", () => {
+    assert.equal(sheetRedirect({ id: "p1", type: "problem", origin: "rp", occurredAt }, "rp9"), "/rp/rp9");
+  });
+
+  it("problema de RP fica na ficha enquanto o RP não é achado", () => {
     assert.equal(sheetRedirect({ id: "p1", type: "problem", origin: "rp", occurredAt }), null);
   });
 });

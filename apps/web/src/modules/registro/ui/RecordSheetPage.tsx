@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
 import { useRpOfProblem } from "../../rp/data/rp";
@@ -8,21 +8,11 @@ import { originLabel } from "../model/record";
 import { sheetRedirect } from "../model/sheet-redirect";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
 
-// O Problema de um RP é só o espelho: a ficha de verdade é a do RP.
-function RpMirror({ recordId }: { recordId: string }) {
-  const rp = useRpOfProblem(recordId, true);
+// Problema de RP cujo RP ainda está sendo procurado ou não existe mais (achado, a ficha abre o RP).
+function RpMirror({ pending }: { pending: boolean }) {
   return (
     <div className="rounded-card border border-line bg-card p-4 text-sm text-app shadow-card sm:p-5">
-      <p>Este problema vem de um RP. Para alterar, abra a ficha do RP.</p>
-      {rp.data ? (
-        <Link to={`/rp/${rp.data.id}`} className="mt-3 inline-flex font-semibold text-accent">
-          Abrir o RP →
-        </Link>
-      ) : rp.isPending ? (
-        <p className="mt-3 text-muted">Procurando o RP…</p>
-      ) : (
-        <p className="mt-3 text-muted">O RP deste problema não foi encontrado.</p>
-      )}
+      {pending ? <p className="text-muted">Procurando o RP deste problema…</p> : <p>Este problema vem de um RP, mas o RP não foi encontrado.</p>}
     </div>
   );
 }
@@ -31,12 +21,13 @@ function RpMirror({ recordId }: { recordId: string }) {
 export function RecordSheetPage() {
   const { id = "" } = useParams();
   const record = useRecord(id);
+  const rp = useRpOfProblem(id, record.data?.origin === "rp");
   const navigate = useNavigate();
   const [removing, setRemoving] = useState(false);
   if (record.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!record.data) return <p className="text-sm text-danger">Registro não encontrado.</p>;
   const data = record.data;
-  const redirect = sheetRedirect(data);
+  const redirect = sheetRedirect(data, rp.data?.id ?? null);
   if (redirect) return <Navigate to={redirect} replace />;
   return (
     <div className="mx-auto max-w-2xl">
@@ -47,7 +38,7 @@ export function RecordSheetPage() {
         back={{ to: "/registros", label: "Registros" }}
       />
       {data.origin === "ocorrencia" ? <OcorrenciaForm record={data} /> : null}
-      {data.origin === "rp" ? <RpMirror recordId={data.id} /> : null}
+      {data.origin === "rp" ? <RpMirror pending={rp.isPending} /> : null}
       <div className="mt-6 flex justify-end border-t border-line pt-4">
         <button
           type="button"

@@ -47,11 +47,7 @@ export function RpEditPage() {
         back={{ to: "/rp", label: "RPs" }}
       />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold empty:hidden">
-        {data.problemRecordId ? (
-          <Link to={`/registros/${data.problemRecordId}`} className="text-accent">
-            Ver o Problema nos Registros
-          </Link>
-        ) : null}
+        {/* Sem link para o Problema: a ficha dele (/registros/:id) manda de volta para este RP. */}
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
       <RpAttentionBox rpId={data.id} lineId={data.lineId} />
