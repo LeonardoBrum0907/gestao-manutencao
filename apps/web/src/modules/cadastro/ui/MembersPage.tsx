@@ -17,7 +17,7 @@ type Open = { member: MemberDto | null; removing?: boolean } | undefined;
 export function MembersPage() {
   const members = useMembers();
   const teams = useTeams();
-  // Filters live in the URL so they survive opening a member and coming back with "←".
+  // Os filtros ficam no endereço para continuarem escolhidos depois de abrir a ficha e voltar pelo "←".
   const [params, setParams] = useSearchParams();
   const positionFilter = memberPositionFilter(params.get("position"));
   const teamFilter = params.get("team") ?? "";

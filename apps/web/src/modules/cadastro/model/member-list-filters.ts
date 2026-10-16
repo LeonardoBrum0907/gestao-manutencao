@@ -1,8 +1,8 @@
 import { isMemberPosition, type MemberPosition } from "@manutencao/shared";
 
 /**
- * Position filter of the members list, read from the URL (?position=technician). An unknown value, such as a
- * hand-typed or outdated link, means "all" instead of an empty list.
+ * Filtro de cargo da lista de Colaboradores, lido do endereço (?position=technician). Valor desconhecido, como um
+ * link antigo ou digitado à mão, vale como "Todos" em vez de esvaziar a lista.
  * @example memberPositionFilter("supervisor") // "supervisor"
  * @example memberPositionFilter("tecnico") // ""
  */
