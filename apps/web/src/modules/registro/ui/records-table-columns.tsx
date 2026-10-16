@@ -1,6 +1,6 @@
 import type { StackedRow, TableColumn } from "../../../design/ui/data-table";
-import { dueDay, dueLabel, todayDay } from "../model/board";
-import { dueClockOf } from "../model/due-time";
+import { todayDay } from "../model/board";
+import { recordDue, type RecordDue } from "../model/record-due";
 import { originLabel, recordShortName, recordStatusLabel } from "../model/record";
 import { placeLabel, type RecordRow } from "../model/records-table";
 
@@ -23,11 +23,9 @@ function StatusChip({ row }: { row: RecordRow }) {
 }
 
 function DueCell({ row }: { row: RecordRow }) {
-  if (!row.dueAt) return <Dash />;
-  const today = todayDay();
-  const late = row.status !== "done" && dueDay(row.dueAt) < today;
-  const time = row.dueHasTime ? ` ${dueClockOf(row.dueAt)}` : "";
-  return <span className={`tabular-nums ${late ? "font-semibold text-danger" : "text-app"}`}>{dueLabel(row.dueAt, today)}{time}</span>;
+  const due = recordDue(row, todayDay());
+  if (!due) return <Dash />;
+  return <span className={`tabular-nums ${due.late ? "font-semibold text-danger" : "text-app"}`}>{due.text}</span>;
 }
 
 export const RECORD_COLUMNS: TableColumn<RecordRow>[] = [
@@ -46,13 +44,25 @@ export const RECORD_COLUMNS: TableColumn<RecordRow>[] = [
   { key: "situacao", header: "Situação", cell: (row) => <StatusChip row={row} />, sortValue: (row) => ["in_progress", "open", "done"].indexOf(row.status) },
 ];
 
-/** Linha no celular: tipo e data em cima, o texto, e embaixo o lugar ou a pessoa com a situação. */
+// No celular não há coluna Prazo: o prazo vai junto do lugar ou da pessoa, em vermelho quando atrasado, como no computador.
+function StackedMeta({ place, due }: { place: string | null; due: RecordDue }) {
+  return (
+    <>
+      {place ? `${place} · ` : ""}
+      <span className={`tabular-nums ${due.late ? "font-semibold text-danger" : ""}`}>Prazo: {due.text}</span>
+    </>
+  );
+}
+
+/** Linha no celular: tipo e data em cima, o texto, e embaixo o lugar ou a pessoa e o prazo, com a situação. */
 export function recordStacked(row: RecordRow): StackedRow {
   const origin = row.origin !== "inbox" ? ` · ${originLabel(row.origin)}` : "";
+  const place = placeLabel(row) || row.memberName;
+  const due = recordDue(row, todayDay());
   return {
     eyebrow: `${recordShortName(row.type)} · ${shortDay(row.occurredAt)}${origin}`,
     title: <span className={row.status === "done" ? "text-muted line-through" : ""}>{row.body}</span>,
-    meta: placeLabel(row) || row.memberName || undefined,
+    meta: due ? <StackedMeta place={place} due={due} /> : place || undefined,
     side: <StatusChip row={row} />,
   };
 }
