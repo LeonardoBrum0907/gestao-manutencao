@@ -9,6 +9,7 @@ import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay } from "../../rp/model/rp";
 import { useSavePostPreventive } from "../data/post-preventives";
+import { missingFieldsNotice } from "../model/missing-fields";
 import { bodyFromValues, type PostPreventiveFormValues } from "../model/post-preventive";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -36,6 +37,7 @@ export function PostPreventiveForm({
   const save = useSavePostPreventive(id);
   const [values, setValues] = useState(initial);
   const [saved, setSaved] = useState(false);
+  const [missing, setMissing] = useState<string | null>(null);
   const rpSearch = new URLSearchParams(values.lineId ? { lineId: values.lineId } : {});
   const rps = useRpPages(rpSearch);
   const rpItems = values.lineId ? flattenRp(rps.data?.pages) : [];
@@ -57,6 +59,9 @@ export function PostPreventiveForm({
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    const notice = missingFieldsNotice(values);
+    setMissing(notice);
+    if (notice) return;
     save.mutate(bodyFromValues(values), {
       onSuccess: (item) => {
         setSaved(true);
@@ -149,7 +154,8 @@ export function PostPreventiveForm({
           ) : null}
         </Section>
 
-        {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
+        {missing ? <Notice>{missing}</Notice> : null}
+        {!missing && save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
         {saved && id ? <p className="text-sm font-medium text-accent">Ficha gravada.</p> : null}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={save.isPending}>
