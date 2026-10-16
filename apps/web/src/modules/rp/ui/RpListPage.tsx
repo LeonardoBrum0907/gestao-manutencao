@@ -8,7 +8,7 @@ import { Icon } from "../../../design/ui/icons";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { flattenRp, useRpPages } from "../data/rp";
 import { rpStatusOptions } from "../model/rp";
-import { moreFiltersLabel } from "../model/rp-filters";
+import { moreFiltersLabel } from "../../../design/more-filters";
 import { RP_COLUMNS, rpStacked, type RpTableRow } from "./rp-table";
 
 // Nome da linha cadastrada (ou a linha do texto) e a TAG, sem repetir o mesmo nome duas vezes.
