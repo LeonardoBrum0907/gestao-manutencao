@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import type { MemberDto, MemberPosition } from "@manutencao/shared";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { MemberDto } from "@manutencao/shared";
 import { Button, Card, Field, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
 import { useMembers, useTeams } from "../data/cadastro";
+import { memberPositionFilter } from "../model/member-list-filters";
 import { teamsOf } from "../model/team";
 import { MemberPanel } from "./MemberPanel";
 import { memberColumns, memberStacked } from "./member-table";
@@ -16,10 +17,19 @@ type Open = { member: MemberDto | null; removing?: boolean } | undefined;
 export function MembersPage() {
   const members = useMembers();
   const teams = useTeams();
-  const [positionFilter, setPositionFilter] = useState<MemberPosition | "">("");
-  const [teamFilter, setTeamFilter] = useState("");
+  // Filters live in the URL so they survive opening a member and coming back with "←".
+  const [params, setParams] = useSearchParams();
+  const positionFilter = memberPositionFilter(params.get("position"));
+  const teamFilter = params.get("team") ?? "";
   const [open, setOpen] = useState<Open>(undefined);
   const navigate = useNavigate();
+
+  function setFilter(key: "position" | "team", value: string) {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next, { replace: true });
+  }
 
   const allTeams = teams.data ?? [];
   const visible = members.data?.filter((member) => {
@@ -41,14 +51,14 @@ export function MembersPage() {
       {members.data?.length ? (
         <div className="mb-4 grid gap-3 sm:max-w-xl sm:grid-cols-2">
           <Field label="Cargo">
-            <SelectInput value={positionFilter} onChange={(event) => setPositionFilter(event.target.value as MemberPosition | "")}>
+            <SelectInput value={positionFilter} onChange={(event) => setFilter("position", event.target.value)}>
               <option value="">Todos</option>
               <option value="technician">Técnicos</option>
               <option value="supervisor">Supervisores</option>
             </SelectInput>
           </Field>
           <Field label="Equipe">
-            <SelectInput value={teamFilter} onChange={(event) => setTeamFilter(event.target.value)}>
+            <SelectInput value={teamFilter} onChange={(event) => setFilter("team", event.target.value)}>
               <option value="">Todas</option>
               <option value={NO_TEAM}>Sem equipe</option>
               {allTeams.map((team) => (
