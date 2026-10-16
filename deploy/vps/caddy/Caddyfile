@@ -1,5 +1,15 @@
 # O Caddy pede e renova sozinho o certificado HTTPS (Let's Encrypt) para API_DOMAIN.
 # O domínio precisa apontar para o IP da VPS e as portas 80 e 443 precisam estar abertas.
 {$API_DOMAIN} {
-	reverse_proxy api:3000
+	reverse_proxy api:3000 {
+		# No deploy a API fica uns segundos sem aceitar conexão. Em vez de devolver 502,
+		# o Caddy tenta de novo por até 30 s. Só repete o que não chegou a conectar,
+		# então um POST nunca roda duas vezes.
+		lb_try_duration 30s
+		lb_try_interval 500ms
+		# Para repetir um POST o Caddy precisa ter o corpo guardado. 10 MiB cobre os anexos
+		# (limite dos controllers de registro e PDI); um envio maior que isso, bem na hora
+		# da troca, ainda recebe 502.
+		request_buffers 10MiB
+	}
 }
