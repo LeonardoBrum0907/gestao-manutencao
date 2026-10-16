@@ -1,0 +1,64 @@
+# Deploy automático da API na VPS quando a main muda em algo que a API usa.
+# A tela não passa por aqui: a Vercel publica sozinha.
+# A chave em VPS_SSH_KEY só roda `caderno-admin deploy` na VPS (authorized_keys com
+# command= forçado, montado por deploy/vps/admin/instalar-deploy-github.sh).
+name: Deploy da API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/api/**
+      - packages/shared/**
+      - pnpm-lock.yaml
+      - docker-compose.vps.yml
+      - deploy/vps/Caddyfile
+      - .github/workflows/deploy-api.yml
+  workflow_dispatch:
+
+# Um deploy por vez, sem cancelar o que já começou: cortar um build no meio deixa a API parada.
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @manutencao/api exec prisma generate
+      - run: pnpm test
+      - run: pnpm --filter @manutencao/api exec tsc -p tsconfig.json --noEmit
+
+  deploy:
+    needs: testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Preparar a chave SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Backup, pull da main, rebuild da API e espera healthy
+        env:
+          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
+        run: ssh -i ~/.ssh/deploy -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "$VPS_SSH_HOST"
+      - name: Conferir o /health pela internet
+        env:
+          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
+        run: curl -fsS --retry 5 --retry-delay 5 "https://${VPS_SSH_HOST#*@}/health"

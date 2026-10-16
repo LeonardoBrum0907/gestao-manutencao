@@ -68,6 +68,8 @@ Acesso do Claude: o usuário `claude` da VPS roda o `claude remote-control` e n�
 sudo install -o root -g root -m 0755 deploy/vps/admin/caderno-admin /usr/local/sbin/caderno-admin
 ```
 
+Deploy automático: `.github/workflows/deploy-api.yml` roda a cada push na `main` que mexa em `apps/api`, `packages/shared`, no lockfile ou no compose da VPS (e à mão pela aba Actions). Primeiro `pnpm test` e os tipos da API; se passarem, entra na VPS como `gh-deploy` e roda `caderno-admin deploy`, depois confere o `/health`. A chave desse usuário só roda esse comando. Para montar, rode na VPS `sudo bash deploy/vps/admin/instalar-deploy-github.sh` e cadastre os três valores que ele imprime em Settings › Secrets and variables › Actions (`VPS_SSH_HOST`, `VPS_SSH_KNOWN_HOSTS`, `VPS_SSH_KEY`). Rodar de novo troca a chave.
+
 ### IA (servidor MCP)
 
 A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências, pós-preventivas e fichas de documentação técnica pelas mesmas regras das telas. São 24 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.
