@@ -10,4 +10,4 @@ destino="${1:-$HOME/Backups/caderno-gestor}"
 mkdir -p "$destino"
 
 ssh -i ~/.ssh/id_backup -o BatchMode=yes "$vps" | tar -xf - -C "$destino"
-echo "$(date '+%F %T') backups no PC: $(ls -1 "$destino" | grep -c '^20') dias, último $(ls -1 "$destino" | grep '^20' | tail -1)"
+echo "$(date '+%F %T') backups no PC: $(ls -1 "$destino" | grep -c '^20') backups, último $(ls -1 "$destino" | grep '^20' | tail -1)"

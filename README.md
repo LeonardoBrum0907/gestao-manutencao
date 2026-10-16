@@ -54,7 +54,7 @@ curl -s https://$API_DOMAIN/health
 
 Atualizar depois de um merge: `git pull` e `docker compose -f docker-compose.vps.yml up -d --build --no-deps api`. O `vercel.json` repassa `/api`, `/health` e as rotas do MCP para `https://<API_DOMAIN>`.
 
-Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>/` o dump do banco e um `attachments.tar.gz` com os anexos, e apaga as pastas com mais de 14 dias. Roda pelo cron do usuário da VPS (`crontab -e`):
+Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>_<hora>/` (uma pasta por execução, então o backup de antes de um deploy não apaga o da madrugada) o dump do banco e um `attachments.tar.gz` com os anexos, e apaga as pastas com mais de 14 dias. Roda pelo cron do usuário da VPS (`crontab -e`):
 
 ```
 0 6 * * * /home/leo/caderno-gestor/deploy/vps/backup.sh >> /home/leo/backups/backup.log 2>&1
