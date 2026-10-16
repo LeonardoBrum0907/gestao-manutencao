@@ -18,6 +18,10 @@ describe("planilha da Matriz da equipe", () => {
     assert.equal(tab.widths.length, titles.length);
   });
 
+  it("subtítulo da aba diz o corte, a visão e quantos técnicos aparecem", () => {
+    assert.equal(tab.rows[1][0].value, `Qualificado: aderência de 80% ou mais · Visão: Treino · ${grid.memberCount} técnico(s)`);
+  });
+
   it("nota em fração para o formato de %, com o tom de perto do corte", () => {
     const caio = tab.rows.find((row) => row[0]?.value === "Caio");
     assert.deepEqual(caio?.[4], { value: 0.75, percent: true, tone: "near" });
