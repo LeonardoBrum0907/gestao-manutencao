@@ -4,6 +4,7 @@ import { expectedByLevel, type MatrixCatalogDto, type MatrixSkillDto } from "@ma
 import { DomainError } from "../../kernel/domain-error";
 import {
   assertMatrixEditable,
+  assertSkillInCategory,
   buildMatrix,
   expectedFor,
   normalizeEntry,
@@ -14,7 +15,7 @@ import {
 } from "./matrix";
 
 function skill(id: string, equipmentId: string, level: MatrixSkillDto["level"], archived = false): MatrixSkillDto {
-  return { id, equipmentId, subgroup: "Selagem", text: id, level, archived };
+  return { id, equipmentId, subgroup: "Selagem", text: id, level, category: "mechanical", archived };
 }
 
 const skills: MatrixSkillDto[] = [
@@ -156,6 +157,25 @@ describe("matriz do técnico", () => {
       assert.throws(() => requireSkill(id, catalog), (error: unknown) => error instanceof DomainError && error.code === "skill_archived");
     }
     assert.throws(() => requireSkill("X", catalog), (error: unknown) => error instanceof DomainError && error.statusCode === 404);
+  });
+});
+
+describe("nota pela categoria da função", () => {
+  const electrical: MatrixSkillDto = { ...skill("T1", "blistadeira-cam", "basic"), category: "electrical", text: "Ajustar sensor" };
+
+  it("aceita habilidade da categoria do colaborador ou de quem vê as duas", () => {
+    assert.doesNotThrow(() => assertSkillInCategory(electrical, "electrical"));
+    assert.doesNotThrow(() => assertSkillInCategory(electrical, null));
+  });
+
+  it("recusa habilidade de outra categoria dizendo qual é qual", () => {
+    assert.throws(() => assertSkillInCategory(electrical, "mechanical"), (error: unknown) => {
+      assert.ok(error instanceof DomainError);
+      assert.equal(error.code, "skill_category");
+      assert.equal(error.statusCode, 409);
+      assert.match(error.message, /"Ajustar sensor" é de Eletricista.*só as de Mecânico/);
+      return true;
+    });
   });
 });
 

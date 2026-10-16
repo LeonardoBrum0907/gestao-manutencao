@@ -1,9 +1,11 @@
 import {
   COMPETENCY_LEVEL_EXPECTED,
+  MATRIX_CATEGORY_LABELS,
   type CompetencyLevel,
   type CompetencyScore,
   type CompetencySummaryDto,
   type MatrixCatalogDto,
+  type MatrixCategory,
   type MatrixSkillDto,
   type MemberPosition,
 } from "@manutencao/shared";
@@ -131,6 +133,16 @@ export function requireSkill(skillId: string, catalog: MatrixCatalogDto): Matrix
     throw new DomainError("skill_archived", 409, "Habilidade arquivada não recebe nota. Reative no cadastro da matriz.");
   }
   return skill;
+}
+
+// A nota de uma habilidade que não é da categoria do colaborador ficaria guardada sem contar em nada.
+export function assertSkillInCategory(skill: MatrixSkillDto, category: MatrixCategory | null): void {
+  if (category === null || skill.category === category) return;
+  throw new DomainError(
+    "skill_category",
+    409,
+    `A habilidade "${skill.text}" é de ${MATRIX_CATEGORY_LABELS[skill.category]}, e a função do colaborador vê só as de ${MATRIX_CATEGORY_LABELS[category]}.`,
+  );
 }
 
 export function normalizeEntry(skillId: string, input: EntryInput): MatrixEntry | null {

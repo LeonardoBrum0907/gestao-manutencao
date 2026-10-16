@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { Roles } from "../application/roles";
 import { removalCheck } from "../../kernel/removal";
 
@@ -19,6 +19,11 @@ export class RolesController {
   @Patch(":id")
   rename(@Param("id") id: string, @Body() body: unknown) {
     return this.roles.rename(id, body);
+  }
+
+  @Put(":id/matrix-category")
+  setMatrixCategory(@Param("id") id: string, @Body() body: unknown) {
+    return this.roles.setMatrixCategory(id, body);
   }
 
   @Get(":id/removal")

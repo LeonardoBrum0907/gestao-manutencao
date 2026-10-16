@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { MatrixCatalogDto, MatrixEquipmentDto, MatrixSkillDto } from "@manutencao/shared";
+import { DEFAULT_MATRIX_CATEGORY, isMatrixCategory, type MatrixCatalogDto, type MatrixCategory, type MatrixEquipmentDto, type MatrixSkillDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { requireOrder } from "../../kernel/order";
 import { readObject, requiredBoolean, requiredString } from "../../kernel/parse";
@@ -7,6 +7,7 @@ import {
   assertEquipmentCanBeRemoved,
   assertEquipmentNameAvailable,
   assertSkillCanBeRemoved,
+  requireCategory,
   requireLevel,
   requireMinQualified,
   requireText,
@@ -58,13 +59,13 @@ export class MatrixCatalog {
   }
 
   async createSkill(body: unknown): Promise<MatrixSkillDto> {
-    return this.catalog.createSkill(await this.parseSkill(body));
+    return this.catalog.createSkill(await this.parseSkill(body, DEFAULT_MATRIX_CATEGORY));
   }
 
   async updateSkill(id: string, body: unknown): Promise<MatrixSkillDto> {
     const current = await this.catalog.findSkill(id);
     if (!current) throw new DomainError("not_found", 404, "Habilidade não encontrada.");
-    const input = await this.parseSkill(body);
+    const input = await this.parseSkill(body, isMatrixCategory(current.category) ? current.category : DEFAULT_MATRIX_CATEGORY);
     const archived = requiredBoolean(readObject(body), "archived");
     return this.catalog.updateSkill(id, { ...input, archived }, input.equipmentId !== current.equipmentId);
   }
@@ -81,7 +82,7 @@ export class MatrixCatalog {
     return this.catalog.load();
   }
 
-  private async parseSkill(body: unknown): Promise<SkillWrite> {
+  private async parseSkill(body: unknown, category: MatrixCategory): Promise<SkillWrite> {
     const source = readObject(body);
     const equipmentId = requiredString(source, "equipmentId", "Escolha o equipamento.");
     await this.requireEquipment(equipmentId, 400);
@@ -90,6 +91,7 @@ export class MatrixCatalog {
       subgroup: requireText(requiredString(source, "subgroup", "Informe o subconjunto."), "Informe o subconjunto."),
       text: requireText(requiredString(source, "text", "Escreva a habilidade."), "Escreva a habilidade."),
       level: requireLevel(requiredString(source, "level", "Escolha o nível.")),
+      category: requireCategory(source.category, category),
     };
   }
 

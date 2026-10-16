@@ -1,5 +1,5 @@
+import type { MatrixCategory } from "./matrix-category";
 import type { TeamLineDto, TeamMatrixLayoutDto } from "./team-matrix-layout";
-export const COMPETENCY_MATRIX_TITLE = "Check List de Conhecimento Específico Mecânico por Equipamento";
 
 // O catálogo (equipamentos e habilidades) é cadastro do coordenador e mora no banco.
 // Os 9 equipamentos e as 222 habilidades do SIGEM entram pela migration 20261005120000_matrix_catalog.
@@ -55,6 +55,8 @@ export type MatrixSkillDto = {
   subgroup: string;
   text: string;
   level: CompetencyLevel;
+  // De mecânico ou de técnico: cada colaborador vê só a da categoria da função dele.
+  category: MatrixCategory;
   archived: boolean;
 };
 
