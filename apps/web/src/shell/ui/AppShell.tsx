@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet, useMatch } from "react-router-dom";
 import { MENU_STATE } from "../../app/nav-trail";
 import { useSession } from "../data/session";
@@ -6,9 +6,29 @@ import { Icon } from "../../design/ui/icons";
 import { NotebookIcon } from "../../design/ui/brand-mark";
 import { Sidebar } from "./Sidebar";
 
+// Esc fecha o menu do celular e devolve o foco ao botão que o abriu, como nas janelas (dialog.ts).
+function useCloseMenuOnEscape(open: boolean, close: () => void) {
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      closeRef.current();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+}
+
 export function AppShell() {
   const session = useSession();
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useCloseMenuOnEscape(open, () => {
+    setOpen(false);
+    menuButton.current?.focus();
+  });
   // Telas de tabela larga usam a largura toda; as demais ficam numa coluna de leitura.
   const wide = useMatch("/competencias");
 
@@ -24,6 +44,7 @@ export function AppShell() {
         <header className="app-chrome flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-3 py-2 lg:hidden">
           <div className="flex items-center gap-1">
             <button
+              ref={menuButton}
               type="button"
               aria-label="Abrir menu"
               className="inline-flex h-10 w-10 items-center justify-center rounded-control text-app transition hover:bg-chip"
