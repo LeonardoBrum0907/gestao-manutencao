@@ -62,6 +62,12 @@ Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>/` o dump do banco e um
 
 O horário do cron é UTC (6h = 3h de Brasília). No PC, `scripts/puxar-backup-vps.sh` copia essa pasta para `~/Backups/caderno-gestor` usando a chave `~/.ssh/id_backup`, que na VPS só consegue ler os backups (linha do `authorized_keys` com `restrict,command="tar -C /home/leo/backups -cf - ."`). Restaurar: `pg_restore --clean --no-owner` do `manutencao.dump` e `tar -xzf attachments.tar.gz` dentro de `/data` no container da API.
 
+Acesso do Claude: o usuário `claude` da VPS roda o `claude remote-control` e não está no grupo `docker` (quem está lá manda na máquina toda). O que ele pode fazer nos containers passa por `deploy/vps/admin/caderno-admin` (`status`, `logs`, `backup`, `deploy`, `reiniciar api`), instalado como cópia de dono root em `/usr/local/sbin` e liberado no sudoers por `deploy/vps/admin/sudoers-claude`. Depois de mudar o script no repositório, instale a cópia de novo:
+
+```bash
+sudo install -o root -g root -m 0755 deploy/vps/admin/caderno-admin /usr/local/sbin/caderno-admin
+```
+
 ### IA (servidor MCP)
 
 A API responde em `/mcp` como servidor MCP: um app de IA (Claude no navegador, no celular, no Desktop ou no Claude Code) consulta e lança chamados, RPs, pendências, pós-preventivas e fichas de documentação técnica pelas mesmas regras das telas. São 24 ferramentas; não há nenhuma de excluir. Cada lançamento sai no log da API como `[mcp] <ferramenta>`.

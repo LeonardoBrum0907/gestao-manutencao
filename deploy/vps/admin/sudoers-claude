@@ -1,0 +1,3 @@
+# Instalar em /etc/sudoers.d/caderno-claude (dono root, modo 0440), conferido com visudo -c.
+# O usuário claude só roda este script como root, sem senha. Os argumentos são validados no script.
+claude ALL=(root) NOPASSWD: /usr/local/sbin/caderno-admin
