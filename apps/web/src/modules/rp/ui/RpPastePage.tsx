@@ -3,11 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { ChamadoDto, LineDto, RpDraftDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, TextArea } from "../../../design/ui/controls";
-import { useLines } from "../../cadastro/data/cadastro";
+import { useLines, useMachines } from "../../cadastro/data/cadastro";
 import { useChamado } from "../../turno/data/shift";
 import { chamadoHref } from "../../turno/model/chamado";
 import { useParseRp } from "../data/rp";
 import { emptyRpValues, valuesFromRp, type RpFormValues } from "../model/rp";
+import { withMachineFromTag } from "../model/rp-machine-tag";
 import { RpForm } from "./RpForm";
 
 // RP escrito a partir de um chamado: já vem com dia, linha, TAG, técnicos e o problema.
@@ -81,6 +82,8 @@ export function RpPastePage() {
 function PasteRp() {
   const navigate = useNavigate();
   const parse = useParseRp();
+  const lines = useLines();
+  const machines = useMachines();
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<RpDraftDto[] | null>(null);
   const [index, setIndex] = useState(0);
@@ -102,7 +105,8 @@ function PasteRp() {
     else navigate("/rp");
   }
 
-  const draft = drafts?.[index];
+  // A ficha guarda os valores iniciais ao abrir: espera o cadastro para a TAG achar a máquina.
+  const draft = lines.isPending || machines.isPending ? undefined : drafts?.[index];
   return (
     <div className="mx-auto max-w-3xl">
       <PageTitle
@@ -144,7 +148,7 @@ function PasteRp() {
           </div>
           <RpForm
             key={`${index}-${draft.rawText.length}`}
-            initial={valuesFromRp(draft)}
+            initial={withMachineFromTag(valuesFromRp(draft), machines.data ?? [], lines.data ?? [])}
             rawText={draft.rawText}
             warnings={draft.warnings}
             submitLabel={index + 1 < drafts.length ? "Salvar e ir para o próximo" : "Salvar RP"}
