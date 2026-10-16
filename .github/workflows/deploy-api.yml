@@ -12,7 +12,7 @@ on:
       - packages/shared/**
       - pnpm-lock.yaml
       - docker-compose.vps.yml
-      - deploy/vps/Caddyfile
+      - deploy/vps/caddy/**
       - .github/workflows/deploy-api.yml
   workflow_dispatch:
 
