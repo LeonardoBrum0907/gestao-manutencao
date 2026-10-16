@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Comandos que o usuário `claude` da VPS pode rodar como root, via `sudo caderno-admin …`.
+# O `claude` não está no grupo docker (quem está lá manda na máquina toda), então
+# tudo que mexe nos containers passa por aqui, com uma lista fechada de comandos.
+# Instalado como cópia de dono root em /usr/local/sbin: um git pull não muda o que roda como root.
+set -euo pipefail
+
+readonly DONO=leo
+readonly PASTA=/home/leo/caderno-gestor
+readonly SERVICOS="api db caddy"
+
+uso() {
+  cat <<'TEXTO'
+Uso: sudo caderno-admin <comando>
+  status                     containers, disco e memória
+  logs <api|db|caddy> [N]    últimas N linhas (padrão 200, máximo 2000)
+  backup                     roda deploy/vps/backup.sh
+  deploy                     backup, git pull da main, rebuild da API e espera o /health
+  reiniciar api              reinicia só o container da API
+TEXTO
+}
+
+falhar() {
+  echo "caderno-admin: $1" >&2
+  uso >&2
+  exit 2
+}
+
+# Roda como o dono do repositório, que está no grupo docker e tem o .env.
+como_dono() {
+  (cd "$PASTA" && runuser -u "$DONO" -- "$@")
+}
+
+compose() {
+  como_dono docker compose -f docker-compose.vps.yml "$@"
+}
+
+cmd_status() {
+  compose ps
+  echo
+  df -h / | tail -1
+  free -h | head -2
+}
+
+cmd_logs() {
+  local servico="${1:-}" linhas="${2:-200}"
+  [[ " $SERVICOS " == *" $servico "* ]] || falhar "serviço '$servico' inválido; esperado um de: $SERVICOS"
+  [[ "$linhas" =~ ^[0-9]{1,4}$ && "$linhas" -ge 1 && "$linhas" -le 2000 ]] || falhar "linhas '$linhas' inválido; esperado número de 1 a 2000"
+  compose logs --no-color --tail "$linhas" "$servico"
+}
+
+cmd_backup() {
+  como_dono "$PASTA/deploy/vps/backup.sh"
+}
+
+# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
+esperar_api() {
+  local id tentativa
+  id="$(compose ps -q api)"
+  for tentativa in $(seq 1 40); do
+    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id")" == healthy ]] && { echo "API healthy"; return 0; }
+    sleep 3
+  done
+  echo "API não ficou healthy; veja: sudo caderno-admin logs api" >&2
+  return 1
+}
+
+cmd_deploy() {
+  local ramo
+  ramo="$(como_dono git rev-parse --abbrev-ref HEAD)"
+  [[ "$ramo" == main ]] || falhar "repositório no ramo '$ramo'; o deploy só roda na main"
+  cmd_backup
+  como_dono git pull --ff-only
+  como_dono git log --oneline -1
+  compose up -d --build --no-deps api
+  esperar_api
+}
+
+cmd_reiniciar() {
+  [[ "${1:-}" == api ]] || falhar "só 'reiniciar api' é permitido; recebido: '${1:-}'"
+  compose restart api
+  esperar_api
+}
+
+principal() {
+  local comando="${1:-}"
+  shift || true
+  case "$comando" in
+    status) cmd_status ;;
+    logs) cmd_logs "$@" ;;
+    backup) cmd_backup ;;
+    deploy) cmd_deploy ;;
+    reiniciar) cmd_reiniciar "$@" ;;
+    *) falhar "comando '$comando' desconhecido" ;;
+  esac
+}
+
+principal "$@"
