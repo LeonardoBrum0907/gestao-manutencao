@@ -10,7 +10,7 @@ import { RowMenu } from "../../../design/ui/row-menu";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteTeam, useMembers, useSaveTeam, useTeamMembership, useTeams, type TeamWrite } from "../data/cadastro";
 import { memberStatusClass, memberStatusLabel } from "../model/labels";
-import { teamCandidateLabel } from "../model/team";
+import { teamCandidateLabel, teamHeadcountLabel } from "../model/team";
 import { TEAM_MEMBER_COLUMNS, teamMemberStacked } from "./member-table";
 
 const empty: TeamWrite = { name: "", description: "", supervisorId: null };
@@ -67,7 +67,7 @@ function TeamCard({
               "Sem supervisor"
             )}
             {" · "}
-            {people.length === 1 ? "1 técnico" : `${people.length} técnicos`}
+            {teamHeadcountLabel(people)}
           </span>
           {team.description ? <span className="mt-1 block text-sm text-muted">{team.description}</span> : null}
         </button>

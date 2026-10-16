@@ -30,3 +30,16 @@ export function teamCandidateLabel(member: Pick<MemberDto, "name" | "status">, c
   const notes = [memberStatusNote(member), currentTeamName ? `sai de ${currentTeamName}` : null].filter(Boolean);
   return notes.length ? `${member.name} (${notes.join(", ")})` : member.name;
 }
+
+/**
+ * Quantos técnicos a equipe tem e, se alguém estiver fora (inativo, afastado, férias), quantos estão ativos.
+ * A Matriz da equipe só conta os ativos; sem a ressalva, os dois números não batiam.
+ * @example teamHeadcountLabel([ana, joao]) // "2 técnicos, 1 ativo"
+ */
+export function teamHeadcountLabel(people: readonly Pick<MemberDto, "status">[]): string {
+  const total = people.length === 1 ? "1 técnico" : `${people.length} técnicos`;
+  const active = people.filter((person) => person.status === "active").length;
+  if (active === people.length) return total;
+  if (active === 0) return `${total}, nenhum ativo`;
+  return `${total}, ${active} ${active === 1 ? "ativo" : "ativos"}`;
+}
