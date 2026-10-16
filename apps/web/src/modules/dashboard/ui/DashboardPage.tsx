@@ -71,7 +71,7 @@ export function DashboardPage() {
       {overview.isError ? <Notice>{errorMessage(overview.error)}</Notice> : null}
       {data ? (
         <>
-          <NowBand now={data.now} flow={data.flow} at={new Date(data.generatedAt)} />
+          <NowBand now={data.now} flow={data.flow} at={new Date(data.generatedAt)} factoryId={data.factoryId} />
           <MachinesBand machines={data.machines} />
           <TeamBand people={data.people} team={team.data} />
         </>
