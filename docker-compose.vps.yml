@@ -26,6 +26,8 @@ services:
       dockerfile: apps/api/Dockerfile
       target: production
     restart: unless-stopped
+    # Repassa o SIGTERM ao node e recolhe processos filhos: o container para na hora no deploy.
+    init: true
     env_file:
       - path: .env
         required: false
