@@ -3,10 +3,11 @@ import type { DashboardChamadoDto, DashboardFlowWeekDto, DashboardNowDto } from 
 import { dayOf } from "../../turno/model/chamado";
 import { formatDuration, LONG_OPEN_MINUTES, minutesSince, shortDate } from "../model/overview-format";
 import { openChamadosLink } from "../model/open-chamados-link";
+import { rpsInAnalysisLink } from "../model/rps-in-analysis-link";
 import { Band, Kpi, Panel } from "./band";
 import { ColumnChart } from "./ColumnChart";
 
-function NowKpis({ now, at }: { now: DashboardNowDto; at: Date }) {
+function NowKpis({ now, at, factoryId }: { now: DashboardNowDto; at: Date; factoryId: string | null }) {
   const long = now.openChamados.filter((item) => minutesSince(item.openedAt, at) >= LONG_OPEN_MINUTES).length;
   const stopped = now.stoppedLines.map((line) => line.name).join(", ");
   const settingUp = now.settingUpLines ? ` · ${now.settingUpLines} em ajuste` : "";
@@ -16,7 +17,7 @@ function NowKpis({ now, at }: { now: DashboardNowDto; at: Date }) {
       <Kpi to="/meu-dia" label="Tarefas vencidas" value={now.overdueTasks} sub={`${now.overdueHighTasks} de alta prioridade`} tone={now.overdueTasks ? "danger" : "neutral"} />
       <Kpi to="/meu-dia" label="Vencem hoje" value={now.dueTodayTasks} tone="today" />
       <Kpi to="/configuracoes/fabricas" label="Linhas paradas" value={now.stoppedLines.length} sub={`${stopped || "nenhuma"}${settingUp}`} tone={now.stoppedLines.length ? "danger" : "neutral"} />
-      <Kpi to="/rp?status=analysis" label="RPs em análise" value={now.rpsInAnalysis} sub={`${now.rpsWithoutRootCause} sem causa raiz`} />
+      <Kpi to={rpsInAnalysisLink(factoryId)} label="RPs em análise" value={now.rpsInAnalysis} sub={`${now.rpsWithoutRootCause} sem causa raiz`} />
       <Kpi to="/entrada" label="Rascunhos na Entrada" value={now.drafts} sub={now.oldestDraftAt ? `o mais antigo de ${shortDate(now.oldestDraftAt)}` : "nada para triar"} />
     </div>
   );
@@ -69,11 +70,11 @@ function FlowPanel({ flow }: { flow: DashboardFlowWeekDto[] }) {
   );
 }
 
-/** Faixa Agora: o que precisa do coordenador hoje. */
-export function NowBand({ now, flow, at }: { now: DashboardNowDto; flow: DashboardFlowWeekDto[]; at: Date }) {
+/** Faixa Agora: o que precisa do coordenador hoje. `factoryId` é a fábrica do filtro, para os links levarem junto. */
+export function NowBand({ now, flow, at, factoryId }: { now: DashboardNowDto; flow: DashboardFlowWeekDto[]; at: Date; factoryId: string | null }) {
   return (
     <Band id="agora" title="Agora">
-      <NowKpis now={now} at={at} />
+      <NowKpis now={now} at={at} factoryId={factoryId} />
       <div className="grid gap-3 lg:grid-cols-2">
         <OpenChamados chamados={now.openChamados} at={at} />
         <FlowPanel flow={flow} />
