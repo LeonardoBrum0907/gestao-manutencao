@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { DEFAULT_TEAM_MATRIX_LAYOUT } from "@manutencao/shared";
 import { teamFixture } from "./team-fixture";
 import { teamGrid } from "./team-grid";
-import { teamMatrixTab, teamTrainingTab } from "./team-sheet";
+import { technicianCountLabel, teamMatrixTab, teamTrainingTab } from "./team-sheet";
 
 describe("planilha da Matriz da equipe", () => {
   const team = teamFixture();
@@ -19,7 +19,13 @@ describe("planilha da Matriz da equipe", () => {
   });
 
   it("subtítulo da aba diz o corte, a visão e quantos técnicos aparecem", () => {
-    assert.equal(tab.rows[1][0].value, `Qualificado: aderência de 80% ou mais · Visão: Treino · ${grid.memberCount} técnico(s)`);
+    assert.equal(tab.rows[1][0].value, "Qualificado: aderência de 80% ou mais · Visão: Treino · 4 técnicos");
+  });
+
+  it("conta os técnicos no singular ou no plural, sem \"(s)\"", () => {
+    assert.equal(technicianCountLabel(0), "0 técnicos");
+    assert.equal(technicianCountLabel(1), "1 técnico");
+    assert.equal(technicianCountLabel(3), "3 técnicos");
   });
 
   it("nota em fração para o formato de %, com o tom de perto do corte", () => {

@@ -57,13 +57,21 @@ function memberRows(team: TeamMatrixDto, grid: TeamGrid, view: TeamMatrixView): 
 }
 
 /**
+ * Quantos técnicos a grade mostra, no singular ou no plural, para o subtítulo da folha A4 e da planilha.
+ * @example technicianCountLabel(1) // "1 técnico"
+ */
+export function technicianCountLabel(count: number): string {
+  return count === 1 ? "1 técnico" : `${count} técnicos`;
+}
+
+/**
  * Aba "Matriz": a grade como está na tela (mesma ordem, grupos e filtros), com a nota em % e a cor do tom.
  * @example teamMatrixTab(team, grid, "training").rows[0] // título com a data
  */
 export function teamMatrixTab(team: TeamMatrixDto, grid: TeamGrid, view: TeamMatrixView, today: string): SheetTab {
   const intro: SheetRow[] = [
     [{ value: `Matriz da equipe · ${today}`, bold: true }],
-    [{ value: `Qualificado: aderência de ${team.qualifiedAdherence}% ou mais · Visão: ${TEAM_MATRIX_VIEW_LABELS[view]} · ${grid.memberCount} técnico(s)` }],
+    [{ value: `Qualificado: aderência de ${team.qualifiedAdherence}% ou mais · Visão: ${TEAM_MATRIX_VIEW_LABELS[view]} · ${technicianCountLabel(grid.memberCount)}` }],
     [],
   ];
   const head = headerRows(team, grid);

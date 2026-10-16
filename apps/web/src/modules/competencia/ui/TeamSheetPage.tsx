@@ -9,6 +9,7 @@ import { useTeamMatrix } from "../data/matrix";
 import { teamGrid, type TeamGrid } from "../model/team-grid";
 import { teamKpis, trainingNeeds } from "../model/team-insights";
 import { readTeamSearch } from "../model/team-search";
+import { technicianCountLabel } from "../model/team-sheet";
 import { parseTeamSheetSections, type TeamSheetSection } from "../model/team-sheet-sections";
 import { TeamSheetGrid } from "./team/TeamSheetGrid";
 import "../../../design/ui/report.css";
@@ -69,7 +70,7 @@ function Training({ team }: { team: TeamMatrixDto }) {
 
 function subtitle(team: TeamMatrixDto, grid: TeamGrid, shift: string): string {
   const shiftText = shift ? (MEMBER_SHIFT_LABELS[shift as MemberShift] ?? shift) : "todos os turnos";
-  return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]} · ${shiftText} · ${grid.memberCount} técnico(s) · qualificado com ${team.qualifiedAdherence}% ou mais`;
+  return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]} · ${shiftText} · ${technicianCountLabel(grid.memberCount)} · qualificado com ${team.qualifiedAdherence}% ou mais`;
 }
 
 function SheetBody({ team, grid, sections }: { team: TeamMatrixDto; grid: TeamGrid; sections: readonly TeamSheetSection[] }) {
