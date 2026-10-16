@@ -15,7 +15,8 @@ Uso: sudo caderno-admin <comando>
   status                     containers, disco e memória
   logs <api|db|caddy> [N]    últimas N linhas (padrão 200, máximo 2000)
   backup                     roda deploy/vps/backup.sh
-  deploy                     backup, git pull da main, rebuild da API e espera o /health
+  deploy                     backup, git pull da main, rebuild da API e espera healthy;
+                             se a API nova não subir, volta código e imagem para a versão anterior
   reiniciar api              reinicia só o container da API
 TEXTO
 }
@@ -58,22 +59,61 @@ esperar_api() {
   local id tentativa
   id="$(compose ps -q api)"
   for tentativa in $(seq 1 40); do
-    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id")" == healthy ]] && { echo "API healthy"; return 0; }
+    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "API healthy"; return 0; }
     sleep 3
   done
   echo "API não ficou healthy; veja: sudo caderno-admin logs api" >&2
   return 1
 }
 
+# Nome da imagem que o compose gera para a API (caderno-gestor-api).
+imagem_api() {
+  compose config --images api
+}
+
+# Marca a imagem em uso como :anterior, para o rollback ter para onde voltar.
+guardar_imagem_atual() {
+  local id
+  id="$(compose ps -q api)"
+  [[ -n "$id" ]] || return 0
+  docker tag "$(docker inspect -f '{{.Image}}' "$id")" "$(imagem_api):anterior"
+}
+
+# Sobe o Caddy se o compose dele mudou e relê o Caddyfile sem derrubar conexões.
+atualizar_caddy() {
+  compose up -d --no-deps caddy
+  compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+}
+
+# Volta o código e a imagem para a versão de antes e sai com erro, para o GitHub Actions ficar vermelho.
+# O banco não volta: por isso as migrações só acrescentam (AGENTS.md), e a versão anterior roda no banco novo.
+voltar_versao() {
+  local anterior="$1"
+  echo "caderno-admin: deploy falhou; voltando para $anterior" >&2
+  como_dono git reset --keep "$anterior"
+  atualizar_caddy || true
+  if docker image inspect "$(imagem_api):anterior" >/dev/null 2>&1; then
+    docker tag "$(imagem_api):anterior" "$(imagem_api):latest"
+    compose up -d --no-deps --no-build --force-recreate api
+    esperar_api || echo "caderno-admin: a versão anterior também não ficou healthy" >&2
+  fi
+  exit 1
+}
+
 cmd_deploy() {
-  local ramo
+  local ramo anterior
   ramo="$(como_dono git rev-parse --abbrev-ref HEAD)"
   [[ "$ramo" == main ]] || falhar "repositório no ramo '$ramo'; o deploy só roda na main"
   cmd_backup
+  anterior="$(como_dono git rev-parse HEAD)"
+  guardar_imagem_atual
   como_dono git pull --ff-only
   como_dono git log --oneline -1
-  compose up -d --build --no-deps api
-  esperar_api
+  atualizar_caddy || voltar_versao "$anterior"
+  # Build separado do up: se o build quebra, o container antigo nem é tocado.
+  compose build api || voltar_versao "$anterior"
+  compose up -d --no-deps --no-build api
+  esperar_api || voltar_versao "$anterior"
 }
 
 cmd_reiniciar() {
