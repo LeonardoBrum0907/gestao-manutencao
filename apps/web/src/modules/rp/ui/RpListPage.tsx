@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { RpListItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
@@ -7,6 +8,7 @@ import { Icon } from "../../../design/ui/icons";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { flattenRp, useRpPages } from "../data/rp";
 import { rpStatusOptions } from "../model/rp";
+import { moreFiltersLabel } from "../model/rp-filters";
 import { RP_COLUMNS, rpStacked, type RpTableRow } from "./rp-table";
 
 // Nome da linha cadastrada (ou a linha do texto) e a TAG, sem repetir o mesmo nome duas vezes.
@@ -50,6 +52,8 @@ export function RpListPage() {
   const lineNames = new Map(lines.data?.map((line) => [line.id, line.name]));
   const memberNames = new Map(members.data?.map((member) => [member.id, member.name]));
   const filtered = FILTERS.some((key) => params.get(key));
+  const hiddenInUse = FILTERS.filter((key) => key !== "q" && params.get(key)).length;
+  const [moreOpen, setMoreOpen] = useState(false);
   const rows: RpTableRow[] = items.map((rp) => ({ rp, place: place(rp, lineNames), technicians: technicianNames(rp, memberNames) }));
 
   function setFilter(key: (typeof FILTERS)[number], value: string) {
@@ -76,7 +80,9 @@ export function RpListPage() {
         }
       />
       <Card className="mb-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* No celular os 10 filtros empilhados empurravam a lista para baixo da primeira tela: fechado, ali só o
+            primeiro campo (Buscar) fica à vista; os outros aparecem em "Mais filtros". */}
+        <div id="rp-filtros" className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${moreOpen ? "" : "max-sm:[&>label:nth-of-type(n+2)]:hidden"}`}>
           <Field label="Buscar">
             <TextInput
               type="search"
@@ -85,6 +91,15 @@ export function RpListPage() {
               onChange={(event) => setFilter("q", event.target.value)}
             />
           </Field>
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-controls="rp-filtros"
+            onClick={() => setMoreOpen((open) => !open)}
+            className="order-last justify-self-start text-sm font-semibold text-accent hover:underline sm:hidden"
+          >
+            {moreOpen ? "Menos filtros" : moreFiltersLabel(hiddenInUse)}
+          </button>
           <Field label="Status">
             <SelectInput value={params.get("status") ?? ""} onChange={(event) => setFilter("status", event.target.value)}>
               <option value="">Todos</option>
