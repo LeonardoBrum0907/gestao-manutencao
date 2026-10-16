@@ -10,6 +10,7 @@ import { Machines } from "../../cadastro/application/machines";
 import { Members } from "../../cadastro/application/members";
 import { Subassemblies } from "../../cadastro/application/subassemblies";
 import { Teams } from "../../cadastro/application/teams";
+import { MatrixCatalog } from "../../competencia/application/matrix-catalog";
 import { MemberMatrix } from "../../competencia/application/member-matrix";
 import { TeamMatrix } from "../../competencia/application/team-matrix";
 import { ShowDashboard } from "../../dashboard/application/show-dashboard";
@@ -38,6 +39,7 @@ export class McpUseCases implements OnModuleInit {
   rps!: Rps;
   postPreventives!: PostPreventives;
   memberMatrix!: MemberMatrix;
+  matrixCatalog!: MatrixCatalog;
   teamMatrix!: TeamMatrix;
   performance!: MemberPerformance;
   pdi!: MemberPdi;
@@ -63,6 +65,7 @@ export class McpUseCases implements OnModuleInit {
     this.rps = get(Rps);
     this.postPreventives = get(PostPreventives);
     this.memberMatrix = get(MemberMatrix);
+    this.matrixCatalog = get(MatrixCatalog);
     this.teamMatrix = get(TeamMatrix);
     this.performance = get(MemberPerformance);
     this.pdi = get(MemberPdi);

@@ -15,6 +15,7 @@ import { parseRecordList } from "../../registro/application/parse-record-list";
 import { mcpDue, mcpDueChange } from "../domain/due";
 import { matches, overlay } from "../domain/merge";
 import { registerDocTools } from "./mcp-doc-tools";
+import { registerMatrixTools } from "./mcp-matrix-tools";
 import { answer, CHANGE, CREATE, id, optionalText, READ, toolWriter, type ToolLog } from "./mcp-tool-kit";
 import type { McpUseCases } from "./mcp-use-cases";
 
@@ -27,6 +28,7 @@ export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábri
 - Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com o ponto de atenção para a próxima.
 - Antes de qualquer ferramenta que grava, mostre ao gestor o que vai gravar.
 - Documentação técnica: fichas curtas tiradas dos manuais (código de erro, interface entre máquinas, sinal, peça, parâmetro, procedimento), cada uma com a fonte. Antes de responder sobre um alarme, uma peça ou a ligação entre máquinas, use buscar_documentacao. Ao ler um PDF enviado pelo gestor, crie uma ficha por fato com criar_ficha, citando documentId (listar_documentos) e página ou folha; marque reviewNeeded quando a leitura ficou em dúvida.
+- Matriz de competências: habilidades por equipamento e subconjunto, nota de 0 a 4 por técnico. Ache os ids em catalogo_da_matriz, cadastre com cadastrar_habilidades e lance com dar_nota_matriz.
 - Não há ferramenta de excluir: exclusão é feita na tela.`;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -94,6 +96,7 @@ const chamadoFields = {
 export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog): void {
   const write = toolWriter(log);
   registerDocTools(server, uc, log);
+  registerMatrixTools(server, uc, log);
 
   // ---- Consultas ----
 
