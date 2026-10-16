@@ -6,6 +6,7 @@ import { defaultRecordOrder, filterRecords, matchesSearch, placeLabel, recordGro
 const names = {
   lines: new Map([["l1", "MED 01"], ["l2", "CAM 01"]]),
   machines: new Map([["m1", "Blistadeira"]]),
+  tags: new Map([["m1", "EBS-BLI-01"]]),
   subassemblies: new Map([["s1", "Desbobinador"]]),
   members: new Map([["p1", "Dennes Oliveira"]]),
 };
@@ -45,6 +46,13 @@ describe("linhas de Registros", () => {
     assert.equal(matchesSearch(problem, "filme cam"), false);
     const feedback = withNames(item("f", { type: "feedback", body: "Atenção ao checklist", memberId: "p1" }), names);
     assert.equal(matchesSearch(feedback, "atencao dennes"), true);
+  });
+
+  // Regressão: a TAG da máquina (como o turno chama a máquina) não entrava na busca.
+  it("acha pela TAG da máquina, inteira ou em parte", () => {
+    assert.equal(matchesSearch(problem, "EBS-BLI-01"), true);
+    assert.equal(matchesSearch(problem, "bli-01 filme"), true);
+    assert.equal(matchesSearch(withNames(item("t", { body: "Trocar correia" }), names), "bli-01"), false);
   });
 });
 

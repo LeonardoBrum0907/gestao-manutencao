@@ -69,6 +69,7 @@ function useRecordRows(): { rows: RecordRow[] | null; error: unknown } {
   const names = {
     lines: new Map(lines.data?.map((line) => [line.id, line.name])),
     machines: new Map(machines.data?.map((machine) => [machine.id, machine.name])),
+    tags: new Map(machines.data?.flatMap((machine) => (machine.tag ? [[machine.id, machine.tag] as const] : []))),
     subassemblies: new Map(subassemblies.data?.map((item) => [item.id, item.name])),
     members: new Map(members.data?.map((member) => [member.id, member.name])),
   };
@@ -122,7 +123,7 @@ export function RecordsPage() {
       <div className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-[minmax(0,1fr)_repeat(4,minmax(0,11rem))]">
         <label className="col-span-2 lg:col-span-1">
           <span className="sr-only">Procurar</span>
-          <TextInput type="search" value={filter.q} placeholder="Procurar no texto, linha, máquina ou pessoa" onChange={(event) => update({ q: event.target.value || null })} />
+          <TextInput type="search" value={filter.q} placeholder="Texto, lugar, TAG ou pessoa" onChange={(event) => update({ q: event.target.value || null })} />
         </label>
         <SelectInput aria-label="Situação" value={filter.scope} onChange={(event) => update({ situacao: event.target.value === "abertos" ? null : event.target.value })}>
           {STATUS_SCOPES.map((scope) => (
