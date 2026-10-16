@@ -2,7 +2,7 @@
 
 Monorepo pnpm em TypeScript: `apps/api` (NestJS + Prisma), `apps/web` (Vite + React) e `packages/shared`.
 
-Duas partes. **Código novo** vale para tudo que você escreve ou altera. **Código existente** diz como mexer no que já está aqui, que é anterior a estas regras.
+Três partes. **Versionamento** diz como escrever commits, branches e PRs. **Código novo** vale para tudo que você escreve ou altera. **Código existente** diz como mexer no que já está aqui, que é anterior a estas regras.
 
 Base: "Clean Code para agentes de IA" de Fabio Akita (akitaonrails.com/2026/04/20/clean-code-para-agentes-de-ia), adaptado para TypeScript, mais a regra do escoteiro (Uncle Bob) e testes de caracterização e seams (Michael Feathers).
 
@@ -12,6 +12,32 @@ Base: "Clean Code para agentes de IA" de Fabio Akita (akitaonrails.com/2026/04/2
 - Tipos da API: `pnpm --filter @manutencao/api exec tsc -p tsconfig.json --noEmit`
 - Tipos do web: `pnpm --filter @manutencao/web exec tsc -p tsconfig.json --noEmit`
 - Build de tudo: `pnpm build`
+
+# Versionamento
+
+Commits, branches, títulos e descrições de PR são em inglês. O código, os comentários e a documentação do repositório continuam em português. Commits anteriores a 2026-10-16 ficam como estão no histórico.
+
+## Commits: Conventional Commits
+
+- Formato: `<tipo>(<escopo>): <descrição>` (https://www.conventionalcommits.org).
+- Tipos: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style`, `revert`.
+- Escopos: `api`, `web`, `shared`, `db` (schema e migrações do Prisma), `deploy` (`deploy/`, arquivos do compose, `vercel.json`), `scripts`, `deps`. Sem escopo quando a mudança pega o repositório todo.
+- Descrição em inglês, no imperativo, minúscula, sem ponto final, até 72 caracteres. Ex.: `fix(web): keep reminder time when moving a task to today`.
+- Corpo (opcional), em inglês: o PORQUÊ, quebrado em 72 colunas. Cite o PR ou issue (`Refs #96`).
+- Mudança que quebra quem chama: `!` depois do escopo (`feat(api)!: rename shift routes`) e rodapé `BREAKING CHANGE:` dizendo o que muda para quem chama.
+- Uma mudança lógica por commit. Refatoração e mudança de comportamento nunca no mesmo commit (ver **Código existente**).
+
+## Branches
+
+- Formato: `<tipo>/<descricao-curta>` em inglês, com os mesmos tipos dos commits. Ex.: `fix/machines-status-filter`.
+- Quando a ferramenta exige prefixo (as sessões do Claude usam `claude/`), mantenha o prefixo e ponha o tipo logo depois: `claude/fix-machines-status-filter`.
+- Apague a branch depois que o PR for mesclado ou fechado.
+- `main` é a única branch permanente. Nunca faça force-push nela.
+
+## Pull requests
+
+- Título no mesmo formato do commit, em inglês.
+- Descrição em inglês: o que muda para quem usa, por quê, e como foi conferido (`pnpm test`, checagem de tipos, prints).
 
 # Código novo
 
