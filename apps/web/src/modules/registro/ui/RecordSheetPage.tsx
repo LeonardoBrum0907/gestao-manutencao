@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../../design/ui/controls";
-import { chamadoHref, dayOf } from "../../turno/model/chamado";
 import { OcorrenciaForm } from "../../turno/ui/OcorrenciaForm";
 import { useRpOfProblem } from "../../rp/data/rp";
 import { useRecord } from "../data/records";
 import { originLabel } from "../model/record";
-import type { RecordType } from "@manutencao/shared";
+import { sheetRedirect } from "../model/sheet-redirect";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
 
 // O Problema de um RP é só o espelho: a ficha de verdade é a do RP.
@@ -28,18 +27,6 @@ function RpMirror({ recordId }: { recordId: string }) {
   );
 }
 
-// Onde o modal do registro abre: rascunho na Entrada, o resto em Registros, já no tipo dele.
-const listOf: Record<RecordType, string> = {
-  entry: "/entrada?",
-  task: "/registros?tipo=tarefas&situacao=todos&",
-  problem: "/registros?tipo=problemas&situacao=todos&",
-  feedback: "/registros?tipo=feedbacks&situacao=todos&",
-};
-
-function inboxRecordHref(id: string, type: RecordType): string {
-  return `${listOf[type]}registro=${id}`;
-}
-
 // Problema de ocorrência ou de RP (o resto abre no modal de Registros ou na tela de Chamados).
 export function RecordSheetPage() {
   const { id = "" } = useParams();
@@ -49,10 +36,8 @@ export function RecordSheetPage() {
   if (record.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!record.data) return <p className="text-sm text-danger">Registro não encontrado.</p>;
   const data = record.data;
-  // Chamado tem tela própria: abre a lista do dia dele, com o painel aberto.
-  if (data.origin === "chamado") return <Navigate to={chamadoHref({ id: data.id, day: dayOf(new Date(data.occurredAt)) })} replace />;
-  // Registro lançado pela Entrada abre no modal, por cima da lista do tipo dele.
-  if (data.origin === "inbox") return <Navigate to={inboxRecordHref(data.id, data.type)} replace />;
+  const redirect = sheetRedirect(data);
+  if (redirect) return <Navigate to={redirect} replace />;
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle
