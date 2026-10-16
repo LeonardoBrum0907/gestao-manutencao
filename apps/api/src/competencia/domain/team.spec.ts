@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { COMPETENCY_LEVEL_EXPECTED, type MatrixCatalogDto } from "@manutencao/shared";
+import { COMPETENCY_LEVEL_EXPECTED, type MatrixCatalogDto, type MatrixCategory } from "@manutencao/shared";
 import type { MatrixEntry } from "./matrix";
-import { buildTeamMatrix, coverageStatus, type TeamMemberInput } from "./team";
+import { buildTeamMatrix, coverageStatus, inTeamCategory, type TeamMemberInput } from "./team";
 
 const catalog: MatrixCatalogDto = {
   equipments: [
@@ -11,10 +11,10 @@ const catalog: MatrixCatalogDto = {
     { id: "e3", name: "Antiga", archived: true, minQualified: 0 },
   ],
   skills: [
-    { id: "s1", equipmentId: "e1", subgroup: "A", text: "a", level: "basic", archived: false },
-    { id: "s2", equipmentId: "e1", subgroup: "A", text: "b", level: "basic", archived: false },
-    { id: "s3", equipmentId: "e2", subgroup: "B", text: "c", level: "basic", archived: false },
-    { id: "s4", equipmentId: "e3", subgroup: "C", text: "d", level: "basic", archived: false },
+    { id: "s1", equipmentId: "e1", subgroup: "A", text: "a", level: "basic", category: "mechanical", archived: false },
+    { id: "s2", equipmentId: "e1", subgroup: "A", text: "b", level: "basic", category: "mechanical", archived: false },
+    { id: "s3", equipmentId: "e2", subgroup: "B", text: "c", level: "basic", category: "mechanical", archived: false },
+    { id: "s4", equipmentId: "e3", subgroup: "C", text: "d", level: "basic", category: "mechanical", archived: false },
   ],
 };
 
@@ -28,8 +28,9 @@ function member(
   equipments: string[],
   entries: MatrixEntry[],
   expectedByLevel = COMPETENCY_LEVEL_EXPECTED,
+  matrixCategory: MatrixCategory | null = null,
 ): TeamMemberInput {
-  return { id, name: id, shift, teamId: null, gradeName: null, teamName: null, equipments, entries, expectedByLevel, pdiOverdue: 0 };
+  return { id, name: id, shift, teamId: null, gradeName: null, teamName: null, equipments, entries, expectedByLevel, matrixCategory, pdiOverdue: 0 };
 }
 
 describe("visão da equipe", () => {
@@ -77,5 +78,42 @@ describe("visão da equipe", () => {
     assert.equal(coverageStatus(1, 1), "single");
     assert.equal(coverageStatus(2, 2), "ok");
     assert.equal(coverageStatus(3, 0), "ok");
+  });
+});
+
+describe("visão da equipe por categoria", () => {
+  // e1 tem uma habilidade de cada categoria; e2 só mecânica.
+  const mixed: MatrixCatalogDto = {
+    equipments: catalog.equipments,
+    skills: [
+      { id: "m1", equipmentId: "e1", subgroup: "A", text: "folga da faca", level: "basic", category: "mechanical", archived: false },
+      { id: "t1", equipmentId: "e1", subgroup: "A", text: "sensor", level: "basic", category: "electrical", archived: false },
+      { id: "m2", equipmentId: "e2", subgroup: "B", text: "correia", level: "basic", category: "mechanical", archived: false },
+    ],
+  };
+  const mechanic = member("mec", "first", ["e1"], [meets("m1")], COMPETENCY_LEVEL_EXPECTED, "mechanical");
+  const technician = member("tec", "first", ["e1"], [meets("t1")], COMPETENCY_LEVEL_EXPECTED, "electrical");
+  const both = member("dois", "first", ["e1"], [meets("m1")], COMPETENCY_LEVEL_EXPECTED, null);
+
+  it("sem filtro cada técnico conta só as habilidades da categoria dele", () => {
+    const team = buildTeamMatrix(mixed, [mechanic, technician, both], 80);
+    const adherence = (id: string) => team.members.find((row) => row.id === id)?.cells[0]?.adherence;
+    assert.equal(adherence("mec"), 100);
+    assert.equal(adherence("tec"), 100);
+    assert.equal(adherence("dois"), 50);
+    assert.deepEqual(team.equipments.map((item) => item.id), ["e1", "e2"]);
+  });
+
+  it("com o filtro tira quem é da outra categoria e o equipamento sem habilidade dela", () => {
+    const team = buildTeamMatrix(mixed, [mechanic, technician, both], 80, "electrical");
+    assert.deepEqual(team.members.map((row) => row.id), ["tec", "dois"]);
+    assert.deepEqual(team.equipments.map((item) => item.id), ["e1"]);
+    assert.equal(team.members.find((row) => row.id === "dois")?.cells[0]?.adherence, 0);
+  });
+
+  it("quem vê as duas entra em qualquer filtro", () => {
+    assert.equal(inTeamCategory({ matrixCategory: null }, "mechanical"), true);
+    assert.equal(inTeamCategory({ matrixCategory: "electrical" }, "mechanical"), false);
+    assert.equal(inTeamCategory({ matrixCategory: "electrical" }, null), true);
   });
 });

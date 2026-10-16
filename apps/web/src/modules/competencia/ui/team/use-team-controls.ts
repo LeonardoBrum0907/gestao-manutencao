@@ -1,11 +1,13 @@
 import { useSearchParams } from "react-router-dom";
-import type { TeamMatrixDto, TeamMatrixLayoutDto, TeamMatrixView } from "@manutencao/shared";
+import type { MatrixCategory, TeamMatrixDto, TeamMatrixLayoutDto, TeamMatrixView } from "@manutencao/shared";
 import { useSaveTeamLayout } from "../../data/matrix";
 import type { TeamGridState } from "../../model/team-grid";
 import { viewPreset } from "../../model/team-insights";
 import { readTeamSearch, writeTeamSearch, type TeamSearchState } from "../../model/team-search";
 
 export type TeamControls = TeamGridState & {
+  // Já aplicada pela API (a página busca a equipe com ?categoria=); a grade não filtra de novo.
+  category: MatrixCategory | null;
   search: URLSearchParams;
   setSearch: (next: Partial<TeamSearchState>) => void;
   saveLayout: (next: Partial<TeamMatrixLayoutDto>) => void;
@@ -15,7 +17,7 @@ export type TeamControls = TeamGridState & {
 
 /**
  * Estado da Matriz da equipe: a disposição salva no sistema (visão, agrupamentos, ordem das colunas) e os filtros
- * do endereço (turno, números do topo, linhas, ordem dos técnicos).
+ * do endereço (turno, números do topo, categoria, linhas, ordem dos técnicos).
  * @example const controls = useTeamControls(team); controls.chooseView("schedule");
  */
 export function useTeamControls(team: TeamMatrixDto): TeamControls {

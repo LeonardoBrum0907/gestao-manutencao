@@ -1,6 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { MEMBER_ROLES, type MemberRoleDto } from "@manutencao/shared";
+import { isMatrixCategory, MEMBER_ROLES, type MatrixCategory, type MemberRoleDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
+
+function toRole(row: { id: string; name: string; matrixCategory: string | null }): MemberRoleDto {
+  return { id: row.id, name: row.name, matrixCategory: isMatrixCategory(row.matrixCategory) ? row.matrixCategory : null };
+}
+
+// Num banco novo, Mecânico e Eletricista já nascem na categoria da matriz delas.
+const SEED_CATEGORY: Partial<Record<(typeof MEMBER_ROLES)[number], MatrixCategory>> = { mecânico: "mechanical", eletricista: "electrical" };
 
 @Injectable()
 export class RoleRepository {
@@ -11,7 +18,7 @@ export class RoleRepository {
       await this.prisma.memberRole.upsert({
         where: { name },
         update: {},
-        create: { name },
+        create: { name, matrixCategory: SEED_CATEGORY[name] ?? null },
       });
     }
   }
@@ -20,7 +27,7 @@ export class RoleRepository {
     const rows = await this.prisma.memberRole.findMany({ orderBy: { name: "asc" } });
     const order = new Map(MEMBER_ROLES.map((name, index) => [name, index]));
     return rows
-      .map((row) => ({ id: row.id, name: row.name }))
+      .map(toRole)
       .sort((a, b) => (order.get(a.name as (typeof MEMBER_ROLES)[number]) ?? 99) - (order.get(b.name as (typeof MEMBER_ROLES)[number]) ?? 99));
   }
 
@@ -33,13 +40,15 @@ export class RoleRepository {
   }
 
   async create(name: string): Promise<MemberRoleDto> {
-    const row = await this.prisma.memberRole.create({ data: { name } });
-    return { id: row.id, name: row.name };
+    return toRole(await this.prisma.memberRole.create({ data: { name } }));
   }
 
   async rename(id: string, name: string): Promise<MemberRoleDto> {
-    const row = await this.prisma.memberRole.update({ where: { id }, data: { name } });
-    return { id: row.id, name: row.name };
+    return toRole(await this.prisma.memberRole.update({ where: { id }, data: { name } }));
+  }
+
+  async setMatrixCategory(id: string, matrixCategory: MatrixCategory | null): Promise<MemberRoleDto> {
+    return toRole(await this.prisma.memberRole.update({ where: { id }, data: { matrixCategory } }));
   }
 
   countMembers(id: string) {

@@ -1,8 +1,9 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
+  catalogForCategory,
   COMPETENCY_LEVEL_LABELS,
-  COMPETENCY_MATRIX_TITLE,
+  competencyMatrixTitle,
   COMPETENCY_SCORE_LABELS,
   COMPETENCY_SCORES,
   type CompetencyEntryDto,
@@ -427,7 +428,7 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
       <Summary summary={matrix.summary} />
       <Card>
         <h2 className="text-sm font-semibold text-app">Equipamentos que se aplicam</h2>
-        <p className="mt-1 text-sm text-muted">A aderência conta só estes. Quem não é mecânico fica sem nenhum.</p>
+        <p className="mt-1 text-sm text-muted">A aderência conta só estes, e só as habilidades da categoria da função do colaborador.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {catalog.equipments
             .filter((equipment) => !equipment.archived)
@@ -496,12 +497,13 @@ export function MatrixPanel({ memberId }: { memberId: string }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm text-muted">{COMPETENCY_MATRIX_TITLE}</p>
+        <p className="text-sm text-muted">{competencyMatrixTitle(matrix.data.matrixCategory)}</p>
         <Link to="/configuracoes/avaliacao" className="text-sm font-medium text-accent hover:underline">
           Editar equipamentos e habilidades
         </Link>
       </div>
-      <Matrix key={matrix.data.memberId} catalog={catalog.data} matrix={matrix.data} />
+      {/* Só as habilidades da categoria da função do colaborador (de mecânico, de eletricista ou as duas). */}
+      <Matrix key={matrix.data.memberId} catalog={catalogForCategory(catalog.data, matrix.data.matrixCategory)} matrix={matrix.data} />
     </div>
   );
 }

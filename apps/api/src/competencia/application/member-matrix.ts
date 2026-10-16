@@ -1,8 +1,16 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { MemberMatrixDto, MemberPosition } from "@manutencao/shared";
+import { catalogForCategory, type MemberMatrixDto, type MemberPosition } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
-import { assertMatrixEditable, buildMatrix, normalizeEntry, requireEquipments, requireSkill, type MatrixEntry } from "../domain/matrix";
+import {
+  assertMatrixEditable,
+  assertSkillInCategory,
+  buildMatrix,
+  normalizeEntry,
+  requireEquipments,
+  requireSkill,
+  type MatrixEntry,
+} from "../domain/matrix";
 import { CatalogRepository } from "../infra/catalog.repository";
 import { MatrixRepository } from "../infra/matrix.repository";
 import { parseBulk, parseEntry, parseEquipments } from "./parse-matrix";
@@ -22,11 +30,13 @@ export class MemberMatrix {
 
   // Quem já checou o colaborador não precisa checar de novo para devolver a matriz.
   private async build(memberId: string): Promise<MemberMatrixDto> {
-    const [{ equipments, entries, gradeName, expectedByLevel }, catalog] = await Promise.all([
+    const [{ equipments, entries, gradeName, expectedByLevel, matrixCategory }, catalog] = await Promise.all([
       this.matrix.load(memberId),
       this.catalog.load(),
     ]);
-    return { memberId, gradeName, expectedByLevel, entries, ...buildMatrix(catalog, equipments, entries, expectedByLevel) };
+    // A aderência conta só as habilidades da categoria da função; as notas de outra categoria ficam guardadas.
+    const ownCatalog = catalogForCategory(catalog, matrixCategory);
+    return { memberId, gradeName, expectedByLevel, matrixCategory, entries, ...buildMatrix(ownCatalog, equipments, entries, expectedByLevel) };
   }
 
   async setEquipments(memberId: string, body: unknown): Promise<MemberMatrixDto> {
@@ -37,9 +47,14 @@ export class MemberMatrix {
   }
 
   async setSkill(memberId: string, skillId: string, body: unknown): Promise<MemberMatrixDto> {
-    const [position, catalog] = await Promise.all([this.assertMember(memberId), this.catalog.load()]);
+    const [position, catalog, category] = await Promise.all([
+      this.assertMember(memberId),
+      this.catalog.load(),
+      this.matrix.memberCategory(memberId),
+    ]);
     assertMatrixEditable(position);
     const skill = requireSkill(skillId, catalog);
+    assertSkillInCategory(skill, category);
     const entry = normalizeEntry(skill.id, parseEntry(body));
     if (entry) await this.matrix.saveSkill(memberId, entry);
     else await this.matrix.clearSkill(memberId, skill.id);
@@ -47,12 +62,18 @@ export class MemberMatrix {
   }
 
   async setSkills(memberId: string, body: unknown): Promise<MemberMatrixDto> {
-    const [position, catalog] = await Promise.all([this.assertMember(memberId), this.catalog.load()]);
+    const [position, catalog, category] = await Promise.all([
+      this.assertMember(memberId),
+      this.catalog.load(),
+      this.matrix.memberCategory(memberId),
+    ]);
     assertMatrixEditable(position);
     const save: MatrixEntry[] = [];
     const clear: string[] = [];
     for (const { skillId, input } of parseBulk(body)) {
-      const entry = normalizeEntry(requireSkill(skillId, catalog).id, input);
+      const skill = requireSkill(skillId, catalog);
+      assertSkillInCategory(skill, category);
+      const entry = normalizeEntry(skill.id, input);
       if (entry) save.push(entry);
       else clear.push(skillId);
     }

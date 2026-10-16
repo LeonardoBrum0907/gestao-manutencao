@@ -148,9 +148,11 @@ model Subassembly {
 }
 
 model MemberRole {
-  id      String   @id @default(cuid())
-  name    String   @unique
-  members Member[]
+  id             String   @id @default(cuid())
+  name           String   @unique
+  // Categoria da matriz que quem tem esta função vê (mechanical ou electrical); vazio vê as duas.
+  matrixCategory String?
+  members        Member[]
 }
 
 model MemberGrade {
@@ -357,6 +359,8 @@ model MatrixSkill {
   subgroup    String
   text        String
   level       String
+  // mechanical ou electrical: separa a matriz de mecânico da de eletricista.
+  category    String               @default("mechanical")
   position    Int
   archived    Boolean              @default(false)
   scores      MemberSkill[]

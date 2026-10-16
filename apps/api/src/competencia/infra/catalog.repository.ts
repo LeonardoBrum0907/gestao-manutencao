@@ -1,21 +1,24 @@
 import { Injectable } from "@nestjs/common";
-import { isCompetencyLevel, type MatrixCatalogDto, type MatrixEquipmentDto, type MatrixSkillDto } from "@manutencao/shared";
+import { isCompetencyLevel, isMatrixCategory, type MatrixCatalogDto, type MatrixEquipmentDto, type MatrixSkillDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import type { EquipmentUsage } from "../domain/catalog";
 import { PrismaService } from "../../prisma/prisma.service";
 
-type SkillRow = { id: string; equipmentId: string; subgroup: string; text: string; level: string; archived: boolean };
+type SkillRow = { id: string; equipmentId: string; subgroup: string; text: string; level: string; category: string; archived: boolean };
 
 function toSkill(row: SkillRow): MatrixSkillDto {
-  if (!isCompetencyLevel(row.level)) throw new DomainError("invalid", 500, "Habilidade gravada está inválida.");
-  return { id: row.id, equipmentId: row.equipmentId, subgroup: row.subgroup, text: row.text, level: row.level, archived: row.archived };
+  if (!isCompetencyLevel(row.level) || !isMatrixCategory(row.category)) {
+    throw new DomainError("invalid", 500, `Habilidade gravada está inválida (nível "${row.level}", categoria "${row.category}").`);
+  }
+  const { id, equipmentId, subgroup, text, level, category, archived } = row;
+  return { id, equipmentId, subgroup, text, level, category, archived };
 }
 
 function toEquipment(row: { id: string; name: string; archived: boolean; minQualified: number }): MatrixEquipmentDto {
   return { id: row.id, name: row.name, archived: row.archived, minQualified: row.minQualified };
 }
 
-export type SkillWrite = { equipmentId: string; subgroup: string; text: string; level: string };
+export type SkillWrite = { equipmentId: string; subgroup: string; text: string; level: string; category: string };
 
 const CATALOG_TTL_MS = 60_000;
 
