@@ -114,6 +114,8 @@ cmd_deploy() {
   compose build api || voltar_versao "$anterior"
   compose up -d --no-deps --no-build api
   esperar_api || voltar_versao "$anterior"
+  # Cada build deixa a imagem velha sem nome (~0,7 GB); a :anterior tem nome e fica para o rollback.
+  docker image prune -f
 }
 
 cmd_reiniciar() {

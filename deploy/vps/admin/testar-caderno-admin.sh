@@ -64,6 +64,7 @@ conferir "deploy normal faz backup antes" no_log backup
 conferir "deploy normal guarda a imagem anterior" no_log "docker tag sha256:velha caderno-gestor-api:anterior"
 conferir "deploy normal relê o Caddyfile" no_log "caddy reload"
 conferir "deploy normal não volta versão" fora_do_log "reset --keep"
+conferir "deploy normal limpa imagens sem nome" no_log "docker image prune -f"
 
 rodar build; codigo=$?
 conferir "build quebrado sai com erro" test "$codigo" -ne 0
