@@ -233,7 +233,8 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
   const all = catalog.skills.filter((skill) => skill.equipmentId === equipmentId);
   const ids = all.map((skill) => skill.id);
   const visible = all.filter((skill) => matchesSearch(skill, query));
-  const error = save.error ?? remove.error ?? reorder.error;
+  // O erro de excluir fica na linha da habilidade: no topo, numa lista de 30+, ele aparecia fora da tela.
+  const error = save.error ?? reorder.error;
 
   return (
     <Card>
@@ -269,9 +270,9 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
           return (
             <li
               key={skill.id}
-              className="flex flex-col gap-2 border-t border-t-line py-3 first:border-t-0 sm:flex-row sm:items-start sm:justify-between"
+              className="flex flex-col gap-2 border-t border-t-line py-3 first:border-t-0 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between"
             >
-              <button type="button" className="min-w-0 text-left" onClick={() => setEditing(skill)}>
+              <button type="button" className="min-w-0 text-left sm:flex-1" onClick={() => setEditing(skill)}>
                 <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-muted">
                   {skill.subgroup} · {COMPETENCY_LEVEL_LABELS[skill.level]}
                 </span>
@@ -306,6 +307,11 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
                 </Button>
                 <DeleteButton pending={remove.isPending} onConfirm={(done) => remove.mutate(skill.id, { onSuccess: done })} />
               </div>
+              {remove.isError && remove.variables === skill.id ? (
+                <div className="w-full">
+                  <Notice>{errorMessage(remove.error)}</Notice>
+                </div>
+              ) : null}
             </li>
           );
         })}
