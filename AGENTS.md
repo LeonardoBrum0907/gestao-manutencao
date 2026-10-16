@@ -89,6 +89,11 @@ Base: "Clean Code para agentes de IA" de Fabio Akita (akitaonrails.com/2026/04/2
   - migrações e schema do banco (`apps/api/prisma`);
   - rotas públicas da API (os controllers em `apps/api/src/*/http`) e o roteamento do `vercel.json`.
 
+## Migrações só acrescentam
+
+- Migração nova só cria tabela, coluna opcional (ou com default) ou índice. O rollback automático do deploy volta o código, mas não o banco: a versão anterior precisa rodar no banco novo.
+- Remover ou renomear coluna ou tabela vira dois PRs: primeiro o código para de usar, depois (em outro deploy) a migração remove.
+
 ## Subir a régua no código novo
 
 - Código novo e alterado segue todas as regras de **Código novo** acima.
