@@ -1,4 +1,4 @@
-import { TEAM_MATRIX_VIEW_LABELS, type TeamMatrixDto, type TeamMatrixView } from "@manutencao/shared";
+import { MATRIX_CATEGORY_LABELS, TEAM_MATRIX_VIEW_LABELS, type MatrixCategory, type TeamMatrixDto, type TeamMatrixView } from "@manutencao/shared";
 import { coverageLabel } from "./team";
 import type { TeamColumn } from "./team-columns";
 import type { TeamGrid } from "./team-grid";
@@ -23,7 +23,7 @@ function headerRows(team: TeamMatrixDto, grid: TeamGrid): SheetRow[] {
   const blocks = grid.columnBlocks.some((block) => block.label)
     ? [[header(""), ...grid.columnBlocks.map((block) => header(block.label ?? "", block.columns.length)), header("")]]
     : [];
-  const titles = [header("Técnico"), ...grid.columns.map((column) => header(columnTitle(column))), header("Qualificado em")];
+  const titles = [header("Eletricista"), ...grid.columns.map((column) => header(columnTitle(column))), header("Qualificado em")];
   const minimum = [
     header("Qualificados / mínimo"),
     ...grid.columns.map((column) => {
@@ -58,12 +58,13 @@ function memberRows(team: TeamMatrixDto, grid: TeamGrid, view: TeamMatrixView): 
 
 /**
  * Aba "Matriz": a grade como está na tela (mesma ordem, grupos e filtros), com a nota em % e a cor do tom.
- * @example teamMatrixTab(team, grid, "training").rows[0] // título com a data
+ * @example teamMatrixTab(team, grid, "training", "16/10/2026", "electrical").rows[0] // título com a data
  */
-export function teamMatrixTab(team: TeamMatrixDto, grid: TeamGrid, view: TeamMatrixView, today: string): SheetTab {
+export function teamMatrixTab(team: TeamMatrixDto, grid: TeamGrid, view: TeamMatrixView, today: string, category: MatrixCategory | null = null): SheetTab {
+  const categoryText = category ? ` · Só ${MATRIX_CATEGORY_LABELS[category]}` : "";
   const intro: SheetRow[] = [
     [{ value: `Matriz da equipe · ${today}`, bold: true }],
-    [{ value: `Qualificado: aderência de ${team.qualifiedAdherence}% ou mais · Visão: ${TEAM_MATRIX_VIEW_LABELS[view]} · ${grid.memberCount} técnico(s)` }],
+    [{ value: `Qualificado: aderência de ${team.qualifiedAdherence}% ou mais · Visão: ${TEAM_MATRIX_VIEW_LABELS[view]}${categoryText} · ${grid.memberCount} técnico(s)` }],
     [],
   ];
   const head = headerRows(team, grid);
@@ -81,7 +82,7 @@ export function teamMatrixTab(team: TeamMatrixDto, grid: TeamGrid, view: TeamMat
  * @example teamTrainingTab(team).rows[1] // ["Encaixotadora Mediseal", "Ninguém qualificado", 0, 2, "Renata", 0.78, 2, "3º turno"]
  */
 export function teamTrainingTab(team: TeamMatrixDto): SheetTab {
-  const titles = ["Equipamento", "Situação", "Qualificados", "Mínimo", "Técnico", "Aderência", "Falta (pts)", "Turno"].map((title) => header(title));
+  const titles = ["Equipamento", "Situação", "Qualificados", "Mínimo", "Eletricista", "Aderência", "Falta (pts)", "Turno"].map((title) => header(title));
   const rows = trainingNeeds(team, 5).flatMap((need) =>
     (need.candidates.length ? need.candidates : [null]).map((candidate): SheetRow => [
       { value: need.name, bold: true },

@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import {
   COMPETENCY_LEVEL_LABELS,
   COMPETENCY_LEVELS,
+  DEFAULT_MATRIX_CATEGORY,
+  isMatrixCategory,
+  MATRIX_CATEGORIES,
+  MATRIX_CATEGORY_LABELS,
   type CompetencyLevel,
+  type MatrixCategory,
   type MatrixCatalogDto,
   type MatrixEquipmentDto,
   type MatrixSkillDto,
@@ -146,21 +151,46 @@ function Equipments({ catalog }: { catalog: MatrixCatalogDto }) {
   );
 }
 
-const blankSkill = (equipmentId: string): SkillInput => ({ equipmentId, subgroup: "", text: "", level: "basic", archived: false });
+const blankSkill = (equipmentId: string, category: MatrixCategory): SkillInput => ({
+  equipmentId,
+  subgroup: "",
+  text: "",
+  level: "basic",
+  category,
+  archived: false,
+});
+
+// Filtro da lista de habilidades: "" mostra as duas categorias.
+function CategorySelect({ value, onChange }: { value: MatrixCategory | ""; onChange: (value: MatrixCategory | "") => void }) {
+  return (
+    <Field label="Categoria">
+      <SelectInput value={value} onChange={(event) => onChange(isMatrixCategory(event.target.value) ? event.target.value : "")}>
+        <option value="">Todas</option>
+        {MATRIX_CATEGORIES.map((category) => (
+          <option key={category} value={category}>
+            {MATRIX_CATEGORY_LABELS[category]}
+          </option>
+        ))}
+      </SelectInput>
+    </Field>
+  );
+}
 
 function SkillForm({
   catalog,
   skill,
   equipmentId,
+  category,
   onClose,
 }: {
   catalog: MatrixCatalogDto;
   skill: MatrixSkillDto | null;
   equipmentId: string;
+  category: MatrixCategory;
   onClose: () => void;
 }) {
   const save = useSaveSkill();
-  const [draft, setDraft] = useState<SkillInput>(() => (skill ? { ...skill } : blankSkill(equipmentId)));
+  const [draft, setDraft] = useState<SkillInput>(() => (skill ? { ...skill } : blankSkill(equipmentId, category)));
   const subgroups = [...new Set(catalog.skills.filter((item) => item.equipmentId === draft.equipmentId).map((item) => item.subgroup))];
 
   function submit(event: FormEvent) {
@@ -206,6 +236,15 @@ function SkillForm({
             ))}
           </SelectInput>
         </Field>
+        <Field label="Categoria">
+          <SelectInput value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value as MatrixCategory })}>
+            {MATRIX_CATEGORIES.map((item) => (
+              <option key={item} value={item}>
+                {MATRIX_CATEGORY_LABELS[item]}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
         {skill && skill.equipmentId !== draft.equipmentId ? (
           <p className="text-sm text-muted">Ao mudar de equipamento, a habilidade vai para o fim da lista dele. As notas já dadas continuam.</p>
         ) : null}
@@ -226,20 +265,21 @@ function SkillForm({
 function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
   const [equipmentId, setEquipmentId] = useState(catalog.equipments[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<MatrixCategory | "">("");
   const [editing, setEditing] = useState<MatrixSkillDto | null | undefined>(undefined);
   const save = useSaveSkill();
   const remove = useDeleteSkill();
   const reorder = useReorderSkills();
   const all = catalog.skills.filter((skill) => skill.equipmentId === equipmentId);
   const ids = all.map((skill) => skill.id);
-  const visible = all.filter((skill) => matchesSearch(skill, query));
+  const visible = all.filter((skill) => matchesSearch(skill, query) && (!category || skill.category === category));
   // O erro de excluir fica na linha da habilidade: no topo, numa lista de 30+, ele aparecia fora da tela.
   const error = save.error ?? reorder.error;
 
   return (
     <Card>
       <h3 className="text-sm font-semibold text-app">Habilidades</h3>
-      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,1fr)_auto] sm:items-end">
         <Field label="Equipamento">
           <SelectInput value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}>
             {catalog.equipments.map((equipment) => (
@@ -250,6 +290,7 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
             ))}
           </SelectInput>
         </Field>
+        <CategorySelect value={category} onChange={setCategory} />
         <Field label="Buscar">
           <TextInput value={query} placeholder="Ex.: selagem, sensor" onChange={(event) => setQuery(event.target.value)} />
         </Field>
@@ -257,7 +298,7 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
           Nova habilidade
         </Button>
       </div>
-      {query ? <p className="mt-2 text-xs text-muted">Para mudar a ordem, limpe a busca.</p> : null}
+      {query || category ? <p className="mt-2 text-xs text-muted">Para mudar a ordem, limpe a busca e mostre todas as categorias.</p> : null}
       {error && editing === undefined ? (
         <div className="mt-3">
           <Notice>{errorMessage(error)}</Notice>
@@ -274,7 +315,7 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
             >
               <button type="button" className="min-w-0 text-left sm:flex-1" onClick={() => setEditing(skill)}>
                 <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-                  {skill.subgroup} · {COMPETENCY_LEVEL_LABELS[skill.level]}
+                  {skill.subgroup} · {COMPETENCY_LEVEL_LABELS[skill.level]} · {MATRIX_CATEGORY_LABELS[skill.category]}
                 </span>
                 <span
                   className={`mt-1 block text-sm transition hover:text-accent hover:underline ${
@@ -294,7 +335,7 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
                   label={skill.text}
                   index={index}
                   count={ids.length}
-                  disabled={reorder.isPending || Boolean(query)}
+                  disabled={reorder.isPending || Boolean(query) || Boolean(category)}
                   onMove={(step) => reorder.mutate({ equipmentId, ids: moved(ids, index, step) })}
                 />
                 <Button
@@ -317,7 +358,13 @@ function Skills({ catalog }: { catalog: MatrixCatalogDto }) {
         })}
       </ol>
       {editing !== undefined ? (
-        <SkillForm catalog={catalog} skill={editing} equipmentId={equipmentId} onClose={() => setEditing(undefined)} />
+        <SkillForm
+          catalog={catalog}
+          skill={editing}
+          equipmentId={equipmentId}
+          category={category || DEFAULT_MATRIX_CATEGORY}
+          onClose={() => setEditing(undefined)}
+        />
       ) : null}
     </Card>
   );
@@ -371,7 +418,7 @@ export function MatrixCatalogSection() {
     <div>
       <SectionTitle
         title="Matriz de habilidades"
-        text="As habilidades de cada equipamento na aba Matriz da ficha do técnico. Com nota ou marcação, arquive em vez de excluir: o que já foi avaliado fica guardado e volta se reativar."
+        text="As habilidades de cada equipamento na aba Matriz da ficha do técnico, separadas em de mecânico e de eletricista (quem vê cada uma está em Matriz por função, acima). Com nota ou marcação, arquive em vez de excluir: o que já foi avaliado fica guardado e volta se reativar."
       />
       {catalog.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {catalog.isError ? <Notice>{errorMessage(catalog.error)}</Notice> : null}

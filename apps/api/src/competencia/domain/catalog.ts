@@ -1,9 +1,39 @@
-import { isCompetencyLevel, PERFORMANCE_SCORES, type CompetencyLevel } from "@manutencao/shared";
+import {
+  DEFAULT_MATRIX_CATEGORY,
+  isCompetencyLevel,
+  isMatrixCategory,
+  MATRIX_CATEGORIES,
+  PERFORMANCE_SCORES,
+  type CompetencyLevel,
+  type MatrixCategory,
+} from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 
 export function requireLevel(value: string): CompetencyLevel {
   if (!isCompetencyLevel(value)) throw new DomainError("invalid", 400, "Nível inválido. Use básico, intermediário ou avançado.");
   return value;
+}
+
+/**
+ * Categoria da habilidade. Sem o campo vale a de antes: a atual ao editar, mecânico ao criar
+ * (a tela antiga e as ferramentas do MCP anteriores à categoria não mandam nada).
+ * @example requireCategory(undefined, "electrical") // "electrical"
+ */
+export function requireCategory(value: unknown, fallback: MatrixCategory): MatrixCategory {
+  if (value === undefined) return fallback;
+  if (!isMatrixCategory(value)) {
+    throw new DomainError("invalid", 400, `Categoria inválida: ${JSON.stringify(value)}. Use ${MATRIX_CATEGORIES.join(" ou ")}.`);
+  }
+  return value;
+}
+
+/**
+ * Filtro de categoria vindo do endereço: vazio é a equipe toda.
+ * @example optionalCategory("") // null
+ */
+export function optionalCategory(value: string | undefined): MatrixCategory | null {
+  if (!value) return null;
+  return requireCategory(value, DEFAULT_MATRIX_CATEGORY);
 }
 
 export function requireText(value: string, message: string): string {
