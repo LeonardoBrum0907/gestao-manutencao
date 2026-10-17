@@ -28,7 +28,8 @@ FALSO
 echo "docker $*" >> "$LOG"
 case "$*" in
   *"ps -q api") echo cid ;;
-  *"config --images api") echo caderno-gestor-api ;;
+  # Como o compose real: lista também a imagem da dependência db.
+  *"config --images api") printf 'postgres:18-alpine\ncaderno-gestor-api\n' ;;
   # Antes do "build api": "up … --no-build api" também termina em "build api".
   *"up -d --no-deps --no-build"*api) echo x >> "$ESTADO" ;;
   *"build api") [ "${FALHA:-}" != build ];;
