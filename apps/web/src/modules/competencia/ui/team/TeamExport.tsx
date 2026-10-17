@@ -24,7 +24,7 @@ export function TeamExport({ team, grid, controls }: { team: TeamMatrixDto; grid
     setBusy(true);
     try {
       const now = new Date();
-      await downloadTeamWorkbook([teamMatrixTab(team, grid, controls.layout.view, dayFormat.format(now)), teamTrainingTab(team)], `matriz-da-equipe-${isoDay(now)}.xlsx`);
+      await downloadTeamWorkbook([teamMatrixTab(team, grid, controls.layout.view, dayFormat.format(now), controls.category), teamTrainingTab(team)], `matriz-da-equipe-${isoDay(now)}.xlsx`);
     } catch {
       toast({ text: "Não foi possível gerar a planilha. Tente de novo." });
     } finally {

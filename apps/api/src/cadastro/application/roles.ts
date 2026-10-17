@@ -4,6 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredString } from "../../kernel/parse";
 import { requireName } from "../domain/names";
 import { assertRoleNameAvailable } from "../domain/role-name";
+import { requireRoleMatrixCategory } from "../domain/role-matrix-category";
 import { assertRoleCanBeRemoved } from "../domain/role-removal";
 import { RoleRepository } from "../infra/role.repository";
 
@@ -29,6 +30,12 @@ export class Roles {
     const owner = await this.roles.findByName(name);
     assertRoleNameAvailable(owner?.id ?? null, id);
     return this.roles.rename(id, name);
+  }
+
+  // Muda que habilidades da matriz todos os colaboradores desta função veem e contam na aderência.
+  async setMatrixCategory(id: string, body: unknown): Promise<MemberRoleDto> {
+    if (!(await this.roles.find(id))) throw new DomainError("not_found", 404, "Função não encontrada.");
+    return this.roles.setMatrixCategory(id, requireRoleMatrixCategory(body));
   }
 
   // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.

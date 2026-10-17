@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { expectedByLevel, GESTOR_TIME_ZONE } from "@manutencao/shared";
+import { expectedByLevel, GESTOR_TIME_ZONE, isMatrixCategory, type MatrixCategory } from "@manutencao/shared";
 import { gradeExpectedOf, GRADE_EXPECTED_SELECT } from "../../cadastro/infra/grade-expected";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -14,6 +14,14 @@ function score(value: number | null): MatrixEntry["score"] {
   return value;
 }
 
+// Valor fora da lista (gravado à mão no banco) conta como vazio: a pessoa vê as duas categorias.
+function categoryOf(role: { matrixCategory: string | null } | null): MatrixCategory | null {
+  const value = role?.matrixCategory;
+  return isMatrixCategory(value) ? value : null;
+}
+
+const ROLE_CATEGORY_SELECT = { role: { select: { matrixCategory: true } } } as const;
+
 @Injectable()
 export class MatrixRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -23,16 +31,21 @@ export class MatrixRepository {
     entries: MatrixEntry[];
     gradeName: string | null;
     expectedByLevel: ExpectedByLevel;
+    matrixCategory: MatrixCategory | null;
   }> {
     const [equipments, skills, member] = await Promise.all([
       this.prisma.memberMatrixEquipment.findMany({ where: { memberId }, select: { equipmentId: true } }),
       this.prisma.memberSkill.findMany({ where: { memberId } }),
-      this.prisma.member.findUnique({ where: { id: memberId }, select: { grade: { select: { name: true, ...GRADE_EXPECTED_SELECT } } } }),
+      this.prisma.member.findUnique({
+        where: { id: memberId },
+        select: { grade: { select: { name: true, ...GRADE_EXPECTED_SELECT } }, ...ROLE_CATEGORY_SELECT },
+      }),
     ]);
     const grade = member?.grade ?? null;
     return {
       gradeName: grade?.name ?? null,
       expectedByLevel: expectedByLevel(grade ? gradeExpectedOf(grade) : null),
+      matrixCategory: categoryOf(member?.role ?? null),
       equipments: equipments.map((row) => row.equipmentId),
       entries: skills.map((row) => ({
         skillId: row.skillId,
@@ -41,6 +54,11 @@ export class MatrixRepository {
         expected: score(row.expected),
       })),
     };
+  }
+
+  async memberCategory(memberId: string): Promise<MatrixCategory | null> {
+    const member = await this.prisma.member.findUnique({ where: { id: memberId }, select: ROLE_CATEGORY_SELECT });
+    return categoryOf(member?.role ?? null);
   }
 
   async replaceEquipments(memberId: string, equipments: string[]): Promise<void> {
@@ -91,6 +109,7 @@ export class MatrixRepository {
         teamId: true,
         team: { select: { name: true } },
         grade: { select: { name: true, ...GRADE_EXPECTED_SELECT } },
+        ...ROLE_CATEGORY_SELECT,
       },
       orderBy: { name: "asc" },
     });
@@ -106,8 +125,9 @@ export class MatrixRepository {
       }),
     ]);
     const overdueBy = new Map(overdue.map((row) => [row.memberId, row._count._all]));
-    return members.map(({ grade, team, ...member }) => ({
+    return members.map(({ grade, team, role, ...member }) => ({
       ...member,
+      matrixCategory: categoryOf(role),
       gradeName: grade?.name ?? null,
       teamName: team?.name ?? null,
       expectedByLevel: expectedByLevel(grade ? gradeExpectedOf(grade) : null),

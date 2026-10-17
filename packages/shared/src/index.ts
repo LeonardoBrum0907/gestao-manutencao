@@ -1,4 +1,5 @@
 import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
+import type { MatrixCategory } from "./matrix-category";
 
 // "entry" é o rascunho da Entrada: anotado rápido, vira tarefa, problema ou feedback quando o coordenador revisa.
 export const RECORD_TYPES = ["task", "feedback", "problem", "entry"] as const;
@@ -113,7 +114,7 @@ export const MEMBER_SHIFT_LABELS: Record<MemberShift, string> = {
 };
 
 export const MEMBER_POSITION_LABELS: Record<MemberPosition, string> = {
-  technician: "Técnico",
+  technician: "Eletricista",
   supervisor: "Supervisor",
 };
 
@@ -212,6 +213,8 @@ export type SubassemblyDto = {
 export type MemberRoleDto = {
   id: string;
   name: string;
+  // Que habilidades da matriz quem tem esta função vê; null = as duas categorias.
+  matrixCategory: MatrixCategory | null;
 };
 
 export type MemberGradeDto = {
@@ -519,6 +522,7 @@ export type DashboardDto = {
 
 export * from "./competency-matrix";
 export * from "./team-matrix-layout";
+export * from "./matrix-category";
 export * from "./dashboard-overview";
 
 export const COMPETENCY_SCORES = [0, 1, 2, 3, 4] as const;
@@ -558,6 +562,8 @@ export type MemberMatrixDto = {
   // Grau do colaborador e o esperado padrão que ele dá a cada dificuldade (o "padrão" do esp. na tela).
   gradeName: string | null;
   expectedByLevel: Record<CompetencyLevel, number>;
+  // Categoria da função do colaborador: a matriz dele só tem habilidades desta categoria (null = as duas).
+  matrixCategory: MatrixCategory | null;
   equipments: string[];
   entries: CompetencyEntryDto[];
   summary: CompetencySummaryDto;

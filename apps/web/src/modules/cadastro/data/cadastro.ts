@@ -8,6 +8,7 @@ import {
   type MachineWriteDto,
   type MemberDto,
   type MemberGradeDto,
+  type MatrixCategory,
   type MemberRoleDto,
   type SubassemblyDto,
   type TeamDto,
@@ -144,11 +145,37 @@ export function useDeleteSubassembly() {
   });
 }
 
+// Uma API anterior à categoria da matriz não manda matrixCategory: a função vê as duas, como antes.
+async function fetchRoles(): Promise<MemberRoleDto[]> {
+  const roles = await api<(Omit<MemberRoleDto, "matrixCategory"> & Partial<MemberRoleDto>)[]>("/api/member-roles");
+  return roles.map((role) => ({ ...role, matrixCategory: role.matrixCategory ?? null }));
+}
+
 export function useRoles() {
   return useQuery({
     queryKey: ["roles"],
     ...REFERENCE_DATA,
-    queryFn: () => api<MemberRoleDto[]>("/api/member-roles"),
+    queryFn: fetchRoles,
+  });
+}
+
+/**
+ * Escolhe que habilidades da matriz a função vê (null = as duas). Muda a matriz de todos com a função.
+ * @example useSetRoleMatrixCategory().mutate({ id, matrixCategory: "electrical" })
+ */
+export function useSetRoleMatrixCategory() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; matrixCategory: MatrixCategory | null }) =>
+      api<MemberRoleDto>(`/api/member-roles/${input.id}/matrix-category`, {
+        method: "PUT",
+        body: JSON.stringify({ category: input.matrixCategory }),
+      }),
+    onSuccess: (role) => {
+      client.setQueryData<MemberRoleDto[]>(["roles"], (list) => list?.map((item) => (item.id === role.id ? role : item)));
+      void client.invalidateQueries({ queryKey: ["matrix"] });
+      void client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
   });
 }
 

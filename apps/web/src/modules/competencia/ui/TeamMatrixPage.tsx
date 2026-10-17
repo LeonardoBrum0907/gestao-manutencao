@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { TeamMatrixDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Card, Notice, PageTitle } from "../../../design/ui/controls";
 import { useTeamMatrix } from "../data/matrix";
 import { canDragColumns, teamGrid } from "../model/team-grid";
+import { readTeamCategory } from "../model/team-search";
 import { TeamExport } from "./team/TeamExport";
 import { TeamGrid } from "./team/TeamGrid";
 import { TeamKpis } from "./team/TeamKpis";
@@ -45,7 +46,8 @@ function TeamMatrixContent({ team }: { team: TeamMatrixDto }) {
 }
 
 export function TeamMatrixPage() {
-  const team = useTeamMatrix();
+  const [search] = useSearchParams();
+  const team = useTeamMatrix(readTeamCategory(search));
   return (
     <div className="flex flex-col">
       <PageTitle

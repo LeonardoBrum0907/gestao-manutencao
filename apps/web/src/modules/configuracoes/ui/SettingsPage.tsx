@@ -13,6 +13,7 @@ import { RolesSection } from "../../cadastro/ui/RolesSection";
 import { SubassembliesSection } from "../../cadastro/ui/SubassembliesSection";
 import { ModelDocumentsSection } from "../../documentacao/ui/ModelDocumentsSection";
 import { MatrixCatalogSection } from "../../competencia/ui/MatrixCatalogSection";
+import { RoleMatrixSection } from "../../competencia/ui/RoleMatrixSection";
 
 // Cadastros que se arrumam uma vez e pouco mudam: ficam fora do menu, numa página com abas (como no SIGEM).
 export const SETTINGS_TABS = [
@@ -59,6 +60,7 @@ export function SettingsPage() {
             <CompetenciesSection />
             <BehaviorTagsSection />
             <GradeExpectedSection />
+            <RoleMatrixSection />
             <MatrixCatalogSection />
           </>
         ) : null}

@@ -1,4 +1,7 @@
 import {
+  isMatrixCategory,
+  MATRIX_CATEGORIES,
+  MATRIX_CATEGORY_LABELS,
   MEMBER_SHIFT_LABELS,
   MEMBER_SHIFTS,
   TEAM_COLUMN_GROUP_LABELS,
@@ -50,7 +53,26 @@ function memberOptions(team: TeamMatrixDto): MultiOption[] {
   return team.members.map((member) => ({ value: member.id, label: member.name })).sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
 }
 
-// Barra da grade: visão, agrupamentos (salvos no sistema), turno, técnicos e linhas (filtros da tela) e exportar.
+// Mecânico ou eletricista: a API devolve só quem vê a categoria e conta só as habilidades dela.
+function CategoryFilter({ controls }: { controls: TeamControls }) {
+  return (
+    <Field label="Categoria">
+      <SelectInput
+        value={controls.category ?? ""}
+        onChange={(event) => controls.setSearch({ category: isMatrixCategory(event.target.value) ? event.target.value : null })}
+      >
+        <option value="">Todas</option>
+        {MATRIX_CATEGORIES.map((category) => (
+          <option key={category} value={category}>
+            {MATRIX_CATEGORY_LABELS[category]}
+          </option>
+        ))}
+      </SelectInput>
+    </Field>
+  );
+}
+
+// Barra da grade: visão, agrupamentos (salvos no sistema), turno, categoria, técnicos e linhas (filtros da tela) e exportar.
 export function TeamToolbar({ team, controls, exportButtons }: { team: TeamMatrixDto; controls: TeamControls; exportButtons: ReactNode }) {
   const { layout } = controls;
   const lineOptions = team.lines.map((line) => ({ value: line.id, label: line.name }));
@@ -90,6 +112,9 @@ export function TeamToolbar({ team, controls, exportButtons }: { team: TeamMatri
             ))}
           </SelectInput>
         </Field>
+      </Slot>
+      <Slot width="w-full sm:w-40">
+        <CategoryFilter controls={controls} />
       </Slot>
       <Slot width="w-full sm:w-64">
         <MultiSelect label="Técnicos" placeholder="Todos" options={memberOptions(team)} value={[...controls.memberIds]} onChange={(memberIds) => controls.setSearch({ memberIds })} />

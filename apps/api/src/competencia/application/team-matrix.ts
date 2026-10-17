@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { TeamMatrixDto, TeamMatrixLayoutDto } from "@manutencao/shared";
+import type { MatrixCategory, TeamMatrixDto, TeamMatrixLayoutDto } from "@manutencao/shared";
 import { buildTeamMatrix } from "../domain/team";
 import { parseTeamLayout, teamLines } from "../domain/team-layout";
 import { CatalogRepository } from "../infra/catalog.repository";
@@ -18,7 +18,8 @@ export class TeamMatrix {
     private readonly layout: TeamLayoutRepository,
   ) {}
 
-  async show(): Promise<TeamMatrixDto> {
+  // Sem categoria: cada técnico na categoria da função dele. Com ela: só quem a vê e só as habilidades dela.
+  async show(category: MatrixCategory | null = null): Promise<TeamMatrixDto> {
     const [catalog, members, settings, lines, layout] = await Promise.all([
       this.catalog.load(),
       this.matrix.loadTeam(),
@@ -26,7 +27,7 @@ export class TeamMatrix {
       this.lines.load(),
       this.layout.load(),
     ]);
-    const coverage = buildTeamMatrix(catalog, members, settings.qualifiedAdherence);
+    const coverage = buildTeamMatrix(catalog, members, settings.qualifiedAdherence, category);
     const activeEquipmentIds = coverage.equipments.map((equipment) => equipment.id);
     return { ...coverage, lines: teamLines(lines, activeEquipmentIds), layout };
   }

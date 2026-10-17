@@ -5,6 +5,8 @@ import {
   assertEquipmentCanBeRemoved,
   assertEquipmentNameAvailable,
   assertSkillCanBeRemoved,
+  optionalCategory,
+  requireCategory,
   requireLevel,
   requireMinQualified,
   requirePerformanceTarget,
@@ -25,6 +27,20 @@ describe("cadastro da matriz", () => {
   it("aceita só os três níveis", () => {
     assert.equal(requireLevel("advanced"), "advanced");
     fails(() => requireLevel("expert"), "invalid", 400);
+  });
+
+  it("categoria: mecânico ou eletricista; sem o campo fica a de antes", () => {
+    assert.equal(requireCategory("electrical", "mechanical"), "electrical");
+    assert.equal(requireCategory(undefined, "electrical"), "electrical");
+    fails(() => requireCategory("eletricista", "mechanical"), "invalid", 400);
+    fails(() => requireCategory(null, "mechanical"), "invalid", 400);
+  });
+
+  it("filtro de categoria do endereço: vazio é a equipe toda", () => {
+    assert.equal(optionalCategory(undefined), null);
+    assert.equal(optionalCategory(""), null);
+    assert.equal(optionalCategory("electrical"), "electrical");
+    fails(() => optionalCategory("tecnico"), "invalid", 400);
   });
 
   it("recusa texto em branco", () => {
