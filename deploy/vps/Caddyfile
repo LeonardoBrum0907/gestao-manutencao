@@ -1,5 +1,0 @@
-# O Caddy pede e renova sozinho o certificado HTTPS (Let's Encrypt) para API_DOMAIN.
-# O domínio precisa apontar para o IP da VPS e as portas 80 e 443 precisam estar abertas.
-{$API_DOMAIN} {
-	reverse_proxy api:3000
-}

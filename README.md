@@ -54,7 +54,7 @@ curl -s https://$API_DOMAIN/health
 
 Atualizar depois de um merge: `git pull` e `docker compose -f docker-compose.vps.yml up -d --build --no-deps api`. O `vercel.json` repassa `/api`, `/health` e as rotas do MCP para `https://<API_DOMAIN>`.
 
-Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>/` o dump do banco e um `attachments.tar.gz` com os anexos, e apaga as pastas com mais de 14 dias. Roda pelo cron do usuário da VPS (`crontab -e`):
+Backup: `deploy/vps/backup.sh` grava em `~/backups/<data>_<hora>/` (uma pasta por execução, então o backup de antes de um deploy não apaga o da madrugada) o dump do banco e um `attachments.tar.gz` com os anexos, e apaga as pastas com mais de 14 dias. Roda pelo cron do usuário da VPS (`crontab -e`):
 
 ```
 0 6 * * * /home/leo/caderno-gestor/deploy/vps/backup.sh >> /home/leo/backups/backup.log 2>&1
@@ -67,6 +67,8 @@ Acesso do Claude: o usuário `claude` da VPS roda o `claude remote-control` e n�
 ```bash
 sudo install -o root -g root -m 0755 deploy/vps/admin/caderno-admin /usr/local/sbin/caderno-admin
 ```
+
+Deploy automático: `.github/workflows/deploy-api.yml` roda a cada push na `main` que mexa em `apps/api`, `packages/shared`, no lockfile ou no compose da VPS (e à mão pela aba Actions). Primeiro `pnpm test` e os tipos da API; se passarem, entra na VPS como `gh-deploy` e roda `caderno-admin deploy`, depois confere o `/health`. A chave desse usuário só roda esse comando. O deploy não derruba o app: a API fecha em menos de 1 s no SIGTERM e o Caddy segura os pedidos por até 30 s enquanto a nova sobe (`deploy/vps/caddy/Caddyfile`). Se o build ou o healthcheck falhar, o `caderno-admin` volta o código e a imagem anteriores (`caderno-gestor-api:anterior`) e o Actions fica vermelho; o banco não volta, por isso as migrações só acrescentam (AGENTS.md). Para montar, rode na VPS `sudo bash deploy/vps/admin/instalar-deploy-github.sh` e cadastre os três valores que ele imprime em Settings › Secrets and variables › Actions (`VPS_SSH_HOST`, `VPS_SSH_KNOWN_HOSTS`, `VPS_SSH_KEY`). Rodar de novo troca a chave.
 
 ### IA (servidor MCP)
 

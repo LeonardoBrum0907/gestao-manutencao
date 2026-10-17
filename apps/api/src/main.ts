@@ -8,6 +8,9 @@ async function bootstrap(): Promise<void> {
   const env = loadEnv();
   const app = await NestFactory.create(AppModule);
   mountMcp(app);
+  // No SIGTERM do deploy, fecha o servidor e o relógio de lembretes e sai em menos de 1 s.
+  // Sem isso o node (PID 1 do container) ignora o sinal e o Docker espera 10 s para matar.
+  app.enableShutdownHooks();
   await app.listen(env.port, "0.0.0.0");
 }
 

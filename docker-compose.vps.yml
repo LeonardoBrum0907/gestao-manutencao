@@ -26,6 +26,8 @@ services:
       dockerfile: apps/api/Dockerfile
       target: production
     restart: unless-stopped
+    # Repassa o SIGTERM ao node e recolhe processos filhos: o container para na hora no deploy.
+    init: true
     env_file:
       - path: .env
         required: false
@@ -61,7 +63,9 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./deploy/vps/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Monta a pasta, não o arquivo: o git pull troca o Caddyfile por um arquivo novo,
+      # e uma montagem de arquivo único continuaria vendo o antigo até recriar o container.
+      - ./deploy/vps/caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
