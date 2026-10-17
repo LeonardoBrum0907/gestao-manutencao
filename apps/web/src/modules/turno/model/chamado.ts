@@ -87,7 +87,14 @@ export function instant(day: string, time: string): Date {
   return new Date(`${day}T${time}:00`);
 }
 
-export function closingInstant(day: string, opened: string, closed: string): Date {
+/**
+ * Instante do fechamento. `closedDay` é o dia em que fechou, quando se sabe ("Agora" ou o fechamento já gravado):
+ * sem ele, um chamado aberto anteontem e fechado hoje caía no dia seguinte à abertura e perdia um dia.
+ * @example closingInstant("2026-10-14", "15:10", "04:12", "2026-10-16") // 16/10 04:12
+ * @example closingInstant("2026-10-14", "23:10", "01:20") // 15/10 01:20 (3º turno)
+ */
+export function closingInstant(day: string, opened: string, closed: string, closedDay = ""): Date {
+  if (closedDay > day) return instant(closedDay, closed);
   const open = instant(day, opened);
   const close = instant(day, closed);
   return close.getTime() < open.getTime() ? instant(addDays(day, 1), closed) : close;

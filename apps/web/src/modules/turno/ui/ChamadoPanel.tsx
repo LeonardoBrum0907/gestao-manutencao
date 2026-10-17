@@ -24,6 +24,7 @@ import {
   nowClock,
   shiftChoices,
   shiftLabel,
+  shortDay,
   suggestShift,
   today,
 } from "../model/chamado";
@@ -38,6 +39,8 @@ type Draft = {
   day: string;
   opened: string;
   closed: string;
+  // Dia em que fechou, quando se sabe (fechamento gravado ou "Agora"); vazio segue a regra de closingInstant.
+  closedDay: string;
   shift: ChamadoShift | "";
   memberIds: string[];
   notes: string;
@@ -61,6 +64,7 @@ function newDraft(day: string): Draft {
     day,
     opened: isToday ? nowClock() : "",
     closed: "",
+    closedDay: "",
     shift: isToday ? suggestShift(now) : "",
     memberIds: [],
     notes: "",
@@ -79,6 +83,7 @@ function toDraft(chamado: ChamadoDto): Draft {
     day: dayOf(new Date(opened)),
     opened: clock(opened),
     closed: clock(chamado.closedAt),
+    closedDay: chamado.closedAt ? dayOf(new Date(chamado.closedAt)) : "",
     shift: chamado.shift ?? "",
     memberIds: chamado.memberIds,
     notes: chamado.notes ?? "",
@@ -91,7 +96,7 @@ function toBody(draft: Draft): ChamadoBody {
     body: draft.body,
     // Sem hora, a API recusa com a mensagem certa.
     openedAt: opened ? opened.toISOString() : "",
-    closedAt: opened && draft.closed ? closingInstant(draft.day, draft.opened, draft.closed).toISOString() : null,
+    closedAt: opened && draft.closed ? closingInstant(draft.day, draft.opened, draft.closed, draft.closedDay).toISOString() : null,
     shift: draft.shift || null,
     memberIds: draft.memberIds,
     lineId: draft.lineMode === "line" ? blank(draft.lineId) : null,
@@ -377,11 +382,12 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
               <label htmlFor="chamado-fechamento" className="font-medium">
                 Fechamento
               </label>
-              <button type="button" className="text-xs font-semibold text-accent hover:underline" onClick={() => set("closed", nowClock())}>
+              <button type="button" className="text-xs font-semibold text-accent hover:underline" onClick={() => setDraft((current) => ({ ...current, closed: nowClock(), closedDay: today() }))}>
                 Agora
               </button>
             </span>
             <TextInput id="chamado-fechamento" type="time" value={draft.closed} onChange={(event) => set("closed", event.target.value)} />
+            {draft.closed && draft.closedDay > draft.day ? <span className="text-xs text-muted">em {shortDay(draft.closedDay)}</span> : null}
           </div>
         </div>
 
