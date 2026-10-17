@@ -8,6 +8,9 @@ set -euo pipefail
 readonly DONO=leo
 readonly PASTA=/home/leo/caderno-gestor
 readonly SERVICOS="api db caddy"
+# Clone separado da API de teste (docker-compose.teste.yml): fica no ramo que se publicar,
+# sem mexer no checkout da produção, que segue na main.
+readonly PASTA_TESTE=/home/leo/caderno-teste
 
 uso() {
   cat <<'TEXTO'
@@ -18,6 +21,11 @@ Uso: sudo caderno-admin <comando>
   deploy                     backup, git pull da main, rebuild da API e espera healthy;
                              se a API nova não subir, volta código e imagem para a versão anterior
   reiniciar api              reinicia só o container da API
+  teste publicar [ramo]      sobe a API de teste no ramo do GitHub (padrão main)
+  teste dados                apaga o banco e os anexos do teste e copia os da produção
+  teste parar                desliga a API de teste (banco e anexos ficam guardados)
+  teste status               containers do teste
+  teste logs <api|db> [N]
 TEXTO
 }
 
@@ -43,10 +51,15 @@ cmd_status() {
   free -h | head -2
 }
 
+validar_logs() {
+  local servicos="$1" servico="$2" linhas="$3"
+  [[ " $servicos " == *" $servico "* ]] || falhar "serviço '$servico' inválido; esperado um de: $servicos"
+  [[ "$linhas" =~ ^[0-9]{1,4}$ && "$linhas" -ge 1 && "$linhas" -le 2000 ]] || falhar "linhas '$linhas' inválido; esperado número de 1 a 2000"
+}
+
 cmd_logs() {
   local servico="${1:-}" linhas="${2:-200}"
-  [[ " $SERVICOS " == *" $servico "* ]] || falhar "serviço '$servico' inválido; esperado um de: $SERVICOS"
-  [[ "$linhas" =~ ^[0-9]{1,4}$ && "$linhas" -ge 1 && "$linhas" -le 2000 ]] || falhar "linhas '$linhas' inválido; esperado número de 1 a 2000"
+  validar_logs "$SERVICOS" "$servico" "$linhas"
   compose logs --no-color --tail "$linhas" "$servico"
 }
 
@@ -54,14 +67,19 @@ cmd_backup() {
   como_dono "$PASTA/deploy/vps/backup.sh"
 }
 
-# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
-esperar_api() {
-  local id tentativa
-  id="$(compose ps -q api)"
+# Espera o healthcheck de um container ficar healthy (até ~2 min).
+esperar_saudavel() {
+  local id="$1" nome="$2" tentativa
   for tentativa in $(seq 1 40); do
-    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "API healthy"; return 0; }
+    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "$nome healthy"; return 0; }
     sleep 3
   done
+  return 1
+}
+
+# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
+esperar_api() {
+  esperar_saudavel "$(compose ps -q api)" API && return 0
   echo "API não ficou healthy; veja: sudo caderno-admin logs api" >&2
   return 1
 }
@@ -120,6 +138,71 @@ cmd_deploy() {
   docker image prune -f
 }
 
+# O compose do teste vem da main (pasta da produção) e o código, do clone de teste.
+compose_teste() {
+  (cd "$PASTA_TESTE" && runuser -u "$DONO" -- docker compose -p caderno-teste \
+    -f "$PASTA/docker-compose.teste.yml" --project-directory "$PASTA_TESTE" \
+    --env-file "$PASTA_TESTE/.env.teste" "$@")
+}
+
+como_dono_teste() {
+  (cd "$PASTA_TESTE" && runuser -u "$DONO" -- "$@")
+}
+
+esperar_api_teste() {
+  esperar_saudavel "$(compose_teste ps -q api)" "API de teste" && return 0
+  echo "API de teste não ficou healthy; veja: sudo caderno-admin teste logs api" >&2
+  return 1
+}
+
+teste_publicar() {
+  local ramo="${1:-main}"
+  # Começa com letra ou número: um ramo como "-x" viraria opção do git.
+  [[ "$ramo" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] || falhar "ramo '$ramo' inválido; esperado nome de ramo do GitHub, como main ou claude/fix-algo"
+  como_dono_teste git fetch origin "$ramo"
+  como_dono_teste git checkout --detach FETCH_HEAD
+  como_dono_teste git log --oneline -1
+  compose_teste up -d --build
+  esperar_api_teste
+}
+
+# Copia o banco e os anexos da produção. A produção só é lida (pg_dump e tar).
+teste_dados() {
+  compose_teste up -d db
+  esperar_saudavel "$(compose_teste ps -q db)" "Banco de teste"
+  compose_teste stop api
+  compose_teste exec -T db dropdb -U manutencao --if-exists --force manutencao
+  compose_teste exec -T db createdb -U manutencao manutencao
+  compose exec -T db pg_dump -U manutencao -Fc manutencao \
+    | compose_teste exec -T db pg_restore -U manutencao -d manutencao --no-owner
+  compose_teste up -d
+  esperar_api_teste
+  compose_teste exec -T api sh -c 'rm -rf /data/attachments/* /data/attachments/.[!.]*'
+  compose exec -T api tar -C /data/attachments -cf - . \
+    | compose_teste exec -T api tar -C /data/attachments -xf -
+  echo "Dados da produção copiados para o teste"
+}
+
+teste_logs() {
+  local servico="${1:-}" linhas="${2:-200}"
+  validar_logs "api db" "$servico" "$linhas"
+  compose_teste logs --no-color --tail "$linhas" "$servico"
+}
+
+cmd_teste() {
+  local acao="${1:-}"
+  shift || true
+  [[ -f "$PASTA_TESTE/.env.teste" ]] || falhar "ambiente de teste não montado: falta $PASTA_TESTE/.env.teste (passos no README)"
+  case "$acao" in
+    publicar) teste_publicar "$@" ;;
+    dados) teste_dados ;;
+    parar) compose_teste stop ;;
+    status) compose_teste ps ;;
+    logs) teste_logs "$@" ;;
+    *) falhar "teste '$acao' desconhecido; esperado publicar, dados, parar, status ou logs" ;;
+  esac
+}
+
 cmd_reiniciar() {
   [[ "${1:-}" == api ]] || falhar "só 'reiniciar api' é permitido; recebido: '${1:-}'"
   compose restart api
@@ -135,6 +218,7 @@ principal() {
     backup) cmd_backup ;;
     deploy) cmd_deploy ;;
     reiniciar) cmd_reiniciar "$@" ;;
+    teste) cmd_teste "$@" ;;
     *) falhar "comando '$comando' desconhecido" ;;
   esac
 }
