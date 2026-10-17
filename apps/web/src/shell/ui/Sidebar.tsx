@@ -57,9 +57,10 @@ export function Sidebar({
       {open ? (
         <button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-overlay lg:hidden" onClick={onClose} />
       ) : null}
+      {/* Fechado no celular, o menu fica fora da tela e também fora do Tab (invisible); no computador está sempre à vista. */}
       <aside
-        className={`app-chrome fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[248px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-3 py-4 text-sidebar-text transition lg:static lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
+        className={`app-chrome fixed inset-y-0 left-0 z-40 flex h-full min-h-0 w-[248px] shrink-0 flex-col overflow-hidden border-r border-sidebar-line bg-sidebar px-3 py-4 text-sidebar-text transition-[transform,visibility] lg:visible lg:static lg:translate-x-0 ${
+          open ? "translate-x-0" : "invisible -translate-x-full"
         }`}
       >
         <div className="px-2">
