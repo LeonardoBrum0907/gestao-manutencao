@@ -8,7 +8,7 @@ set -euo pipefail
 readonly DONO=leo
 readonly PASTA=/home/leo/caderno-gestor
 readonly SERVICOS="api db caddy"
-# Clone separado do ambiente de teste (docker-compose.teste.yml): fica no ramo que se publicar,
+# Clone separado da API de teste (docker-compose.teste.yml): fica no ramo que se publicar,
 # sem mexer no checkout da produção, que segue na main.
 readonly PASTA_TESTE=/home/leo/caderno-teste
 
@@ -21,11 +21,11 @@ Uso: sudo caderno-admin <comando>
   deploy                     backup, git pull da main, rebuild da API e espera healthy;
                              se a API nova não subir, volta código e imagem para a versão anterior
   reiniciar api              reinicia só o container da API
-  teste publicar [ramo]      sobe o ambiente de teste no ramo do GitHub (padrão main)
+  teste publicar [ramo]      sobe a API de teste no ramo do GitHub (padrão main)
   teste dados                apaga o banco e os anexos do teste e copia os da produção
-  teste parar                desliga o ambiente de teste (banco e anexos ficam guardados)
+  teste parar                desliga a API de teste (banco e anexos ficam guardados)
   teste status               containers do teste
-  teste logs <api|db|web> [N]
+  teste logs <api|db> [N]
 TEXTO
 }
 
@@ -170,7 +170,7 @@ teste_publicar() {
 teste_dados() {
   compose_teste up -d db
   esperar_saudavel "$(compose_teste ps -q db)" "Banco de teste"
-  compose_teste stop api web
+  compose_teste stop api
   compose_teste exec -T db dropdb -U manutencao --if-exists --force manutencao
   compose_teste exec -T db createdb -U manutencao manutencao
   compose exec -T db pg_dump -U manutencao -Fc manutencao \
@@ -185,7 +185,7 @@ teste_dados() {
 
 teste_logs() {
   local servico="${1:-}" linhas="${2:-200}"
-  validar_logs "api db web" "$servico" "$linhas"
+  validar_logs "api db" "$servico" "$linhas"
   compose_teste logs --no-color --tail "$linhas" "$servico"
 }
 

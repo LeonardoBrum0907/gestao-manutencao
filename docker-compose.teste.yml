@@ -1,8 +1,7 @@
-# Ambiente de teste na VPS: cópia da produção com banco, anexos e segredos próprios.
+# API de teste na VPS: cópia da produção com banco, anexos e segredos próprios.
 # Roda de um clone separado (/home/leo/caderno-teste), no ramo que se quiser testar,
-# e o Caddy da produção entrega https://TESTE_DOMAIN para o web daqui pela rede caderno-borda.
-# O web (nginx) serve a tela e repassa /api e /health para a API de teste: mesmo domínio,
-# então o login por cookie funciona sem CORS e sem mexer no vercel.json.
+# e o Caddy da produção entrega https://TESTE_DOMAIN para a API daqui pela rede caderno-borda.
+# A tela de teste são os previews da Vercel, que repassam /api para cá (vercel.json).
 #
 # Quem sobe e atualiza é o caderno-admin (`teste publicar`, `teste dados`, `teste parar`):
 #   docker compose -p caderno-teste -f <este arquivo> --project-directory /home/leo/caderno-teste \
@@ -43,6 +42,11 @@ services:
       PORT: "3000"
     volumes:
       - attachments:/data/attachments
+    networks:
+      default:
+      borda:
+        # Nome pelo qual o Caddy da produção acha esta API (deploy/vps/caddy/Caddyfile).
+        aliases: [caderno-teste-api]
     depends_on:
       db:
         condition: service_healthy
@@ -56,21 +60,6 @@ services:
       timeout: 5s
       retries: 12
       start_period: 60s
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      target: production
-    restart: unless-stopped
-    networks:
-      default:
-      borda:
-        # Nome pelo qual o Caddy da produção acha este web (deploy/vps/caddy/Caddyfile).
-        aliases: [caderno-teste-web]
-    depends_on:
-      api:
-        condition: service_healthy
 
 networks:
   # Criada pelo docker-compose.vps.yml, que precisa estar no ar antes.

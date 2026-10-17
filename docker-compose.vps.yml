@@ -58,7 +58,7 @@ services:
     restart: unless-stopped
     environment:
       API_DOMAIN: "${API_DOMAIN:?Defina API_DOMAIN no .env, por exemplo srv123456.hstgr.cloud}"
-      # Endereço do ambiente de teste (docker-compose.teste.yml). Sem ele no .env, o Caddy só
+      # Endereço da API de teste (docker-compose.teste.yml). Sem ele no .env, o Caddy só
       # registra erro de certificado para teste.invalid; a produção não é afetada.
       TESTE_DOMAIN: "${TESTE_DOMAIN:-teste.invalid}"
     ports:
@@ -80,7 +80,7 @@ services:
 
 networks:
   default:
-  # Só o Caddy e o web do ambiente de teste entram aqui; banco e API de cada lado ficam isolados.
+  # Só o Caddy e a API de teste entram aqui; banco e API de cada lado ficam isolados.
   borda:
     name: caderno-borda
 

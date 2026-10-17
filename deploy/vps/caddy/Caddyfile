@@ -14,8 +14,8 @@
 	}
 }
 
-# Ambiente de teste (docker-compose.teste.yml): o web de lá serve a tela e repassa a API.
+# API de teste (docker-compose.teste.yml), chamada pelos previews da Vercel.
 # Sem retry: no teste, um 502 durante a troca não atrapalha ninguém.
 {$TESTE_DOMAIN} {
-	reverse_proxy caderno-teste-web:80
+	reverse_proxy caderno-teste-api:3000
 }
