@@ -43,6 +43,8 @@ export function PostPreventivePage() {
   const remove = useDeletePostPreventive();
   const [confirming, setConfirming] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [exportBlocked, setExportBlocked] = useState(false);
 
   if (item.isPending) return <p className="text-sm text-muted">Carregando ficha…</p>;
   if (!item.data) return <p className="text-sm text-danger">Ficha não encontrada.</p>;
@@ -60,10 +62,13 @@ export function PostPreventivePage() {
         key={data.id}
         id={data.id}
         initial={valuesFromDto(data)}
-        onSaved={() => undefined}
+        onSaved={() => setExportBlocked(false)}
+        onDirtyChange={setDirty}
+        notice={exportBlocked && dirty ? "Grave a ficha antes de exportar: a folha sai com o que está gravado, e a mudança desta tela se perderia." : null}
         extraActions={
           <>
-            <Button tone="ghost" onClick={() => setExporting(true)}>
+            {/* A folha é montada com o que está gravado e abre em outra tela: exportar antes de gravar perdia a mudança. */}
+            <Button tone="ghost" onClick={() => (dirty ? setExportBlocked(true) : setExporting(true))}>
               Exportar
             </Button>
             {confirming ? (

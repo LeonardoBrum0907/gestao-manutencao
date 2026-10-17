@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { PostPreventiveDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
@@ -10,7 +10,7 @@ import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay } from "../../rp/model/rp";
 import { useSavePostPreventive } from "../data/post-preventives";
 import { missingFieldsNotice } from "../model/missing-fields";
-import { bodyFromValues, type PostPreventiveFormValues } from "../model/post-preventive";
+import { bodyFromValues, formChanged, type PostPreventiveFormValues } from "../model/post-preventive";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -25,22 +25,32 @@ export function PostPreventiveForm({
   id,
   initial,
   onSaved,
+  onDirtyChange,
+  notice,
   extraActions,
 }: {
   id?: string;
   initial: PostPreventiveFormValues;
   onSaved: (item: PostPreventiveDto) => void;
+  // Avisa a tela quando passa a ter (ou deixa de ter) mudança não gravada.
+  onDirtyChange?: (dirty: boolean) => void;
+  // Aviso da tela que usa o formulário, mostrado junto dos outros, em cima dos botões.
+  notice?: string | null;
   extraActions?: ReactNode;
 }) {
   const lines = useLines();
   const members = useMembers();
   const save = useSavePostPreventive(id);
   const [values, setValues] = useState(initial);
+  const [lastSaved, setLastSaved] = useState(initial);
+  const dirty = formChanged(lastSaved, values);
   const [saved, setSaved] = useState(false);
   const [missing, setMissing] = useState<string | null>(null);
   const rpSearch = new URLSearchParams(values.lineId ? { lineId: values.lineId } : {});
   const rps = useRpPages(rpSearch);
   const rpItems = values.lineId ? flattenRp(rps.data?.pages) : [];
+
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
   function set<K extends keyof PostPreventiveFormValues>(key: K, value: PostPreventiveFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -65,6 +75,7 @@ export function PostPreventiveForm({
     save.mutate(bodyFromValues(values), {
       onSuccess: (item) => {
         setSaved(true);
+        setLastSaved(values);
         onSaved(item);
       },
     });
@@ -155,6 +166,7 @@ export function PostPreventiveForm({
         </Section>
 
         {missing ? <Notice>{missing}</Notice> : null}
+        {notice ? <Notice>{notice}</Notice> : null}
         {!missing && save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
         {saved && id ? <p className="text-sm font-medium text-accent">Ficha gravada.</p> : null}
         <div className="flex flex-wrap items-center gap-3">
