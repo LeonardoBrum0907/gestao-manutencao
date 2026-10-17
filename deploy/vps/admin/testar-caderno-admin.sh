@@ -7,7 +7,7 @@ set -uo pipefail
 raiz="$(mktemp -d)"
 trap 'rm -rf "$raiz"' EXIT
 falsos="$raiz/bin"
-mkdir -p "$falsos" "$raiz/repo/deploy/vps"
+mkdir -p "$falsos" "$raiz/repo/deploy/vps" "$raiz/teste"
 export LOG="$raiz/log" ESTADO="$raiz/estado"
 
 criar_falsos() {
@@ -27,7 +27,7 @@ FALSO
 #!/bin/sh
 echo "docker $*" >> "$LOG"
 case "$*" in
-  *"ps -q api") echo cid ;;
+  *"ps -q "*) echo cid ;;
   # Como o compose real: lista também a imagem da dependência db.
   *"config --images api") printf 'postgres:18-alpine\ncaderno-gestor-api\n' ;;
   # Antes do "build api": "up … --no-build api" também termina em "build api".
@@ -41,12 +41,14 @@ case "$*" in
 esac
 FALSO
   chmod +x "$falsos"/* "$raiz/repo/deploy/vps/backup.sh"
-  sed "s|^readonly PASTA=.*|readonly PASTA=$raiz/repo|" deploy/vps/admin/caderno-admin > "$raiz/caderno-admin"
+  sed -e "s|^readonly PASTA=.*|readonly PASTA=$raiz/repo|" -e "s|^readonly PASTA_TESTE=.*|readonly PASTA_TESTE=$raiz/teste|" \
+    deploy/vps/admin/caderno-admin > "$raiz/caderno-admin"
 }
 
 rodar() {
+  local falha="$1"; shift
   : > "$LOG"; rm -f "$ESTADO"
-  FALHA="$1" PATH="$falsos:$PATH" bash "$raiz/caderno-admin" deploy > "$raiz/saida" 2>&1
+  FALHA="$falha" PATH="$falsos:$PATH" bash "$raiz/caderno-admin" "${@:-deploy}" > "$raiz/saida" 2>&1
 }
 
 falhas=0
@@ -77,5 +79,24 @@ conferir "API que não sobe sai com erro" test "$codigo" -ne 0
 conferir "API que não sobe volta o código" no_log "git reset --keep sha-anterior"
 conferir "API que não sobe sobe a imagem anterior" no_log "up -d --no-deps --no-build --force-recreate api"
 conferir "rollback espera a anterior ficar healthy" grep -q "API healthy" "$raiz/saida"
+
+rodar "" teste publicar; codigo=$?
+conferir "teste sem .env.teste recusa" test "$codigo" -eq 2
+
+touch "$raiz/teste/.env.teste"
+rodar "" teste publicar claude/fix-algo; codigo=$?
+conferir "teste publicar sai com 0" test "$codigo" -eq 0
+conferir "teste publicar busca o ramo pedido" no_log "git fetch origin claude/fix-algo"
+conferir "teste publicar usa o projeto de teste" no_log "docker compose -p caderno-teste"
+conferir "teste publicar não mexe na produção" fora_do_log "docker-compose.vps.yml"
+
+rodar "" teste publicar -x; codigo=$?
+conferir "teste publicar recusa ramo que vira opção" test "$codigo" -eq 2
+conferir "teste publicar recusado não busca nada" fora_do_log "git fetch"
+
+rodar "" teste dados; codigo=$?
+conferir "teste dados sai com 0" test "$codigo" -eq 0
+conferir "teste dados lê o banco da produção" no_log "docker-compose.vps.yml exec -T db pg_dump"
+conferir "teste dados não apaga o banco da produção" fora_do_log "docker-compose.vps.yml exec -T db dropdb"
 
 exit "$falhas"

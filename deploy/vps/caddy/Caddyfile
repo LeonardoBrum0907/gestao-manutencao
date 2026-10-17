@@ -13,3 +13,9 @@
 		request_buffers 10MiB
 	}
 }
+
+# Ambiente de teste (docker-compose.teste.yml): o web de lá serve a tela e repassa a API.
+# Sem retry: no teste, um 502 durante a troca não atrapalha ninguém.
+{$TESTE_DOMAIN} {
+	reverse_proxy caderno-teste-web:80
+}
