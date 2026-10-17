@@ -66,9 +66,11 @@ esperar_api() {
   return 1
 }
 
-# Nome da imagem que o compose gera para a API (caderno-gestor-api).
+# Nome da imagem que o compose gera para a API: <projeto>-<serviço>, com o projeto vindo do nome da pasta.
+# Não usa `compose config --images api`: ele lista também as imagens das dependências (o postgres do db)
+# e o `docker tag` recebia as duas linhas (primeiro deploy pelo Actions, 2026-10-17).
 imagem_api() {
-  compose config --images api
+  echo caderno-gestor-api
 }
 
 # Marca a imagem em uso como :anterior, para o rollback ter para onde voltar.
