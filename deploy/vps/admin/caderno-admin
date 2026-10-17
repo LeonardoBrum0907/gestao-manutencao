@@ -54,14 +54,19 @@ cmd_backup() {
   como_dono "$PASTA/deploy/vps/backup.sh"
 }
 
-# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
-esperar_api() {
-  local id tentativa
-  id="$(compose ps -q api)"
+# Espera o healthcheck de um container ficar healthy (até ~2 min).
+esperar_saudavel() {
+  local id="$1" nome="$2" tentativa
   for tentativa in $(seq 1 40); do
-    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "API healthy"; return 0; }
+    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "$nome healthy"; return 0; }
     sleep 3
   done
+  return 1
+}
+
+# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
+esperar_api() {
+  esperar_saudavel "$(compose ps -q api)" API && return 0
   echo "API não ficou healthy; veja: sudo caderno-admin logs api" >&2
   return 1
 }
