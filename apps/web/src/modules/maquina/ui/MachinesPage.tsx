@@ -3,11 +3,13 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
 import { useFactories, useLines, useMachines } from "../../cadastro/data/cadastro";
+import { machineStatusOptions } from "../../cadastro/model/labels";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { usePostPreventives } from "../../pos-preventiva/data/post-preventives";
+import { machineStatusFilter } from "../model/machine-status-filter";
 import { MACHINE_COLUMNS, machineStacked, type MachineTableRow } from "./machine-table";
 
-const FILTERS = ["q", "factoryId", "lineId", "points"] as const;
+const FILTERS = ["q", "factoryId", "lineId", "situacao", "points"] as const;
 
 // Busca sem diferenciar maiúscula nem acento.
 function fold(text: string): string {
@@ -32,6 +34,7 @@ export function MachinesPage() {
   const query = fold(params.get("q") ?? "").trim();
   const factoryId = params.get("factoryId") ?? "";
   const lineId = params.get("lineId") ?? "";
+  const status = machineStatusFilter(params.get("situacao"));
   const onlyPoints = params.get("points") === "true";
   const filtered = FILTERS.some((key) => params.get(key));
   const factoryLines = (lines.data ?? []).filter((line) => !factoryId || line.factoryId === factoryId);
@@ -45,6 +48,7 @@ export function MachinesPage() {
     .filter(({ machine, line }) => {
       if (lineId && machine.lineId !== lineId) return false;
       if (factoryId && line?.factoryId !== factoryId) return false;
+      if (status && machine.status !== status) return false;
       if (onlyPoints && !pointCount.get(machine.id)) return false;
       if (!query) return true;
       const text = [machine.name, machine.tag, machine.manufacturer, line?.name, line?.internalCode, modelNames.get(machine.equipmentId ?? "")];
@@ -77,15 +81,18 @@ export function MachinesPage() {
         }
       />
       <Card className="mb-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Buscar">
-            <TextInput
-              type="search"
-              value={params.get("q") ?? ""}
-              placeholder="Máquina, TAG ou linha"
-              onChange={(event) => setFilter("q", event.target.value)}
-            />
-          </Field>
+        {/* Dois filtros por fileira no celular: um por fileira empurrava a lista para baixo da primeira tela. */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="col-span-2 lg:col-span-1">
+            <Field label="Buscar">
+              <TextInput
+                type="search"
+                value={params.get("q") ?? ""}
+                placeholder="Máquina, TAG ou linha"
+                onChange={(event) => setFilter("q", event.target.value)}
+              />
+            </Field>
+          </div>
           <Field label="Fábrica">
             <SelectInput value={factoryId} onChange={(event) => setFilter("factoryId", event.target.value)}>
               <option value="">Todas</option>
@@ -106,10 +113,20 @@ export function MachinesPage() {
               ))}
             </SelectInput>
           </Field>
+          <Field label="Situação">
+            <SelectInput value={status ?? ""} onChange={(event) => setFilter("situacao", event.target.value)}>
+              <option value="">Todas</option>
+              {machineStatusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectInput>
+          </Field>
           <Field label="Pontos de atenção">
             <SelectInput value={onlyPoints ? "true" : ""} onChange={(event) => setFilter("points", event.target.value)}>
-              <option value="">Todas as máquinas</option>
-              <option value="true">Só com ponto ativo</option>
+              <option value="">Todas</option>
+              <option value="true">Com ponto ativo</option>
             </SelectInput>
           </Field>
         </div>
