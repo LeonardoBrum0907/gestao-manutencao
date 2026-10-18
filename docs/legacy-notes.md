@@ -10,3 +10,11 @@ Com Meu Dia, Agenda e Registros no lugar das abas antigas de Registros, o web de
 - `GET /api/dashboard/overdue-count` (selo de atrasadas no menu, removido a pedido do Léo: o Meu Dia já tem a seção Atrasadas).
 
 Ficaram na API porque são rotas públicas (o `AGENTS.md` pede para perguntar antes de mexer) e algum cliente externo, como o conector MCP, pode usá-las. Antes de removê-las, confira o MCP em `apps/api/src/mcp`.
+
+## Cargo do colaborador vem da função (2026-10-18)
+
+O cadastro não tem mais o campo Cargo. `Member.position` continua gravado porque matriz, desempenho, equipes e dashboard filtram por ele, mas quem decide é a função: `MemberRole.leadsTeams` liga o supervisor (`positionOfRole` em `apps/api/src/cadastro/domain/member-position.ts`).
+
+- Nunca grave `position` direto: salvar o colaborador recalcula pela função, e `PUT /api/member-roles/:id/leads-teams` muda a marca e o cargo de todos com a função numa transação. O `position` que a tela ainda manda no corpo é ignorado.
+- Quando der para trocar as leituras de `position` por `role.leadsTeams`, a coluna pode sair em dois PRs (regra das migrações).
+- As funções do SIGEM só são criadas num banco sem função (`role-seed.ts`). Antes o boot recriava pelo nome exato e quem renomeava "mecânico" para "Mecânico" ficava com as duas; a migração `20261018200000_role_leads_teams` juntou as repetidas.
