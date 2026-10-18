@@ -126,11 +126,11 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
   const toast = useToast();
   async function copyLink() {
     const url = publicRpUrl(window.location.origin, code, rp.id);
-    toast({ text: (await copyText(url)) ? "Link do RP copiado. Cole no WhatsApp." : `Copie o endereço: ${url}` });
+    toast({ text: (await copyText(url)) ? "Link do RP copiado. Cole no WhatsApp, Teams ou onde quiser." : `Copie o endereço: ${url}` });
   }
   async function copyReport() {
     const copied = await copyText(publicRpWhatsappText(rp, lines));
-    toast({ text: copied ? "Texto do RP copiado. Cole no grupo do WhatsApp." : "Não deu para copiar: o navegador bloqueou a área de transferência." });
+    toast({ text: copied ? "Texto do RP copiado. Cole no WhatsApp, Teams ou onde quiser." : "Não deu para copiar: o navegador bloqueou a área de transferência." });
   }
   return (
     <div className="flex flex-wrap gap-3">
@@ -141,7 +141,7 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
         Editar
       </Link>
       <Button tone="ghost" onClick={() => void copyReport()}>
-        Copiar para o WhatsApp
+        Copiar como texto
       </Button>
       <Button tone="ghost" onClick={() => void copyLink()}>
         Copiar link
@@ -155,7 +155,7 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
 }
 
 /**
- * Leitura de um RP da página pública, com Editar, Copiar para o WhatsApp, Copiar link, Pedir revisão, Aprovar e Recusar.
+ * Leitura de um RP da página pública, com Editar, Copiar como texto (modelo do WhatsApp), Copiar link, Pedir revisão, Aprovar e Recusar.
  * @example <Route path=":id" element={<PublicRpPage />} />
  */
 export function PublicRpPage() {
