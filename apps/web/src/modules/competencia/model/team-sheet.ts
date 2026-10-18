@@ -23,7 +23,7 @@ function headerRows(team: TeamMatrixDto, grid: TeamGrid): SheetRow[] {
   const blocks = grid.columnBlocks.some((block) => block.label)
     ? [[header(""), ...grid.columnBlocks.map((block) => header(block.label ?? "", block.columns.length)), header("")]]
     : [];
-  const titles = [header("Eletricista"), ...grid.columns.map((column) => header(columnTitle(column))), header("Qualificado em")];
+  const titles = [header("Técnico"), ...grid.columns.map((column) => header(columnTitle(column))), header("Qualificado em")];
   const minimum = [
     header("Qualificados / mínimo"),
     ...grid.columns.map((column) => {
@@ -90,7 +90,7 @@ export function teamMatrixTab(team: TeamMatrixDto, grid: TeamGrid, view: TeamMat
  * @example teamTrainingTab(team).rows[1] // ["Encaixotadora Mediseal", "Ninguém qualificado", 0, 2, "Renata", 0.78, 2, "3º turno"]
  */
 export function teamTrainingTab(team: TeamMatrixDto): SheetTab {
-  const titles = ["Equipamento", "Situação", "Qualificados", "Mínimo", "Eletricista", "Aderência", "Falta (pts)", "Turno"].map((title) => header(title));
+  const titles = ["Equipamento", "Situação", "Qualificados", "Mínimo", "Técnico", "Aderência", "Falta (pts)", "Turno"].map((title) => header(title));
   const rows = trainingNeeds(team, 5).flatMap((need) =>
     (need.candidates.length ? need.candidates : [null]).map((candidate): SheetRow => [
       { value: need.name, bold: true },

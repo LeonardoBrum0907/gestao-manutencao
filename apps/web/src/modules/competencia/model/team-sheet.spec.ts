@@ -13,7 +13,7 @@ describe("planilha da Matriz da equipe", () => {
   it("repete a grade da tela: linhas em cima, máquinas, e as mesmas colunas em todas as fileiras", () => {
     const [blocks, titles] = tab.rows.slice(3, 5);
     assert.deepEqual(blocks.map((cell) => [cell.value, cell.span]), [["", 1], ["CAM 05", 2], ["CAM 08", 1], ["Sem máquina cadastrada", 1], ["", 1]]);
-    assert.deepEqual(titles.map((cell) => cell.value), ["Eletricista", "Blistadeira (Blistadeira CAM)", "Encartuchadeira (Encartuchadeira CAM)", "Blistadeira CAM", "Encaixotadora CAM", "Qualificado em"]);
+    assert.deepEqual(titles.map((cell) => cell.value), ["Técnico", "Blistadeira (Blistadeira CAM)", "Encartuchadeira (Encartuchadeira CAM)", "Blistadeira CAM", "Encaixotadora CAM", "Qualificado em"]);
     assert.equal(tab.frozenRows, 6);
     assert.equal(tab.widths.length, titles.length);
   });
@@ -41,6 +41,7 @@ describe("planilha da Matriz da equipe", () => {
 
   it("lista quem treinar, com uma linha avisando quando ninguém tem o equipamento", () => {
     const rows = teamTrainingTab(team).rows;
+    assert.equal(rows[0][4].value, "Técnico");
     assert.equal(rows[1][0].value, "Encaixotadora CAM");
     assert.equal(rows[1][4].value, "Caio");
   });
