@@ -216,6 +216,8 @@ export type MemberRoleDto = {
   name: string;
   // Que habilidades da matriz quem tem esta função vê; null = as duas categorias.
   matrixCategory: MatrixCategory | null;
+  // Quem tem esta função lidera equipe (supervisor); o cargo do colaborador segue esta marca.
+  leadsTeams: boolean;
 };
 
 export type MemberGradeDto = {

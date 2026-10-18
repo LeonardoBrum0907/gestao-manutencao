@@ -3,11 +3,15 @@ import { describe, it } from "node:test";
 import { compareRoleNames, rolesToSeed } from "./role-seed";
 
 describe("funções do SIGEM ao subir a API", () => {
-  it("cria as seis num banco sem função, Mecânico e Eletricista já na categoria delas", () => {
+  it("cria as seis num banco sem função, Mecânico e Eletricista já na categoria delas, e Supervisor liderando equipe", () => {
     const seed = rolesToSeed(0);
     assert.deepEqual(
       seed.map((role) => role.name),
-      ["mecânico", "eletricista", "automação", "instrumentação", "manutenção", "utilidades"],
+      ["mecânico", "eletricista", "automação", "instrumentação", "manutenção", "utilidades", "Supervisor"],
+    );
+    assert.deepEqual(
+      seed.filter((role) => role.leadsTeams).map((role) => role.name),
+      ["Supervisor"],
     );
     assert.equal(seed[0].matrixCategory, "mechanical");
     assert.equal(seed[1].matrixCategory, "electrical");

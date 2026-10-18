@@ -4,6 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredString } from "../../kernel/parse";
 import { nameOwner, requireName } from "../domain/names";
 import { assertRoleNameAvailable } from "../domain/role-name";
+import { assertLeadsTeamsChange, requireLeadsTeams } from "../domain/role-leads-teams";
 import { requireRoleMatrixCategory } from "../domain/role-matrix-category";
 import { assertRoleCanBeRemoved } from "../domain/role-removal";
 import { RoleRepository } from "../infra/role.repository";
@@ -36,6 +37,15 @@ export class Roles {
   async setMatrixCategory(id: string, body: unknown): Promise<MemberRoleDto> {
     if (!(await this.roles.find(id))) throw new DomainError("not_found", 404, "Função não encontrada.");
     return this.roles.setMatrixCategory(id, requireRoleMatrixCategory(body));
+  }
+
+  // Liga ou desliga "lidera equipe": o cargo de todos com a função muda junto.
+  async setLeadsTeams(id: string, body: unknown): Promise<MemberRoleDto> {
+    const current = await this.roles.find(id);
+    if (!current) throw new DomainError("not_found", 404, "Função não encontrada.");
+    const leadsTeams = requireLeadsTeams(body);
+    assertLeadsTeamsChange(current.leadsTeams, leadsTeams, await this.roles.countTeamUse(id));
+    return this.roles.setLeadsTeams(id, leadsTeams);
   }
 
   // As regras da exclusão, sem excluir: a tela pergunta antes de oferecer o botão.
