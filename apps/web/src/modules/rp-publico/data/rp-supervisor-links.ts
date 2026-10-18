@@ -17,7 +17,7 @@ function useRefreshAfter<T>(mutationFn: (input: T) => Promise<unknown>) {
 }
 
 export function useCreateSupervisorLink() {
-  return useRefreshAfter((name: string) => api<RpSupervisorLinkDto>(PATH, { method: "POST", body: JSON.stringify({ name }) }));
+  return useRefreshAfter((memberId: string) => api<RpSupervisorLinkDto>(PATH, { method: "POST", body: JSON.stringify({ memberId }) }));
 }
 
 export function useReplaceSupervisorLink() {

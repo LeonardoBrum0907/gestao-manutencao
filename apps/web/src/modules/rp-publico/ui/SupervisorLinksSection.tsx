@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
-import type { RpSupervisorLinkDto } from "@manutencao/shared";
+import type { MemberDto, RpSupervisorLinkDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Notice, SectionTitle, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Notice, SectionTitle, SelectInput } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
+import { useMembers } from "../../cadastro/data/cadastro";
 import { useCreateSupervisorLink, useReplaceSupervisorLink, useRevokeSupervisorLink, useSupervisorLinks } from "../data/rp-supervisor-links";
 import { publicRpUrl } from "../model/public-rp";
+import { supervisorChoices } from "../model/supervisor-links";
 import { copyText } from "./public-rp-parts";
 
 type Confirming = "replace" | "revoke";
@@ -52,18 +54,35 @@ function SupervisorLinkActions({ link }: { link: RpSupervisorLinkDto }) {
   );
 }
 
-function NewSupervisorForm() {
+// Supervisor é quem tem função que lidera equipe (Configurações › Funções); quem já tem link sai da lista.
+function NewSupervisorForm({ choices, hasLinks }: { choices: MemberDto[]; hasLinks: boolean }) {
   const create = useCreateSupervisorLink();
-  const [name, setName] = useState("");
+  const [memberId, setMemberId] = useState("");
   function submit(event: FormEvent) {
     event.preventDefault();
-    create.mutate(name.trim(), { onSuccess: () => setName("") });
+    create.mutate(memberId, { onSuccess: () => setMemberId("") });
+  }
+  if (!choices.length) {
+    return (
+      <p className="text-sm text-muted">
+        {hasLinks ? "Todos os supervisores já têm link." : "Nenhum supervisor no cadastro. Em Configurações › Funções, marque “Lidera equipe” na função deles."}
+      </p>
+    );
   }
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-3">
-        <TextInput aria-label="Nome do supervisor" placeholder="Nome do supervisor" maxLength={60} value={name} onChange={(event) => setName(event.target.value)} className="min-w-0 flex-1" />
-        <Button type="submit" disabled={!name.trim() || create.isPending}>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-[12rem] flex-1">
+          <SelectInput aria-label="Supervisor" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
+            <option value="">Escolha o supervisor</option>
+            {choices.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name}
+              </option>
+            ))}
+          </SelectInput>
+        </div>
+        <Button type="submit" disabled={!memberId || create.isPending}>
           Criar link
         </Button>
       </div>
@@ -73,12 +92,14 @@ function NewSupervisorForm() {
 }
 
 /**
- * Configurações › Página pública: um link por supervisor. Só esse link aprova, recusa, pede revisão e exporta,
+ * Configurações › Página pública: um link por supervisor, escolhido entre os supervisores do cadastro. Só esse link aprova, recusa, pede revisão e exporta,
  * e o histórico do RP mostra o nome de quem fez (escolha do Léo em vez de login de supervisor).
  * @example {current === "rp-publico" ? <SupervisorLinksSection /> : null}
  */
 export function SupervisorLinksSection() {
   const links = useSupervisorLinks();
+  const members = useMembers();
+  const choices = supervisorChoices(members.data ?? [], links.data ?? []);
   return (
     <section>
       <SectionTitle
@@ -96,7 +117,7 @@ export function SupervisorLinksSection() {
               <SupervisorLinkActions link={link} />
             </div>
           ))}
-          <NewSupervisorForm />
+          {links.isSuccess && members.isSuccess ? <NewSupervisorForm choices={choices} hasLinks={links.data.length > 0} /> : null}
         </div>
       </Card>
     </section>
