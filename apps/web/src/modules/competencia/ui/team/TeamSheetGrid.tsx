@@ -84,7 +84,7 @@ function MemberRow({ member, grid, team, view }: { member: TeamMemberDto; grid: 
 function SheetLegend({ cut, view }: { cut: number; view: TeamMatrixView }) {
   return (
     <p className="legend">
-      <span>Negrito em verde: qualificado ({cut}% ou mais)</span>
+      <span>Negrito em azul: qualificado ({cut}% ou mais)</span>
       {view === "training" ? <span>Contorno tracejado: perto do corte</span> : null}
       <span>· não opera o equipamento</span>
       <span>Embaixo do nome: qualificados / mínimo</span>
