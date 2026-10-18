@@ -5,6 +5,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
 import { mirrorProblem } from "../domain/rp";
+import type { RpDecisionPatch } from "../domain/rp-decision";
 import { matchLine, matchMembers } from "../domain/rp-match";
 import { parseRpText as readReports, type ParsedRp } from "../domain/rp-text";
 import { RpRepository, type RpWrite } from "../infra/rp.repository";
@@ -99,12 +100,8 @@ export class Rps {
     return this.rps.listPage(parseRpList(query));
   }
 
-  setChecked(id: string, at: Date | null): Promise<RpDto> {
-    return this.rps.setChecked(id, at);
-  }
-
-  setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
-    return this.rps.setReviewRequest(id, text, at);
+  setDecision(id: string, patch: RpDecisionPatch): Promise<RpDto> {
+    return this.rps.setDecision(id, patch);
   }
 
   // Avisa de RP parecido antes de salvar. Não bloqueia: o gestor decide.

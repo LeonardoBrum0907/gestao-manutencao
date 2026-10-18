@@ -1,6 +1,7 @@
 import type { PublicRpDirectoryDto, PublicRpFields, RpDto, RpPageDto, RpPublicLinkDto, RpRevisionDto, RpRevisionKind, RpSource } from "@manutencao/shared";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
+import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
 
 // O que a página pública usa do módulo de RP (a classe Rps cumpre isto).
 export interface RpBook {
@@ -8,8 +9,7 @@ export interface RpBook {
   page(query: RpListQuery): Promise<RpPageDto>;
   createFrom(input: RpInput, origin: RpSource): Promise<RpDto>;
   updateFrom(id: string, input: RpInput): Promise<RpDto>;
-  setChecked(id: string, at: Date | null): Promise<RpDto>;
-  setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto>;
+  setDecision(id: string, patch: RpDecisionPatch): Promise<RpDto>;
 }
 
 export interface PublicLinkStore {

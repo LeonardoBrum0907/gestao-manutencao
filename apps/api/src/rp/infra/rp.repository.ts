@@ -8,12 +8,14 @@ import {
   type RpFields,
   type RpListItemDto,
   type RpPageDto,
+  type RpPublicDecision,
   type RpSource,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { RpListFilter } from "../domain/rp-list";
 import { normalizeOrder, normalizeProblem } from "../domain/rp";
+import type { RpDecisionPatch } from "../domain/rp-decision";
 
 const include = { members: { orderBy: { position: "asc" as const } } };
 
@@ -65,6 +67,8 @@ function toDto(row: Row): RpDto {
     checkedAt: row.checkedAt?.toISOString() ?? null,
     reviewRequest: row.reviewRequest,
     reviewRequestedAt: row.reviewRequestedAt?.toISOString() ?? null,
+    rejectedAt: row.rejectedAt?.toISOString() ?? null,
+    rejectionNote: row.rejectionNote,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -83,6 +87,7 @@ const listSelect = {
   source: true,
   checkedAt: true,
   reviewRequestedAt: true,
+  rejectedAt: true,
   members: { select: { memberId: true }, orderBy: { position: "asc" as const } },
 } satisfies Prisma.RpSelect;
 
@@ -101,6 +106,7 @@ function toListItem(row: Prisma.RpGetPayload<{ select: typeof listSelect }>): Rp
     source: source(row.source),
     checked: row.checkedAt !== null,
     reviewRequested: row.reviewRequestedAt !== null,
+    rejected: row.rejectedAt !== null,
   };
 }
 
@@ -170,11 +176,20 @@ function listWhere(filter: RpListFilter): Prisma.RpWhereInput {
   if (filter.source) and.push({ source: filter.source });
   if (filter.reviewPending) and.push({ reviewRequestedAt: { not: null } });
   if (filter.checked !== null) and.push({ checkedAt: filter.checked ? { not: null } : null });
+  if (filter.decision) and.push(decisionWhere(filter.decision));
   if (filter.q) {
     const contains = { contains: filter.q, mode: "insensitive" as const };
     and.push({ OR: [{ problem: contains }, { description: contains }, { rootCause: contains }] });
   }
   return { AND: and };
+}
+
+// Mesma ordem de rpPublicDecisionOf: pedido de revisão, recusa, aprovação.
+function decisionWhere(decision: RpPublicDecision): Prisma.RpWhereInput {
+  if (decision === "revision") return { reviewRequestedAt: { not: null } };
+  if (decision === "rejected") return { reviewRequestedAt: null, rejectedAt: { not: null } };
+  if (decision === "approved") return { reviewRequestedAt: null, rejectedAt: null, checkedAt: { not: null } };
+  return { reviewRequestedAt: null, rejectedAt: null, checkedAt: null };
 }
 
 @Injectable()
@@ -223,15 +238,9 @@ export class RpRepository {
     await this.prisma.rp.delete({ where: { id } });
   }
 
-  // Conferido pelo coordenador (data) ou de volta para conferir (null).
-  async setChecked(id: string, at: Date | null): Promise<RpDto> {
-    const row = await this.prisma.rp.update({ where: { id }, data: { checkedAt: at }, include });
-    return toDto(row);
-  }
-
-  // Pedido de revisão do supervisor; null nos dois apaga o pedido.
-  async setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
-    const row = await this.prisma.rp.update({ where: { id }, data: { reviewRequest: text, reviewRequestedAt: at }, include });
+  // Conferido, pedido de revisão: grava só as chaves que vierem no patch.
+  async setDecision(id: string, patch: RpDecisionPatch): Promise<RpDto> {
+    const row = await this.prisma.rp.update({ where: { id }, data: patch, include });
     return toDto(row);
   }
 

@@ -529,6 +529,9 @@ model Rp {
   // Pedido de revisão do supervisor (página pública): some quando o técnico corrige e marca revisado.
   reviewRequest        String?
   reviewRequestedAt    DateTime?
+  // Supervisor recusou o RP na página pública (com o motivo, se deu); editar pelo link volta para pendente.
+  rejectedAt           DateTime?
+  rejectionNote        String?
   members              RpMember[]
   postPreventives      PostPreventive[]
   revisions            RpRevision[]

@@ -38,6 +38,12 @@ export class PublicRpController {
     return this.rps.update(code, id, body);
   }
 
+  // Aprovar, recusar ou pedir revisão de vários RPs marcados na lista.
+  @Post("review")
+  bulkReview(@Param("code") code: string, @Body() body: unknown) {
+    return this.rps.bulkReview(code, body);
+  }
+
   @Post(":id/review-request")
   requestReview(@Param("code") code: string, @Param("id") id: string, @Body() body: unknown) {
     return this.rps.requestReview(code, id, body);

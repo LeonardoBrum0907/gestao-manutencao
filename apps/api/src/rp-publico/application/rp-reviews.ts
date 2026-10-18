@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { RpDto, RpRevisionDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredBoolean } from "../../kernel/parse";
+import { decisionPatch } from "../../rp/domain/rp-decision";
 import { publicFieldsOf } from "../domain/public-rp-view";
 import { toRpInput } from "./parse-public-rp";
 import { PUBLIC_CLOCK, PUBLIC_DIRECTORY_STORE, RP_BOOK, RP_REVISION_STORE, type Clock, type PublicDirectoryStore, type RpBook, type RpRevisionStore } from "./ports";
@@ -23,7 +24,8 @@ export class RpReviews {
   async setChecked(id: string, body: unknown): Promise<RpDto> {
     const checked = requiredBoolean(readObject(body), "checked");
     await this.rps.get(id);
-    return this.rps.setChecked(id, checked ? this.clock() : null);
+    // Conferir no app é aprovar: tira a recusa e o pedido de revisão do supervisor.
+    return this.rps.setDecision(id, checked ? decisionPatch("approve", this.clock(), null) : { checkedAt: null });
   }
 
   async list(id: string): Promise<RpRevisionDto[]> {

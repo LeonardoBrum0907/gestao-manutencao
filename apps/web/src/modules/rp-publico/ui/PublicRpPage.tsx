@@ -4,12 +4,13 @@ import { RP_FOUR_M, RP_FOUR_M_LABELS, type PublicRpDirectoryDto, type PublicRpDt
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, TextArea } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
-import { usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
+import { formatRpDay } from "../../rp/model/rp";
+import { useBulkReview, usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
 import { publicRpPath, publicRpUrl } from "../model/public-rp";
 import { publicRpWhatsappText } from "../model/public-rp-whatsapp";
-import { ApprovedBadge } from "./PublicRpExport";
-import { copyText, ReviewRequestNotice } from "./public-rp-parts";
+import { bulkDoneText, NOTE_PROMPTS } from "../model/public-rp-review";
+import { RpBadges } from "./PublicRpSelection";
+import { copyText, NoteDialog, ReviewRequestNotice } from "./public-rp-parts";
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -74,17 +75,62 @@ function AskReview({ code, id, onDone }: { code: string; id: string; onDone: () 
   );
 }
 
+// Aprovar e Recusar do supervisor, pela mesma rota do lote (um RP só).
+function DecisionButtons({ code, rp }: { code: string; rp: PublicRpDto }) {
+  const review = useBulkReview(code);
+  const toast = useToast();
+  const [rejecting, setRejecting] = useState(false);
+  function decide(action: "approve" | "reject", note?: string) {
+    review.mutate(
+      { ids: [rp.id], action, note },
+      {
+        onSuccess: (result) => {
+          toast({ text: bulkDoneText(action, result.updated) });
+          setRejecting(false);
+        },
+        onError: (error) => toast({ text: `Não deu para gravar: ${errorMessage(error)}` }),
+      },
+    );
+  }
+  return (
+    <>
+      {rp.decision === "approved" ? null : (
+        <Button tone="ghost" disabled={review.isPending} onClick={() => decide("approve")}>
+          Aprovar
+        </Button>
+      )}
+      {rp.decision === "rejected" ? null : (
+        <Button tone="ghost" disabled={review.isPending} onClick={() => setRejecting(true)}>
+          Recusar
+        </Button>
+      )}
+      {rejecting ? (
+        <NoteDialog prompt={NOTE_PROMPTS.reject} pending={review.isPending} onClose={() => setRejecting(false)} onConfirm={(note) => decide("reject", note)} />
+      ) : null}
+    </>
+  );
+}
+
+function RejectionNotice({ note }: { note: string | null }) {
+  return (
+    <div role="status" className="flex flex-col gap-1 rounded-control border border-danger bg-danger-soft p-4 text-sm text-app">
+      <p className="font-semibold text-danger">RP recusado</p>
+      {note ? <p className="whitespace-pre-line">{note}</p> : null}
+    </div>
+  );
+}
+
 type ActionsProps = { code: string; rp: PublicRpDto; lines: PublicRpDirectoryDto["lines"]; onAskReview: () => void };
 
 function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
   const toast = useToast();
   async function copyLink() {
     const url = publicRpUrl(window.location.origin, code, rp.id);
-    toast({ text: (await copyText(url)) ? "Link do RP copiado. Cole no WhatsApp." : `Copie o endereço: ${url}` });
+    toast({ text: (await copyText(url)) ? "Link do RP copiado. Cole no WhatsApp, Teams ou onde quiser." : `Copie o endereço: ${url}` });
   }
   async function copyReport() {
     const copied = await copyText(publicRpWhatsappText(rp, lines));
-    toast({ text: copied ? "Texto do RP copiado. Cole no grupo do WhatsApp." : "Não deu para copiar: o navegador bloqueou a área de transferência." });
+    toast({ text: copied ? "Texto do RP copiado. Cole no WhatsApp, Teams ou onde quiser." : "Não deu para copiar: o navegador bloqueou a área de transferência." });
   }
   return (
     <div className="flex flex-wrap gap-3">
@@ -95,7 +141,7 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
         Editar
       </Link>
       <Button tone="ghost" onClick={() => void copyReport()}>
-        Copiar para o WhatsApp
+        Copiar como texto
       </Button>
       <Button tone="ghost" onClick={() => void copyLink()}>
         Copiar link
@@ -103,12 +149,13 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
       <Button tone="ghost" onClick={onAskReview}>
         Pedir revisão
       </Button>
+      <DecisionButtons code={code} rp={rp} />
     </div>
   );
 }
 
 /**
- * Leitura de um RP da página pública, com Editar, Copiar para o WhatsApp, Copiar link e Pedir revisão.
+ * Leitura de um RP da página pública, com Editar, Copiar como texto (modelo do WhatsApp), Copiar link, Pedir revisão, Aprovar e Recusar.
  * @example <Route path=":id" element={<PublicRpPage />} />
  */
 export function PublicRpPage() {
@@ -126,13 +173,11 @@ export function PublicRpPage() {
       <Link to={publicRpPath(code)} className="text-sm font-semibold text-accent hover:underline">
         ← Todos os RPs
       </Link>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-2">
         <h1 className="font-serif text-2xl font-semibold text-app">Relatório padrão</h1>
-        <span className="flex items-center gap-2">
-          {data.approved ? <ApprovedBadge /> : null}
-          <span className={rpStatusChipClass(data.status)}>{rpStatusLabel(data.status)}</span>
-        </span>
+        <RpBadges decision={data.decision} status={data.status} />
       </div>
+      {data.decision === "rejected" ? <RejectionNotice note={data.rejectionNote} /> : null}
       {data.reviewRequest ? <ReviewRequestNotice text={data.reviewRequest} at={data.reviewRequestedAt} /> : null}
       <Actions code={code} rp={data} lines={directory.data?.lines ?? []} onAskReview={() => setAsking(true)} />
       {asking ? <AskReview code={code} id={data.id} onDone={() => setAsking(false)} /> : null}

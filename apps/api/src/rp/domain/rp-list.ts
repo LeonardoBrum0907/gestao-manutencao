@@ -1,4 +1,4 @@
-import type { RpSource, RpStatus } from "@manutencao/shared";
+import type { RpPublicDecision, RpSource, RpStatus } from "@manutencao/shared";
 
 export const DEFAULT_PAGE_SIZE = 50;
 export const MAX_PAGE_SIZE = 100;
@@ -18,6 +18,8 @@ export type RpListFilter = {
   reviewPending: boolean;
   // RP da página pública conferido (aprovado) pelo coordenador; null: todos.
   checked: boolean | null;
+  // Situação na avaliação do supervisor (pendente, aprovado, recusado, revisar); null: todas.
+  decision: RpPublicDecision | null;
   q: string | null;
   cursor: string | null;
   limit: number;

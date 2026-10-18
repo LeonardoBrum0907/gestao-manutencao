@@ -23,7 +23,11 @@ function pickPublic(source: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(PUBLIC_KEYS.filter((key) => key in source).map((key) => [key, source[key]]));
 }
 
-function assertLength(value: string | null, label: string, max: number): void {
+/**
+ * Recusa texto maior que o limite, dizendo o tamanho recebido e o máximo.
+ * @example assertLength(texto, "O pedido de revisão", REVIEW_MAX)
+ */
+export function assertLength(value: string | null, label: string, max: number): void {
   if (value && value.length > max) {
     throw new DomainError("too_long", 400, `${label} passou do tamanho (recebido: ${value.length} caracteres; máximo: ${max}).`);
   }
@@ -75,7 +79,7 @@ export function parsePublicRp(body: unknown, allowed: ReadonlySet<string>, curre
   return { input, revised: optionalBoolean(source, "revised") };
 }
 
-const REVIEW_MAX = 1000;
+export const REVIEW_MAX = 1000;
 
 /**
  * O que o supervisor pede para revisar.

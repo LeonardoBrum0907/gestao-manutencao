@@ -1,4 +1,4 @@
-import { isRpSource, isRpStatus, type RpSource, type RpStatus } from "@manutencao/shared";
+import { isRpPublicDecision, isRpSource, isRpStatus, type RpPublicDecision, type RpSource, type RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, type RpListFilter } from "../domain/rp-list";
 
@@ -30,6 +30,7 @@ export type RpListQuery = {
   source?: unknown;
   review?: unknown;
   checked?: unknown;
+  decision?: unknown;
   q?: unknown;
   cursor?: unknown;
   limit?: unknown;
@@ -54,6 +55,13 @@ function checkedFilter(value: unknown): boolean | null {
   if (!text) return null;
   if (text !== "true" && text !== "false") throw new DomainError("invalid", 400, `Filtro de conferido inválido (recebido: ${text}; esperado: true ou false).`);
   return text === "true";
+}
+
+function decisionFilter(value: unknown): RpPublicDecision | null {
+  const text = single(value);
+  if (!text) return null;
+  if (!isRpPublicDecision(text)) throw new DomainError("invalid", 400, `Situação inválida (recebido: ${text}; esperado: pending, approved, rejected ou revision).`);
+  return text;
 }
 
 export function parseRpList(query: RpListQuery): RpListFilter {
@@ -82,6 +90,7 @@ export function parseRpList(query: RpListQuery): RpListFilter {
     source: origin(query.source),
     reviewPending: reviewPending(query.review),
     checked: checkedFilter(query.checked),
+    decision: decisionFilter(query.decision),
     q: single(query.q)?.trim() || null,
     cursor: single(query.cursor) || null,
     limit,
