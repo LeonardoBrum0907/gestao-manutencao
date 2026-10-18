@@ -6,7 +6,7 @@ import { InlineCreate } from "../../../design/ui/inline-create";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteSubassembly, useSaveSubassembly } from "../../cadastro/data/cadastro";
 import { useSetHiddenSubassemblies } from "../../cadastro/data/machine-parts";
-import { machineSubassemblyGroups, toggledHidden } from "../model/machine-subassemblies";
+import { machineSubassemblyGroups, subassemblyChecklistHint, toggledHidden } from "../model/machine-subassemblies";
 
 type CardProps = {
   machine: MachineDto;
@@ -51,7 +51,7 @@ function SubassemblyChecklist({ machine, model, subassemblies }: Omit<CardProps,
           </Link>
         }
       />
-      <p className="-mt-2 mb-3 text-sm text-muted">Desmarque o que esta máquina não tem. Só o que está marcado aparece nas fichas dela.</p>
+      <p className="-mt-2 mb-3 text-sm text-muted">{subassemblyChecklistHint(groups, model.name)}</p>
       <div className="flex flex-col gap-4">
         <CheckGroup title={`Do modelo ${model.name}`} items={groups.model} machine={machine} onToggle={toggle} />
         <OwnGroup items={groups.own} machine={machine} onToggle={toggle} />

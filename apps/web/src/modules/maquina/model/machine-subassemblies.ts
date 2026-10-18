@@ -23,3 +23,13 @@ export function toggledHidden(hidden: string[], subassemblyId: string, has: bool
   const rest = hidden.filter((id) => id !== subassemblyId);
   return has ? rest : [...rest, subassemblyId];
 }
+
+/**
+ * Texto de ajuda do bloco "Subconjuntos": sem nenhum subconjunto não há o que desmarcar,
+ * então diz isso e aponta onde cadastrar.
+ * @example subassemblyChecklistHint({ model: [], own: [] }, "PH-200") // "O modelo PH-200 ainda não tem subconjunto. …"
+ */
+export function subassemblyChecklistHint(groups: MachineSubassemblyGroups, modelName: string): string {
+  if (groups.model.length || groups.own.length) return "Desmarque o que esta máquina não tem. Só o que está marcado aparece nas fichas dela.";
+  return `O modelo ${modelName} ainda não tem subconjunto. Cadastre em "Editar no modelo" ou crie um só desta máquina.`;
+}
