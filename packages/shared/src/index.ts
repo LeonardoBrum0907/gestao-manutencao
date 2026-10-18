@@ -824,3 +824,4 @@ export * from "./machine-parts";
 export * from "./push";
 export * from "./reminder";
 export * from "./rp-public";
+export * from "./rp-whatsapp";
