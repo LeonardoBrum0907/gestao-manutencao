@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { assertCanJoinTeam, assertMemberShape, assertPositionChange, requirePosition } from "./member-position";
+import { assertCanJoinTeam, assertMemberShape, assertPositionChange, positionOfRole, requirePosition } from "./member-position";
 
 function fails(run: () => void, code: string, statusCode: number) {
   assert.throws(run, (error: unknown) => {
@@ -19,14 +19,21 @@ describe("cargo do colaborador", () => {
     fails(() => requirePosition("coordenador"), "invalid", 400);
   });
 
-  it("exige função do técnico e deixa o supervisor sem", () => {
+  // Antes o supervisor podia ficar sem função; agora é a função que diz que ele é supervisor.
+  it("exige função de todo colaborador", () => {
     fails(() => assertMemberShape({ position: "technician", roleId: null, teamId: null }), "invalid", 400);
+    fails(() => assertMemberShape({ position: "supervisor", roleId: null, teamId: null }), "invalid", 400);
     assert.doesNotThrow(() => assertMemberShape({ position: "technician", roleId: "role", teamId: "team" }));
-    assert.doesNotThrow(() => assertMemberShape({ position: "supervisor", roleId: null, teamId: null }));
+    assert.doesNotThrow(() => assertMemberShape({ position: "supervisor", roleId: "role", teamId: null }));
+  });
+
+  it("tira o cargo da função: quem lidera equipe é supervisor", () => {
+    assert.equal(positionOfRole({ leadsTeams: true }), "supervisor");
+    assert.equal(positionOfRole({ leadsTeams: false }), "technician");
   });
 
   it("não deixa supervisor entrar como membro de equipe", () => {
-    fails(() => assertMemberShape({ position: "supervisor", roleId: null, teamId: "team" }), "supervisor_not_member", 400);
+    fails(() => assertMemberShape({ position: "supervisor", roleId: "role", teamId: "team" }), "supervisor_not_member", 400);
     fails(() => assertCanJoinTeam("supervisor"), "supervisor_not_member", 400);
     assert.doesNotThrow(() => assertCanJoinTeam("technician"));
   });

@@ -13,15 +13,12 @@ function fails(run: () => void, code: string) {
 }
 
 describe("exclusão de função", () => {
-  it("recusa as funções do SIGEM, que a API recria ao subir", () => {
-    fails(() => assertRoleCanBeRemoved("mecânico", 0), "role_is_default");
-  });
-
   it("recusa quando existe colaborador com a função", () => {
-    fails(() => assertRoleCanBeRemoved("caldeireiro", 2), "role_in_use");
+    fails(() => assertRoleCanBeRemoved(2), "role_in_use");
   });
 
-  it("permite função criada pelo gestor e sem uso", () => {
-    assert.doesNotThrow(() => assertRoleCanBeRemoved("caldeireiro", 0));
+  // A API não recria mais as funções do SIGEM ao subir, então elas também saem quando ninguém usa.
+  it("permite qualquer função sem uso, inclusive as do SIGEM", () => {
+    assert.doesNotThrow(() => assertRoleCanBeRemoved(0));
   });
 });

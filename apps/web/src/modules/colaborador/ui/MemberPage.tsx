@@ -41,7 +41,7 @@ export function MemberPage() {
 
   const allTeams = teams.data ?? [];
   const current = resolveTab(tab, member.position);
-  const subtitle = [positionLabel(member.position), member.roleName, member.gradeName, shiftLabel(member.shift), teamText(member, allTeams)]
+  const subtitle = [member.roleName ?? positionLabel(member.position), member.gradeName, shiftLabel(member.shift), teamText(member, allTeams)]
     .filter(Boolean)
     .join(" · ");
 

@@ -9,7 +9,7 @@ export function assertTeamNameAvailable(ownerId: string | null, currentId: strin
 
 export function assertCanLead(position: MemberPosition): void {
   if (position !== "supervisor") {
-    throw new DomainError("not_supervisor", 400, "O supervisor da equipe precisa ter o cargo Supervisor.");
+    throw new DomainError("not_supervisor", 400, "O supervisor da equipe precisa ter uma função que lidera equipe (Configurações › Funções e graus).");
   }
 }
 

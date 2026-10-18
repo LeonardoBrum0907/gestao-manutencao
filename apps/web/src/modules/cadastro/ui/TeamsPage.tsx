@@ -213,7 +213,7 @@ function TeamPanel({
           </SelectInput>
         </Field>
         {supervisors.length === 0 ? (
-          <p className="text-sm text-muted">Nenhum supervisor ainda. Cadastre em Colaboradores, com o cargo Supervisor.</p>
+          <p className="text-sm text-muted">Nenhum supervisor ainda. Cadastre em Colaboradores, com uma função que lidera equipe (como Supervisor).</p>
         ) : null}
         <Field label="Descrição">
           <TextArea value={draft.description ?? ""} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />

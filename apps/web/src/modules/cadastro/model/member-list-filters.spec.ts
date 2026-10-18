@@ -1,16 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { memberPositionFilter } from "./member-list-filters";
+import { memberRoleFilter } from "./member-list-filters";
 
-describe("memberPositionFilter", () => {
-  it("devolve o cargo pedido no endereço", () => {
-    assert.equal(memberPositionFilter("technician"), "technician");
-    assert.equal(memberPositionFilter("supervisor"), "supervisor");
+describe("memberRoleFilter", () => {
+  const roles = [{ id: "mecanico" }, { id: "supervisor" }];
+
+  it("devolve a função pedida no endereço", () => {
+    assert.equal(memberRoleFilter("mecanico", roles), "mecanico");
+    assert.equal(memberRoleFilter("supervisor", roles), "supervisor");
   });
 
-  it("sem pedido ou com valor desconhecido, não filtra", () => {
-    assert.equal(memberPositionFilter(null), "");
-    assert.equal(memberPositionFilter(""), "");
-    assert.equal(memberPositionFilter("tecnico"), "");
+  it("sem pedido ou com função que não existe, não filtra", () => {
+    assert.equal(memberRoleFilter(null, roles), "");
+    assert.equal(memberRoleFilter("", roles), "");
+    assert.equal(memberRoleFilter("technician", roles), "");
   });
 });

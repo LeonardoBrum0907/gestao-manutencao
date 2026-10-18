@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { MemberDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
-import { assertMemberShape, assertPositionChange, requirePosition } from "../domain/member-position";
+import { assertMemberShape, assertPositionChange, positionOfRole, requirePosition } from "../domain/member-position";
 import { assertMemberCanBeRemoved } from "../domain/member-removal";
 import { requireName, requireShift, requireMemberStatus } from "../domain/names";
 import { GradeRepository } from "../infra/grade.repository";
@@ -61,12 +61,13 @@ export class Members {
       teamId ? this.teams.find(teamId) : null,
     ]);
     if (id && !current) throw new DomainError("not_found", 404, "Colaborador não encontrado.");
-    const position = requirePosition(requiredString(source, "position", "Escolha o cargo."));
+    if (roleId && !role) throw new DomainError("role", 400, `Função não encontrada: ${roleId}.`);
+    // O cargo vem da função; o "position" que a tela antiga ainda manda é ignorado.
+    const position = role ? positionOfRole(role) : "technician";
     assertMemberShape({ position, roleId, teamId });
     if (current) {
       assertPositionChange(requirePosition(current.position), position, await this.teams.countLedBy(current.id));
     }
-    if (roleId && !role) throw new DomainError("role", 400, "Função não encontrada.");
     if (gradeId && !grade) throw new DomainError("grade", 400, "Grau não encontrado.");
     if (teamId && !team) throw new DomainError("team", 400, "Equipe não encontrada.");
     const input = {

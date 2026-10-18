@@ -152,6 +152,8 @@ model MemberRole {
   name           String   @unique
   // Categoria da matriz que quem tem esta função vê (mechanical ou electrical); vazio vê as duas.
   matrixCategory String?
+  // Quem tem esta função lidera equipe (o antigo cargo Supervisor): Member.position segue esta marca.
+  leadsTeams     Boolean  @default(false)
   members        Member[]
 }
 

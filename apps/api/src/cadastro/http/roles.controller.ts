@@ -26,6 +26,11 @@ export class RolesController {
     return this.roles.setMatrixCategory(id, body);
   }
 
+  @Put(":id/leads-teams")
+  setLeadsTeams(@Param("id") id: string, @Body() body: unknown) {
+    return this.roles.setLeadsTeams(id, body);
+  }
+
   @Get(":id/removal")
   removal(@Param("id") id: string) {
     return removalCheck(() => this.roles.checkRemoval(id));
