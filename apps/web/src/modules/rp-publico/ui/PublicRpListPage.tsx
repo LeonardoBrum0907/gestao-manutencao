@@ -4,24 +4,19 @@ import { RP_PUBLIC_DECISION_LABELS, RP_PUBLIC_DECISIONS, type PublicRpDirectoryD
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel, rpStatusOptions } from "../../rp/model/rp";
+import { formatRpDay, rpStatusOptions } from "../../rp/model/rp";
 import { usePendingReviews, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
 import { placeOf, publicRpPath, rememberMember, rememberedMember } from "../model/public-rp";
 import { toggleSelected } from "../model/public-rp-export";
-import { DecisionBadge, SelectableRpCard, SelectionBar, SelectionIntro } from "./PublicRpSelection";
+import { RpBadges, SelectableRpCard, SelectionBar, SelectionIntro } from "./PublicRpSelection";
 import { deviceStorage } from "./public-rp-parts";
 
 function RpCard({ code, rp, lineNames }: { code: string; rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string> }) {
   return (
     <li>
       <Link to={publicRpPath(code, rp.id)} className="flex flex-col gap-1.5 rounded-card border border-line bg-card p-4 shadow-card transition hover:border-accent">
-        <span className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-          <span>{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
-          <span className="flex items-center gap-2">
-            <DecisionBadge decision={rp.decision} />
-            <span className={rpStatusChipClass(rp.status)}>{rpStatusLabel(rp.status)}</span>
-          </span>
-        </span>
+        <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
+        <RpBadges decision={rp.decision} status={rp.status} />
         <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
         <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
       </Link>
@@ -72,7 +67,7 @@ function useRememberedMemberParam(params: URLSearchParams, setParams: (next: URL
 function Filters({ params, setFilter }: { params: URLSearchParams; setFilter: (key: string, value: string) => void }) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <Field label="Status">
+      <Field label="Status da máquina">
         <SelectInput value={params.get("status") ?? ""} onChange={(event) => setFilter("status", event.target.value)}>
           <option value="">Todos</option>
           {rpStatusOptions.map((option) => (
@@ -82,7 +77,7 @@ function Filters({ params, setFilter }: { params: URLSearchParams; setFilter: (k
           ))}
         </SelectInput>
       </Field>
-      <Field label="Situação">
+      <Field label="Avaliação do supervisor">
         <SelectInput value={params.get("decision") ?? ""} onChange={(event) => setFilter("decision", event.target.value)}>
           <option value="">Todas</option>
           {RP_PUBLIC_DECISIONS.map((decision) => (

@@ -1,4 +1,5 @@
-import type { RpBulkAction, RpPublicDecision } from "@manutencao/shared";
+import { RP_PUBLIC_DECISION_LABELS, type RpBulkAction, type RpPublicDecision, type RpStatus } from "@manutencao/shared";
+import { rpStatusLabel } from "../../rp/model/rp";
 
 // Textos da avaliação em lote na página pública: o que cada ação pede e o aviso depois de gravar.
 
@@ -38,13 +39,31 @@ export const NOTE_PROMPTS: Record<Exclude<RpBulkAction, "approve">, NotePrompt> 
 };
 
 /**
- * Classe do selo da situação. Pendente não tem selo: é o normal de um RP novo.
+ * Classe do selo da avaliação do supervisor. Pendente fica neutro.
  * @example decisionBadgeClass("rejected") // "… bg-danger-soft text-danger"
  */
-export function decisionBadgeClass(decision: RpPublicDecision): string | null {
+export function decisionBadgeClass(decision: RpPublicDecision): string {
   const base = "rounded-control px-2 py-1 text-xs font-semibold";
   if (decision === "approved") return `${base} bg-accent-soft text-accent-ink`;
   if (decision === "rejected") return `${base} bg-danger-soft text-danger`;
   if (decision === "revision") return `${base} bg-warn-soft text-warn`;
-  return null;
+  return `${base} bg-chip text-muted`;
+}
+
+// Os dois selos ficam lado a lado e "Aprovado" com "Em análise" confundia: cada um diz do que fala (pedido do Léo).
+
+/**
+ * Texto do selo da avaliação do supervisor sobre o relatório.
+ * @example decisionBadgeText("approved") // "Avaliação do supervisor: Aprovado"
+ */
+export function decisionBadgeText(decision: RpPublicDecision): string {
+  return `Avaliação do supervisor: ${RP_PUBLIC_DECISION_LABELS[decision]}`;
+}
+
+/**
+ * Texto do selo do status do RP, que diz em que pé está a falha na máquina.
+ * @example machineStatusText("analysis") // "Status da máquina: Em análise"
+ */
+export function machineStatusText(status: RpStatus): string {
+  return `Status da máquina: ${rpStatusLabel(status)}`;
 }

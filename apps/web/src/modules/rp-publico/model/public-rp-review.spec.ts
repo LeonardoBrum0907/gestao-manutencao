@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { bulkDoneText, decisionBadgeClass, NOTE_PROMPTS } from "./public-rp-review";
+import { bulkDoneText, decisionBadgeClass, decisionBadgeText, machineStatusText, NOTE_PROMPTS } from "./public-rp-review";
 
 describe("avaliação em lote", () => {
   it("aviso no singular e no plural", () => {
@@ -14,9 +14,15 @@ describe("avaliação em lote", () => {
   });
 
   it("pendente fica sem selo; as outras situações têm cor própria", () => {
-    assert.equal(decisionBadgeClass("pending"), null);
-    assert.match(decisionBadgeClass("approved") ?? "", /accent-soft/);
-    assert.match(decisionBadgeClass("rejected") ?? "", /danger-soft/);
-    assert.match(decisionBadgeClass("revision") ?? "", /warn-soft/);
+    assert.match(decisionBadgeClass("pending"), /bg-chip/);
+    assert.match(decisionBadgeClass("approved"), /accent-soft/);
+    assert.match(decisionBadgeClass("rejected"), /danger-soft/);
+    assert.match(decisionBadgeClass("revision"), /warn-soft/);
+  });
+
+  it("cada selo diz do que fala", () => {
+    assert.equal(decisionBadgeText("approved"), "Avaliação do supervisor: Aprovado");
+    assert.equal(decisionBadgeText("pending"), "Avaliação do supervisor: Pendente");
+    assert.equal(machineStatusText("analysis"), "Status da máquina: Em análise");
   });
 });

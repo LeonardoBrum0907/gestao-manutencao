@@ -4,12 +4,12 @@ import { RP_FOUR_M, RP_FOUR_M_LABELS, type PublicRpDirectoryDto, type PublicRpDt
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, TextArea } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
+import { formatRpDay } from "../../rp/model/rp";
 import { useBulkReview, usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
 import { publicRpPath, publicRpUrl } from "../model/public-rp";
 import { publicRpWhatsappText } from "../model/public-rp-whatsapp";
 import { bulkDoneText, NOTE_PROMPTS } from "../model/public-rp-review";
-import { DecisionBadge } from "./PublicRpSelection";
+import { RpBadges } from "./PublicRpSelection";
 import { copyText, NoteDialog, ReviewRequestNotice } from "./public-rp-parts";
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -173,12 +173,9 @@ export function PublicRpPage() {
       <Link to={publicRpPath(code)} className="text-sm font-semibold text-accent hover:underline">
         ← Todos os RPs
       </Link>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-2">
         <h1 className="font-serif text-2xl font-semibold text-app">Relatório padrão</h1>
-        <span className="flex items-center gap-2">
-          <DecisionBadge decision={data.decision} />
-          <span className={rpStatusChipClass(data.status)}>{rpStatusLabel(data.status)}</span>
-        </span>
+        <RpBadges decision={data.decision} status={data.status} />
       </div>
       {data.decision === "rejected" ? <RejectionNotice note={data.rejectionNote} /> : null}
       {data.reviewRequest ? <ReviewRequestNotice text={data.reviewRequest} at={data.reviewRequestedAt} /> : null}

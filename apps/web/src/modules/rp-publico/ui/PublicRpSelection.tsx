@@ -1,24 +1,28 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { RP_PUBLIC_DECISION_LABELS, type PublicRpDirectoryDto, type PublicRpListItemDto, type RpBulkAction, type RpPublicDecision } from "@manutencao/shared";
+import type { PublicRpDirectoryDto, PublicRpListItemDto, RpBulkAction, RpPublicDecision, RpStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
-import { formatRpDay, rpStatusChipClass, rpStatusLabel, todayLocal } from "../../rp/model/rp";
+import { formatRpDay, rpStatusChipClass, todayLocal } from "../../rp/model/rp";
 import { fetchPublicRps, useBulkReview } from "../data/public-rp";
 import { downloadRpExport } from "../data/public-rp-xlsx";
 import { placeOf } from "../model/public-rp";
 import { rpExportFileName, rpExportTable } from "../model/public-rp-export";
-import { bulkDoneText, decisionBadgeClass, NOTE_PROMPTS } from "../model/public-rp-review";
+import { bulkDoneText, decisionBadgeClass, decisionBadgeText, machineStatusText, NOTE_PROMPTS } from "../model/public-rp-review";
 import { NoteDialog } from "./public-rp-parts";
 
 /**
- * Selo da situação do RP (Aprovado, Recusado, Revisar). Pendente não mostra nada.
- * @example <DecisionBadge decision={rp.decision} />
+ * Os dois selos do RP: a avaliação do supervisor sobre o relatório e o status da falha na máquina.
+ * @example <RpBadges decision={rp.decision} status={rp.status} />
  */
-export function DecisionBadge({ decision }: { decision: RpPublicDecision }) {
-  const className = decisionBadgeClass(decision);
-  return className ? <span className={className}>{RP_PUBLIC_DECISION_LABELS[decision]}</span> : null;
+export function RpBadges({ decision, status }: { decision: RpPublicDecision; status: RpStatus }) {
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span className={decisionBadgeClass(decision)}>{decisionBadgeText(decision)}</span>
+      <span className={rpStatusChipClass(status)}>{machineStatusText(status)}</span>
+    </span>
+  );
 }
 
 type SelectableCardProps = { rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string>; checked: boolean; onToggle: () => void };
@@ -34,13 +38,8 @@ export function SelectableRpCard({ rp, lineNames, checked, onToggle }: Selectabl
       <label className={`flex cursor-pointer gap-3 rounded-card border ${border} bg-card p-4 shadow-card transition hover:border-accent`}>
         <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--accent)]" checked={checked} onChange={onToggle} />
         <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-            <span>{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
-            <span className="flex items-center gap-2">
-              <DecisionBadge decision={rp.decision} />
-              <span className={rpStatusChipClass(rp.status)}>{rpStatusLabel(rp.status)}</span>
-            </span>
-          </span>
+          <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
+          <RpBadges decision={rp.decision} status={rp.status} />
           <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
           <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
         </span>
