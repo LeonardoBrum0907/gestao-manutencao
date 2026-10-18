@@ -18,7 +18,7 @@ describe("resumo do dia na tela de Chamados", () => {
     assert.equal(chamadosDaySummary(of("open")), "1 chamado · 1 pendente");
   });
 
-  it("vários do mesmo status", () => {
-    assert.equal(chamadosDaySummary(of("done", "done", "open", "open", "in_progress", "in_progress")), "6 chamados · 2 liberado · 2 pendente · 2 em andamento");
+  it("vários do mesmo status vão para o plural", () => {
+    assert.equal(chamadosDaySummary(of("done", "done", "open", "open", "in_progress", "in_progress")), "6 chamados · 2 liberados · 2 pendentes · 2 em andamento");
   });
 });
