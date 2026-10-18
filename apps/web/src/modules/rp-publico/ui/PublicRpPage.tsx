@@ -8,6 +8,7 @@ import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp
 import { usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
 import { publicRpPath, publicRpUrl } from "../model/public-rp";
 import { publicRpWhatsappText } from "../model/public-rp-whatsapp";
+import { ApprovedBadge } from "./PublicRpExport";
 import { copyText, ReviewRequestNotice } from "./public-rp-parts";
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -127,7 +128,10 @@ export function PublicRpPage() {
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-2xl font-semibold text-app">Relatório padrão</h1>
-        <span className={rpStatusChipClass(data.status)}>{rpStatusLabel(data.status)}</span>
+        <span className="flex items-center gap-2">
+          {data.approved ? <ApprovedBadge /> : null}
+          <span className={rpStatusChipClass(data.status)}>{rpStatusLabel(data.status)}</span>
+        </span>
       </div>
       {data.reviewRequest ? <ReviewRequestNotice text={data.reviewRequest} at={data.reviewRequestedAt} /> : null}
       <Actions code={code} rp={data} lines={directory.data?.lines ?? []} onAskReview={() => setAsking(true)} />
