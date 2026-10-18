@@ -115,7 +115,7 @@ export const MEMBER_SHIFT_LABELS: Record<MemberShift, string> = {
 };
 
 export const MEMBER_POSITION_LABELS: Record<MemberPosition, string> = {
-  technician: "Eletricista",
+  technician: "Técnico",
   supervisor: "Supervisor",
 };
 
