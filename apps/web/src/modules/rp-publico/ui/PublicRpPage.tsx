@@ -5,7 +5,7 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, TextArea } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
 import { formatRpDay } from "../../rp/model/rp";
-import { useBulkReview, usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
+import { useBulkReview, usePublicAccess, usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
 import { publicRpPath, publicRpUrl } from "../model/public-rp";
 import { publicRpWhatsappText } from "../model/public-rp-whatsapp";
 import { bulkDoneText, NOTE_PROMPTS } from "../model/public-rp-review";
@@ -120,9 +120,10 @@ function RejectionNotice({ note }: { note: string | null }) {
   );
 }
 
-type ActionsProps = { code: string; rp: PublicRpDto; lines: PublicRpDirectoryDto["lines"]; onAskReview: () => void };
+// supervisor: só o link de um supervisor avalia o RP (a API também recusa no link da equipe).
+type ActionsProps = { code: string; rp: PublicRpDto; lines: PublicRpDirectoryDto["lines"]; supervisor: boolean; onAskReview: () => void };
 
-function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
+function Actions({ code, rp, lines, supervisor, onAskReview }: ActionsProps) {
   const toast = useToast();
   async function copyLink() {
     const url = publicRpUrl(window.location.origin, code, rp.id);
@@ -146,22 +147,28 @@ function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
       <Button tone="ghost" onClick={() => void copyLink()}>
         Copiar link
       </Button>
-      <Button tone="ghost" onClick={onAskReview}>
-        Pedir revisão
-      </Button>
-      <DecisionButtons code={code} rp={rp} />
+      {supervisor ? (
+        <>
+          <Button tone="ghost" onClick={onAskReview}>
+            Pedir revisão
+          </Button>
+          <DecisionButtons code={code} rp={rp} />
+        </>
+      ) : null}
     </div>
   );
 }
 
 /**
- * Leitura de um RP da página pública, com Editar, Copiar como texto (modelo do WhatsApp), Copiar link, Pedir revisão, Aprovar e Recusar.
+ * Leitura de um RP da página pública, com Editar, Copiar como texto (modelo do WhatsApp) e Copiar link. No link de um
+ * supervisor também Pedir revisão, Aprovar e Recusar.
  * @example <Route path=":id" element={<PublicRpPage />} />
  */
 export function PublicRpPage() {
   const { code = "", id = "" } = useParams();
   const rp = usePublicRp(code, id);
   const directory = usePublicDirectory(code);
+  const access = usePublicAccess(code);
   const [asking, setAsking] = useState(false);
 
   if (rp.isPending) return <p className="text-sm text-muted">Carregando RP…</p>;
@@ -179,7 +186,7 @@ export function PublicRpPage() {
       </div>
       {data.decision === "rejected" ? <RejectionNotice note={data.rejectionNote} /> : null}
       {data.reviewRequest ? <ReviewRequestNotice text={data.reviewRequest} at={data.reviewRequestedAt} /> : null}
-      <Actions code={code} rp={data} lines={directory.data?.lines ?? []} onAskReview={() => setAsking(true)} />
+      <Actions code={code} rp={data} lines={directory.data?.lines ?? []} supervisor={access.data?.role === "supervisor"} onAskReview={() => setAsking(true)} />
       {asking ? <AskReview code={code} id={data.id} onDone={() => setAsking(false)} /> : null}
       <Card>
         <RpDetails rp={data} directory={directory.data} />

@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkReviewBody, RpBulkReviewResultDto } from "@manutencao/shared";
+import type { PublicRpAccessDto, PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkReviewBody, RpBulkReviewResultDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 // Chamadas da página pública: sem login, o código do link vai no caminho.
@@ -8,6 +8,18 @@ const PAGE_SIZE = 50;
 
 function base(code: string): string {
   return `/api/public/rp/${encodeURIComponent(code)}`;
+}
+
+/**
+ * Quem é o link: o da equipe ou o de um supervisor (só este aprova, recusa, pede revisão e exporta).
+ * @example const access = usePublicAccess(code); const supervisor = access.data?.role === "supervisor";
+ */
+export function usePublicAccess(code: string) {
+  return useQuery({
+    queryKey: ["public-rp", code, "access"],
+    queryFn: () => api<PublicRpAccessDto>(`${base(code)}/access`),
+    staleTime: 10 * 60_000,
+  });
 }
 
 export function usePublicDirectory(code: string) {

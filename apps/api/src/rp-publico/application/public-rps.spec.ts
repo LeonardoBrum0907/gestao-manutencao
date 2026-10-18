@@ -3,11 +3,20 @@ import { describe, it } from "node:test";
 import type { PublicRpBody } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PublicWriteLimiter } from "../domain/write-limiter";
-import { FakePublicDirectoryStore, FakePublicLinkStore, FakeRpBook, FakeRpRevisionStore, sampleRp } from "./fake-public-rp-stores";
+import {
+  FakePublicDirectoryStore,
+  FakePublicLinkStore,
+  FakeRpBook,
+  FakeRpRevisionStore,
+  FakeSupervisorLinkStore,
+  sampleRp,
+} from "./fake-public-rp-stores";
 import { PublicLinks } from "./public-links";
 import { PublicRps } from "./public-rps";
 
 const CODE = "k8F3qP0zLm2xV7sR9tW1yB4n";
+// Link do supervisor Carlos: o único que aprova, recusa e pede revisão.
+const SUP = "s8F3qP0zLm2xV7sR9tW1yB4n";
 const NOW = new Date("2026-10-18T15:00:00Z");
 const noCause = { marked: false, text: null };
 
@@ -28,7 +37,9 @@ async function setup(limit = 10) {
   const people = new FakePublicDirectoryStore();
   const revisions = new FakeRpRevisionStore();
   const limiter = new PublicWriteLimiter({ create: { limit, windowMs: 1000 }, write: { limit, windowMs: 1000 } }, () => 0);
-  const service = new PublicRps(new PublicLinks(links, () => NOW), book, people, revisions, limiter, () => NOW);
+  const supervisors = new FakeSupervisorLinkStore();
+  await supervisors.create({ id: "m-carlos", name: "Carlos" }, SUP, NOW);
+  const service = new PublicRps(new PublicLinks(links, supervisors, () => NOW), book, people, revisions, limiter, () => NOW);
   return { links, book, people, revisions, service };
 }
 
@@ -161,7 +172,7 @@ describe("PublicRps: pedir revisão", () => {
   it("grava o pedido com a hora e vai para o histórico", async () => {
     const { book, revisions, service } = await setup();
     book.rows = [sampleRp()];
-    const rp = await service.requestReview(CODE, "rp1", { text: "  Faltou a causa raiz " });
+    const rp = await service.requestReview(SUP, "rp1", { text: "  Faltou a causa raiz " });
     assert.equal(rp.reviewRequest, "Faltou a causa raiz");
     assert.equal(rp.reviewRequestedAt, NOW.toISOString());
     assert.equal(revisions.rows[0]!.kind, "review_request");
@@ -171,7 +182,7 @@ describe("PublicRps: pedir revisão", () => {
   it("pedido vazio é recusado", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp()];
-    await assert.rejects(service.requestReview(CODE, "rp1", { text: " " }), /Escreva o que precisa revisar/);
+    await assert.rejects(service.requestReview(SUP, "rp1", { text: " " }), /Escreva o que precisa revisar/);
   });
 });
 
@@ -179,7 +190,7 @@ describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
   it("aprova vários de uma vez, cada um com o antes no histórico", async () => {
     const { book, revisions, service } = await setup();
     book.rows = [sampleRp({ id: "a", rejectedAt: NOW.toISOString(), rejectionNote: "x" }), sampleRp({ id: "b" })];
-    assert.deepEqual(await service.bulkReview(CODE, { ids: ["a", "b"], action: "approve" }), { updated: 2 });
+    assert.deepEqual(await service.bulkReview(SUP, { ids: ["a", "b"], action: "approve" }), { updated: 2 });
     const [a, b] = [await service.get(CODE, "a"), await service.get(CODE, "b")];
     assert.deepEqual([a.decision, b.decision, a.rejectionNote], ["approved", "approved", null]);
     assert.deepEqual(revisions.rows.map((row) => [row.rpId, row.kind]), [["a", "approve"], ["b", "approve"]]);
@@ -188,7 +199,7 @@ describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
   it("recusar guarda o motivo e tira a aprovação", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp({ checkedAt: NOW.toISOString() })];
-    await service.bulkReview(CODE, { ids: ["rp1"], action: "reject", note: "Não é falha" });
+    await service.bulkReview(SUP, { ids: ["rp1"], action: "reject", note: "Não é falha" });
     const rp = await service.get(CODE, "rp1");
     assert.deepEqual([rp.decision, rp.approved, rp.rejectionNote], ["rejected", false, "Não é falha"]);
   });
@@ -196,7 +207,7 @@ describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
   it("pedir revisão em lote vale para todos e aparece no filtro de revisão", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp({ id: "a" }), sampleRp({ id: "b" })];
-    await service.bulkReview(CODE, { ids: ["a", "b"], action: "request_review", note: "Faltou a TAG" });
+    await service.bulkReview(SUP, { ids: ["a", "b"], action: "request_review", note: "Faltou a TAG" });
     const rps = await Promise.all(["a", "b"].map((id) => service.get(CODE, id)));
     assert.deepEqual(rps.map((rp) => [rp.decision, rp.reviewRequest]), [["revision", "Faltou a TAG"], ["revision", "Faltou a TAG"]]);
   });
@@ -204,7 +215,7 @@ describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
   it("um RP fora da página pública barra o lote inteiro", async () => {
     const { book, revisions, service } = await setup();
     book.rows = [sampleRp({ id: "a" }), sampleRp({ id: "colado", source: "paste" })];
-    await assert.rejects(service.bulkReview(CODE, { ids: ["a", "colado"], action: "approve" }), rejects(404));
+    await assert.rejects(service.bulkReview(SUP, { ids: ["a", "colado"], action: "approve" }), rejects(404));
     assert.equal(revisions.rows.length, 0);
     assert.equal((await book.get("a")).checkedAt, null);
   });
@@ -214,5 +225,28 @@ describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
     book.rows = [sampleRp()];
     await service.page(CODE, { decision: "rejected" });
     assert.deepEqual(book.queries[0], { source: "public", decision: "rejected" });
+  });
+});
+
+describe("PublicRps: só o supervisor avalia", () => {
+  it("link da equipe não aprova, não recusa e não pede revisão", async () => {
+    const { book, revisions, service } = await setup();
+    book.rows = [sampleRp()];
+    await assert.rejects(service.bulkReview(CODE, { ids: ["rp1"], action: "approve" }), rejects(403));
+    await assert.rejects(service.requestReview(CODE, "rp1", { text: "Faltou a TAG" }), rejects(403));
+    assert.equal(revisions.rows.length, 0);
+  });
+
+  it("o histórico guarda o nome do supervisor que avaliou", async () => {
+    const { book, revisions, service } = await setup();
+    book.rows = [sampleRp()];
+    await service.bulkReview(SUP, { ids: ["rp1"], action: "reject", note: "Repetido" });
+    assert.deepEqual([revisions.rows[0]!.kind, revisions.rows[0]!.actorName], ["reject", "Carlos"]);
+  });
+
+  it("diz à tela quem abriu", async () => {
+    const { service } = await setup();
+    assert.deepEqual(await service.access(CODE), { role: "team" });
+    assert.deepEqual(await service.access(SUP), { role: "supervisor", supervisorName: "Carlos" });
   });
 });

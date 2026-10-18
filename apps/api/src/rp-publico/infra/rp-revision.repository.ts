@@ -6,14 +6,15 @@ import { isRecord } from "../../kernel/parse";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { RevisionWrite, RpRevisionStore } from "../application/ports";
 
-type Row = { id: string; rpId: string; kind: string; before: Prisma.JsonValue; note: string | null; createdAt: Date };
+type Row = { id: string; rpId: string; kind: string; before: Prisma.JsonValue; note: string | null; actorName: string | null; createdAt: Date };
 
 // O "antes" é gravado por esta API; a restauração passa de novo pela leitura do RP, que confere cada campo.
 function toDto(row: Row): RpRevisionDto {
   if (!isRpRevisionKind(row.kind) || !isRecord(row.before)) {
     throw new DomainError("invalid", 500, `Histórico do RP gravado está inválido (linha ${row.id}, tipo ${row.kind}).`);
   }
-  return { id: row.id, rpId: row.rpId, kind: row.kind, note: row.note, before: row.before as PublicRpFields, createdAt: row.createdAt.toISOString() };
+  const before = row.before as PublicRpFields;
+  return { id: row.id, rpId: row.rpId, kind: row.kind, note: row.note, before, actorName: row.actorName, createdAt: row.createdAt.toISOString() };
 }
 
 @Injectable()
@@ -22,7 +23,13 @@ export class RpRevisionRepository implements RpRevisionStore {
 
   async add(write: RevisionWrite): Promise<RpRevisionDto> {
     const row = await this.prisma.rpRevision.create({
-      data: { rpId: write.rpId, kind: write.kind, before: write.before as Prisma.InputJsonValue, note: write.note },
+      data: {
+        rpId: write.rpId,
+        kind: write.kind,
+        before: write.before as Prisma.InputJsonValue,
+        note: write.note,
+        actorName: write.actorName ?? null,
+      },
     });
     return toDto(row);
   }

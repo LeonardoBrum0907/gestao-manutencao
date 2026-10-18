@@ -15,6 +15,7 @@ import { ModelDocumentsSection } from "../../documentacao/ui/ModelDocumentsSecti
 import { MatrixCatalogSection } from "../../competencia/ui/MatrixCatalogSection";
 import { RoleMatrixSection } from "../../competencia/ui/RoleMatrixSection";
 import { PublicRpLinkSection } from "../../rp-publico/ui/PublicRpLinkSection";
+import { SupervisorLinksSection } from "../../rp-publico/ui/SupervisorLinksSection";
 
 // Cadastros que se arrumam uma vez e pouco mudam: ficam fora do menu, numa página com abas (como no SIGEM).
 export const SETTINGS_TABS = [
@@ -67,7 +68,12 @@ export function SettingsPage() {
           </>
         ) : null}
         {current === "avisos" ? <AvisosSection /> : null}
-        {current === "rp-publico" ? <PublicRpLinkSection /> : null}
+        {current === "rp-publico" ? (
+          <>
+            <PublicRpLinkSection />
+            <SupervisorLinksSection />
+          </>
+        ) : null}
       </div>
     </div>
   );
