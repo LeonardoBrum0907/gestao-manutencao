@@ -31,6 +31,8 @@ function RoleRow({ role, disabled, onPick }: { role: MemberRoleDto; disabled: bo
 export function RoleMatrixSection() {
   const roles = useRoles();
   const save = useSetRoleMatrixCategory();
+  // Supervisor (função que lidera equipe) não tem matriz: escolher categoria para ela não muda nada.
+  const matrixRoles = roles.data?.filter((role) => !role.leadsTeams) ?? [];
   const pick = (role: MemberRoleDto, value: string) => save.mutate({ id: role.id, matrixCategory: isMatrixCategory(value) ? value : null });
   return (
     <div>
@@ -40,9 +42,9 @@ export function RoleMatrixSection() {
       />
       {save.error ? <Notice>{errorMessage(save.error)}</Notice> : null}
       {roles.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
-      {roles.data?.length ? (
+      {matrixRoles.length ? (
         <ul className="overflow-hidden rounded-card border border-line bg-card shadow-card">
-          {roles.data.map((role) => (
+          {matrixRoles.map((role) => (
             <RoleRow key={role.id} role={role} disabled={save.isPending} onPick={pick} />
           ))}
         </ul>

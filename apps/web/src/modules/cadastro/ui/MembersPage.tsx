@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { MemberDto } from "@manutencao/shared";
 import { Button, Card, Field, PageTitle, SelectInput } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
-import { useMembers, useTeams } from "../data/cadastro";
-import { memberPositionFilter } from "../model/member-list-filters";
+import { useMembers, useRoles, useTeams } from "../data/cadastro";
+import { memberRoleFilter } from "../model/member-list-filters";
 import { teamsOf } from "../model/team";
 import { MemberPanel } from "./MemberPanel";
 import { memberColumns, memberStacked } from "./member-table";
@@ -17,14 +17,16 @@ type Open = { member: MemberDto | null; removing?: boolean } | undefined;
 export function MembersPage() {
   const members = useMembers();
   const teams = useTeams();
+  const roles = useRoles();
   // Os filtros ficam no endereço para continuarem escolhidos depois de abrir a ficha e voltar pelo "←".
   const [params, setParams] = useSearchParams();
-  const positionFilter = memberPositionFilter(params.get("position"));
+  const allRoles = roles.data ?? [];
+  const roleFilter = memberRoleFilter(params.get("funcao"), allRoles);
   const teamFilter = params.get("team") ?? "";
   const [open, setOpen] = useState<Open>(undefined);
   const navigate = useNavigate();
 
-  function setFilter(key: "position" | "team", value: string) {
+  function setFilter(key: "funcao" | "team", value: string) {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
     else next.delete(key);
@@ -33,7 +35,7 @@ export function MembersPage() {
 
   const allTeams = teams.data ?? [];
   const visible = members.data?.filter((member) => {
-    if (positionFilter && member.position !== positionFilter) return false;
+    if (roleFilter && member.roleId !== roleFilter) return false;
     if (!teamFilter) return true;
     const own = teamsOf(member, allTeams);
     return teamFilter === NO_TEAM ? own.length === 0 : own.some((team) => team.id === teamFilter);
@@ -50,11 +52,14 @@ export function MembersPage() {
       {members.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {members.data?.length ? (
         <div className="mb-4 grid gap-3 sm:max-w-xl sm:grid-cols-2">
-          <Field label="Cargo">
-            <SelectInput value={positionFilter} onChange={(event) => setFilter("position", event.target.value)}>
-              <option value="">Todos</option>
-              <option value="technician">Técnicos</option>
-              <option value="supervisor">Supervisores</option>
+          <Field label="Função">
+            <SelectInput value={roleFilter} onChange={(event) => setFilter("funcao", event.target.value)}>
+              <option value="">Todas</option>
+              {allRoles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
             </SelectInput>
           </Field>
           <Field label="Equipe">

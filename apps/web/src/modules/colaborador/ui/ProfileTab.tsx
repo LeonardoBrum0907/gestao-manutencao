@@ -4,7 +4,7 @@ import type { MemberDto, TeamDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Notice, Stat } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
-import { memberStatusClass, memberStatusLabel, positionLabel, shiftLabel } from "../../cadastro/model/labels";
+import { memberStatusClass, memberStatusLabel, shiftLabel } from "../../cadastro/model/labels";
 import { teamsOf } from "../../cadastro/model/team";
 import { flattenPages } from "../../registro/data/records";
 import { useMemberRp } from "../../rp/data/rp";
@@ -161,7 +161,6 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
         <Card>
           <h2 className="text-sm font-semibold text-app">Dados</h2>
           <dl className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-3">
-            <Detail label="Cargo">{positionLabel(member.position)}</Detail>
             <Detail label="Função">{member.roleName}</Detail>
             <Detail label="Grau">{member.gradeName}</Detail>
             <Detail label="Turno">{shiftLabel(member.shift)}</Detail>

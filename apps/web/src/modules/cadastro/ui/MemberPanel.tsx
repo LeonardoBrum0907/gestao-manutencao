@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { MemberDto, MemberPosition, MemberShift, MemberStatus } from "@manutencao/shared";
+import type { MemberDto, MemberShift, MemberStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Field, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { PanelFooter, PanelSection, PanelTag, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { useToast } from "../../../design/ui/toast";
 import { useDeleteMember, useGrades, useRoles, useSaveMember, useTeams, type MemberWrite } from "../data/cadastro";
-import { memberStatusLabel, memberStatusOptions, positionLabel, positionOptions, shiftOptions } from "../model/labels";
+import { memberStatusLabel, memberStatusOptions, positionLabel, shiftOptions } from "../model/labels";
+import { positionForRole } from "../model/member-role";
 
 const empty: MemberWrite = {
   name: "",
@@ -85,7 +86,7 @@ export function MemberPanel({
   return (
     <DetailModal
       open
-      eyebrow={member ? positionLabel(member.position) : "Novo"}
+      eyebrow={member ? (member.roleName ?? positionLabel(member.position)) : "Novo"}
       title={member ? member.name : "Novo colaborador"}
       meta={
         member ? (
@@ -172,17 +173,20 @@ export function MemberPanel({
             <TextInput value={draft.name} placeholder="Nome completo" onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Cargo">
+            {/* Sem campo Cargo: a função diz se a pessoa lidera equipe (Configurações › Funções e graus). */}
+            <Field label="Função">
               <SelectInput
-                value={draft.position}
+                value={draft.roleId ?? ""}
                 onChange={(event) => {
-                  const position = event.target.value as MemberPosition;
-                  setDraft({ ...draft, position, teamId: position === "supervisor" ? null : draft.teamId });
+                  const roleId = event.target.value || null;
+                  const position = positionForRole(roles.data?.find((role) => role.id === roleId), draft.position);
+                  setDraft({ ...draft, roleId, position, teamId: position === "supervisor" ? null : draft.teamId });
                 }}
               >
-                {positionOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                <option value="">Escolha</option>
+                {roles.data?.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
                   </option>
                 ))}
               </SelectInput>
@@ -199,18 +203,8 @@ export function MemberPanel({
                 </SelectInput>
               </Field>
             ) : (
-              <p className="self-end text-sm text-muted">O supervisor é escolhido na equipe que ele lidera, em Equipes.</p>
+              <p className="self-end text-sm text-muted">Esta função lidera equipe: a pessoa é escolhida como supervisor na equipe, em Equipes.</p>
             )}
-            <Field label={draft.position === "technician" ? "Função" : "Função (opcional)"}>
-              <SelectInput value={draft.roleId ?? ""} onChange={(event) => setDraft({ ...draft, roleId: event.target.value || null })}>
-                <option value="">{draft.position === "technician" ? "Escolha" : "Sem função"}</option>
-                {roles.data?.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
             <Field label="Grau">
               <SelectInput value={draft.gradeId ?? ""} onChange={(event) => setDraft({ ...draft, gradeId: event.target.value || null })}>
                 <option value="">Sem grau</option>

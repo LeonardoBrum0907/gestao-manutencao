@@ -15,7 +15,6 @@ function StatusText({ member }: { member: MemberDto }) {
 export function memberColumns(teams: TeamDto[]): TableColumn<MemberDto>[] {
   return [
     { key: "name", header: "Nome", cell: (member) => member.name, sortValue: (member) => member.name },
-    { key: "position", header: "Cargo", cell: (member) => positionLabel(member.position), sortValue: (member) => positionLabel(member.position) },
     { key: "role", header: "Função", cell: (member) => member.roleName ?? "—", sortValue: (member) => member.roleName },
     { key: "grade", header: "Grau", cell: (member) => member.gradeName ?? "—", sortValue: (member) => member.gradeName },
     { key: "shift", header: "Turno", cell: (member) => shiftLabel(member.shift), sortValue: (member) => shiftLabel(member.shift) },
@@ -25,11 +24,11 @@ export function memberColumns(teams: TeamDto[]): TableColumn<MemberDto>[] {
 }
 
 /**
- * A linha do colaborador no celular: nome, cargo e lugar; a situação só aparece quando não é "Ativo".
+ * A linha do colaborador no celular: nome, função e lugar; a situação só aparece quando não é "Ativo".
  * @example stacked={(member) => memberStacked(member, teams)}
  */
 export function memberStacked(member: MemberDto, teams: TeamDto[]): StackedRow {
-  const meta = [positionLabel(member.position), member.roleName, member.gradeName, teamText(member, teams) ?? shiftLabel(member.shift)];
+  const meta = [member.roleName ?? positionLabel(member.position), member.gradeName, teamText(member, teams) ?? shiftLabel(member.shift)];
   return {
     title: member.name,
     meta: meta.filter(Boolean).join(" · "),

@@ -2,7 +2,6 @@ import {
   MACHINE_STATUSES,
   MACHINE_STATUS_LABELS,
   MEMBER_POSITION_LABELS,
-  MEMBER_POSITIONS,
   MEMBER_SHIFT_LABELS,
   MEMBER_SHIFTS,
   MEMBER_STATUS_LABELS,
@@ -46,11 +45,6 @@ export function memberStatusClass(status: MemberStatus): string {
 export const machineStatusOptions = MACHINE_STATUSES.map((status) => ({
   value: status,
   label: MACHINE_STATUS_LABELS[status],
-}));
-
-export const positionOptions = MEMBER_POSITIONS.map((position) => ({
-  value: position,
-  label: MEMBER_POSITION_LABELS[position],
 }));
 
 export const shiftOptions = MEMBER_SHIFTS.map((shift) => ({

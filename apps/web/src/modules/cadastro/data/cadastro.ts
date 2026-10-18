@@ -146,9 +146,10 @@ export function useDeleteSubassembly() {
 }
 
 // Uma API anterior à categoria da matriz não manda matrixCategory: a função vê as duas, como antes.
+// Uma anterior ao campo único (sem leadsTeams) não tem função que lidera equipe.
 async function fetchRoles(): Promise<MemberRoleDto[]> {
-  const roles = await api<(Omit<MemberRoleDto, "matrixCategory"> & Partial<MemberRoleDto>)[]>("/api/member-roles");
-  return roles.map((role) => ({ ...role, matrixCategory: role.matrixCategory ?? null }));
+  const roles = await api<(Pick<MemberRoleDto, "id" | "name"> & Partial<MemberRoleDto>)[]>("/api/member-roles");
+  return roles.map((role) => ({ ...role, matrixCategory: role.matrixCategory ?? null, leadsTeams: role.leadsTeams ?? false }));
 }
 
 export function useRoles() {
@@ -175,6 +176,26 @@ export function useSetRoleMatrixCategory() {
       client.setQueryData<MemberRoleDto[]>(["roles"], (list) => list?.map((item) => (item.id === role.id ? role : item)));
       void client.invalidateQueries({ queryKey: ["matrix"] });
       void client.invalidateQueries({ queryKey: ["team-matrix"] });
+    },
+  });
+}
+
+/**
+ * Liga ou desliga "lidera equipe" na função. Todos com ela mudam de cargo juntos, por isso recarrega a lista e as equipes.
+ * @example useSetRoleLeadsTeams().mutateAsync({ id, leadsTeams: true })
+ */
+export function useSetRoleLeadsTeams() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; leadsTeams: boolean }) =>
+      api<MemberRoleDto>(`/api/member-roles/${input.id}/leads-teams`, {
+        method: "PUT",
+        body: JSON.stringify({ leadsTeams: input.leadsTeams }),
+      }),
+    onSuccess: (role) => {
+      client.setQueryData<MemberRoleDto[]>(["roles"], (list) => list?.map((item) => (item.id === role.id ? role : item)));
+      void client.invalidateQueries({ queryKey: ["members"] });
+      void client.invalidateQueries({ queryKey: ["teams"] });
     },
   });
 }
