@@ -11,8 +11,15 @@ function StatusCell({ rp, inline = false }: { rp: RpListItemDto; inline?: boolea
     <span className={`inline-flex gap-1 ${inline ? "flex-row-reverse items-center gap-2" : "flex-col items-start"}`}>
       <span className={rpStatusChipClass(rp.status)}>{rpStatusLabel(rp.status)}</span>
       {rp.repeatedFailure ? <span className="text-xs font-semibold text-danger">Falha repetida</span> : null}
+      {rp.source === "public" ? <OriginNote rp={rp} /> : null}
     </span>
   );
+}
+
+// RP da página pública: diz a origem e o que falta o coordenador fazer.
+function OriginNote({ rp }: { rp: RpListItemDto }) {
+  const pending = [rp.checked ? null : "conferir", rp.reviewRequested ? "em revisão" : null].filter(Boolean).join(", ");
+  return <span className="text-xs font-semibold text-accent">Página pública{pending ? ` · ${pending}` : ""}</span>;
 }
 
 // A linha em cima e a TAG embaixo, para a coluna não esticar com TAGs longas.

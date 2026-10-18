@@ -14,6 +14,7 @@ import { SubassembliesSection } from "../../cadastro/ui/SubassembliesSection";
 import { ModelDocumentsSection } from "../../documentacao/ui/ModelDocumentsSection";
 import { MatrixCatalogSection } from "../../competencia/ui/MatrixCatalogSection";
 import { RoleMatrixSection } from "../../competencia/ui/RoleMatrixSection";
+import { PublicRpLinkSection } from "../../rp-publico/ui/PublicRpLinkSection";
 
 // Cadastros que se arrumam uma vez e pouco mudam: ficam fora do menu, numa página com abas (como no SIGEM).
 export const SETTINGS_TABS = [
@@ -21,6 +22,7 @@ export const SETTINGS_TABS = [
   { key: "funcoes", label: "Funções e graus" },
   { key: "avaliacao", label: "Avaliação" },
   { key: "avisos", label: "Avisos" },
+  { key: "rp-publico", label: "Página pública" },
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
@@ -65,6 +67,7 @@ export function SettingsPage() {
           </>
         ) : null}
         {current === "avisos" ? <AvisosSection /> : null}
+        {current === "rp-publico" ? <PublicRpLinkSection /> : null}
       </div>
     </div>
   );

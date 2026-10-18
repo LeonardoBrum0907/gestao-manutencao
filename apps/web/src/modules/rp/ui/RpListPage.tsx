@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import type { RpListItemDto } from "@manutencao/shared";
+import { RP_SOURCE_LABELS, RP_SOURCES, type RpListItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, PageTitle, SelectInput, TextInput } from "../../../design/ui/controls";
 import { DataTable } from "../../../design/ui/data-table";
@@ -39,7 +39,7 @@ function LoadMore({ loading, onLoad }: { loading: boolean; onLoad: () => void })
   );
 }
 
-const FILTERS = ["q", "status", "factoryId", "lineId", "memberId", "line", "tag", "repeated", "from", "to"] as const;
+const FILTERS = ["q", "status", "source", "factoryId", "lineId", "memberId", "line", "tag", "repeated", "from", "to"] as const;
 
 export function RpListPage() {
   const navigate = useNavigate();
@@ -106,6 +106,16 @@ export function RpListPage() {
               {rpStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
+                </option>
+              ))}
+            </SelectInput>
+          </Field>
+          <Field label="Origem">
+            <SelectInput value={params.get("source") ?? ""} onChange={(event) => setFilter("source", event.target.value)}>
+              <option value="">Todas</option>
+              {RP_SOURCES.map((source) => (
+                <option key={source} value={source}>
+                  {RP_SOURCE_LABELS[source]}
                 </option>
               ))}
             </SelectInput>
