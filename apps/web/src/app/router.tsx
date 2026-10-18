@@ -21,6 +21,10 @@ import { RecordsPage } from "../modules/registro/ui/RecordsPage";
 import { RpEditPage } from "../modules/rp/ui/RpEditPage";
 import { RpListPage } from "../modules/rp/ui/RpListPage";
 import { RpPastePage } from "../modules/rp/ui/RpPastePage";
+import { PublicRpFormPage } from "../modules/rp-publico/ui/PublicRpFormPage";
+import { PublicRpListPage } from "../modules/rp-publico/ui/PublicRpListPage";
+import { PublicRpPage } from "../modules/rp-publico/ui/PublicRpPage";
+import { PublicRpShell } from "../modules/rp-publico/ui/PublicRpShell";
 import { ChamadosPage } from "../modules/turno/ui/ChamadosPage";
 import { AppShell } from "../shell/ui/AppShell";
 import { LoginPage } from "../shell/ui/LoginPage";
@@ -66,6 +70,13 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Página pública de RPs: sem login, o código do link é a chave. Fica fora da casca do app. */}
+      <Route path="/rp/abrir/:code" element={<PublicRpShell />}>
+        <Route index element={<PublicRpListPage />} />
+        <Route path="novo" element={<PublicRpFormPage />} />
+        <Route path=":id" element={<PublicRpPage />} />
+        <Route path=":id/editar" element={<PublicRpFormPage />} />
+      </Route>
       <Route element={<AppShell />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/entrada" element={<InboxPage />} />
