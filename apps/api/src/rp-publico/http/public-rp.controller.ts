@@ -10,6 +10,12 @@ import { PublicRps } from "../application/public-rps";
 export class PublicRpController {
   constructor(private readonly rps: PublicRps) {}
 
+  @Get("access")
+  @Header("X-Robots-Tag", "noindex")
+  access(@Param("code") code: string) {
+    return this.rps.access(code);
+  }
+
   @Get("directory")
   @Header("X-Robots-Tag", "noindex")
   directory(@Param("code") code: string) {
@@ -38,7 +44,7 @@ export class PublicRpController {
     return this.rps.update(code, id, body);
   }
 
-  // Aprovar, recusar ou pedir revisão de vários RPs marcados na lista.
+  // Aprovar, recusar ou pedir revisão de vários RPs marcados na lista. Só pelo link de um supervisor.
   @Post("review")
   bulkReview(@Param("code") code: string, @Body() body: unknown) {
     return this.rps.bulkReview(code, body);

@@ -1,5 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkAction, RpBulkReviewResultDto, RpDto, RpRevisionKind } from "@manutencao/shared";
+import type {
+  PublicRpAccessDto,
+  PublicRpDirectoryDto,
+  PublicRpDto,
+  PublicRpPageDto,
+  RpBulkAction,
+  RpBulkReviewResultDto,
+  RpDto,
+  RpRevisionKind,
+} from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import { decisionPatch, type RpDecisionPatch } from "../../rp/domain/rp-decision";
@@ -43,7 +52,8 @@ function editReset(current: RpDto, revised: boolean): RpDecisionPatch {
 
 /**
  * O que a página pública faz, sempre depois de conferir o código do link: lista, lê, cria e edita
- * só os RPs nascidos nela, e pede revisão. Toda edição e pedido de revisão vai para o histórico.
+ * só os RPs nascidos nela. Aprovar, recusar e pedir revisão só pelo link de um supervisor, com o nome dele
+ * no histórico. Toda edição e avaliação vai para o histórico.
  * @example await publicRps.create(code, body)
  */
 @Injectable()
@@ -56,6 +66,11 @@ export class PublicRps {
     @Inject(PUBLIC_WRITE_LIMITER) private readonly limiter: PublicWriteLimiter,
     @Inject(PUBLIC_CLOCK) private readonly clock: Clock,
   ) {}
+
+  // A tela pergunta quem é o link para mostrar ou esconder o que é só do supervisor.
+  access(code: string): Promise<PublicRpAccessDto> {
+    return this.links.assertActive(code);
+  }
 
   async directory(code: string): Promise<PublicRpDirectoryDto> {
     await this.links.assertActive(code);
@@ -97,24 +112,24 @@ export class PublicRps {
   }
 
   async requestReview(code: string, id: string, body: unknown): Promise<PublicRpDto> {
-    await this.links.assertActive(code);
+    const actorName = await this.links.assertSupervisor(code);
     this.limiter.take("write");
     const current = await this.publicRp(id);
     const text = parseReviewRequest(body);
-    await this.revisions.add({ rpId: id, kind: "review_request", before: publicFieldsOf(current), note: text });
+    await this.revisions.add({ rpId: id, kind: "review_request", before: publicFieldsOf(current), note: text, actorName });
     return this.view(await this.rps.setDecision(id, decisionPatch("request_review", this.clock(), text)));
   }
 
   // Aprovar, recusar ou pedir revisão de vários RPs. Confere todos antes de gravar: um id fora da página
   // pública barra o lote inteiro.
   async bulkReview(code: string, body: unknown): Promise<RpBulkReviewResultDto> {
-    await this.links.assertActive(code);
+    const actorName = await this.links.assertSupervisor(code);
     this.limiter.take("write");
     const { ids, action, note } = parseBulkReview(body);
     const rps = await Promise.all(ids.map((id) => this.publicRp(id)));
     const patch = decisionPatch(action, this.clock(), note);
     for (const rp of rps) {
-      await this.revisions.add({ rpId: rp.id, kind: REVISION_KIND[action], before: publicFieldsOf(rp), note });
+      await this.revisions.add({ rpId: rp.id, kind: REVISION_KIND[action], before: publicFieldsOf(rp), note, actorName });
       await this.rps.setDecision(rp.id, patch);
     }
     return { updated: rps.length };

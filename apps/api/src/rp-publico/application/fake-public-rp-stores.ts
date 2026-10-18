@@ -1,9 +1,9 @@
-import type { PublicRpDirectoryDto, RpDto, RpListItemDto, RpPageDto, RpPublicLinkDto, RpRevisionDto, RpSource } from "@manutencao/shared";
+import type { PublicRpDirectoryDto, RpDto, RpListItemDto, RpPageDto, RpPublicLinkDto, RpRevisionDto, RpSource, RpSupervisorLinkDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
-import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore } from "./ports";
+import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore, SupervisorLinkStore } from "./ports";
 
 // Classes falsas dos testes da página pública: guardam tudo em memória.
 
@@ -117,11 +117,44 @@ export class FakePublicLinkStore implements PublicLinkStore {
   }
 }
 
+export class FakeSupervisorLinkStore implements SupervisorLinkStore {
+  links: Array<RpSupervisorLinkDto & { revokedAt: string | null }> = [];
+
+  async list(): Promise<RpSupervisorLinkDto[]> {
+    return this.links.filter((link) => !link.revokedAt).map(({ revokedAt: _revoked, ...link }) => link);
+  }
+
+  async create(name: string, code: string, at: Date): Promise<RpSupervisorLinkDto> {
+    const link = { id: `sup${this.links.length + 1}`, name, code, createdAt: at.toISOString() };
+    this.links.push({ ...link, revokedAt: null });
+    return link;
+  }
+
+  async replaceCode(id: string, code: string): Promise<RpSupervisorLinkDto | null> {
+    const link = this.links.find((item) => item.id === id && !item.revokedAt);
+    if (!link) return null;
+    link.code = code;
+    return (await this.list()).find((item) => item.id === id) ?? null;
+  }
+
+  async revoke(id: string, at: Date): Promise<boolean> {
+    const link = this.links.find((item) => item.id === id && !item.revokedAt);
+    if (!link) return false;
+    link.revokedAt = at.toISOString();
+    return true;
+  }
+
+  async findActive(code: string): Promise<{ id: string; name: string } | null> {
+    const link = this.links.find((item) => item.code === code && !item.revokedAt);
+    return link ? { id: link.id, name: link.name } : null;
+  }
+}
+
 export class FakeRpRevisionStore implements RpRevisionStore {
   rows: RpRevisionDto[] = [];
 
   async add(write: RevisionWrite): Promise<RpRevisionDto> {
-    const row = { ...write, id: `rev${this.rows.length + 1}`, createdAt: "2026-10-18T12:00:00.000Z" };
+    const row = { ...write, actorName: write.actorName ?? null, id: `rev${this.rows.length + 1}`, createdAt: "2026-10-18T12:00:00.000Z" };
     this.rows.push(row);
     return row;
   }
