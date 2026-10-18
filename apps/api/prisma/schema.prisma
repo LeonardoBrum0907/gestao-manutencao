@@ -556,16 +556,28 @@ model RpPublicLink {
   revokedAt DateTime?
 }
 
+// Link pessoal de um supervisor na página pública: abre tudo que o link da equipe abre e ainda aprova,
+// recusa, pede revisão e exporta. O nome vai para o histórico de cada RP que ele avaliar.
+model RpSupervisorLink {
+  id        String    @id @default(cuid())
+  name      String
+  code      String    @unique
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+}
+
 // Histórico de um RP da página pública: cada edição guarda os campos de antes, para o coordenador desfazer.
 model RpRevision {
   id        String   @id @default(cuid())
   rpId      String
   rp        Rp       @relation(fields: [rpId], references: [id], onDelete: Cascade)
-  // edit, review_request, restore
+  // edit, review_request, restore, approve, reject
   kind      String
   // Campos do RP antes da mudança (forma de RpFields).
   before    Json
   note      String?
+  // Nome do supervisor que aprovou, recusou ou pediu revisão; nulo nas edições e no que veio antes dos links de supervisor.
+  actorName String?
   createdAt DateTime @default(now())
 
   @@index([rpId, createdAt])
