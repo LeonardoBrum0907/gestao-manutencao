@@ -15,22 +15,11 @@ import { DomainError } from "../../kernel/domain-error";
 import { parseRecordList } from "../../registro/application/parse-record-list";
 import { mcpDue, mcpDueChange } from "../domain/due";
 import { matches, overlay } from "../domain/merge";
+import { registerCadastroTools } from "./mcp-cadastro-tools";
 import { registerDocTools } from "./mcp-doc-tools";
 import { registerMatrixTools } from "./mcp-matrix-tools";
 import { answer, CHANGE, CREATE, id, optionalText, READ, toolWriter, type ToolLog } from "./mcp-tool-kit";
 import type { McpUseCases } from "./mcp-use-cases";
-
-export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábrica (linhas de produção, máquinas, técnicos).
-- Antes de lançar, resolva nomes em ids com buscar_cadastro. Nunca invente id.
-- Datas e horas em ISO 8601 no fuso de Brasília (ex.: 2026-10-11T14:30:00-03:00). Dia sozinho: AAAA-MM-DD. resumo_do_dia diz a data de hoje.
-- Chamado: atendimento do turno (o que parou, quem atendeu). O que ficar para depois vira pendência com gerar_pendencia.
-- Registro: tarefa (task, a pendência com prazo), feedback sobre um técnico ou problema (problem). Situação: open = aberto, in_progress = em andamento, done = concluído.
-- RP (Relatório Padrão): análise de falha que chega pelo WhatsApp. Use ler_rp para transformar o texto em campos, mostre ao gestor e só depois salvar_rp.
-- Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com o ponto de atenção para a próxima.
-- Antes de qualquer ferramenta que grava, mostre ao gestor o que vai gravar.
-- Documentação técnica: fichas curtas tiradas dos manuais (código de erro, interface entre máquinas, sinal, peça, parâmetro, procedimento), cada uma com a fonte. Antes de responder sobre um alarme, uma peça ou a ligação entre máquinas, use buscar_documentacao. Ao ler um PDF enviado pelo gestor, crie uma ficha por fato com criar_ficha, citando documentId (listar_documentos) e página ou folha; marque reviewNeeded quando a leitura ficou em dúvida.
-- Matriz de competências: habilidades por equipamento e subconjunto, nota de 0 a 4 por técnico. Cada habilidade é de mecânico (mechanical) ou de eletricista (electrical); o técnico só recebe nota nas da categoria da função dele. Ache os ids em catalogo_da_matriz, cadastre com cadastrar_habilidades e lance com dar_nota_matriz.
-- Não há ferramenta de excluir: exclusão é feita na tela.`;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -40,7 +29,7 @@ const dateTime = (what: string) => z.string().min(1).describe(`${what}, ISO 8601
 const dueDate = (what: string) =>
   z.string().min(1).describe(`${what}: AAAA-MM-DD se for só o dia, ou ISO 8601 com fuso se tiver horário (ex.: 2026-10-11T14:30:00-03:00)`);
 
-const CADASTRO_KINDS = ["fabricas", "linhas", "maquinas", "subconjuntos", "colaboradores", "equipes"] as const;
+const CADASTRO_KINDS = ["fabricas", "linhas", "maquinas", "modelos", "subconjuntos", "colaboradores", "equipes"] as const;
 const SEARCH_LIMIT = 100;
 
 function today(now: Date = new Date()): string {
@@ -98,6 +87,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
   const write = toolWriter(log);
   registerDocTools(server, uc, log);
   registerMatrixTools(server, uc, log);
+  registerCadastroTools(server, uc, log);
 
   // ---- Consultas ----
 
@@ -115,7 +105,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
     "buscar_cadastro",
     {
       title: "Buscar no cadastro",
-      description: "Acha fábricas, linhas, máquinas, subconjuntos, colaboradores e equipes pelo nome (ou TAG da máquina), sem ligar para acento. Devolve os ids que as outras ferramentas pedem.",
+      description: "Acha fábricas, linhas, máquinas, modelos de equipamento, subconjuntos, colaboradores e equipes pelo nome (ou TAG da máquina), sem ligar para acento. Devolve os ids que as outras ferramentas pedem.",
       inputSchema: {
         tipo: z.enum(CADASTRO_KINDS).optional().describe("o que procurar; sem tipo, procura em tudo"),
         busca: z.string().optional().describe("parte do nome; vazio lista tudo"),
@@ -127,10 +117,11 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
         const wants = (kind: (typeof CADASTRO_KINDS)[number]) => !tipo || tipo === kind;
         const result: Record<string, unknown[]> = {};
         const cap = <T>(rows: T[]) => rows.slice(0, SEARCH_LIMIT);
-        const [factories, lines, machines, subassemblies, members, teams] = await Promise.all([
+        const [factories, lines, machines, catalog, subassemblies, members, teams] = await Promise.all([
           wants("fabricas") || wants("linhas") ? uc.factories.list() : [],
           wants("linhas") || wants("maquinas") ? uc.lines.list() : [],
           wants("maquinas") ? uc.machines.list() : [],
+          wants("modelos") ? uc.matrixCatalog.show() : null,
           wants("subconjuntos") ? uc.subassemblies.list() : [],
           wants("colaboradores") ? uc.members.list() : [],
           wants("equipes") ? uc.teams.list() : [],
@@ -152,6 +143,7 @@ export function registerTools(server: McpServer, uc: McpUseCases, log: ToolLog):
               .map((row) => ({ id: row.id, name: row.name, tag: row.tag, lineId: row.lineId, line: lineName.get(row.lineId) ?? null, equipmentId: row.equipmentId, status: row.status })),
           );
         }
+        if (catalog) result.modelos = cap(catalog.equipments.filter((row) => matches(busca, row.name)));
         if (wants("subconjuntos")) {
           result.subconjuntos = cap(subassemblies.filter((row) => !row.archived && matches(busca, row.name)));
         }
