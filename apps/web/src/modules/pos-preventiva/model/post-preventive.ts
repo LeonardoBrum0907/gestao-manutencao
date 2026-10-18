@@ -49,6 +49,15 @@ export function valuesFromDto(item: PostPreventiveDto): PostPreventiveFormValues
   };
 }
 
+/**
+ * Se o formulário tem mudança ainda não gravada (campo a campo; técnicos na mesma ordem). Exportar usa o que está gravado.
+ * @example formChanged(gravado, { ...gravado, attentionPoint: "Medir a placa" }) // true
+ */
+export function formChanged(saved: PostPreventiveFormValues, current: PostPreventiveFormValues): boolean {
+  const keys = Object.keys(saved) as (keyof PostPreventiveFormValues)[];
+  return keys.some((key) => JSON.stringify(saved[key]) !== JSON.stringify(current[key]));
+}
+
 export function bodyFromValues(values: PostPreventiveFormValues): PostPreventiveFields {
   return {
     preventiveDate: values.preventiveDate,
