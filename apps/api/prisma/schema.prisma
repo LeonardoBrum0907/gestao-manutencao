@@ -209,6 +209,7 @@ model Member {
   rpLinks             RpMember[]
   postPreventiveLinks PostPreventiveMember[]
   supervisedTeams     Team[]                  @relation("TeamSupervisor")
+  rpSupervisorLinks   RpSupervisorLink[]
   behavior            MemberBehavior?
   evaluations         MemberEvaluation[]
   lines               MemberLine[]
@@ -560,10 +561,16 @@ model RpPublicLink {
 // recusa, pede revisão e exporta. O nome vai para o histórico de cada RP que ele avaliar.
 model RpSupervisorLink {
   id        String    @id @default(cuid())
+  // O supervisor do cadastro (função que lidera equipe). Some (null) se o colaborador for excluído.
+  memberId  String?
+  member    Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  // Nome no dia em que o link foi criado: fica para o histórico mesmo sem o colaborador.
   name      String
   code      String    @unique
   createdAt DateTime  @default(now())
   revokedAt DateTime?
+
+  @@index([memberId])
 }
 
 // Histórico de um RP da página pública: cada edição guarda os campos de antes, para o coordenador desfazer.
