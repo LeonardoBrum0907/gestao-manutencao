@@ -21,6 +21,7 @@ import { Records } from "../../registro/application/records";
 import { RecordsList } from "../../registro/application/records-list";
 import { Rps } from "../../rp/application/rps";
 import { Chamados } from "../../turno/application/chamados";
+import { CadastroLinksRepository } from "../infra/cadastro-links.repository";
 
 // As ferramentas chamam os mesmos casos de uso das telas. Eles não são exportados pelos módulos,
 // então vêm do container do Nest depois que tudo subiu.
@@ -48,7 +49,11 @@ export class McpUseCases implements OnModuleInit {
   techCards!: TechCards;
   techDocuments!: TechDocuments;
 
-  constructor(private readonly modules: ModuleRef) {}
+  constructor(
+    private readonly modules: ModuleRef,
+    // Só a exclusão pela IA usa: conta o que perderia a ligação (ver mcp-cadastro-removal.ts).
+    readonly cadastroLinks: CadastroLinksRepository,
+  ) {}
 
   onModuleInit(): void {
     const get = <T>(type: Type<T>): T => this.modules.get(type, { strict: false });
