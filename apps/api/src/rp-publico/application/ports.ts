@@ -30,14 +30,18 @@ export interface PublicLinkStore {
   revokeAll(at: Date): Promise<void>;
 }
 
+export type SupervisorMember = { id: string; name: string };
+
 export interface SupervisorLinkStore {
   // Só os ativos, do mais antigo para o mais novo.
   list(): Promise<RpSupervisorLinkDto[]>;
-  create(name: string, code: string, at: Date): Promise<RpSupervisorLinkDto>;
+  create(supervisor: SupervisorMember, code: string, at: Date): Promise<RpSupervisorLinkDto>;
   // null quando o link não existe ou já foi removido.
   replaceCode(id: string, code: string): Promise<RpSupervisorLinkDto | null>;
   revoke(id: string, at: Date): Promise<boolean>;
   findActive(code: string): Promise<{ id: string; name: string } | null>;
+  // Colaborador com função que lidera equipe (cargo supervisor); null se não existe ou não é supervisor.
+  findSupervisor(memberId: string): Promise<SupervisorMember | null>;
 }
 
 // actorName: o supervisor que agiu pelo link dele (aprovar, recusar, pedir revisão).

@@ -3,7 +3,7 @@ import { DomainError } from "../../kernel/domain-error";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
-import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore, SupervisorLinkStore } from "./ports";
+import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore, SupervisorLinkStore, SupervisorMember } from "./ports";
 
 // Classes falsas dos testes da página pública: guardam tudo em memória.
 
@@ -119,13 +119,18 @@ export class FakePublicLinkStore implements PublicLinkStore {
 
 export class FakeSupervisorLinkStore implements SupervisorLinkStore {
   links: Array<RpSupervisorLinkDto & { revokedAt: string | null }> = [];
+  // Colaboradores com função que lidera equipe.
+  supervisors: SupervisorMember[] = [
+    { id: "m-carlos", name: "Carlos" },
+    { id: "m-ana", name: "Ana" },
+  ];
 
   async list(): Promise<RpSupervisorLinkDto[]> {
     return this.links.filter((link) => !link.revokedAt).map(({ revokedAt: _revoked, ...link }) => link);
   }
 
-  async create(name: string, code: string, at: Date): Promise<RpSupervisorLinkDto> {
-    const link = { id: `sup${this.links.length + 1}`, name, code, createdAt: at.toISOString() };
+  async create(supervisor: SupervisorMember, code: string, at: Date): Promise<RpSupervisorLinkDto> {
+    const link = { id: `sup${this.links.length + 1}`, memberId: supervisor.id, name: supervisor.name, code, createdAt: at.toISOString() };
     this.links.push({ ...link, revokedAt: null });
     return link;
   }
@@ -147,6 +152,10 @@ export class FakeSupervisorLinkStore implements SupervisorLinkStore {
   async findActive(code: string): Promise<{ id: string; name: string } | null> {
     const link = this.links.find((item) => item.code === code && !item.revokedAt);
     return link ? { id: link.id, name: link.name } : null;
+  }
+
+  async findSupervisor(memberId: string): Promise<SupervisorMember | null> {
+    return this.supervisors.find((member) => member.id === memberId) ?? null;
   }
 }
 

@@ -3,20 +3,14 @@ import type { RpSupervisorLinkDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredString } from "../../kernel/parse";
 import { newPublicLinkCode } from "../domain/link-code";
-import { PUBLIC_CLOCK, SUPERVISOR_LINK_STORE, type Clock, type SupervisorLinkStore } from "./ports";
-
-export const SUPERVISOR_NAME_MAX = 60;
+import { PUBLIC_CLOCK, SUPERVISOR_LINK_STORE, type Clock, type SupervisorLinkStore, type SupervisorMember } from "./ports";
 
 /**
- * Nome do supervisor como aparece no histórico do RP ("Aprovado por …").
- * @example parseSupervisorName({ name: " Carlos " }) // "Carlos"
+ * O colaborador escolhido para receber o link.
+ * @example parseSupervisorMemberId({ memberId: "m1" }) // "m1"
  */
-export function parseSupervisorName(body: unknown): string {
-  const name = requiredString(readObject(body), "name", "Escreva o nome do supervisor.");
-  if (name.length > SUPERVISOR_NAME_MAX) {
-    throw new DomainError("invalid", 400, `Nome do supervisor longo demais (${name.length} caracteres; até ${SUPERVISOR_NAME_MAX}).`);
-  }
-  return name;
+export function parseSupervisorMemberId(body: unknown): string {
+  return requiredString(readObject(body), "memberId", "Escolha o supervisor.");
 }
 
 function notFound(id: string): DomainError {
@@ -24,8 +18,9 @@ function notFound(id: string): DomainError {
 }
 
 /**
- * Os links pessoais dos supervisores: o coordenador cria um por pessoa, troca (o antigo para de abrir) ou remove.
- * @example await supervisorLinks.create({ name: "Carlos" })
+ * Os links pessoais dos supervisores: o coordenador escolhe um supervisor do cadastro, troca o link
+ * (o antigo para de abrir) ou remove. Um link ativo por supervisor.
+ * @example await supervisorLinks.create({ memberId: "m1" })
  */
 @Injectable()
 export class SupervisorLinks {
@@ -38,8 +33,9 @@ export class SupervisorLinks {
     return this.store.list();
   }
 
-  create(body: unknown): Promise<RpSupervisorLinkDto> {
-    return this.store.create(parseSupervisorName(body), newPublicLinkCode(), this.clock());
+  async create(body: unknown): Promise<RpSupervisorLinkDto> {
+    const supervisor = await this.supervisorWithoutLink(parseSupervisorMemberId(body));
+    return this.store.create(supervisor, newPublicLinkCode(), this.clock());
   }
 
   async replace(id: string): Promise<RpSupervisorLinkDto> {
@@ -50,5 +46,17 @@ export class SupervisorLinks {
 
   async revoke(id: string): Promise<void> {
     if (!(await this.store.revoke(id, this.clock()))) throw notFound(id);
+  }
+
+  private async supervisorWithoutLink(memberId: string): Promise<SupervisorMember> {
+    const supervisor = await this.store.findSupervisor(memberId);
+    if (!supervisor) {
+      throw new DomainError("invalid", 400, `Colaborador ${memberId} não é supervisor: a função dele precisa liderar equipe.`);
+    }
+    const links = await this.store.list();
+    if (links.some((link) => link.memberId === memberId)) {
+      throw new DomainError("conflict", 409, `${supervisor.name} já tem link. Use Trocar link para gerar outro.`);
+    }
+    return supervisor;
   }
 }

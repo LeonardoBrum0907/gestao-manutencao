@@ -38,7 +38,7 @@ async function setup(limit = 10) {
   const revisions = new FakeRpRevisionStore();
   const limiter = new PublicWriteLimiter({ create: { limit, windowMs: 1000 }, write: { limit, windowMs: 1000 } }, () => 0);
   const supervisors = new FakeSupervisorLinkStore();
-  await supervisors.create("Carlos", SUP, NOW);
+  await supervisors.create({ id: "m-carlos", name: "Carlos" }, SUP, NOW);
   const service = new PublicRps(new PublicLinks(links, supervisors, () => NOW), book, people, revisions, limiter, () => NOW);
   return { links, book, people, revisions, service };
 }

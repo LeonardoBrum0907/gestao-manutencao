@@ -29,7 +29,7 @@ describe("PublicLinks", () => {
     const supervisors = new FakeSupervisorLinkStore();
     const links = new PublicLinks(new FakePublicLinkStore(), supervisors, () => NOW);
     const team = (await links.replace()).link!.code;
-    const carlos = await supervisors.create("Carlos", "c".repeat(24), NOW);
+    const carlos = await supervisors.create({ id: "m-carlos", name: "Carlos" }, "c".repeat(24), NOW);
     assert.deepEqual(await links.assertActive(team), { role: "team" });
     assert.deepEqual(await links.assertActive(carlos.code), { role: "supervisor", supervisorName: "Carlos" });
     assert.equal(await links.assertSupervisor(carlos.code), "Carlos");
@@ -40,7 +40,7 @@ describe("PublicLinks", () => {
     const supervisors = new FakeSupervisorLinkStore();
     const links = new PublicLinks(new FakePublicLinkStore(), supervisors, () => NOW);
     await links.replace();
-    const carlos = await supervisors.create("Carlos", "c".repeat(24), NOW);
+    const carlos = await supervisors.create({ id: "m-carlos", name: "Carlos" }, "c".repeat(24), NOW);
     await supervisors.revoke(carlos.id, NOW);
     await assert.rejects(links.assertActive(carlos.code), /não vale mais/);
   });

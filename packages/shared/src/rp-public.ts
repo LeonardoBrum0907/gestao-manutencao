@@ -161,10 +161,14 @@ export type RpPublicLinkDto = { code: string; createdAt: string };
 // null: a página pública está desligada.
 export type RpPublicLinkStateDto = { link: RpPublicLinkDto | null };
 
-/** Link pessoal de um supervisor: o mesmo endereço da página pública, com o código dele. */
-export type RpSupervisorLinkDto = { id: string; name: string; code: string; createdAt: string };
+/**
+ * Link pessoal de um supervisor: o mesmo endereço da página pública, com o código dele.
+ * memberId é o supervisor no cadastro (null se o colaborador foi excluído).
+ */
+export type RpSupervisorLinkDto = { id: string; memberId: string | null; name: string; code: string; createdAt: string };
 
-export type RpSupervisorLinkBody = { name: string };
+// O coordenador escolhe um colaborador com função que lidera equipe.
+export type RpSupervisorLinkBody = { memberId: string };
 
 /**
  * Quem está abrindo a página pública. O link da equipe (técnicos) só lê, cria e edita;
