@@ -24,7 +24,7 @@ export function ReviewRequestNotice({ text, at, children }: { text: string; at: 
 }
 
 /**
- * Copia o endereço para mandar no WhatsApp. Sem permissão de área de transferência, devolve false.
+ * Copia um texto (endereço ou o RP) para mandar no WhatsApp. Sem permissão de área de transferência, devolve false.
  * @example if (!(await copyText(url))) mostrarEndereco(url)
  */
 export async function copyText(text: string): Promise<boolean> {

@@ -7,6 +7,7 @@ import { useToast } from "../../../design/ui/toast";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { usePublicDirectory, usePublicRp, useRequestReview } from "../data/public-rp";
 import { publicRpPath, publicRpUrl } from "../model/public-rp";
+import { publicRpWhatsappText } from "../model/public-rp-whatsapp";
 import { copyText, ReviewRequestNotice } from "./public-rp-parts";
 
 function Item({ label, children }: { label: string; children: ReactNode }) {
@@ -72,11 +73,17 @@ function AskReview({ code, id, onDone }: { code: string; id: string; onDone: () 
   );
 }
 
-function Actions({ code, rp, onAskReview }: { code: string; rp: PublicRpDto; onAskReview: () => void }) {
+type ActionsProps = { code: string; rp: PublicRpDto; lines: PublicRpDirectoryDto["lines"]; onAskReview: () => void };
+
+function Actions({ code, rp, lines, onAskReview }: ActionsProps) {
   const toast = useToast();
   async function copyLink() {
     const url = publicRpUrl(window.location.origin, code, rp.id);
     toast({ text: (await copyText(url)) ? "Link do RP copiado. Cole no WhatsApp." : `Copie o endereço: ${url}` });
+  }
+  async function copyReport() {
+    const copied = await copyText(publicRpWhatsappText(rp, lines));
+    toast({ text: copied ? "Texto do RP copiado. Cole no grupo do WhatsApp." : "Não deu para copiar: o navegador bloqueou a área de transferência." });
   }
   return (
     <div className="flex flex-wrap gap-3">
@@ -86,6 +93,9 @@ function Actions({ code, rp, onAskReview }: { code: string; rp: PublicRpDto; onA
       >
         Editar
       </Link>
+      <Button tone="ghost" onClick={() => void copyReport()}>
+        Copiar para o WhatsApp
+      </Button>
       <Button tone="ghost" onClick={() => void copyLink()}>
         Copiar link
       </Button>
@@ -97,7 +107,7 @@ function Actions({ code, rp, onAskReview }: { code: string; rp: PublicRpDto; onA
 }
 
 /**
- * Leitura de um RP da página pública, com Editar, Copiar link e Pedir revisão.
+ * Leitura de um RP da página pública, com Editar, Copiar para o WhatsApp, Copiar link e Pedir revisão.
  * @example <Route path=":id" element={<PublicRpPage />} />
  */
 export function PublicRpPage() {
@@ -120,7 +130,7 @@ export function PublicRpPage() {
         <span className={rpStatusChipClass(data.status)}>{rpStatusLabel(data.status)}</span>
       </div>
       {data.reviewRequest ? <ReviewRequestNotice text={data.reviewRequest} at={data.reviewRequestedAt} /> : null}
-      <Actions code={code} rp={data} onAskReview={() => setAsking(true)} />
+      <Actions code={code} rp={data} lines={directory.data?.lines ?? []} onAskReview={() => setAsking(true)} />
       {asking ? <AskReview code={code} id={data.id} onDone={() => setAsking(false)} /> : null}
       <Card>
         <RpDetails rp={data} directory={directory.data} />
