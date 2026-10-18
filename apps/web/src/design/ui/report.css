@@ -60,7 +60,7 @@
 
 @media print {
   /* Cores fixas aqui de propósito: a margem da página impressa (@page) não herda as variáveis do :root, e o papel é branco. */
-  @page { size: A4; margin: 10mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; color: #5e6e64; } }
+  @page { size: A4; margin: 10mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; color: #5a6b7d; } }
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   .app-shell, .app-shell > div { display: block !important; height: auto !important; overflow: visible !important; }
   .app-chrome, .no-print { display: none !important; }

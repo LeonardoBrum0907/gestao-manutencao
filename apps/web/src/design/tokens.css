@@ -2,20 +2,22 @@
 [data-theme="light"] {
   color-scheme: light;
   /* Tema claro "branco com toques pastel" (opção C, escolhida pelo Léo em 2026-10-12): fundo quase branco, pastel
-     só nas superfícies suaves (item ativo, etiquetas, células, avisos) e o verde da marca mais claro nos botões. */
-  --bg: #f5f8f6;
+     só nas superfícies suaves (item ativo, etiquetas, células, avisos).
+     Cor da marca azul #084c89 a pedido do Léo (2026-10-18), a mesma que a página pública de RPs estreou no PR #117;
+     era verde. Os cinzas puxam para o azul para combinar. No escuro vai um azul mais claro da mesma família. */
+  --bg: #f4f7fb;
   --surface: #ffffff;
-  --text: #1c2822;
-  --muted: #5e6e64;
-  --border: #e0e9e3;
-  --accent: #287a51;
+  --text: #1a2633;
+  --muted: #5a6b7d;
+  --border: #dbe4ee;
+  --accent: #084c89;
   --accent-contrast: #ffffff;
-  --accent-soft: #dcf3e6;
+  --accent-soft: #dde9f6;
   --sidebar-bg: #ffffff;
-  --sidebar-text: #1c2822;
-  --sidebar-muted: #5e6e64;
-  --sidebar-active: #dcf2e5;
-  --sidebar-border: #e0e9e3;
+  --sidebar-text: #1a2633;
+  --sidebar-muted: #5a6b7d;
+  --sidebar-active: #dde9f6;
+  --sidebar-border: #dbe4ee;
   --card-bg: #ffffff;
   --danger: #a3413b;
   --danger-soft: #fde4e1;
@@ -34,20 +36,21 @@
   --level-above: #5cc08b;
   --level-equal: #86b4ea;
   --level-below: #f08c84;
-  --level-ink: #1c2822;
-  --chip-bg: #edf3ef;
+  --level-ink: #1a2633;
+  --chip-bg: #ebf1f8;
   /* Títulos de grupo (subconjunto da matriz): faixa e linha mais fortes que chip/border, para separar do conteúdo. */
-  --group-bg: #e3ece6;
-  --border-strong: #9fb0a5;
-  --accent-ink: #17543a;
-  --overlay: rgb(28 40 34 / 0.4);
-  /* Marca de gráfico: o verde da marca, ajustado para passar no validador de cor (croma e contraste no card). */
-  --chart-1: #1f744b;
-  /* Segunda série dos gráficos (azul): par do --chart-1 que passa no validador de cor (daltonismo e contraste). */
-  --chart-2: #5b8fc7;
-  --shadow-card: 0 1px 2px rgb(28 40 34 / 0.05), 0 10px 28px rgb(28 40 34 / 0.06);
+  --group-bg: #e1e9f3;
+  --border-strong: #9cadbf;
+  --accent-ink: #063c6c;
+  --overlay: rgb(26 38 51 / 0.4);
+  /* Marca de gráfico: o azul da marca. */
+  --chart-1: #084c89;
+  /* Segunda série dos gráficos (âmbar, como a fita do caderno): azul e âmbar se separam bem também para quem
+     não distingue verde e vermelho, e passa de 3:1 no card. */
+  --chart-2: #b7761c;
+  --shadow-card: 0 1px 2px rgb(26 38 51 / 0.05), 0 10px 28px rgb(26 38 51 / 0.06);
   /* Sombra de menus e listas que abrem por cima da tela (row-menu, select). */
-  --shadow-pop: 0 12px 32px rgb(28 40 34 / 0.14);
+  --shadow-pop: 0 12px 32px rgb(26 38 51 / 0.14);
   /* Faixas da nota de desempenho (0 a 10): 9–10, 7–8, 5–6 e até 4. Iguais nos dois temas. */
   --band-high: #16a34a;
   --band-good: #84cc16;
@@ -64,7 +67,7 @@
   --pill-bad-text: #b91c1c;
   --pill-equal-bg: rgb(59 91 120 / 0.15);
   --report-good-text: #15803d;
-  --report-stripe-end: #84b81f;
+  --report-stripe-end: #5ea2e8;
   /* Raios menores a pedido do Léo (eram 16px e 10px): os componentes pareciam redondos demais. */
   --radius-card: 10px;
   --radius-control: 6px;
@@ -82,20 +85,20 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #121815;
-  --surface: #1b2420;
-  --text: #e7f0ea;
-  --muted: #a3b5aa;
-  --border: #2d3b34;
-  --accent: #3dbe7a;
-  --accent-contrast: #062113;
-  --accent-soft: #1a3328;
-  --sidebar-bg: #171f1b;
-  --sidebar-text: #e7f0ea;
-  --sidebar-muted: #a3b5aa;
-  --sidebar-active: #24382e;
-  --sidebar-border: #2d3b34;
-  --card-bg: #1e2823;
+  --bg: #10161d;
+  --surface: #18212b;
+  --text: #e6edf5;
+  --muted: #a2b1c2;
+  --border: #2a3746;
+  --accent: #5ea2e8;
+  --accent-contrast: #04192e;
+  --accent-soft: #16283c;
+  --sidebar-bg: #141c25;
+  --sidebar-text: #e6edf5;
+  --sidebar-muted: #a2b1c2;
+  --sidebar-active: #1f3348;
+  --sidebar-border: #2a3746;
+  --card-bg: #1c2631;
   --danger: #f0b4ae;
   --danger-soft: #3a2422;
   --warn: #e8b05a;
@@ -107,14 +110,14 @@
   --level-above: #4cc285;
   --level-equal: #6fa8e8;
   --level-below: #f07a70;
-  --level-ink: #0f1713;
-  --chip-bg: #24302a;
-  --group-bg: #2c3a33;
-  --border-strong: #4f6358;
-  --accent-ink: #8fdcb2;
+  --level-ink: #0d151d;
+  --chip-bg: #222e3b;
+  --group-bg: #2a3846;
+  --border-strong: #4c5e72;
+  --accent-ink: #9fc7f0;
   --overlay: rgb(0 0 0 / 0.6);
-  --chart-1: #34a96c;
-  --chart-2: #5a93d6;
+  --chart-1: #5ea2e8;
+  --chart-2: #e0a54a;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.28);
   --radius-card: 10px;
   --radius-control: 6px;
