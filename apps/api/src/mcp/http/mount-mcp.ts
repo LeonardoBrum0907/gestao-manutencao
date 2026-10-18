@@ -5,7 +5,8 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { requireBearerAuth } from "@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js";
 import { getOAuthProtectedResourceMetadataUrl, mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import { EnvService } from "../../env.module";
-import { MCP_INSTRUCTIONS, registerTools } from "../application/mcp-tools";
+import { MCP_INSTRUCTIONS } from "../application/mcp-instructions";
+import { registerTools } from "../application/mcp-tools";
 import type { ToolLog } from "../application/mcp-tool-kit";
 import { McpOAuthProvider } from "../application/mcp-oauth.provider";
 import { McpUseCases } from "../application/mcp-use-cases";
