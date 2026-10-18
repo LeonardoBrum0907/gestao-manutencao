@@ -69,6 +69,8 @@ export type PublicRpDto = PublicRpFields & {
   id: string;
   // Nomes dos técnicos do RP, mesmo de quem saiu da lista do formulário depois.
   memberNames: string[];
+  // Conferido pelo coordenador no app: é o RP "aprovado" que o supervisor pode exportar.
+  approved: boolean;
   reviewRequest: string | null;
   reviewRequestedAt: string | null;
   createdAt: string;
@@ -87,6 +89,8 @@ export type PublicRpListItemDto = {
   memberIds: string[];
   memberNames: string[];
   reviewRequested: boolean;
+  // Conferido pelo coordenador no app (ver PublicRpDto.approved).
+  approved: boolean;
 };
 
 export type PublicRpPageDto = { items: PublicRpListItemDto[]; nextCursor: string | null };

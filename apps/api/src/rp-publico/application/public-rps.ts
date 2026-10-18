@@ -19,7 +19,7 @@ import {
 } from "./ports";
 
 // Filtros que a lista pública aceita; a origem é sempre "public".
-const PUBLIC_FILTERS = ["memberId", "status", "review", "q", "from", "to", "lineId", "cursor", "limit"] as const;
+const PUBLIC_FILTERS = ["memberId", "status", "review", "checked", "q", "from", "to", "lineId", "cursor", "limit"] as const;
 
 function publicQuery(query: RpListQuery): RpListQuery {
   const picked: RpListQuery = { source: "public" };

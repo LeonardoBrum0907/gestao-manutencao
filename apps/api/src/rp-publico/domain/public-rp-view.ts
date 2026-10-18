@@ -42,6 +42,7 @@ export function toPublicRp(rp: RpDto, names: ReadonlyMap<string, string>): Publi
     ...publicFieldsOf(rp),
     id: rp.id,
     memberNames: namesOf(rp.memberIds, names),
+    approved: rp.checkedAt !== null,
     reviewRequest: rp.reviewRequest,
     reviewRequestedAt: rp.reviewRequestedAt,
     createdAt: rp.createdAt,
@@ -66,5 +67,6 @@ export function toPublicListItem(item: RpListItemDto, names: ReadonlyMap<string,
     memberIds: item.memberIds,
     memberNames: namesOf(item.memberIds, names),
     reviewRequested: item.reviewRequested,
+    approved: item.checked,
   };
 }

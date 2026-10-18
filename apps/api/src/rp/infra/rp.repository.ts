@@ -169,6 +169,7 @@ function listWhere(filter: RpListFilter): Prisma.RpWhereInput {
   if (filter.repeated !== null) and.push({ repeatedFailure: filter.repeated });
   if (filter.source) and.push({ source: filter.source });
   if (filter.reviewPending) and.push({ reviewRequestedAt: { not: null } });
+  if (filter.checked !== null) and.push({ checkedAt: filter.checked ? { not: null } : null });
   if (filter.q) {
     const contains = { contains: filter.q, mode: "insensitive" as const };
     and.push({ OR: [{ problem: contains }, { description: contains }, { rootCause: contains }] });
