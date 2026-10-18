@@ -156,17 +156,24 @@ export function DocumentationPage() {
             </SelectInput>
           </Field>
         </div>
-        {filtered ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* A caixa fica sempre à vista: dentro do "Limpar" ela só aparecia depois de outro filtro, e na tela limpa não
+            havia como listar as fichas a revisar. Vem antes do "Limpar" para não pular de lugar quando ele aparece. */}
+        <div className="mt-4 flex min-h-10 flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-app">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[var(--accent)]"
+              checked={filter.review === "true"}
+              onChange={(event) => setFilter("review", event.target.checked ? "true" : "")}
+            />
+            Só as que precisam de revisão
+          </label>
+          {filtered ? (
             <Button tone="ghost" onClick={() => setParams({}, { replace: true })}>
               Limpar
             </Button>
-            <label className="flex items-center gap-2 text-sm text-app">
-              <input type="checkbox" checked={filter.review === "true"} onChange={(event) => setFilter("review", event.target.checked ? "true" : "")} />
-              Só as que precisam de revisão
-            </label>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </Card>
       {results.isError ? <Notice>{errorMessage(results.error)}</Notice> : null}
       {results.isPending ? <p className="text-sm text-muted">Buscando…</p> : null}
