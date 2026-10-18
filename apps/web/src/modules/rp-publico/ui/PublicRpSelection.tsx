@@ -34,17 +34,17 @@ type RpListCardProps = {
   checked: boolean;
   selecting: boolean;
   onToggle: () => void;
+  onHold: () => void;
 };
 
 /**
  * Cartão da lista. No computador a caixinha fica sempre à esquerda; no celular ela só aparece depois de tocar e segurar
  * um RP, como na galeria (pedido do Léo: não ocupar espaço). Com algum RP marcado, tocar no cartão marca em vez de abrir.
- * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} selecting={selected.size > 0} onToggle={…} />
+ * `onHold` começa a seleção por arrasto (useDragSelect).
+ * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} selecting={selected.size > 0} onToggle={…} onHold={…} />
  */
-export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle }: RpListCardProps) {
-  const longPress = useLongPress(() => {
-    if (!checked) onToggle();
-  });
+export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle, onHold }: RpListCardProps) {
+  const longPress = useLongPress(onHold);
   const border = checked ? "border-accent" : "border-line";
   function toggleInsteadOfOpening(event: MouseEvent) {
     if (!selecting) return;
@@ -52,7 +52,7 @@ export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle }
     onToggle();
   }
   return (
-    <li className={`flex rounded-card border ${border} bg-card shadow-card transition hover:border-accent`}>
+    <li data-rp-id={rp.id} className={`flex rounded-card border ${border} bg-card shadow-card transition hover:border-accent`}>
       <label className={`${selecting ? "flex" : "hidden sm:flex"} cursor-pointer items-start py-4 pl-4 pr-1`}>
         <input type="checkbox" aria-label={`Marcar RP: ${rp.problem}`} className="h-5 w-5 accent-[var(--accent)]" checked={checked} onChange={onToggle} />
       </label>
@@ -76,7 +76,11 @@ function selectedText(count: number): string {
 }
 
 function StickyBar({ children }: { children: ReactNode }) {
-  return <div className="sticky bottom-0 -mx-4 border-t border-line bg-surface px-4 py-3">{children}</div>;
+  return (
+    <div data-selection-bar className="sticky bottom-0 -mx-4 border-t border-line bg-surface px-4 py-3">
+      {children}
+    </div>
+  );
 }
 
 type ReviewBarProps = { code: string; selected: ReadonlySet<string>; onClear: () => void };

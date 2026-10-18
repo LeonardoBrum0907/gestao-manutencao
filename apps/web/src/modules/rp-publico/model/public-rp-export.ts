@@ -78,3 +78,17 @@ export function toggleSelected(selected: ReadonlySet<string>, id: string): Set<s
   else next.add(id);
   return next;
 }
+
+/**
+ * Seleção enquanto o dedo arrasta depois de segurar, como na galeria do celular: o que já estava marcado continua,
+ * mais todos os RPs entre o que foi segurado e o que está debaixo do dedo agora (para cima ou para baixo).
+ * @example dragSelection(new Set(), ["a", "b", "c", "d"], "b", "d") // Set { "b", "c", "d" }
+ */
+export function dragSelection(base: ReadonlySet<string>, ids: readonly string[], anchorId: string, currentId: string): Set<string> {
+  const from = ids.indexOf(anchorId);
+  const to = ids.indexOf(currentId);
+  const next = new Set(base);
+  if (from < 0 || to < 0) return next.add(anchorId);
+  for (const id of ids.slice(Math.min(from, to), Math.max(from, to) + 1)) next.add(id);
+  return next;
+}

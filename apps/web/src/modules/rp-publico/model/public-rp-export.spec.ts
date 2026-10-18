@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { samplePublicRp, sampleDirectory } from "./fake-public-rp";
-import { rpExportFileName, rpExportTable, toggleSelected } from "./public-rp-export";
+import { dragSelection, rpExportFileName, rpExportTable, toggleSelected } from "./public-rp-export";
 
 function cell(table: ReturnType<typeof rpExportTable>, row: number, header: string): string {
   return table.rows[row]![table.headers.indexOf(header)]!;
@@ -41,5 +41,24 @@ describe("rpExportFileName e toggleSelected", () => {
     assert.deepEqual([...toggleSelected(before, "b")], ["a", "b"]);
     assert.deepEqual([...toggleSelected(before, "a")], []);
     assert.deepEqual([...before], ["a"]);
+  });
+});
+
+describe("dragSelection", () => {
+  const ids = ["a", "b", "c", "d", "e"];
+
+  it("marca do segurado até o que está debaixo do dedo, nos dois sentidos", () => {
+    assert.deepEqual([...dragSelection(new Set(), ids, "b", "d")], ["b", "c", "d"]);
+    assert.deepEqual([...dragSelection(new Set(), ids, "d", "b")].sort(), ["b", "c", "d"]);
+  });
+
+  it("mantém o que já estava marcado e não mexe no conjunto de antes", () => {
+    const base = new Set(["e"]);
+    assert.deepEqual([...dragSelection(base, ids, "a", "b")].sort(), ["a", "b", "e"]);
+    assert.deepEqual([...base], ["e"]);
+  });
+
+  it("dedo fora de um RP conhecido deixa só o segurado", () => {
+    assert.deepEqual([...dragSelection(new Set(), ids, "c", "zz")], ["c"]);
   });
 });

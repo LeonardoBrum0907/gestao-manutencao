@@ -10,6 +10,7 @@ import { publicRpPath, rememberMember, rememberedMember } from "../model/public-
 import { toggleSelected } from "../model/public-rp-export";
 import { ExportBar, ExportIntro, ReviewBar, RpListCard } from "./PublicRpSelection";
 import { deviceStorage } from "./public-rp-parts";
+import { useDragSelect } from "./use-drag-select";
 
 // "Quem sou": o aparelho lembra, e a lista abre nos RPs da pessoa. Não é login.
 function MemberPicker({ members, value, onChange }: { members: PublicRpDirectoryDto["members"]; value: string; onChange: (id: string) => void }) {
@@ -151,6 +152,7 @@ export function PublicRpListPage() {
   }
   const setFilter = (key: string, value: string) => setFilters({ [key]: value });
   const selection = useListSelection(params, setFilters);
+  const drag = useDragSelect({ ids: items.map((rp) => rp.id), selected: selection.selected, onChange: selection.setSelected });
 
   if (directory.isError) return <Notice>{errorMessage(directory.error)}</Notice>;
 
@@ -195,6 +197,7 @@ export function PublicRpListPage() {
             checked={selection.selected.has(rp.id)}
             selecting={selection.exporting || selection.selected.size > 0}
             onToggle={() => selection.toggle(rp.id)}
+            onHold={() => drag.begin(rp.id)}
           />
         ))}
       </ul>
