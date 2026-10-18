@@ -94,7 +94,7 @@ export function MachineFields({
         {machine?.equipmentId ? (
           <Field label="Subconjunto">
             <SelectInput value={subassemblyId} onChange={(event) => onSubassemblyChange(event.target.value)}>
-              <option value="">{subassemblyPlaceholder(optional)}</option>
+              <option value="">{subassemblyPlaceholder(optional, choices.length)}</option>
               {choices.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}

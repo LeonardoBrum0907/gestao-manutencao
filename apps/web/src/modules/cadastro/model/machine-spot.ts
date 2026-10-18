@@ -12,9 +12,12 @@ export function subassemblyChoices(subassemblies: SubassemblyDto[], machine: Sub
 
 /**
  * Primeira opção do campo Subconjunto: "Não sei" onde a ficha aceita ficar sem, senão o pedido para escolher.
- * @example subassemblyPlaceholder(true) // "Não sei"
+ * Sem nenhum subconjunto para a máquina, diz isso: a lista abria só com "Escolha o subconjunto".
+ * @example subassemblyPlaceholder(true, 3) // "Não sei"
+ * @example subassemblyPlaceholder(false, 0) // "Nenhum subconjunto nesta máquina"
  */
-export function subassemblyPlaceholder(optional: boolean): string {
+export function subassemblyPlaceholder(optional: boolean, choices: number): string {
+  if (!choices) return "Nenhum subconjunto nesta máquina";
   return optional ? "Não sei" : "Escolha o subconjunto";
 }
 

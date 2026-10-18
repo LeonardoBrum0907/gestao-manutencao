@@ -49,10 +49,15 @@ describe("resposta da API antiga", () => {
 
 describe("primeira opção do campo Subconjunto", () => {
   it("ficha que aceita ficar sem subconjunto mostra Não sei", () => {
-    assert.equal(subassemblyPlaceholder(true), "Não sei");
+    assert.equal(subassemblyPlaceholder(true, 2), "Não sei");
   });
 
   it("ficha que exige subconjunto pede para escolher", () => {
-    assert.equal(subassemblyPlaceholder(false), "Escolha o subconjunto");
+    assert.equal(subassemblyPlaceholder(false, 2), "Escolha o subconjunto");
+  });
+
+  it("máquina sem nenhum subconjunto avisa em vez de pedir para escolher", () => {
+    assert.equal(subassemblyPlaceholder(false, 0), "Nenhum subconjunto nesta máquina");
+    assert.equal(subassemblyPlaceholder(true, 0), "Nenhum subconjunto nesta máquina");
   });
 });
