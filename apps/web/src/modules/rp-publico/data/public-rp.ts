@@ -1,4 +1,4 @@
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
@@ -45,6 +45,16 @@ export function usePendingReviews(code: string, memberId: string) {
 
 export function usePublicRp(code: string, id: string) {
   return useQuery({ queryKey: ["public-rp", code, "rp", id], queryFn: () => api<PublicRpDto>(`${base(code)}/${id}`) });
+}
+
+/**
+ * Busca a ficha completa de cada RP escolhido para exportar (a lista só traz o resumo).
+ * @example const rps = await fetchPublicRps(client, code, ["rp1", "rp2"])
+ */
+export function fetchPublicRps(client: QueryClient, code: string, ids: string[]): Promise<PublicRpDto[]> {
+  return Promise.all(
+    ids.map((id) => client.fetchQuery({ queryKey: ["public-rp", code, "rp", id], queryFn: () => api<PublicRpDto>(`${base(code)}/${id}`) })),
+  );
 }
 
 export function useSavePublicRp(code: string, id?: string) {
