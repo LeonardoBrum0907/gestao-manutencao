@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import type { PublicRpDirectoryDto, PublicRpListItemDto } from "@manutencao/shared";
+import { RP_PUBLIC_DECISION_LABELS, RP_PUBLIC_DECISIONS, type PublicRpDirectoryDto, type PublicRpListItemDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
@@ -8,8 +8,8 @@ import { formatRpDay, rpStatusChipClass, rpStatusLabel, rpStatusOptions } from "
 import { usePendingReviews, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
 import { placeOf, publicRpPath, rememberMember, rememberedMember } from "../model/public-rp";
 import { toggleSelected } from "../model/public-rp-export";
-import { ApprovedBadge, ExportBar, ExportIntro, SelectableRpCard } from "./PublicRpExport";
-import { deviceStorage, ReviewBadge } from "./public-rp-parts";
+import { DecisionBadge, SelectableRpCard, SelectionBar, SelectionIntro } from "./PublicRpSelection";
+import { deviceStorage } from "./public-rp-parts";
 
 function RpCard({ code, rp, lineNames }: { code: string; rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string> }) {
   return (
@@ -18,8 +18,7 @@ function RpCard({ code, rp, lineNames }: { code: string; rp: PublicRpListItemDto
         <span className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
           <span>{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
           <span className="flex items-center gap-2">
-            {rp.reviewRequested ? <ReviewBadge /> : null}
-            {rp.approved ? <ApprovedBadge /> : null}
+            <DecisionBadge decision={rp.decision} />
             <span className={rpStatusChipClass(rp.status)}>{rpStatusLabel(rp.status)}</span>
           </span>
         </span>
@@ -72,13 +71,23 @@ function useRememberedMemberParam(params: URLSearchParams, setParams: (next: URL
 
 function Filters({ params, setFilter }: { params: URLSearchParams; setFilter: (key: string, value: string) => void }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-3">
       <Field label="Status">
         <SelectInput value={params.get("status") ?? ""} onChange={(event) => setFilter("status", event.target.value)}>
           <option value="">Todos</option>
           {rpStatusOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
+            </option>
+          ))}
+        </SelectInput>
+      </Field>
+      <Field label="Situação">
+        <SelectInput value={params.get("decision") ?? ""} onChange={(event) => setFilter("decision", event.target.value)}>
+          <option value="">Todas</option>
+          {RP_PUBLIC_DECISIONS.map((decision) => (
+            <option key={decision} value={decision}>
+              {RP_PUBLIC_DECISION_LABELS[decision]}
             </option>
           ))}
         </SelectInput>
@@ -90,32 +99,26 @@ function Filters({ params, setFilter }: { params: URLSearchParams; setFilter: (k
   );
 }
 
-// Modo de exportar: a lista passa a mostrar só os aprovados (checked=true) e o toque marca em vez de abrir.
-// Quem recarrega a página com checked=true na URL volta direto para o modo de exportar.
-function useExportMode(params: URLSearchParams, setFilter: (key: string, value: string) => void) {
-  const [exporting, setExporting] = useState(params.get("checked") === "true");
+// Modo de seleção: o toque marca em vez de abrir, e a barra do pé aprova, recusa, pede revisão ou exporta.
+function useSelectionMode() {
+  const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  function start() {
-    setExporting(true);
-    setFilter("checked", "true");
-  }
   function stop() {
-    setExporting(false);
+    setSelecting(false);
     setSelected(new Set());
-    setFilter("checked", "");
   }
   const toggle = (id: string) => setSelected((current) => toggleSelected(current, id));
-  return { exporting, selected, setSelected, start, stop, toggle };
+  return { selecting, selected, setSelected, start: () => setSelecting(true), stop, toggle };
 }
 
-function ListHeader({ code, exporting, onExport }: { code: string; exporting: boolean; onExport: () => void }) {
+function ListHeader({ code, selecting, onSelect }: { code: string; selecting: boolean; onSelect: () => void }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <h1 className="font-serif text-2xl font-semibold text-app">RPs da equipe</h1>
-      {exporting ? null : (
+      {selecting ? null : (
         <div className="flex flex-wrap gap-3">
-          <Button tone="ghost" onClick={onExport}>
-            Exportar planilha
+          <Button tone="ghost" onClick={onSelect}>
+            Selecionar vários
           </Button>
           <Link
             to={publicRpPath(code, "novo")}
@@ -131,8 +134,8 @@ function ListHeader({ code, exporting, onExport }: { code: string; exporting: bo
 }
 
 /**
- * Lista da página pública: só os RPs criados nela, filtráveis pelo técnico do aparelho e pelo pedido de revisão.
- * No modo de exportar, o supervisor marca RPs aprovados e baixa a planilha.
+ * Lista da página pública: só os RPs criados nela, filtráveis pelo técnico do aparelho, pela situação e pelo pedido de revisão.
+ * No modo de seleção, o supervisor marca vários RPs e aprova, recusa, pede revisão ou exporta os aprovados.
  * @example <Route index element={<PublicRpListPage />} />
  */
 export function PublicRpListPage() {
@@ -152,20 +155,20 @@ export function PublicRpListPage() {
     if (key === "memberId") rememberMember(deviceStorage(), value);
     setParams(next, { replace: true });
   }
-  const exportMode = useExportMode(params, setFilter);
+  const selection = useSelectionMode();
 
   if (directory.isError) return <Notice>{errorMessage(directory.error)}</Notice>;
 
   return (
     <div className="flex flex-col gap-4">
-      <ListHeader code={code} exporting={exportMode.exporting} onExport={exportMode.start} />
-      {exportMode.exporting ? (
-        <ExportIntro
+      <ListHeader code={code} selecting={selection.selecting} onSelect={selection.start} />
+      {selection.selecting ? (
+        <SelectionIntro
           shown={items.length}
-          selected={items.filter((rp) => exportMode.selected.has(rp.id)).length}
-          onSelectAll={() => exportMode.setSelected(new Set(items.map((rp) => rp.id)))}
-          onClear={() => exportMode.setSelected(new Set())}
-          onCancel={exportMode.stop}
+          selected={items.filter((rp) => selection.selected.has(rp.id)).length}
+          onSelectAll={() => selection.setSelected(new Set(items.map((rp) => rp.id)))}
+          onClear={() => selection.setSelected(new Set())}
+          onCancel={selection.stop}
         />
       ) : null}
       <Card>
@@ -182,12 +185,12 @@ export function PublicRpListPage() {
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
       {list.isPending ? <p className="text-sm text-muted">Carregando RPs…</p> : null}
       {list.isSuccess && !items.length ? (
-        <p className="text-sm text-muted">{exportMode.exporting ? "Nenhum RP aprovado com esses filtros." : "Nenhum RP por aqui ainda."}</p>
+        <p className="text-sm text-muted">{params.toString() ? "Nenhum RP com esses filtros." : "Nenhum RP por aqui ainda."}</p>
       ) : null}
       <ul className="flex flex-col gap-3">
         {items.map((rp) =>
-          exportMode.exporting ? (
-            <SelectableRpCard key={rp.id} rp={rp} lineNames={lineNames} checked={exportMode.selected.has(rp.id)} onToggle={() => exportMode.toggle(rp.id)} />
+          selection.selecting ? (
+            <SelectableRpCard key={rp.id} rp={rp} lineNames={lineNames} checked={selection.selected.has(rp.id)} onToggle={() => selection.toggle(rp.id)} />
           ) : (
             <RpCard key={rp.id} code={code} rp={rp} lineNames={lineNames} />
           ),
@@ -198,7 +201,7 @@ export function PublicRpListPage() {
           {list.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
         </Button>
       ) : null}
-      {exportMode.exporting ? <ExportBar code={code} selected={exportMode.selected} directory={directory.data} /> : null}
+      {selection.selecting ? <SelectionBar code={code} selected={selection.selected} directory={directory.data} onDone={() => selection.setSelected(new Set())} /> : null}
     </div>
   );
 }

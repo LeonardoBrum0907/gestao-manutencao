@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto } from "@manutencao/shared";
+import type { PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkReviewBody, RpBulkReviewResultDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 // Chamadas da página pública: sem login, o código do link vai no caminho.
@@ -79,5 +79,14 @@ export function useRequestReview(code: string, id: string) {
       client.setQueryData(["public-rp", code, "rp", rp.id], rp);
       void client.invalidateQueries({ queryKey: ["public-rp", code], predicate: (query) => query.queryKey[2] !== "rp" });
     },
+  });
+}
+
+// Aprovar, recusar ou pedir revisão de vários RPs (ou de um só, na leitura). Recarrega lista e fichas.
+export function useBulkReview(code: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RpBulkReviewBody) => api<RpBulkReviewResultDto>(`${base(code)}/review`, { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["public-rp", code] }),
   });
 }

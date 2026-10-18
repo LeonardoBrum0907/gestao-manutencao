@@ -1,12 +1,34 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { Button, Field, Modal, TextArea } from "../../../design/ui/controls";
 import { formatRpDay } from "../../rp/model/rp";
+import type { NotePrompt } from "../model/public-rp-review";
+
+type NoteDialogProps = { prompt: NotePrompt; pending: boolean; onClose: () => void; onConfirm: (note: string) => void };
 
 /**
- * Selo "Revisar" de RP com pedido de revisão em aberto.
- * @example {rp.reviewRequested ? <ReviewBadge /> : null}
+ * Caixa que pede o texto de recusar ou de pedir revisão antes de gravar.
+ * @example <NoteDialog prompt={NOTE_PROMPTS.reject} pending={false} onClose={fechar} onConfirm={(note) => recusar(note)} />
  */
-export function ReviewBadge() {
-  return <span className="rounded-control bg-warn-soft px-2 py-1 text-xs font-semibold text-warn">Revisar</span>;
+export function NoteDialog({ prompt, pending, onClose, onConfirm }: NoteDialogProps) {
+  const [note, setNote] = useState("");
+  const missing = prompt.required && !note.trim();
+  return (
+    <Modal open title={prompt.title} onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <Field label={prompt.label}>
+          <TextArea autoFocus value={note} placeholder={prompt.placeholder} onChange={(event) => setNote(event.target.value)} />
+        </Field>
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button tone="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button disabled={missing || pending} onClick={() => onConfirm(note.trim())}>
+            {pending ? "Gravando…" : prompt.confirm}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
 }
 
 /**
