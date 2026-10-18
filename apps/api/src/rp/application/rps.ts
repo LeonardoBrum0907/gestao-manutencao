@@ -36,8 +36,15 @@ export class Rps {
     });
   }
 
-  async create(body: unknown): Promise<RpDto> {
-    const input = parseRp(body);
+  create(body: unknown): Promise<RpDto> {
+    return this.createFrom(parseRp(body));
+  }
+
+  /**
+   * Grava um RP já lido, com o Problema espelho.
+   * @example await rps.createFrom(parseRp(body))
+   */
+  async createFrom(input: RpInput): Promise<RpDto> {
     await this.assertRefs(input, null);
     if (input.chamadoId) await this.assertChamado(input.chamadoId);
     const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
@@ -49,9 +56,16 @@ export class Rps {
     }
   }
 
-  async update(id: string, body: unknown): Promise<RpDto> {
+  update(id: string, body: unknown): Promise<RpDto> {
+    return this.updateFrom(id, parseRp(body));
+  }
+
+  /**
+   * Regrava um RP já lido e acompanha o Problema espelho. Não mexe no chamado.
+   * @example await rps.updateFrom(id, parseRp(body))
+   */
+  async updateFrom(id: string, input: RpInput): Promise<RpDto> {
     const current = await this.get(id);
-    const input = parseRp(body);
     await this.assertRefs(input, current.subassemblyId);
     let problemId = current.problemRecordId;
     if (problemId) {
