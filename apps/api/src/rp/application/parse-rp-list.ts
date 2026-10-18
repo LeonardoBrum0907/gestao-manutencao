@@ -29,6 +29,7 @@ export type RpListQuery = {
   repeated?: unknown;
   source?: unknown;
   review?: unknown;
+  checked?: unknown;
   q?: unknown;
   cursor?: unknown;
   limit?: unknown;
@@ -46,6 +47,13 @@ function reviewPending(value: unknown): boolean {
   if (!text) return false;
   if (text !== "pending") throw new DomainError("invalid", 400, `Filtro de revisão inválido (recebido: ${text}; esperado: pending).`);
   return true;
+}
+
+function checkedFilter(value: unknown): boolean | null {
+  const text = single(value);
+  if (!text) return null;
+  if (text !== "true" && text !== "false") throw new DomainError("invalid", 400, `Filtro de conferido inválido (recebido: ${text}; esperado: true ou false).`);
+  return text === "true";
 }
 
 export function parseRpList(query: RpListQuery): RpListFilter {
@@ -73,6 +81,7 @@ export function parseRpList(query: RpListQuery): RpListFilter {
     repeated: repeated === "true" ? true : repeated === "false" ? false : null,
     source: origin(query.source),
     reviewPending: reviewPending(query.review),
+    checked: checkedFilter(query.checked),
     q: single(query.q)?.trim() || null,
     cursor: single(query.cursor) || null,
     limit,

@@ -55,6 +55,15 @@ describe("PublicRps: lista e leitura", () => {
     assert.deepEqual(book.queries[0], { source: "public", memberId: "m1" });
   });
 
+  it("aceita o filtro de aprovados e diz quais o coordenador conferiu", async () => {
+    const { book, service } = await setup();
+    book.rows = [sampleRp({ id: "ok", checkedAt: NOW.toISOString() }), sampleRp({ id: "novo" })];
+    const page = await service.page(CODE, { checked: "true" });
+    assert.deepEqual(book.queries[0], { source: "public", checked: "true" });
+    assert.deepEqual(page.items.map((item) => [item.id, item.approved]), [["ok", true], ["novo", false]]);
+    assert.equal((await service.get(CODE, "ok")).approved, true);
+  });
+
   it("RP colado no app não abre pelo link", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp({ id: "colado", source: "paste" })];

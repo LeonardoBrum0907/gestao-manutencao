@@ -26,6 +26,13 @@ describe("parseRpList", () => {
     assert.throws(() => parseRpList({ review: "sim" }), /esperado: pending/);
   });
 
+  it("checked=true|false: só conferidos ou só não conferidos", () => {
+    assert.equal(parseRpList({}).checked, null);
+    assert.equal(parseRpList({ checked: "true" }).checked, true);
+    assert.equal(parseRpList({ checked: "false" }).checked, false);
+    assert.throws(() => parseRpList({ checked: "sim" }), /recebido: sim; esperado: true ou false/);
+  });
+
   it("limite fora de 1 a 100 é recusado", () => {
     assert.throws(() => parseRpList({ limit: "0" }), /de 1 a 100/);
   });
