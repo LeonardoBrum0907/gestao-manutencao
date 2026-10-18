@@ -1,9 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpDto } from "@manutencao/shared";
+import type { PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkAction, RpBulkReviewResultDto, RpDto, RpRevisionKind } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
+import { decisionPatch, type RpDecisionPatch } from "../../rp/domain/rp-decision";
 import type { PublicWriteLimiter } from "../domain/write-limiter";
 import { publicFieldsOf, toPublicListItem, toPublicRp } from "../domain/public-rp-view";
+import { parseBulkReview } from "./parse-bulk-review";
 import { parsePublicRp, parseReviewRequest } from "./parse-public-rp";
 import { PublicLinks } from "./public-links";
 import {
@@ -19,12 +21,24 @@ import {
 } from "./ports";
 
 // Filtros que a lista pública aceita; a origem é sempre "public".
-const PUBLIC_FILTERS = ["memberId", "status", "review", "checked", "q", "from", "to", "lineId", "cursor", "limit"] as const;
+const PUBLIC_FILTERS = ["memberId", "status", "review", "checked", "decision", "q", "from", "to", "lineId", "cursor", "limit"] as const;
 
 function publicQuery(query: RpListQuery): RpListQuery {
   const picked: RpListQuery = { source: "public" };
   for (const key of PUBLIC_FILTERS) if (query[key] !== undefined) picked[key] = query[key];
   return picked;
+}
+
+const REVISION_KIND: Record<RpBulkAction, RpRevisionKind> = { approve: "approve", reject: "reject", request_review: "review_request" };
+
+// Editar pelo link devolve o RP para avaliação: sai aprovado e recusado. O pedido de revisão só sai
+// quando o técnico marca "Revisado".
+function editReset(current: RpDto, revised: boolean): RpDecisionPatch {
+  const patch: RpDecisionPatch = {};
+  if (current.checkedAt) patch.checkedAt = null;
+  if (current.rejectedAt) Object.assign(patch, { rejectedAt: null, rejectionNote: null });
+  if (revised && current.reviewRequestedAt) Object.assign(patch, { reviewRequest: null, reviewRequestedAt: null });
+  return patch;
 }
 
 /**
@@ -77,8 +91,8 @@ export class PublicRps {
     const { input, revised } = parsePublicRp(body, allowed, current);
     let saved = await this.rps.updateFrom(id, input);
     await this.revisions.add({ rpId: id, kind: "edit", before: publicFieldsOf(current), note: null });
-    if (current.checkedAt) saved = await this.rps.setDecision(id, { checkedAt: null });
-    if (revised && current.reviewRequestedAt) saved = await this.rps.setDecision(id, { reviewRequest: null, reviewRequestedAt: null });
+    const reset = editReset(current, revised);
+    if (Object.keys(reset).length) saved = await this.rps.setDecision(id, reset);
     return this.view(saved);
   }
 
@@ -88,7 +102,22 @@ export class PublicRps {
     const current = await this.publicRp(id);
     const text = parseReviewRequest(body);
     await this.revisions.add({ rpId: id, kind: "review_request", before: publicFieldsOf(current), note: text });
-    return this.view(await this.rps.setDecision(id, { reviewRequest: text, reviewRequestedAt: this.clock() }));
+    return this.view(await this.rps.setDecision(id, decisionPatch("request_review", this.clock(), text)));
+  }
+
+  // Aprovar, recusar ou pedir revisão de vários RPs. Confere todos antes de gravar: um id fora da página
+  // pública barra o lote inteiro.
+  async bulkReview(code: string, body: unknown): Promise<RpBulkReviewResultDto> {
+    await this.links.assertActive(code);
+    this.limiter.take("write");
+    const { ids, action, note } = parseBulkReview(body);
+    const rps = await Promise.all(ids.map((id) => this.publicRp(id)));
+    const patch = decisionPatch(action, this.clock(), note);
+    for (const rp of rps) {
+      await this.revisions.add({ rpId: rp.id, kind: REVISION_KIND[action], before: publicFieldsOf(rp), note });
+      await this.rps.setDecision(rp.id, patch);
+    }
+    return { updated: rps.length };
   }
 
   // RP colado no app não existe para a página pública: mesma resposta de id inexistente.

@@ -33,6 +33,12 @@ describe("parseRpList", () => {
     assert.throws(() => parseRpList({ checked: "sim" }), /recebido: sim; esperado: true ou false/);
   });
 
+  it("decision filtra pela situação da avaliação", () => {
+    assert.equal(parseRpList({}).decision, null);
+    assert.equal(parseRpList({ decision: "rejected" }).decision, "rejected");
+    assert.throws(() => parseRpList({ decision: "ok" }), /recebido: ok; esperado: pending, approved, rejected ou revision/);
+  });
+
   it("limite fora de 1 a 100 é recusado", () => {
     assert.throws(() => parseRpList({ limit: "0" }), /de 1 a 100/);
   });

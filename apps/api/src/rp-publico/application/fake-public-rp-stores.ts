@@ -40,6 +40,8 @@ export function sampleRp(patch: Partial<RpDto> = {}): RpDto {
     checkedAt: null,
     reviewRequest: null,
     reviewRequestedAt: null,
+    rejectedAt: null,
+    rejectionNote: null,
     createdAt: "2026-10-04T12:00:00.000Z",
     updatedAt: "2026-10-04T12:00:00.000Z",
     ...patch,
@@ -50,7 +52,7 @@ function listItem(rp: RpDto): RpListItemDto {
   return {
     id: rp.id, occurredAt: rp.occurredAt, line: rp.line, tag: rp.tag, lineId: rp.lineId, problem: rp.problem, status: rp.status,
     repeatedFailure: rp.repeatedFailure, memberIds: rp.memberIds, unmatchedTechnicians: rp.unmatchedTechnicians, source: rp.source,
-    checked: rp.checkedAt !== null, reviewRequested: rp.reviewRequestedAt !== null,
+    checked: rp.checkedAt !== null, reviewRequested: rp.reviewRequestedAt !== null, rejected: rp.rejectedAt !== null,
   };
 }
 

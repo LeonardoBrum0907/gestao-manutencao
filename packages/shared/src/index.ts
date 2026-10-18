@@ -638,6 +638,9 @@ export type RpDto = RpFields & {
   checkedAt: string | null;
   reviewRequest: string | null;
   reviewRequestedAt: string | null;
+  // Supervisor recusou na página pública.
+  rejectedAt: string | null;
+  rejectionNote: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -656,6 +659,7 @@ export type RpListItemDto = {
   source: RpSource;
   checked: boolean;
   reviewRequested: boolean;
+  rejected: boolean;
 };
 
 export type RpPageDto = { items: RpListItemDto[]; nextCursor: string | null };

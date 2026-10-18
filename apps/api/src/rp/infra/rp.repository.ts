@@ -8,6 +8,7 @@ import {
   type RpFields,
   type RpListItemDto,
   type RpPageDto,
+  type RpPublicDecision,
   type RpSource,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
@@ -66,6 +67,8 @@ function toDto(row: Row): RpDto {
     checkedAt: row.checkedAt?.toISOString() ?? null,
     reviewRequest: row.reviewRequest,
     reviewRequestedAt: row.reviewRequestedAt?.toISOString() ?? null,
+    rejectedAt: row.rejectedAt?.toISOString() ?? null,
+    rejectionNote: row.rejectionNote,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -84,6 +87,7 @@ const listSelect = {
   source: true,
   checkedAt: true,
   reviewRequestedAt: true,
+  rejectedAt: true,
   members: { select: { memberId: true }, orderBy: { position: "asc" as const } },
 } satisfies Prisma.RpSelect;
 
@@ -102,6 +106,7 @@ function toListItem(row: Prisma.RpGetPayload<{ select: typeof listSelect }>): Rp
     source: source(row.source),
     checked: row.checkedAt !== null,
     reviewRequested: row.reviewRequestedAt !== null,
+    rejected: row.rejectedAt !== null,
   };
 }
 
@@ -171,11 +176,20 @@ function listWhere(filter: RpListFilter): Prisma.RpWhereInput {
   if (filter.source) and.push({ source: filter.source });
   if (filter.reviewPending) and.push({ reviewRequestedAt: { not: null } });
   if (filter.checked !== null) and.push({ checkedAt: filter.checked ? { not: null } : null });
+  if (filter.decision) and.push(decisionWhere(filter.decision));
   if (filter.q) {
     const contains = { contains: filter.q, mode: "insensitive" as const };
     and.push({ OR: [{ problem: contains }, { description: contains }, { rootCause: contains }] });
   }
   return { AND: and };
+}
+
+// Mesma ordem de rpPublicDecisionOf: pedido de revisão, recusa, aprovação.
+function decisionWhere(decision: RpPublicDecision): Prisma.RpWhereInput {
+  if (decision === "revision") return { reviewRequestedAt: { not: null } };
+  if (decision === "rejected") return { reviewRequestedAt: null, rejectedAt: { not: null } };
+  if (decision === "approved") return { reviewRequestedAt: null, rejectedAt: null, checkedAt: { not: null } };
+  return { reviewRequestedAt: null, rejectedAt: null, checkedAt: null };
 }
 
 @Injectable()

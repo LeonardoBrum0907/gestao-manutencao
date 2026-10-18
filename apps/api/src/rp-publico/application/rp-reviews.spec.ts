@@ -22,6 +22,13 @@ describe("RpReviews", () => {
     assert.equal((await reviews.setChecked("rp1", { checked: false })).checkedAt, null);
   });
 
+  it("conferir no app aprova: tira a recusa e o pedido de revisão do supervisor", async () => {
+    const { book, reviews } = setup();
+    book.rows = [sampleRp({ rejectedAt: NOW.toISOString(), rejectionNote: "x", reviewRequest: "y", reviewRequestedAt: NOW.toISOString() })];
+    const rp = await reviews.setChecked("rp1", { checked: true });
+    assert.deepEqual([rp.checkedAt, rp.rejectedAt, rp.rejectionNote, rp.reviewRequest], [NOW.toISOString(), null, null, null]);
+  });
+
   it("desfazer volta os campos da versão e guarda o estado de agora", async () => {
     const { book, revisions, reviews } = setup();
     const before = publicFieldsOf(sampleRp({ problem: "Texto original" }));

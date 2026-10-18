@@ -140,6 +140,13 @@ describe("PublicRps: editar", () => {
     assert.equal((await book.get("rp1")).checkedAt, null);
   });
 
+  it("editado pelo link sai de recusado e volta para pendente", async () => {
+    const { book, service } = await setup();
+    book.rows = [sampleRp({ rejectedAt: "2026-10-17T10:00:00.000Z", rejectionNote: "Fora do padrão" })];
+    const rp = await service.update(CODE, "rp1", body());
+    assert.deepEqual([rp.decision, rp.rejectionNote], ["pending", null]);
+  });
+
   it("marcar revisado apaga o pedido; sem marcar, o pedido fica", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp({ reviewRequest: "Falta a causa", reviewRequestedAt: "2026-10-17T10:00:00.000Z" })];
@@ -165,5 +172,47 @@ describe("PublicRps: pedir revisão", () => {
     const { book, service } = await setup();
     book.rows = [sampleRp()];
     await assert.rejects(service.requestReview(CODE, "rp1", { text: " " }), /Escreva o que precisa revisar/);
+  });
+});
+
+describe("PublicRps: aprovar, recusar e pedir revisão em lote", () => {
+  it("aprova vários de uma vez, cada um com o antes no histórico", async () => {
+    const { book, revisions, service } = await setup();
+    book.rows = [sampleRp({ id: "a", rejectedAt: NOW.toISOString(), rejectionNote: "x" }), sampleRp({ id: "b" })];
+    assert.deepEqual(await service.bulkReview(CODE, { ids: ["a", "b"], action: "approve" }), { updated: 2 });
+    const [a, b] = [await service.get(CODE, "a"), await service.get(CODE, "b")];
+    assert.deepEqual([a.decision, b.decision, a.rejectionNote], ["approved", "approved", null]);
+    assert.deepEqual(revisions.rows.map((row) => [row.rpId, row.kind]), [["a", "approve"], ["b", "approve"]]);
+  });
+
+  it("recusar guarda o motivo e tira a aprovação", async () => {
+    const { book, service } = await setup();
+    book.rows = [sampleRp({ checkedAt: NOW.toISOString() })];
+    await service.bulkReview(CODE, { ids: ["rp1"], action: "reject", note: "Não é falha" });
+    const rp = await service.get(CODE, "rp1");
+    assert.deepEqual([rp.decision, rp.approved, rp.rejectionNote], ["rejected", false, "Não é falha"]);
+  });
+
+  it("pedir revisão em lote vale para todos e aparece no filtro de revisão", async () => {
+    const { book, service } = await setup();
+    book.rows = [sampleRp({ id: "a" }), sampleRp({ id: "b" })];
+    await service.bulkReview(CODE, { ids: ["a", "b"], action: "request_review", note: "Faltou a TAG" });
+    const rps = await Promise.all(["a", "b"].map((id) => service.get(CODE, id)));
+    assert.deepEqual(rps.map((rp) => [rp.decision, rp.reviewRequest]), [["revision", "Faltou a TAG"], ["revision", "Faltou a TAG"]]);
+  });
+
+  it("um RP fora da página pública barra o lote inteiro", async () => {
+    const { book, revisions, service } = await setup();
+    book.rows = [sampleRp({ id: "a" }), sampleRp({ id: "colado", source: "paste" })];
+    await assert.rejects(service.bulkReview(CODE, { ids: ["a", "colado"], action: "approve" }), rejects(404));
+    assert.equal(revisions.rows.length, 0);
+    assert.equal((await book.get("a")).checkedAt, null);
+  });
+
+  it("aceita o filtro de situação na lista", async () => {
+    const { book, service } = await setup();
+    book.rows = [sampleRp()];
+    await service.page(CODE, { decision: "rejected" });
+    assert.deepEqual(book.queries[0], { source: "public", decision: "rejected" });
   });
 });

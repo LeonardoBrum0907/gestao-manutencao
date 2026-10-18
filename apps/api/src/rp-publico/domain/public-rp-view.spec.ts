@@ -22,3 +22,18 @@ describe("toPublicRp", () => {
     assert.deepEqual(toPublicRp(sampleRp({ memberIds: ["m1", "m2"] }), new Map([["m1", "Rogério B"]])).memberNames, ["Rogério B"]);
   });
 });
+
+describe("toPublicRp: situação", () => {
+  const at = "2026-10-18T10:00:00.000Z";
+
+  it("pedido de revisão vence conferido antigo: não conta como aprovado", () => {
+    const rp = toPublicRp(sampleRp({ checkedAt: at, reviewRequestedAt: at, reviewRequest: "x" }), new Map());
+    assert.deepEqual([rp.decision, rp.approved], ["revision", false]);
+  });
+
+  it("sem marca nenhuma fica pendente; recusado leva o motivo", () => {
+    assert.equal(toPublicRp(sampleRp(), new Map()).decision, "pending");
+    const rejected = toPublicRp(sampleRp({ rejectedAt: at, rejectionNote: "Duplicado" }), new Map());
+    assert.deepEqual([rejected.decision, rejected.rejectionNote], ["rejected", "Duplicado"]);
+  });
+});

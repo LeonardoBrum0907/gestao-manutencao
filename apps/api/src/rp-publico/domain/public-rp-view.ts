@@ -1,4 +1,4 @@
-import type { PublicRpDto, PublicRpFields, PublicRpListItemDto, RpDto, RpListItemDto } from "@manutencao/shared";
+import { rpPublicDecisionOf, type PublicRpDto, type PublicRpFields, type PublicRpListItemDto, type RpDto, type RpListItemDto } from "@manutencao/shared";
 
 /**
  * Os campos que a página pública vê e edita, sem o que é do coordenador (subconjunto, chamado, texto colado).
@@ -38,11 +38,14 @@ function namesOf(ids: string[], names: ReadonlyMap<string, string>): string[] {
  * @example toPublicRp(rp, new Map([["m1", "Rogério B"]])).memberNames // ["Rogério B"]
  */
 export function toPublicRp(rp: RpDto, names: ReadonlyMap<string, string>): PublicRpDto {
+  const decision = rpPublicDecisionOf({ approved: rp.checkedAt !== null, rejected: rp.rejectedAt !== null, reviewRequested: rp.reviewRequestedAt !== null });
   return {
     ...publicFieldsOf(rp),
     id: rp.id,
     memberNames: namesOf(rp.memberIds, names),
-    approved: rp.checkedAt !== null,
+    approved: decision === "approved",
+    decision,
+    rejectionNote: rp.rejectionNote,
     reviewRequest: rp.reviewRequest,
     reviewRequestedAt: rp.reviewRequestedAt,
     createdAt: rp.createdAt,
@@ -55,6 +58,7 @@ export function toPublicRp(rp: RpDto, names: ReadonlyMap<string, string>): Publi
  * @example toPublicListItem(item, names).reviewRequested
  */
 export function toPublicListItem(item: RpListItemDto, names: ReadonlyMap<string, string>): PublicRpListItemDto {
+  const decision = rpPublicDecisionOf({ approved: item.checked, rejected: item.rejected, reviewRequested: item.reviewRequested });
   return {
     id: item.id,
     occurredAt: item.occurredAt,
@@ -67,6 +71,8 @@ export function toPublicListItem(item: RpListItemDto, names: ReadonlyMap<string,
     memberIds: item.memberIds,
     memberNames: namesOf(item.memberIds, names),
     reviewRequested: item.reviewRequested,
-    approved: item.checked,
+    // RP antigo pode ter conferido e pedido de revisão juntos: vale a situação, não a marca.
+    approved: decision === "approved",
+    decision,
   };
 }
