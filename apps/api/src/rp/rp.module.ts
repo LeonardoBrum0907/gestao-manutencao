@@ -10,5 +10,6 @@ import { RpRepository } from "./infra/rp.repository";
   imports: [CadastroModule, RegistroModule],
   controllers: [RpController, MemberRpController],
   providers: [RpRepository, Rps],
+  exports: [Rps],
 })
 export class RpModule {}

@@ -38,6 +38,7 @@ function toDto(row: {
   registration: string | null;
   contact: string | null;
   notes: string | null;
+  publicRp: boolean;
   role: { name: string } | null;
   grade: { name: string } | null;
   team: { name: string } | null;
@@ -61,6 +62,7 @@ function toDto(row: {
     registration: row.registration,
     contact: row.contact,
     notes: row.notes,
+    publicRp: row.publicRp,
   };
 }
 

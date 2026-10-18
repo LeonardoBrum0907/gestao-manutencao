@@ -1,4 +1,4 @@
-import { isRpStatus, type RpStatus } from "@manutencao/shared";
+import { isRpSource, isRpStatus, type RpSource, type RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, type RpListFilter } from "../domain/rp-list";
 
@@ -27,10 +27,26 @@ export type RpListQuery = {
   status?: unknown;
   memberId?: unknown;
   repeated?: unknown;
+  source?: unknown;
+  review?: unknown;
   q?: unknown;
   cursor?: unknown;
   limit?: unknown;
 };
+
+function origin(value: unknown): RpSource | null {
+  const text = single(value);
+  if (!text) return null;
+  if (!isRpSource(text)) throw new DomainError("invalid", 400, `Origem inválida (recebido: ${text}; esperado: paste ou public).`);
+  return text;
+}
+
+function reviewPending(value: unknown): boolean {
+  const text = single(value);
+  if (!text) return false;
+  if (text !== "pending") throw new DomainError("invalid", 400, `Filtro de revisão inválido (recebido: ${text}; esperado: pending).`);
+  return true;
+}
 
 export function parseRpList(query: RpListQuery): RpListFilter {
   const statusText = single(query.status);
@@ -55,6 +71,8 @@ export function parseRpList(query: RpListQuery): RpListFilter {
     statuses: statuses.length ? (statuses as RpStatus[]) : null,
     memberId: single(query.memberId) || null,
     repeated: repeated === "true" ? true : repeated === "false" ? false : null,
+    source: origin(query.source),
+    reviewPending: reviewPending(query.review),
     q: single(query.q)?.trim() || null,
     cursor: single(query.cursor) || null,
     limit,

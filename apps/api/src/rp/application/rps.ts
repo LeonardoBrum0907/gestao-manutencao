@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { RpDraftDto, RpDto, RpDuplicateDto, RpMemberSummaryDto, RpPageDto } from "@manutencao/shared";
+import type { RpDraftDto, RpDto, RpDuplicateDto, RpMemberSummaryDto, RpPageDto, RpSource } from "@manutencao/shared";
 import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
@@ -37,19 +37,19 @@ export class Rps {
   }
 
   create(body: unknown): Promise<RpDto> {
-    return this.createFrom(parseRp(body));
+    return this.createFrom(parseRp(body), "paste");
   }
 
   /**
-   * Grava um RP já lido, com o Problema espelho.
-   * @example await rps.createFrom(parseRp(body))
+   * Grava um RP já lido, com o Problema espelho. A página pública chama com origem "public".
+   * @example await rps.createFrom(parseRp(body), "public")
    */
-  async createFrom(input: RpInput): Promise<RpDto> {
+  async createFrom(input: RpInput, origin: RpSource): Promise<RpDto> {
     await this.assertRefs(input, null);
     if (input.chamadoId) await this.assertChamado(input.chamadoId);
     const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
     try {
-      return await this.rps.insert(this.write(input, problem.id), input.chamadoId);
+      return await this.rps.insert(this.write(input, problem.id), input.chamadoId, origin);
     } catch (error) {
       await this.problems.remove(problem.id);
       throw error;
@@ -61,7 +61,7 @@ export class Rps {
   }
 
   /**
-   * Regrava um RP já lido e acompanha o Problema espelho. Não mexe no chamado.
+   * Regrava um RP já lido e acompanha o Problema espelho. Não mexe na origem nem no chamado.
    * @example await rps.updateFrom(id, parseRp(body))
    */
   async updateFrom(id: string, input: RpInput): Promise<RpDto> {
@@ -97,6 +97,14 @@ export class Rps {
 
   page(query: RpListQuery): Promise<RpPageDto> {
     return this.rps.listPage(parseRpList(query));
+  }
+
+  setChecked(id: string, at: Date | null): Promise<RpDto> {
+    return this.rps.setChecked(id, at);
+  }
+
+  setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
+    return this.rps.setReviewRequest(id, text, at);
   }
 
   // Avisa de RP parecido antes de salvar. Não bloqueia: o gestor decide.
