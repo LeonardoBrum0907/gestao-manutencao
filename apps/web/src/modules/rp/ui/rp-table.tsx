@@ -18,7 +18,9 @@ function StatusCell({ rp, inline = false }: { rp: RpListItemDto; inline?: boolea
 
 // RP da página pública: diz a origem e o que falta o coordenador fazer.
 function OriginNote({ rp }: { rp: RpListItemDto }) {
-  const pending = [rp.checked ? null : "conferir", rp.reviewRequested ? "em revisão" : null].filter(Boolean).join(", ");
+  // Recusado na página pública não pede "conferir": o supervisor já decidiu.
+  const check = rp.rejected ? "recusado" : rp.checked ? null : "conferir";
+  const pending = [check, rp.reviewRequested ? "em revisão" : null].filter(Boolean).join(", ");
   return <span className="text-xs font-semibold text-accent">Página pública{pending ? ` · ${pending}` : ""}</span>;
 }
 
