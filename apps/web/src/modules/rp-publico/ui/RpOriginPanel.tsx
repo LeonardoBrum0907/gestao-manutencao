@@ -39,7 +39,10 @@ function RevisionItem({ revision, onUndo, busy }: { revision: RpRevisionDto; onU
     <li className="flex flex-wrap items-start justify-between gap-3 border-t border-t-line py-3 text-sm first:border-t-0">
       <span>
         <span className="font-medium text-app">{RP_REVISION_LABELS[revision.kind]}</span>{" "}
-        <span className="text-muted">· {when.format(new Date(revision.createdAt))}</span>
+        <span className="text-muted">
+          · {when.format(new Date(revision.createdAt))}
+          {revision.actorName ? ` · por ${revision.actorName}` : ""}
+        </span>
         {revision.note ? <span className="mt-1 block whitespace-pre-line text-muted">{revision.note}</span> : null}
       </span>
       {DECISION_KINDS.has(revision.kind) ? null : (

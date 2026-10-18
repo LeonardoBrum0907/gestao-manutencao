@@ -74,7 +74,7 @@ export function PublicRpLinkSection() {
     <section>
       <SectionTitle
         title="Página pública de RPs"
-        text="Sem login: quem tem o link vê, cria e edita os RPs feitos nela. Os RPs colados no app não aparecem lá."
+        text="Sem login: quem tem o link vê, cria e edita os RPs feitos nela. Aprovar, recusar, pedir revisão e exportar só pelo link de um supervisor. Os RPs colados no app não aparecem lá."
       />
       <Card>
         <div className="flex flex-col gap-4">

@@ -27,10 +27,33 @@ export function RpBadges({ decision, status }: { decision: RpPublicDecision; sta
   );
 }
 
+function CardSummary({ rp, lineNames }: { rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string> }) {
+  return (
+    <>
+      <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
+      <RpBadges decision={rp.decision} status={rp.status} />
+      <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
+      <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
+    </>
+  );
+}
+
+function PlainListCard({ code, rp, lineNames }: { code: string; rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string> }) {
+  return (
+    <li className="rounded-card border border-line bg-card shadow-card transition hover:border-accent">
+      <Link to={publicRpPath(code, rp.id)} className="flex flex-col gap-1.5 p-4">
+        <CardSummary rp={rp} lineNames={lineNames} />
+      </Link>
+    </li>
+  );
+}
+
 type RpListCardProps = {
   code: string;
   rp: PublicRpListItemDto;
   lineNames: ReadonlyMap<string, string>;
+  // Só o link do supervisor marca RPs; no da equipe o cartão só abre o RP.
+  selectable: boolean;
   checked: boolean;
   selecting: boolean;
   onToggle: () => void;
@@ -40,11 +63,12 @@ type RpListCardProps = {
 /**
  * Cartão da lista. No computador a caixinha fica sempre à esquerda; no celular ela só aparece depois de tocar e segurar
  * um RP, como na galeria (pedido do Léo: não ocupar espaço). Com algum RP marcado, tocar no cartão marca em vez de abrir.
- * `onHold` começa a seleção por arrasto (useDragSelect).
- * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} selecting={selected.size > 0} onToggle={…} onHold={…} />
+ * `onHold` começa a seleção por arrasto (useDragSelect). Sem `selectable` (link da equipe) não há caixinha nem segurar.
+ * @example <RpListCard code={code} rp={rp} lineNames={names} selectable checked={selected.has(rp.id)} selecting={selected.size > 0} onToggle={…} onHold={…} />
  */
-export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle, onHold }: RpListCardProps) {
+export function RpListCard({ code, rp, lineNames, selectable, checked, selecting, onToggle, onHold }: RpListCardProps) {
   const longPress = useLongPress(onHold);
+  if (!selectable) return <PlainListCard code={code} rp={rp} lineNames={lineNames} />;
   const border = checked ? "border-accent" : "border-line";
   function toggleInsteadOfOpening(event: MouseEvent) {
     if (!selecting) return;
@@ -62,10 +86,7 @@ export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle, 
         onClick={toggleInsteadOfOpening}
         className={`flex min-w-0 flex-1 select-none flex-col gap-1.5 p-4 [-webkit-touch-callout:none] ${selecting ? "pl-3" : "sm:pl-3"}`}
       >
-        <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
-        <RpBadges decision={rp.decision} status={rp.status} />
-        <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
-        <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
+        <CardSummary rp={rp} lineNames={lineNames} />
       </Link>
     </li>
   );

@@ -5,7 +5,7 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
 import { rpStatusOptions } from "../../rp/model/rp";
-import { usePendingReviews, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
+import { usePendingReviews, usePublicAccess, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
 import { publicRpPath, rememberMember, rememberedMember } from "../model/public-rp";
 import { toggleSelected } from "../model/public-rp-export";
 import { ExportBar, ExportIntro, ReviewBar, RpListCard } from "./PublicRpSelection";
@@ -87,8 +87,10 @@ function Filters({ params, setFilter, exporting }: { params: URLSearchParams; se
 
 // Marcar fica sempre à mão; Exportar é um modo à parte que mostra só os aprovados (export=1 e decision=approved
 // na URL, então recarregar a página volta direto para a exportação). Trocar de filtro limpa o que estava marcado.
-function useListSelection(params: URLSearchParams, setFilters: (patch: Record<string, string>) => void) {
-  const [exporting, setExporting] = useState(params.get("export") === "1");
+// Fora do link de supervisor o export=1 da URL não vale: a exportação é dele.
+function useListSelection(params: URLSearchParams, setFilters: (patch: Record<string, string>) => void, supervisor: boolean) {
+  const [exportAsked, setExporting] = useState(params.get("export") === "1");
+  const exporting = supervisor && exportAsked;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const filterKey = params.toString();
   useEffect(() => setSelected(new Set()), [filterKey]);
@@ -104,15 +106,22 @@ function useListSelection(params: URLSearchParams, setFilters: (patch: Record<st
   return { exporting, selected, setSelected, startExport, stopExport, toggle };
 }
 
-function ListHeader({ code, exporting, onExport }: { code: string; exporting: boolean; onExport: () => void }) {
+type ListHeaderProps = { code: string; supervisorName: string | null; exporting: boolean; onExport: () => void };
+
+function ListHeader({ code, supervisorName, exporting, onExport }: ListHeaderProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <h1 className="font-serif text-2xl font-semibold text-app">RPs da equipe</h1>
+      <div>
+        <h1 className="font-serif text-2xl font-semibold text-app">RPs da equipe</h1>
+        {supervisorName ? <p className="text-sm text-muted">Link de supervisor: {supervisorName}</p> : null}
+      </div>
       {exporting ? null : (
         <div className="flex flex-wrap gap-3">
-          <Button tone="ghost" onClick={onExport}>
-            Exportar planilha
-          </Button>
+          {supervisorName ? (
+            <Button tone="ghost" onClick={onExport}>
+              Exportar planilha
+            </Button>
+          ) : null}
           <Link
             to={publicRpPath(code, "novo")}
             className="inline-flex items-center gap-2 rounded-control bg-accent px-4 py-2.5 text-sm font-semibold text-accent-contrast transition hover:brightness-90"
@@ -128,7 +137,8 @@ function ListHeader({ code, exporting, onExport }: { code: string; exporting: bo
 
 /**
  * Lista da página pública: só os RPs criados nela, filtráveis pelo técnico do aparelho, pela situação e pelo pedido de revisão.
- * Marcando RPs aparece a barra de aprovar, recusar ou pedir revisão; Exportar planilha mostra só os aprovados para baixar.
+ * No link de um supervisor, marcar RPs mostra a barra de aprovar, recusar ou pedir revisão, e Exportar planilha mostra só
+ * os aprovados para baixar. No link da equipe nada disso aparece (e a API recusa).
  * @example <Route index element={<PublicRpListPage />} />
  */
 export function PublicRpListPage() {
@@ -136,6 +146,8 @@ export function PublicRpListPage() {
   const [params, setParams] = useSearchParams();
   useRememberedMemberParam(params, setParams);
   const directory = usePublicDirectory(code);
+  const access = usePublicAccess(code);
+  const supervisorName = access.data?.role === "supervisor" ? access.data.supervisorName : null;
   const list = usePublicRpPages(code, params);
   const memberId = params.get("memberId") ?? "";
   const items = list.data?.pages.flatMap((page) => page.items) ?? [];
@@ -151,14 +163,14 @@ export function PublicRpListPage() {
     setParams(next, { replace: true });
   }
   const setFilter = (key: string, value: string) => setFilters({ [key]: value });
-  const selection = useListSelection(params, setFilters);
+  const selection = useListSelection(params, setFilters, Boolean(supervisorName));
   const drag = useDragSelect({ ids: items.map((rp) => rp.id), selected: selection.selected, onChange: selection.setSelected });
 
   if (directory.isError) return <Notice>{errorMessage(directory.error)}</Notice>;
 
   return (
     <div className="flex flex-col gap-4">
-      <ListHeader code={code} exporting={selection.exporting} onExport={selection.startExport} />
+      <ListHeader code={code} supervisorName={supervisorName} exporting={selection.exporting} onExport={selection.startExport} />
       {selection.exporting ? (
         <ExportIntro
           shown={items.length}
@@ -184,7 +196,7 @@ export function PublicRpListPage() {
       {list.isSuccess && !items.length ? (
         <p className="text-sm text-muted">{params.toString() ? "Nenhum RP com esses filtros." : "Nenhum RP por aqui ainda."}</p>
       ) : null}
-      {items.length && !selection.exporting && !selection.selected.size ? (
+      {supervisorName && items.length && !selection.exporting && !selection.selected.size ? (
         <p className="text-xs text-muted sm:hidden">Toque e segure um RP para marcar vários.</p>
       ) : null}
       <ul className="flex flex-col gap-3">
@@ -194,6 +206,7 @@ export function PublicRpListPage() {
             code={code}
             rp={rp}
             lineNames={lineNames}
+            selectable={Boolean(supervisorName)}
             checked={selection.selected.has(rp.id)}
             selecting={selection.exporting || selection.selected.size > 0}
             onToggle={() => selection.toggle(rp.id)}
@@ -207,7 +220,7 @@ export function PublicRpListPage() {
         </Button>
       ) : null}
       {selection.exporting ? <ExportBar code={code} selected={selection.selected} directory={directory.data} /> : null}
-      {!selection.exporting && selection.selected.size ? (
+      {supervisorName && !selection.exporting && selection.selected.size ? (
         <ReviewBar code={code} selected={selection.selected} onClear={() => selection.setSelected(new Set())} />
       ) : null}
     </div>
