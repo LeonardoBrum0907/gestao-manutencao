@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { ChamadoDto, LineDto, RpDraftDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
@@ -88,6 +88,12 @@ function PasteRp() {
   const [drafts, setDrafts] = useState<RpDraftDto[] | null>(null);
   const [index, setIndex] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
+  const reportTop = useRef<HTMLDivElement>(null);
+
+  // A ficha seguinte abria rolada até onde estavam os botões da anterior: volta ao contador e aos avisos.
+  useEffect(() => {
+    if (index > 0) reportTop.current?.scrollIntoView({ block: "start" });
+  }, [index]);
 
   function interpret() {
     parse.mutate(text, {
@@ -136,7 +142,7 @@ function PasteRp() {
         </Card>
       ) : null}
       {draft && drafts ? (
-        <div className="flex flex-col gap-4">
+        <div ref={reportTop} className="flex scroll-mt-4 flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold text-app">
               Relatório {index + 1} de {drafts.length}
