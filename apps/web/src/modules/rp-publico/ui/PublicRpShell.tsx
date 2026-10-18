@@ -15,22 +15,6 @@ function useNoIndex() {
   }, []);
 }
 
-// Tema azul da página pública (tokens.css): no <html>, para valer também nos menus e avisos que abrem fora da casca.
-// A barra do navegador no celular (theme-color) acompanha o azul, lido do próprio token.
-function usePublicBrand() {
-  useEffect(() => {
-    const root = document.documentElement;
-    const bar = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    const appColor = bar?.content ?? "";
-    root.setAttribute("data-brand", "rp-publico");
-    if (bar) bar.content = getComputedStyle(root).getPropertyValue("--accent").trim() || appColor;
-    return () => {
-      root.removeAttribute("data-brand");
-      if (bar) bar.content = appColor;
-    };
-  }, []);
-}
-
 /**
  * Casca da página pública de RPs: sem menu nem login, só a marca e o conteúdo, pensada para o celular.
  * @example <Route path="/rp/abrir/:code" element={<PublicRpShell />}>…</Route>
@@ -38,7 +22,6 @@ function usePublicBrand() {
 export function PublicRpShell() {
   const { code = "" } = useParams();
   useNoIndex();
-  usePublicBrand();
   return (
     <div className="h-full overflow-y-auto bg-canvas text-app">
       <header className="border-b border-line bg-surface">
