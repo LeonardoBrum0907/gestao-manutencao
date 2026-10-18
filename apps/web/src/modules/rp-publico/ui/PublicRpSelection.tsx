@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { PublicRpDirectoryDto, PublicRpListItemDto, RpBulkAction, RpPublicDecision, RpStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
@@ -7,7 +8,7 @@ import { useToast } from "../../../design/ui/toast";
 import { formatRpDay, rpStatusChipClass, todayLocal } from "../../rp/model/rp";
 import { fetchPublicRps, useBulkReview } from "../data/public-rp";
 import { downloadRpExport } from "../data/public-rp-xlsx";
-import { placeOf } from "../model/public-rp";
+import { placeOf, publicRpPath } from "../model/public-rp";
 import { rpExportFileName, rpExportTable } from "../model/public-rp-export";
 import { bulkDoneText, decisionBadgeClass, decisionBadgeText, machineStatusText, NOTE_PROMPTS } from "../model/public-rp-review";
 import { NoteDialog } from "./public-rp-parts";
@@ -25,85 +26,48 @@ export function RpBadges({ decision, status }: { decision: RpPublicDecision; sta
   );
 }
 
-type SelectableCardProps = { rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string>; checked: boolean; onToggle: () => void };
+type RpListCardProps = { code: string; rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string>; checked: boolean; onToggle: () => void };
 
 /**
- * Cartão do RP no modo de seleção: o toque marca ou desmarca, em vez de abrir o RP.
- * @example <SelectableRpCard rp={rp} lineNames={names} checked={selected.has(rp.id)} onToggle={() => toggle(rp.id)} />
+ * Cartão da lista: a caixinha da esquerda marca o RP e o resto do cartão abre o RP. Sem "modo de seleção" (pedido do Léo).
+ * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} onToggle={() => toggle(rp.id)} />
  */
-export function SelectableRpCard({ rp, lineNames, checked, onToggle }: SelectableCardProps) {
+export function RpListCard({ code, rp, lineNames, checked, onToggle }: RpListCardProps) {
   const border = checked ? "border-accent" : "border-line";
   return (
-    <li>
-      <label className={`flex cursor-pointer gap-3 rounded-card border ${border} bg-card p-4 shadow-card transition hover:border-accent`}>
-        <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--accent)]" checked={checked} onChange={onToggle} />
-        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
-          <RpBadges decision={rp.decision} status={rp.status} />
-          <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
-          <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
-        </span>
+    <li className={`flex rounded-card border ${border} bg-card shadow-card transition hover:border-accent`}>
+      <label className="flex cursor-pointer items-start py-4 pl-4 pr-1">
+        <input type="checkbox" aria-label={`Marcar RP: ${rp.problem}`} className="h-5 w-5 accent-[var(--accent)]" checked={checked} onChange={onToggle} />
       </label>
+      <Link to={publicRpPath(code, rp.id)} className="flex min-w-0 flex-1 flex-col gap-1.5 p-4 pl-3">
+        <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
+        <RpBadges decision={rp.decision} status={rp.status} />
+        <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>
+        <span className="text-xs text-muted">{rp.memberNames.join(", ") || "Sem técnico"}</span>
+      </Link>
     </li>
   );
 }
 
-type SelectionIntroProps = { shown: number; selected: number; onSelectAll: () => void; onClear: () => void; onCancel: () => void };
-
-/**
- * Cabeçalho do modo de seleção: o que dá para fazer e o atalho de marcar todos.
- * @example <SelectionIntro shown={items.length} selected={selected.size} onSelectAll={…} onClear={…} onCancel={…} />
- */
-export function SelectionIntro({ shown, selected, onSelectAll, onClear, onCancel }: SelectionIntroProps) {
-  const allMarked = shown > 0 && selected === shown;
-  return (
-    <Card>
-      <div className="flex flex-col gap-3">
-        <p className="text-sm text-app">
-          <span className="font-semibold">Selecionar vários.</span> Marque os RPs e escolha embaixo: aprovar, recusar, pedir revisão ou
-          exportar os aprovados para a planilha.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Button tone="ghost" onClick={allMarked ? onClear : onSelectAll} disabled={!shown}>
-            {allMarked ? "Desmarcar todos" : `Marcar todos (${shown})`}
-          </Button>
-          <Button tone="ghost" onClick={onCancel}>
-            Sair da seleção
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
+function selectedText(count: number): string {
+  return count === 1 ? "1 selecionado" : `${count} selecionados`;
 }
 
-// Baixa a planilha só com os aprovados entre os marcados (a lista só traz o resumo: busca a ficha de cada um).
-function useExportApproved(code: string, directory: PublicRpDirectoryDto | undefined) {
-  const client = useQueryClient();
-  const toast = useToast();
-  return async (ids: string[]) => {
-    if (!directory) return;
-    const approved = (await fetchPublicRps(client, code, ids)).filter((rp) => rp.approved);
-    if (!approved.length) return toast({ text: "Nenhum dos marcados está aprovado. Aprove antes de exportar." });
-    await downloadRpExport(rpExportTable(approved, directory), rpExportFileName(todayLocal()));
-    const skipped = ids.length - approved.length;
-    toast({ text: `Planilha com ${approved.length} RP${approved.length === 1 ? "" : "s"} baixada.${skipped ? ` ${skipped} sem aprovação ficaram de fora.` : ""}` });
-  };
+function StickyBar({ children }: { children: ReactNode }) {
+  return <div className="sticky bottom-0 -mx-4 border-t border-line bg-surface px-4 py-3">{children}</div>;
 }
 
-type SelectionBarProps = { code: string; selected: ReadonlySet<string>; directory: PublicRpDirectoryDto | undefined; onDone: () => void };
+type ReviewBarProps = { code: string; selected: ReadonlySet<string>; onClear: () => void };
 
 /**
- * Barra presa no pé da tela com quantos estão marcados e as ações em lote.
- * @example <SelectionBar code={code} selected={selected} directory={directory.data} onDone={() => setSelected(new Set())} />
+ * Barra que aparece no pé quando há RP marcado: aprovar, recusar ou pedir revisão de todos de uma vez.
+ * @example {selected.size ? <ReviewBar code={code} selected={selected} onClear={limpar} /> : null}
  */
-export function SelectionBar({ code, selected, directory, onDone }: SelectionBarProps) {
+export function ReviewBar({ code, selected, onClear }: ReviewBarProps) {
   const review = useBulkReview(code);
-  const exportApproved = useExportApproved(code, directory);
   const toast = useToast();
   const [asking, setAsking] = useState<Exclude<RpBulkAction, "approve"> | null>(null);
-  const [busy, setBusy] = useState(false);
   const ids = [...selected];
-  const disabled = !ids.length || busy || review.isPending;
 
   function apply(action: RpBulkAction, note?: string) {
     review.mutate(
@@ -112,12 +76,86 @@ export function SelectionBar({ code, selected, directory, onDone }: SelectionBar
         onSuccess: (result) => {
           toast({ text: bulkDoneText(action, result.updated) });
           setAsking(null);
-          onDone();
+          onClear();
         },
         onError: (error) => toast({ text: `Não deu para gravar: ${errorMessage(error)}` }),
       },
     );
   }
+
+  return (
+    <StickyBar>
+      <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+        <span className="text-app">{selectedText(ids.length)}</span>
+        <button type="button" className="font-semibold text-accent hover:underline" onClick={onClear}>
+          Limpar
+        </button>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <Button disabled={review.isPending} onClick={() => apply("approve")}>Aprovar</Button>
+        <Button tone="ghost" disabled={review.isPending} onClick={() => setAsking("reject")}>Recusar</Button>
+        <Button tone="ghost" disabled={review.isPending} onClick={() => setAsking("request_review")}>Pedir revisão</Button>
+      </div>
+      {asking ? (
+        <NoteDialog prompt={NOTE_PROMPTS[asking]} pending={review.isPending} onClose={() => setAsking(null)} onConfirm={(note) => apply(asking, note)} />
+      ) : null}
+    </StickyBar>
+  );
+}
+
+type ExportIntroProps = { shown: number; selected: number; onSelectAll: () => void; onClear: () => void; onCancel: () => void };
+
+/**
+ * Cabeçalho da exportação: diz que a lista mostra só os aprovados e dá o atalho de marcar todos.
+ * @example <ExportIntro shown={items.length} selected={marcados} onSelectAll={…} onClear={…} onCancel={sair} />
+ */
+export function ExportIntro({ shown, selected, onSelectAll, onClear, onCancel }: ExportIntroProps) {
+  const allMarked = shown > 0 && selected === shown;
+  return (
+    <Card>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-app">
+          <span className="font-semibold">Exportar planilha.</span> Aparecem só os RPs aprovados. Marque os que vão para a planilha e
+          baixe embaixo.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button tone="ghost" onClick={allMarked ? onClear : onSelectAll} disabled={!shown}>
+            {allMarked ? "Desmarcar todos" : `Marcar todos (${shown})`}
+          </Button>
+          <Button tone="ghost" onClick={onCancel}>
+            Voltar para a lista
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// A lista só traz o resumo: busca a ficha de cada marcado e confere de novo que está aprovado.
+function useExportApproved(code: string, directory: PublicRpDirectoryDto | undefined) {
+  const client = useQueryClient();
+  const toast = useToast();
+  return async (ids: string[]) => {
+    if (!directory) return;
+    const approved = (await fetchPublicRps(client, code, ids)).filter((rp) => rp.approved);
+    if (!approved.length) return toast({ text: "Nenhum dos marcados está aprovado. Aprove antes de exportar." });
+    await downloadRpExport(rpExportTable(approved, directory), rpExportFileName(todayLocal()));
+    toast({ text: `Planilha com ${approved.length} RP${approved.length === 1 ? "" : "s"} baixada.` });
+  };
+}
+
+type ExportBarProps = { code: string; selected: ReadonlySet<string>; directory: PublicRpDirectoryDto | undefined };
+
+/**
+ * Barra da exportação: quantos estão marcados e o botão de baixar a planilha.
+ * @example <ExportBar code={code} selected={selected} directory={directory.data} />
+ */
+export function ExportBar({ code, selected, directory }: ExportBarProps) {
+  const exportApproved = useExportApproved(code, directory);
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const ids = [...selected];
+
   async function exportSelected() {
     setBusy(true);
     await exportApproved(ids).catch((error: unknown) => toast({ text: `Não deu para exportar: ${errorMessage(error)}` }));
@@ -125,19 +163,13 @@ export function SelectionBar({ code, selected, directory, onDone }: SelectionBar
   }
 
   return (
-    <div className="sticky bottom-0 -mx-4 border-t border-line bg-surface px-4 py-3">
-      <p className="mb-2 text-sm text-app">{ids.length ? `${ids.length} selecionado${ids.length === 1 ? "" : "s"}` : "Nenhum selecionado"}</p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Button disabled={disabled} onClick={() => apply("approve")}>Aprovar</Button>
-        <Button tone="ghost" disabled={disabled} onClick={() => setAsking("reject")}>Recusar</Button>
-        <Button tone="ghost" disabled={disabled} onClick={() => setAsking("request_review")}>Pedir revisão</Button>
-        <Button tone="ghost" disabled={disabled || !directory} onClick={() => void exportSelected()}>
-          {busy ? "Exportando…" : "Exportar planilha"}
+    <StickyBar>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-app">{ids.length ? selectedText(ids.length) : "Nenhum selecionado"}</span>
+        <Button disabled={!ids.length || busy || !directory} onClick={() => void exportSelected()}>
+          {busy ? "Baixando…" : "Baixar planilha"}
         </Button>
       </div>
-      {asking ? (
-        <NoteDialog prompt={NOTE_PROMPTS[asking]} pending={review.isPending} onClose={() => setAsking(null)} onConfirm={(note) => apply(asking, note)} />
-      ) : null}
-    </div>
+    </StickyBar>
   );
 }
