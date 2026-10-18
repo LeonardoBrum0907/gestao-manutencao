@@ -42,7 +42,7 @@ export class Roles {
   async checkRemoval(id: string): Promise<void> {
     const current = await this.roles.find(id);
     if (!current) throw new DomainError("not_found", 404, "Função não encontrada.");
-    assertRoleCanBeRemoved(current.name, await this.roles.countMembers(id));
+    assertRoleCanBeRemoved(await this.roles.countMembers(id));
   }
 
   async remove(id: string): Promise<void> {

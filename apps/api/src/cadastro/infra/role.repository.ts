@@ -1,34 +1,24 @@
 import { Injectable } from "@nestjs/common";
-import { isMatrixCategory, MEMBER_ROLES, type MatrixCategory, type MemberRoleDto } from "@manutencao/shared";
+import { isMatrixCategory, type MatrixCategory, type MemberRoleDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
+import { compareRoleNames, rolesToSeed } from "../domain/role-seed";
 
 function toRole(row: { id: string; name: string; matrixCategory: string | null }): MemberRoleDto {
   return { id: row.id, name: row.name, matrixCategory: isMatrixCategory(row.matrixCategory) ? row.matrixCategory : null };
 }
-
-// Num banco novo, Mecânico e Eletricista já nascem na categoria da matriz delas.
-const SEED_CATEGORY: Partial<Record<(typeof MEMBER_ROLES)[number], MatrixCategory>> = { mecânico: "mechanical", eletricista: "electrical" };
 
 @Injectable()
 export class RoleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async ensureSeed(): Promise<void> {
-    for (const name of MEMBER_ROLES) {
-      await this.prisma.memberRole.upsert({
-        where: { name },
-        update: {},
-        create: { name, matrixCategory: SEED_CATEGORY[name] ?? null },
-      });
-    }
+    const seed = rolesToSeed(await this.prisma.memberRole.count());
+    if (seed.length) await this.prisma.memberRole.createMany({ data: seed });
   }
 
   async list(): Promise<MemberRoleDto[]> {
-    const rows = await this.prisma.memberRole.findMany({ orderBy: { name: "asc" } });
-    const order = new Map(MEMBER_ROLES.map((name, index) => [name, index]));
-    return rows
-      .map(toRole)
-      .sort((a, b) => (order.get(a.name as (typeof MEMBER_ROLES)[number]) ?? 99) - (order.get(b.name as (typeof MEMBER_ROLES)[number]) ?? 99));
+    const rows = await this.prisma.memberRole.findMany();
+    return rows.map(toRole).sort((a, b) => compareRoleNames(a.name, b.name));
   }
 
   find(id: string) {
