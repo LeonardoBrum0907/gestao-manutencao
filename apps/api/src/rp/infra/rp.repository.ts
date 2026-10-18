@@ -14,6 +14,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { RpListFilter } from "../domain/rp-list";
 import { normalizeOrder, normalizeProblem } from "../domain/rp";
+import type { RpDecisionPatch } from "../domain/rp-decision";
 
 const include = { members: { orderBy: { position: "asc" as const } } };
 
@@ -223,15 +224,9 @@ export class RpRepository {
     await this.prisma.rp.delete({ where: { id } });
   }
 
-  // Conferido pelo coordenador (data) ou de volta para conferir (null).
-  async setChecked(id: string, at: Date | null): Promise<RpDto> {
-    const row = await this.prisma.rp.update({ where: { id }, data: { checkedAt: at }, include });
-    return toDto(row);
-  }
-
-  // Pedido de revisão do supervisor; null nos dois apaga o pedido.
-  async setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
-    const row = await this.prisma.rp.update({ where: { id }, data: { reviewRequest: text, reviewRequestedAt: at }, include });
+  // Conferido, pedido de revisão: grava só as chaves que vierem no patch.
+  async setDecision(id: string, patch: RpDecisionPatch): Promise<RpDto> {
+    const row = await this.prisma.rp.update({ where: { id }, data: patch, include });
     return toDto(row);
   }
 

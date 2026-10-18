@@ -2,6 +2,7 @@ import type { PublicRpDirectoryDto, RpDto, RpListItemDto, RpPageDto, RpPublicLin
 import { DomainError } from "../../kernel/domain-error";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
+import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
 import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore } from "./ports";
 
 // Classes falsas dos testes da página pública: guardam tudo em memória.
@@ -79,12 +80,9 @@ export class FakeRpBook implements RpBook {
     return this.patch(id, { ...input.fields, rawText: input.rawText });
   }
 
-  async setChecked(id: string, at: Date | null): Promise<RpDto> {
-    return this.patch(id, { checkedAt: at?.toISOString() ?? null });
-  }
-
-  async setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
-    return this.patch(id, { reviewRequest: text, reviewRequestedAt: at?.toISOString() ?? null });
+  async setDecision(id: string, patch: RpDecisionPatch): Promise<RpDto> {
+    const dates = Object.entries(patch).map(([key, value]) => [key, value instanceof Date ? value.toISOString() : value]);
+    return this.patch(id, Object.fromEntries(dates) as Partial<RpDto>);
   }
 
   private async patch(id: string, patch: Partial<RpDto>): Promise<RpDto> {

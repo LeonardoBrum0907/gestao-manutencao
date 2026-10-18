@@ -77,8 +77,8 @@ export class PublicRps {
     const { input, revised } = parsePublicRp(body, allowed, current);
     let saved = await this.rps.updateFrom(id, input);
     await this.revisions.add({ rpId: id, kind: "edit", before: publicFieldsOf(current), note: null });
-    if (current.checkedAt) saved = await this.rps.setChecked(id, null);
-    if (revised && current.reviewRequestedAt) saved = await this.rps.setReviewRequest(id, null, null);
+    if (current.checkedAt) saved = await this.rps.setDecision(id, { checkedAt: null });
+    if (revised && current.reviewRequestedAt) saved = await this.rps.setDecision(id, { reviewRequest: null, reviewRequestedAt: null });
     return this.view(saved);
   }
 
@@ -88,7 +88,7 @@ export class PublicRps {
     const current = await this.publicRp(id);
     const text = parseReviewRequest(body);
     await this.revisions.add({ rpId: id, kind: "review_request", before: publicFieldsOf(current), note: text });
-    return this.view(await this.rps.setReviewRequest(id, text, this.clock()));
+    return this.view(await this.rps.setDecision(id, { reviewRequest: text, reviewRequestedAt: this.clock() }));
   }
 
   // RP colado no app não existe para a página pública: mesma resposta de id inexistente.

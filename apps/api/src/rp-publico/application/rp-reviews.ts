@@ -23,7 +23,7 @@ export class RpReviews {
   async setChecked(id: string, body: unknown): Promise<RpDto> {
     const checked = requiredBoolean(readObject(body), "checked");
     await this.rps.get(id);
-    return this.rps.setChecked(id, checked ? this.clock() : null);
+    return this.rps.setDecision(id, { checkedAt: checked ? this.clock() : null });
   }
 
   async list(id: string): Promise<RpRevisionDto[]> {
