@@ -195,6 +195,8 @@ model Member {
   registration String?
   contact      String?
   notes        String?
+  // Aparece na lista de técnicos do formulário da página pública de RPs.
+  publicRp     Boolean      @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -518,8 +520,16 @@ model Rp {
   problemRecord        Record?          @relation("RpMirror", fields: [problemRecordId], references: [id], onDelete: SetNull)
   chamadoId            String?          @unique
   chamado              Record?          @relation("RpChamado", fields: [chamadoId], references: [id], onDelete: SetNull)
+  // Origem: "paste" (colado ou escrito no app do coordenador) ou "public" (formulário da página pública).
+  source               String           @default("paste")
+  // Quando o coordenador conferiu um RP da página pública; editar pelo link volta para não conferido.
+  checkedAt            DateTime?
+  // Pedido de revisão do supervisor (página pública): some quando o técnico corrige e marca revisado.
+  reviewRequest        String?
+  reviewRequestedAt    DateTime?
   members              RpMember[]
   postPreventives      PostPreventive[]
+  revisions            RpRevision[]
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
@@ -530,6 +540,30 @@ model Rp {
   @@index([tag])
   @@index([machineId])
   @@index([subassemblyId])
+  @@index([source])
+}
+
+// Link da página pública de RPs. Só um fica ativo: gerar outro desliga o anterior (revokedAt).
+model RpPublicLink {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+}
+
+// Histórico de um RP da página pública: cada edição guarda os campos de antes, para o coordenador desfazer.
+model RpRevision {
+  id        String   @id @default(cuid())
+  rpId      String
+  rp        Rp       @relation(fields: [rpId], references: [id], onDelete: Cascade)
+  // edit, review_request, restore
+  kind      String
+  // Campos do RP antes da mudança (forma de RpFields).
+  before    Json
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([rpId, createdAt])
 }
 
 model RpMember {

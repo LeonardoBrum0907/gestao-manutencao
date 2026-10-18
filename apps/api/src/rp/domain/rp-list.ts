@@ -1,4 +1,4 @@
-import type { RpStatus } from "@manutencao/shared";
+import type { RpSource, RpStatus } from "@manutencao/shared";
 
 export const DEFAULT_PAGE_SIZE = 50;
 export const MAX_PAGE_SIZE = 100;
@@ -13,6 +13,9 @@ export type RpListFilter = {
   statuses: RpStatus[] | null;
   memberId: string | null;
   repeated: boolean | null;
+  source: RpSource | null;
+  // Só os que têm pedido de revisão em aberto.
+  reviewPending: boolean;
   q: string | null;
   cursor: string | null;
   limit: number;

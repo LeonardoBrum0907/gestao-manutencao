@@ -1,5 +1,6 @@
 import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
 import type { MatrixCategory } from "./matrix-category";
+import type { RpSource } from "./rp-public";
 
 // "entry" é o rascunho da Entrada: anotado rápido, vira tarefa, problema ou feedback quando o coordenador revisa.
 export const RECORD_TYPES = ["task", "feedback", "problem", "entry"] as const;
@@ -239,6 +240,8 @@ export type MemberDto = {
   registration: string | null;
   contact: string | null;
   notes: string | null;
+  // Aparece na lista de técnicos do formulário da página pública de RPs.
+  publicRp: boolean;
 };
 
 export type TeamDto = {
@@ -630,6 +633,11 @@ export type RpDto = RpFields & {
   // Chamado de onde o RP foi escrito.
   chamadoId: string | null;
   rawText: string;
+  source: RpSource;
+  // RP da página pública: quando o coordenador conferiu (nulo = ainda não).
+  checkedAt: string | null;
+  reviewRequest: string | null;
+  reviewRequestedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -645,6 +653,9 @@ export type RpListItemDto = {
   repeatedFailure: boolean;
   memberIds: string[];
   unmatchedTechnicians: string | null;
+  source: RpSource;
+  checked: boolean;
+  reviewRequested: boolean;
 };
 
 export type RpPageDto = { items: RpListItemDto[]; nextCursor: string | null };
@@ -812,3 +823,4 @@ export * from "./tech-docs";
 export * from "./machine-parts";
 export * from "./push";
 export * from "./reminder";
+export * from "./rp-public";

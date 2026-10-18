@@ -87,9 +87,10 @@ export class OverviewRead {
     return this.prisma.rp.findMany({ where: { status: "analysis" }, select: { factoryId: true, rootCause: true } });
   }
 
+  // RP da página pública só entra no Pareto depois que o coordenador confere (sem login, pode chegar errado).
   rpsSince(since: Date): Promise<(RpRow & { occurredAt: Date })[]> {
     return this.prisma.rp.findMany({
-      where: { occurredAt: { gte: since } },
+      where: { occurredAt: { gte: since }, NOT: { source: "public", checkedAt: null } },
       select: {
         occurredAt: true,
         factoryId: true,

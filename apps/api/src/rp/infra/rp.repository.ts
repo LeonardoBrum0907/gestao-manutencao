@@ -1,12 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import {
+  isRpSource,
   isRpStatus,
   type RpDto,
   type RpDuplicateDto,
   type RpFields,
   type RpListItemDto,
   type RpPageDto,
+  type RpSource,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -19,6 +21,11 @@ type Row = Prisma.RpGetPayload<{ include: typeof include }>;
 
 function status(value: string) {
   if (!isRpStatus(value)) throw new DomainError("invalid", 500, "Status gravado está inválido.");
+  return value;
+}
+
+function source(value: string): RpSource {
+  if (!isRpSource(value)) throw new DomainError("invalid", 500, `Origem gravada está inválida (recebido: ${value}; esperado: paste ou public).`);
   return value;
 }
 
@@ -54,6 +61,10 @@ function toDto(row: Row): RpDto {
     problemRecordId: row.problemRecordId,
     chamadoId: row.chamadoId,
     rawText: row.rawText,
+    source: source(row.source),
+    checkedAt: row.checkedAt?.toISOString() ?? null,
+    reviewRequest: row.reviewRequest,
+    reviewRequestedAt: row.reviewRequestedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -69,6 +80,9 @@ const listSelect = {
   status: true,
   repeatedFailure: true,
   unmatchedTechnicians: true,
+  source: true,
+  checkedAt: true,
+  reviewRequestedAt: true,
   members: { select: { memberId: true }, orderBy: { position: "asc" as const } },
 } satisfies Prisma.RpSelect;
 
@@ -84,6 +98,9 @@ function toListItem(row: Prisma.RpGetPayload<{ select: typeof listSelect }>): Rp
     repeatedFailure: row.repeatedFailure,
     memberIds: row.members.map((link) => link.memberId),
     unmatchedTechnicians: row.unmatchedTechnicians,
+    source: source(row.source),
+    checked: row.checkedAt !== null,
+    reviewRequested: row.reviewRequestedAt !== null,
   };
 }
 
@@ -150,6 +167,8 @@ function listWhere(filter: RpListFilter): Prisma.RpWhereInput {
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
   if (filter.memberId) and.push({ members: { some: { memberId: filter.memberId } } });
   if (filter.repeated !== null) and.push({ repeatedFailure: filter.repeated });
+  if (filter.source) and.push({ source: filter.source });
+  if (filter.reviewPending) and.push({ reviewRequestedAt: { not: null } });
   if (filter.q) {
     const contains = { contains: filter.q, mode: "insensitive" as const };
     and.push({ OR: [{ problem: contains }, { description: contains }, { rootCause: contains }] });
@@ -182,9 +201,9 @@ export class RpRepository {
   }
 
   // O chamado de origem só se liga na criação ("Escrever RP" no chamado); editar o RP não mexe nele.
-  async insert(write: RpWrite, chamadoId: string | null = null): Promise<RpDto> {
+  async insert(write: RpWrite, chamadoId: string | null = null, origin: RpSource = "paste"): Promise<RpDto> {
     const row = await this.prisma.rp.create({
-      data: { ...scalars(write), chamadoId, members: { create: memberRows(write.fields.memberIds) } },
+      data: { ...scalars(write), chamadoId, source: origin, members: { create: memberRows(write.fields.memberIds) } },
       include,
     });
     return toDto(row);
@@ -201,6 +220,18 @@ export class RpRepository {
 
   async remove(id: string): Promise<void> {
     await this.prisma.rp.delete({ where: { id } });
+  }
+
+  // Conferido pelo coordenador (data) ou de volta para conferir (null).
+  async setChecked(id: string, at: Date | null): Promise<RpDto> {
+    const row = await this.prisma.rp.update({ where: { id }, data: { checkedAt: at }, include });
+    return toDto(row);
+  }
+
+  // Pedido de revisão do supervisor; null nos dois apaga o pedido.
+  async setReviewRequest(id: string, text: string | null, at: Date | null): Promise<RpDto> {
+    const row = await this.prisma.rp.update({ where: { id }, data: { reviewRequest: text, reviewRequestedAt: at }, include });
+    return toDto(row);
   }
 
   async listPage(filter: RpListFilter): Promise<RpPageDto> {

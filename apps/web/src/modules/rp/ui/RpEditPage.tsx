@@ -7,6 +7,7 @@ import { useChamado } from "../../turno/data/shift";
 import { chamadoHref, shortDay } from "../../turno/model/chamado";
 import { useDeleteRp, useRp } from "../data/rp";
 import { valuesFromRp } from "../model/rp";
+import { RpOriginPanel } from "../../rp-publico/ui/RpOriginPanel";
 import { RpForm } from "./RpForm";
 
 function ChamadoLink({ chamadoId }: { chamadoId: string }) {
@@ -32,6 +33,8 @@ export function RpEditPage() {
   const rp = useRp(id);
   const remove = useDeleteRp();
   const [confirming, setConfirming] = useState(false);
+  // Desfazer pelo histórico troca os campos: o formulário recomeça com os valores novos.
+  const [formVersion, setFormVersion] = useState(0);
 
   if (rp.isPending) return <p className="text-sm text-muted">Carregando RP…</p>;
   if (!rp.data) return <p className="text-sm text-danger">RP não encontrado.</p>;
@@ -50,8 +53,10 @@ export function RpEditPage() {
         {/* Sem link para o Problema: a ficha dele (/registros/:id) manda de volta para este RP. */}
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
+      {data.source === "public" ? <RpOriginPanel rp={data} onRestored={() => setFormVersion((version) => version + 1)} /> : null}
       <RpAttentionBox rpId={data.id} lineId={data.lineId} />
       <RpForm
+        key={formVersion}
         id={data.id}
         initial={valuesFromRp(data)}
         rawText={data.rawText}
