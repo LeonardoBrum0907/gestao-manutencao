@@ -27,10 +27,10 @@ function RpCard({ code, rp, lineNames }: { code: string; rp: PublicRpListItemDto
   );
 }
 
-// "Sou o…": o aparelho lembra, e a lista abre nos RPs da pessoa. Não é login.
+// "Quem sou": o aparelho lembra, e a lista abre nos RPs da pessoa. Não é login.
 function MemberPicker({ members, value, onChange }: { members: PublicRpDirectoryDto["members"]; value: string; onChange: (id: string) => void }) {
   return (
-    <Field label="Sou">
+    <Field label="Quem sou">
       <SelectInput value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">Ver de todos</option>
         {members.map((member) => (

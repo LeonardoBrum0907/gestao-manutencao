@@ -26,7 +26,7 @@ export function publicRpUrl(origin: string, code: string, ...rest: string[]): st
 const MEMBER_KEY = "rp-publico-tecnico";
 
 /**
- * Técnico escolhido no "Sou o…", guardado no aparelho. Sem acesso ao armazenamento (aba anônima), volta vazio.
+ * Técnico escolhido no "Quem sou", guardado no aparelho. Sem acesso ao armazenamento (aba anônima), volta vazio.
  * @example rememberedMember(window.localStorage) // "m1"
  */
 export function rememberedMember(storage: Pick<Storage, "getItem"> | null): string {
