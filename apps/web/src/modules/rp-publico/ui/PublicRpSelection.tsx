@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { PublicRpDirectoryDto, PublicRpListItemDto, RpBulkAction, RpPublicDecision, RpStatus } from "@manutencao/shared";
@@ -12,6 +12,7 @@ import { placeOf, publicRpPath } from "../model/public-rp";
 import { rpExportFileName, rpExportTable } from "../model/public-rp-export";
 import { bulkDoneText, decisionBadgeClass, decisionBadgeText, machineStatusText, NOTE_PROMPTS } from "../model/public-rp-review";
 import { NoteDialog } from "./public-rp-parts";
+import { useLongPress } from "./use-long-press";
 
 /**
  * Os dois selos do RP: a avaliação do supervisor sobre o relatório e o status da falha na máquina.
@@ -26,20 +27,41 @@ export function RpBadges({ decision, status }: { decision: RpPublicDecision; sta
   );
 }
 
-type RpListCardProps = { code: string; rp: PublicRpListItemDto; lineNames: ReadonlyMap<string, string>; checked: boolean; onToggle: () => void };
+type RpListCardProps = {
+  code: string;
+  rp: PublicRpListItemDto;
+  lineNames: ReadonlyMap<string, string>;
+  checked: boolean;
+  selecting: boolean;
+  onToggle: () => void;
+};
 
 /**
- * Cartão da lista: a caixinha da esquerda marca o RP e o resto do cartão abre o RP. Sem "modo de seleção" (pedido do Léo).
- * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} onToggle={() => toggle(rp.id)} />
+ * Cartão da lista. No computador a caixinha fica sempre à esquerda; no celular ela só aparece depois de tocar e segurar
+ * um RP, como na galeria (pedido do Léo: não ocupar espaço). Com algum RP marcado, tocar no cartão marca em vez de abrir.
+ * @example <RpListCard code={code} rp={rp} lineNames={names} checked={selected.has(rp.id)} selecting={selected.size > 0} onToggle={…} />
  */
-export function RpListCard({ code, rp, lineNames, checked, onToggle }: RpListCardProps) {
+export function RpListCard({ code, rp, lineNames, checked, selecting, onToggle }: RpListCardProps) {
+  const longPress = useLongPress(() => {
+    if (!checked) onToggle();
+  });
   const border = checked ? "border-accent" : "border-line";
+  function toggleInsteadOfOpening(event: MouseEvent) {
+    if (!selecting) return;
+    event.preventDefault();
+    onToggle();
+  }
   return (
     <li className={`flex rounded-card border ${border} bg-card shadow-card transition hover:border-accent`}>
-      <label className="flex cursor-pointer items-start py-4 pl-4 pr-1">
+      <label className={`${selecting ? "flex" : "hidden sm:flex"} cursor-pointer items-start py-4 pl-4 pr-1`}>
         <input type="checkbox" aria-label={`Marcar RP: ${rp.problem}`} className="h-5 w-5 accent-[var(--accent)]" checked={checked} onChange={onToggle} />
       </label>
-      <Link to={publicRpPath(code, rp.id)} className="flex min-w-0 flex-1 flex-col gap-1.5 p-4 pl-3">
+      <Link
+        to={publicRpPath(code, rp.id)}
+        {...longPress}
+        onClick={toggleInsteadOfOpening}
+        className={`flex min-w-0 flex-1 select-none flex-col gap-1.5 p-4 [-webkit-touch-callout:none] ${selecting ? "pl-3" : "sm:pl-3"}`}
+      >
         <span className="text-xs text-muted">{[formatRpDay(rp.occurredAt), ...placeOf(rp, lineNames)].join(" · ")}</span>
         <RpBadges decision={rp.decision} status={rp.status} />
         <span className="line-clamp-2 text-sm text-app">{rp.problem}</span>

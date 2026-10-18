@@ -182,9 +182,20 @@ export function PublicRpListPage() {
       {list.isSuccess && !items.length ? (
         <p className="text-sm text-muted">{params.toString() ? "Nenhum RP com esses filtros." : "Nenhum RP por aqui ainda."}</p>
       ) : null}
+      {items.length && !selection.exporting && !selection.selected.size ? (
+        <p className="text-xs text-muted sm:hidden">Toque e segure um RP para marcar vários.</p>
+      ) : null}
       <ul className="flex flex-col gap-3">
         {items.map((rp) => (
-          <RpListCard key={rp.id} code={code} rp={rp} lineNames={lineNames} checked={selection.selected.has(rp.id)} onToggle={() => selection.toggle(rp.id)} />
+          <RpListCard
+            key={rp.id}
+            code={code}
+            rp={rp}
+            lineNames={lineNames}
+            checked={selection.selected.has(rp.id)}
+            selecting={selection.exporting || selection.selected.size > 0}
+            onToggle={() => selection.toggle(rp.id)}
+          />
         ))}
       </ul>
       {list.hasNextPage ? (
