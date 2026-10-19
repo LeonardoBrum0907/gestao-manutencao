@@ -18,6 +18,15 @@ export type TeamGrid = { columnBlocks: TeamColumnBlock[]; columns: TeamColumn[];
 // Aviso da grade quando os filtros não deixam nenhum técnico.
 export const EMPTY_TEAM_GRID_TEXT = "Nenhum técnico ativo com esses filtros.";
 
+/**
+ * Aviso no lugar da grade da folha A4 quando os filtros não deixam técnico; null quando há alguém.
+ * Antes a folha saía só com o cabeçalho da grade, sem dizer por quê.
+ * @example emptyTeamGridNotice({ memberCount: 0 }) // "Nenhum técnico ativo com esses filtros."
+ */
+export function emptyTeamGridNotice(grid: Pick<TeamGrid, "memberCount">): string | null {
+  return grid.memberCount ? null : EMPTY_TEAM_GRID_TEXT;
+}
+
 type MemberFilter = Pick<TeamGridState, "shift" | "focus" | "memberIds">;
 
 // Sem técnico escolhido valem todos; com escolha, só eles, para comparar lado a lado.
