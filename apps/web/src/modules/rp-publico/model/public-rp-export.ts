@@ -45,7 +45,8 @@ const RP_EXPORT_COLUMNS: ExportColumn[] = [
   { header: "Linha", width: 17, value: lineName },
   { header: "Executante", width: 24, value: (rp) => rp.memberNames.join(", ") },
   { header: "Data da ocorrencia", width: 16, value: (rp) => ({ day: dayOf(rp.occurredAt) }) },
-  { header: "Observações", width: 36, value: (rp) => (rp.orderNumber ? `OS ${rp.orderNumber}` : "") },
+  // A ordem do RP é controle interno (pedido do Léo, 2026-10-19): fica fora da planilha, e Observações sai em branco.
+  { header: "Observações", width: 36, value: () => "" },
 ];
 
 // "- item", "• item", "* item", "1. item", "2) item". O WhatsApp às vezes cola um caractere invisível (U+2060)
