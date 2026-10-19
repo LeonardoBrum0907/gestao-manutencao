@@ -16,8 +16,12 @@ export function Section({ title, children }: { title: string; children: ReactNod
   );
 }
 
+// Erro de cada campo, para aparecer logo abaixo dele (a página pública confere antes de mandar).
+export type RpFieldErrors = Partial<Record<keyof RpFormValues, string>>;
+
 export type RpReportSectionsProps = {
   values: RpFormValues;
+  errors?: RpFieldErrors;
   set: <K extends keyof RpFormValues>(key: K, value: RpFormValues[K]) => void;
   setCause: (key: RpFourM, patch: Partial<RpFormValues["causes"][RpFourM]>) => void;
 };
@@ -26,14 +30,14 @@ export type RpReportSectionsProps = {
  * O miolo do RP, igual no app e na página pública: problema, 4M, causa e contramedidas, status.
  * @example <RpReportSections values={values} set={set} setCause={setCause} />
  */
-export function RpReportSections({ values, set, setCause }: RpReportSectionsProps) {
+export function RpReportSections({ values, set, setCause, errors = {} }: RpReportSectionsProps) {
   return (
     <>
       <Section title="Problema">
-        <Field label="O que ocorreu?">
+        <Field label="O que ocorreu?" required error={errors.problem}>
           <TextArea value={values.problem} onChange={(event) => set("problem", event.target.value)} />
         </Field>
-        <Field label="O que foi observado?">
+        <Field label="O que foi observado?" error={errors.description}>
           <TextArea value={values.description} onChange={(event) => set("description", event.target.value)} />
         </Field>
         <label className="flex items-center gap-2 text-sm font-medium text-app">
@@ -42,10 +46,10 @@ export function RpReportSections({ values, set, setCause }: RpReportSectionsProp
         </label>
         {values.repeatedFailure ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Quantas vezes?">
+            <Field label="Quantas vezes?" error={errors.repeatedTimes}>
               <TextInput value={values.repeatedTimes} onChange={(event) => set("repeatedTimes", event.target.value)} />
             </Field>
-            <Field label="Período aproximado">
+            <Field label="Período aproximado" error={errors.repeatedPeriod}>
               <TextInput value={values.repeatedPeriod} onChange={(event) => set("repeatedPeriod", event.target.value)} />
             </Field>
           </div>
@@ -71,19 +75,19 @@ export function RpReportSections({ values, set, setCause }: RpReportSectionsProp
       </Section>
 
       <Section title="Causa e contramedidas">
-        <Field label="Causa raiz (por que aconteceu?)">
+        <Field label="Causa raiz (por que aconteceu?)" error={errors.rootCause}>
           <TextArea value={values.rootCause} onChange={(event) => set("rootCause", event.target.value)} />
         </Field>
-        <Field label="Contramedida corretiva (o que foi feito agora?)">
+        <Field label="Contramedida corretiva (o que foi feito agora?)" error={errors.corrective}>
           <TextArea value={values.corrective} onChange={(event) => set("corrective", event.target.value)} />
         </Field>
-        <Field label="Contramedida preventiva (como evitar repetir?)">
+        <Field label="Contramedida preventiva (como evitar repetir?)" error={errors.preventive}>
           <TextArea value={values.preventive} onChange={(event) => set("preventive", event.target.value)} />
         </Field>
       </Section>
 
       <Section title="Fechamento">
-        <Field label="Status">
+        <Field label="Status" required error={errors.status}>
           <SelectInput value={values.status} onChange={(event) => set("status", event.target.value as RpFormValues["status"])}>
             {rpStatusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -92,7 +96,7 @@ export function RpReportSections({ values, set, setCause }: RpReportSectionsProp
             ))}
           </SelectInput>
         </Field>
-        <Field label="Impacto em condição básica">
+        <Field label="Impacto em condição básica" error={errors.basicConditionImpact}>
           <TextArea value={values.basicConditionImpact} onChange={(event) => set("basicConditionImpact", event.target.value)} />
         </Field>
       </Section>

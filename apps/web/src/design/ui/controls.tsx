@@ -1,6 +1,7 @@
 import { useId, useRef, type ButtonHTMLAttributes, type ReactNode, type TextareaHTMLAttributes, type InputHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import { useDialogFocus } from "./dialog";
+import { FieldError, RequiredMark } from "./field-feedback";
 import { NavTrail, type BackTo } from "./nav-trail";
 import { FieldLabelContext } from "./select";
 
@@ -30,14 +31,19 @@ export function Button({
 export const controlClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app transition hover:border-accent";
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+type FieldProps = { label: string; children: ReactNode; required?: boolean; error?: string };
+
+// data-invalid: o formulário rola até o primeiro campo com erro.
+export function Field({ label, children, required = false, error }: FieldProps) {
   const labelId = useId();
   return (
-    <label className="flex flex-col gap-1.5 text-sm text-app">
+    <label className="flex flex-col gap-1.5 text-sm text-app" data-invalid={error ? "" : undefined}>
       <span id={labelId} className="font-medium">
         {label}
+        {required ? <RequiredMark /> : null}
       </span>
       <FieldLabelContext.Provider value={{ id: labelId, text: label }}>{children}</FieldLabelContext.Provider>
+      {error ? <FieldError text={error} /> : null}
     </label>
   );
 }
