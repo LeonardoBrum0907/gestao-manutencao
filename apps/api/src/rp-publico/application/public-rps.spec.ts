@@ -250,3 +250,22 @@ describe("PublicRps: só o supervisor avalia", () => {
     assert.deepEqual(await service.access(SUP), { role: "supervisor", supervisorName: "Carlos" });
   });
 });
+
+describe("PublicRps: colar do WhatsApp", () => {
+  const text = "*RELATÓRIO PADRÃO – MANUTENÇÃO*\n*DATA:* 04/10/2026\n*LINHA:* Cam 08\n*PROBLEMA:* Esteira travando\n*TÉCNICO:* Rogério B, Carla";
+
+  it("preenche com os técnicos liberados; quem não está liberado vira aviso", async () => {
+    const { service, book } = await setup();
+    const [draft] = await service.parse(CODE, { text });
+    assert.equal(draft!.problem, "Esteira travando");
+    assert.deepEqual(draft!.memberIds, ["m1"]);
+    assert.ok(draft!.warnings.some((warning) => warning.includes("Carla")));
+    assert.equal(book.rows.length, 0);
+  });
+
+  it("pede o texto e recusa link que não existe", async () => {
+    const { service } = await setup();
+    await assert.rejects(service.parse(CODE, { text: " " }), /Cole o texto/);
+    await assert.rejects(service.parse("x".repeat(24), { text }), rejects(404));
+  });
+});

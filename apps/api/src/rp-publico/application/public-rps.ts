@@ -6,11 +6,14 @@ import type {
   PublicRpPageDto,
   RpBulkAction,
   RpBulkReviewResultDto,
+  RpDraftDto,
   RpDto,
   RpRevisionKind,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
+import { parseRpText } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
+import { rpDrafts } from "../../rp/application/rp-drafts";
 import { decisionPatch, type RpDecisionPatch } from "../../rp/domain/rp-decision";
 import type { PublicWriteLimiter } from "../domain/write-limiter";
 import { publicFieldsOf, toPublicListItem, toPublicRp } from "../domain/public-rp-view";
@@ -75,6 +78,19 @@ export class PublicRps {
   async directory(code: string): Promise<PublicRpDirectoryDto> {
     await this.links.assertActive(code);
     return this.people.directory();
+  }
+
+  /**
+   * O técnico cola o RP que já mandou no WhatsApp e o formulário vem preenchido. Não grava nada; só os técnicos
+   * liberados na página pública entram, o resto vira aviso.
+   * @example (await publicRps.parse(code, { text }))[0].memberIds // ["m1"]
+   */
+  async parse(code: string, body: unknown): Promise<RpDraftDto[]> {
+    await this.links.assertActive(code);
+    const text = parseRpText(body);
+    const directory = await this.people.directory();
+    const members = directory.members.map((member) => ({ ...member, active: true }));
+    return rpDrafts(text, members, directory.lines);
   }
 
   async page(code: string, query: RpListQuery): Promise<PublicRpPageDto> {

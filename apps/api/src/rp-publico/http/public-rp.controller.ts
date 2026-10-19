@@ -44,6 +44,12 @@ export class PublicRpController {
     return this.rps.update(code, id, body);
   }
 
+  // Lê o RP colado do WhatsApp para preencher o formulário. Não grava.
+  @Post("parse")
+  parse(@Param("code") code: string, @Body() body: unknown) {
+    return this.rps.parse(code, body);
+  }
+
   // Aprovar, recusar ou pedir revisão de vários RPs marcados na lista. Só pelo link de um supervisor.
   @Post("review")
   bulkReview(@Param("code") code: string, @Body() body: unknown) {
