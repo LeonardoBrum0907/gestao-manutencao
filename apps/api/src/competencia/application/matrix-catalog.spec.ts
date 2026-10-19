@@ -20,10 +20,6 @@ class FakeCatalogRepository {
     return this.equipments.find((equipment) => equipment.id === id) ?? null;
   }
 
-  async findEquipmentByName(name: string): Promise<MatrixEquipmentDto | null> {
-    return this.equipments.find((equipment) => equipment.name === name) ?? null;
-  }
-
   async createEquipment(name: string): Promise<MatrixEquipmentDto> {
     const equipment = { id: `e${this.equipments.length + 1}`, name, archived: false, minQualified: 0 };
     this.equipments.push(equipment);
