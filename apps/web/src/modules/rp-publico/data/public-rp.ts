@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { PublicRpAccessDto, PublicRpBody, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkReviewBody, RpBulkReviewResultDto } from "@manutencao/shared";
+import type { PublicRpAccessDto, PublicRpBody, RpDraftDto, PublicRpDirectoryDto, PublicRpDto, PublicRpPageDto, RpBulkReviewBody, RpBulkReviewResultDto } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
 // Chamadas da página pública: sem login, o código do link vai no caminho.
@@ -67,6 +67,13 @@ export function fetchPublicRps(client: QueryClient, code: string, ids: string[])
   return Promise.all(
     ids.map((id) => client.fetchQuery({ queryKey: ["public-rp", code, "rp", id], queryFn: () => api<PublicRpDto>(`${base(code)}/${id}`) })),
   );
+}
+
+// Lê o RP colado do WhatsApp; não grava, só devolve o rascunho para o formulário.
+export function useParsePublicRp(code: string) {
+  return useMutation({
+    mutationFn: (text: string) => api<RpDraftDto[]>(`${base(code)}/parse`, { method: "POST", body: JSON.stringify({ text }) }),
+  });
 }
 
 export function useSavePublicRp(code: string, id?: string) {

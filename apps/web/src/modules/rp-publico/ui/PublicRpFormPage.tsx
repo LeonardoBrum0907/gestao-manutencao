@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { PublicRpDirectoryDto, PublicRpDto } from "@manutencao/shared";
+import type { PublicRpDirectoryDto, PublicRpDto, RpDraftDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
 import { usePublicDirectory, usePublicRp } from "../data/public-rp";
-import { newPublicValues, publicRpPath, rememberedMember, valuesFromPublicRp } from "../model/public-rp";
+import { newPublicValues, publicRpPath, rememberedMember, valuesFromPastedRp, valuesFromPublicRp } from "../model/public-rp";
 import { PublicRpForm } from "./PublicRpForm";
+import { PastePanel, PasteWarnings } from "./PublicRpPaste";
 import { deviceStorage } from "./public-rp-parts";
 
 // O técnico do aparelho já vem marcado, se ainda estiver liberado.
@@ -19,6 +21,21 @@ function EditForm({ code, id, directory, onSaved }: { code: string; id: string; 
   if (rp.isPending) return <p className="text-sm text-muted">Carregando RP…</p>;
   if (rp.isError) return <Notice>{errorMessage(rp.error)}</Notice>;
   return <PublicRpForm code={code} directory={directory} initial={valuesFromPublicRp(rp.data)} current={rp.data} onSaved={onSaved} />;
+}
+
+// Novo RP: em branco, ou preenchido pelo texto colado do WhatsApp (o formulário remonta com os valores lidos).
+function NewForm({ code, directory, onSaved }: { code: string; directory: PublicRpDirectoryDto; onSaved: (rp: PublicRpDto) => void }) {
+  const [pasted, setPasted] = useState<{ draft: RpDraftDto; warnings: string[]; count: number } | null>(null);
+  const memberId = deviceMember(directory);
+  const initial = pasted ? valuesFromPastedRp(pasted.draft, directory, memberId) : newPublicValues(memberId);
+  const read = (draft: RpDraftDto, warnings: string[]) => setPasted((before) => ({ draft, warnings, count: (before?.count ?? 0) + 1 }));
+  return (
+    <>
+      <PastePanel code={code} onRead={read} />
+      {pasted ? <PasteWarnings warnings={pasted.warnings} /> : null}
+      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} onSaved={onSaved} />
+    </>
+  );
 }
 
 /**
@@ -48,7 +65,7 @@ export function PublicRpFormPage() {
       {id ? (
         <EditForm code={code} id={id} directory={directory.data} onSaved={saved} />
       ) : (
-        <PublicRpForm code={code} directory={directory.data} initial={newPublicValues(deviceMember(directory.data))} onSaved={saved} />
+        <NewForm code={code} directory={directory.data} onSaved={saved} />
       )}
     </div>
   );

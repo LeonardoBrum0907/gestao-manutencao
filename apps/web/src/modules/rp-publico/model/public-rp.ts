@@ -4,8 +4,10 @@ import {
   type PublicRpDirectoryDto,
   type PublicRpDto,
   type PublicRpListItemDto,
+  type RpDraftDto,
 } from "@manutencao/shared";
-import { emptyRpValues, todayLocal, type RpFormValues } from "../../rp/model/rp";
+import { emptyRpValues, todayLocal, valuesFromRp, type RpFormValues } from "../../rp/model/rp";
+import { withMachineFromTag } from "../../rp/model/rp-machine-tag";
 
 /**
  * Caminho de uma tela da página pública dentro do link.
@@ -56,6 +58,18 @@ export function rememberMember(storage: Pick<Storage, "setItem" | "removeItem"> 
  */
 export function newPublicValues(memberId: string): RpFormValues {
   return { ...emptyRpValues(), occurredAt: todayLocal(), memberIds: memberId ? [memberId] : [] };
+}
+
+/**
+ * Valores do formulário a partir do RP colado do WhatsApp: a TAG acha a máquina do cadastro e, se o texto
+ * não trouxe técnico liberado, entra o técnico do aparelho.
+ * @example valuesFromPastedRp(drafts[0], directory, rememberedMemberId).problem
+ */
+export function valuesFromPastedRp(draft: RpDraftDto, directory: PublicRpDirectoryDto, deviceMemberId: string): RpFormValues {
+  const values = withMachineFromTag(valuesFromRp(draft), directory.machines, directory.lines);
+  const memberIds = values.memberIds.length || !deviceMemberId ? values.memberIds : [deviceMemberId];
+  // O texto colado não vai para a página pública: só os campos (ver parsePublicRp na API).
+  return { ...values, memberIds, unmatchedTechnicians: "" };
 }
 
 /**
