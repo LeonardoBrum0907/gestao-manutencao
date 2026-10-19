@@ -15,6 +15,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { FieldError, RequiredMark } from "./field-feedback";
 
 // Select próprio do sistema: no computador a lista abre embaixo do campo; no celular, num painel que sobe de baixo.
 // Escolher fecha na hora (o seletor nativo do Samsung Internet só fecha no "Concluir").
@@ -511,6 +512,8 @@ export function MultiSelect({
   placeholder = "Selecione",
   emptyText = "Nada para escolher.",
   actions = true,
+  required = false,
+  error,
 }: {
   label: string;
   options: MultiOption[];
@@ -519,6 +522,8 @@ export function MultiSelect({
   placeholder?: string;
   emptyText?: string;
   actions?: boolean;
+  required?: boolean;
+  error?: string;
 }) {
   const labelId = useId();
   const countId = useId();
@@ -652,9 +657,10 @@ export function MultiSelect({
   );
 
   return (
-    <div className="relative flex flex-col gap-1.5 text-sm text-app">
+    <div className="relative flex flex-col gap-1.5 text-sm text-app" data-invalid={error ? "" : undefined}>
       <span id={labelId} className="font-medium">
         {label}
+        {required ? <RequiredMark /> : null}
       </span>
       <div
         ref={boxRef}
@@ -707,6 +713,7 @@ export function MultiSelect({
         {picked.map((item) => chip(item, false))}
         <span className="shrink-0 rounded-lg border border-line px-2 py-0.5 text-[13px] font-semibold">+{picked.length}</span>
       </div>
+      {error ? <FieldError text={error} /> : null}
       {open ? (
         <Panel
           phone={phone}
