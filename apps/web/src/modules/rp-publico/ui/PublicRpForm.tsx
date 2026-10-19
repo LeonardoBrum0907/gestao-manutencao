@@ -7,8 +7,10 @@ import type { RpFormValues } from "../../rp/model/rp";
 import { RpReportSections, Section, type RpFieldErrors } from "../../rp/ui/RpReportSections";
 import { useSavePublicRp } from "../data/public-rp";
 import { memberChoices, publicBodyFromValues, withLine, withMachine } from "../model/public-rp";
-import { publicRpFormErrors } from "../model/public-rp-validation";
+import { machineRequired, publicRpFormErrors, RP_REQUIRED_FIELDS } from "../model/public-rp-validation";
 import { ReviewRequestNotice } from "./public-rp-parts";
+
+const PUBLIC_REQUIRED = new Set(RP_REQUIRED_FIELDS);
 
 type Setter = <K extends keyof RpFormValues>(key: K, value: RpFormValues[K]) => void;
 
@@ -17,6 +19,7 @@ type PlaceSectionProps = { values: RpFormValues; set: Setter; update: (next: RpF
 function PlaceSection({ values, set, update, directory, errors }: PlaceSectionProps) {
   const lines = directory.lines.filter((line) => !values.factoryId || line.factoryId === values.factoryId);
   const machines = directory.machines.filter((machine) => machine.lineId === values.lineId);
+  const needsMachine = machineRequired(values, directory.machines);
   return (
     <Section title="Identificação">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -36,7 +39,7 @@ function PlaceSection({ values, set, update, directory, errors }: PlaceSectionPr
             ))}
           </SelectInput>
         </Field>
-        <Field label="Linha">
+        <Field label="Linha" required>
           <SelectInput value={values.lineId} onChange={(event) => update(withLine(values, event.target.value, directory.lines))}>
             <option value="">Outra linha (escrever)</option>
             {lines.map((line) => (
@@ -48,14 +51,14 @@ function PlaceSection({ values, set, update, directory, errors }: PlaceSectionPr
           </SelectInput>
         </Field>
         {values.lineId ? null : (
-          <Field label="Nome da linha" error={errors.line}>
+          <Field label="Nome da linha" required error={errors.line}>
             <TextInput value={values.line} onChange={(event) => set("line", event.target.value)} />
           </Field>
         )}
         {values.lineId ? (
-          <Field label="Máquina">
+          <Field label="Máquina" required={needsMachine} error={errors.machineId}>
             <SelectInput value={values.machineId} onChange={(event) => update(withMachine(values, event.target.value, directory.machines))}>
-              <option value="">{machines.length ? "Não sei" : "Nenhuma máquina nesta linha"}</option>
+              <option value="">{machines.length ? "Escolha a máquina" : "Nenhuma máquina nesta linha"}</option>
               {machines.map((machine) => (
                 <option key={machine.id} value={machine.id}>
                   {machine.name}
@@ -65,7 +68,7 @@ function PlaceSection({ values, set, update, directory, errors }: PlaceSectionPr
             </SelectInput>
           </Field>
         ) : null}
-        <Field label="TAG" error={errors.tag}>
+        <Field label="TAG" required error={errors.tag}>
           <TextInput value={values.tag} onChange={(event) => set("tag", event.target.value)} />
         </Field>
       </div>
@@ -98,7 +101,7 @@ export function PublicRpForm({
   // Os erros só aparecem depois da primeira tentativa de gravar; a partir daí somem conforme a pessoa corrige.
   const [tried, setTried] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const errors: RpFieldErrors = tried ? publicRpFormErrors(values) : {};
+  const errors: RpFieldErrors = tried ? publicRpFormErrors(values, directory.machines) : {};
   const hasErrors = Object.keys(errors).length > 0;
 
   const set: Setter = (key, value) => setValues((before) => ({ ...before, [key]: value }));
@@ -108,7 +111,7 @@ export function PublicRpForm({
   function submit(event: FormEvent) {
     event.preventDefault();
     setTried(true);
-    if (Object.keys(publicRpFormErrors(values)).length) {
+    if (Object.keys(publicRpFormErrors(values, directory.machines)).length) {
       revealFirstInvalid(formRef.current);
       return;
     }
@@ -130,7 +133,7 @@ export function PublicRpForm({
           </ReviewRequestNotice>
         ) : null}
         <PlaceSection values={values} set={set} update={setValues} directory={directory} errors={errors} />
-        <RpReportSections values={values} set={set} setCause={setCause} errors={errors} />
+        <RpReportSections values={values} set={set} setCause={setCause} errors={errors} required={PUBLIC_REQUIRED} />
         <Section title="Técnico">
           <MultiSelect
             label="Técnicos"

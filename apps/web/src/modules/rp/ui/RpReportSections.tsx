@@ -22,6 +22,8 @@ export type RpFieldErrors = Partial<Record<keyof RpFormValues, string>>;
 export type RpReportSectionsProps = {
   values: RpFormValues;
   errors?: RpFieldErrors;
+  // O que ocorreu e o status o RP sempre exige; a página pública exige também o resto (ver RP_REQUIRED_FIELDS).
+  required?: ReadonlySet<keyof RpFormValues>;
   set: <K extends keyof RpFormValues>(key: K, value: RpFormValues[K]) => void;
   setCause: (key: RpFourM, patch: Partial<RpFormValues["causes"][RpFourM]>) => void;
 };
@@ -30,14 +32,14 @@ export type RpReportSectionsProps = {
  * O miolo do RP, igual no app e na página pública: problema, 4M, causa e contramedidas, status.
  * @example <RpReportSections values={values} set={set} setCause={setCause} />
  */
-export function RpReportSections({ values, set, setCause, errors = {} }: RpReportSectionsProps) {
+export function RpReportSections({ values, set, setCause, errors = {}, required = new Set() }: RpReportSectionsProps) {
   return (
     <>
       <Section title="Problema">
         <Field label="O que ocorreu?" required error={errors.problem}>
           <TextArea value={values.problem} onChange={(event) => set("problem", event.target.value)} />
         </Field>
-        <Field label="O que foi observado?" error={errors.description}>
+        <Field label="O que foi observado?" required={required.has("description")} error={errors.description}>
           <TextArea value={values.description} onChange={(event) => set("description", event.target.value)} />
         </Field>
         <label className="flex items-center gap-2 text-sm font-medium text-app">
@@ -75,13 +77,13 @@ export function RpReportSections({ values, set, setCause, errors = {} }: RpRepor
       </Section>
 
       <Section title="Causa e contramedidas">
-        <Field label="Causa raiz (por que aconteceu?)" error={errors.rootCause}>
+        <Field label="Causa raiz (por que aconteceu?)" required={required.has("rootCause")} error={errors.rootCause}>
           <TextArea value={values.rootCause} onChange={(event) => set("rootCause", event.target.value)} />
         </Field>
-        <Field label="Contramedida corretiva (o que foi feito agora?)" error={errors.corrective}>
+        <Field label="Contramedida corretiva (o que foi feito agora?)" required={required.has("corrective")} error={errors.corrective}>
           <TextArea value={values.corrective} onChange={(event) => set("corrective", event.target.value)} />
         </Field>
-        <Field label="Contramedida preventiva (como evitar repetir?)" error={errors.preventive}>
+        <Field label="Contramedida preventiva (como evitar repetir?)" required={required.has("preventive")} error={errors.preventive}>
           <TextArea value={values.preventive} onChange={(event) => set("preventive", event.target.value)} />
         </Field>
       </Section>
@@ -96,7 +98,7 @@ export function RpReportSections({ values, set, setCause, errors = {} }: RpRepor
             ))}
           </SelectInput>
         </Field>
-        <Field label="Impacto em condição básica" error={errors.basicConditionImpact}>
+        <Field label="Impacto em condição básica" required={required.has("basicConditionImpact")} error={errors.basicConditionImpact}>
           <TextArea value={values.basicConditionImpact} onChange={(event) => set("basicConditionImpact", event.target.value)} />
         </Field>
       </Section>
