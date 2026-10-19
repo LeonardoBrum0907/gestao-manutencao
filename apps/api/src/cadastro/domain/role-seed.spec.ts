@@ -18,9 +18,19 @@ describe("funções do SIGEM ao subir a API", () => {
     assert.equal(seed[2].matrixCategory, null);
   });
 
+  // Regressão (PR #118): a migração cria o Supervisor antes do primeiro boot, e o banco novo ficava só com ele.
+  it("cria as seis do SIGEM quando só existe o Supervisor criado pela migração", () => {
+    const seed = rolesToSeed([{ leadsTeams: true }]);
+    assert.deepEqual(
+      seed.map((role) => role.name),
+      ["mecânico", "eletricista", "automação", "instrumentação", "manutenção", "utilidades"],
+    );
+  });
+
   // Regressão: renomear "mecânico" para "Mecânico" fazia a API recriar "mecânico" no boot seguinte.
-  it("não recria nada quando já existe alguma função", () => {
+  it("não recria nada quando já existe alguma função além das que lideram equipe", () => {
     assert.deepEqual(rolesToSeed([{ leadsTeams: false }]), []);
+    assert.deepEqual(rolesToSeed([{ leadsTeams: true }, { leadsTeams: false }]), []);
     assert.deepEqual(rolesToSeed(Array.from({ length: 7 }, () => ({ leadsTeams: false }))), []);
   });
 });
