@@ -179,26 +179,27 @@ export function ExportIntro({ shown, selected, onSelectAll, onClear, onCancel }:
 }
 
 // A lista só traz o resumo: busca a ficha de cada marcado e confere de novo que está aprovado.
-function useExportApproved(code: string, directory: PublicRpDirectoryDto | undefined) {
+function useExportApproved(code: string, directory: PublicRpDirectoryDto | undefined, responsible: string) {
   const client = useQueryClient();
   const toast = useToast();
   return async (ids: string[]) => {
     if (!directory) return;
     const approved = (await fetchPublicRps(client, code, ids)).filter((rp) => rp.approved);
     if (!approved.length) return toast({ text: "Nenhum dos marcados está aprovado. Aprove antes de exportar." });
-    await downloadRpExport(rpExportTable(approved, directory), rpExportFileName(todayLocal()));
+    await downloadRpExport(rpExportTable(approved, directory, responsible), rpExportFileName(todayLocal()));
     toast({ text: `Planilha com ${approved.length} RP${approved.length === 1 ? "" : "s"} baixada.` });
   };
 }
 
-type ExportBarProps = { code: string; selected: ReadonlySet<string>; directory: PublicRpDirectoryDto | undefined };
+// responsible: o supervisor do link, que vai na coluna Responsável da planilha de ações.
+type ExportBarProps = { code: string; selected: ReadonlySet<string>; directory: PublicRpDirectoryDto | undefined; responsible: string };
 
 /**
  * Barra da exportação: quantos estão marcados e o botão de baixar a planilha.
- * @example <ExportBar code={code} selected={selected} directory={directory.data} />
+ * @example <ExportBar code={code} selected={selected} directory={directory.data} responsible="Anderson" />
  */
-export function ExportBar({ code, selected, directory }: ExportBarProps) {
-  const exportApproved = useExportApproved(code, directory);
+export function ExportBar({ code, selected, directory, responsible }: ExportBarProps) {
+  const exportApproved = useExportApproved(code, directory, responsible);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const ids = [...selected];

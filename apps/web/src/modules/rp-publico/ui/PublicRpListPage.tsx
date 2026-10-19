@@ -219,7 +219,7 @@ export function PublicRpListPage() {
           {list.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
         </Button>
       ) : null}
-      {selection.exporting ? <ExportBar code={code} selected={selection.selected} directory={directory.data} /> : null}
+      {selection.exporting ? <ExportBar code={code} selected={selection.selected} directory={directory.data} responsible={supervisorName ?? ""} /> : null}
       {supervisorName && !selection.exporting && selection.selected.size ? (
         <ReviewBar code={code} selected={selection.selected} onClear={() => selection.setSelected(new Set())} />
       ) : null}
