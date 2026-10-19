@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DEFAULT_MATRIX_CATEGORY, isMatrixCategory, type MatrixCatalogDto, type MatrixCategory, type MatrixEquipmentDto, type MatrixSkillDto } from "@manutencao/shared";
+import { nameOwner } from "../../cadastro/domain/names";
 import { DomainError } from "../../kernel/domain-error";
 import { requireOrder } from "../../kernel/order";
 import { readObject, requiredBoolean, requiredString } from "../../kernel/parse";
@@ -26,7 +27,7 @@ export class MatrixCatalog {
 
   async createEquipment(body: unknown): Promise<MatrixEquipmentDto> {
     const name = requireText(requiredString(readObject(body), "name", EQUIPMENT_MESSAGE), EQUIPMENT_MESSAGE);
-    assertEquipmentNameAvailable((await this.catalog.findEquipmentByName(name))?.id ?? null, null);
+    assertEquipmentNameAvailable(await this.nameOwnerId(name), null);
     return this.catalog.createEquipment(name);
   }
 
@@ -34,7 +35,7 @@ export class MatrixCatalog {
     await this.requireEquipment(id);
     const source = readObject(body);
     const name = requireText(requiredString(source, "name", EQUIPMENT_MESSAGE), EQUIPMENT_MESSAGE);
-    assertEquipmentNameAvailable((await this.catalog.findEquipmentByName(name))?.id ?? null, id);
+    assertEquipmentNameAvailable(await this.nameOwnerId(name), id);
     return this.catalog.updateEquipment(id, {
       name,
       archived: requiredBoolean(source, "archived"),
@@ -93,6 +94,11 @@ export class MatrixCatalog {
       level: requireLevel(requiredString(source, "level", "Escolha o nível.")),
       category: requireCategory(source.category, category),
     };
+  }
+
+  // Sem diferenciar maiúscula: "blistadeira cam" ao lado de "Blistadeira CAM" virava outro modelo (a trava do banco só pega o nome idêntico).
+  private async nameOwnerId(name: string): Promise<string | null> {
+    return nameOwner((await this.catalog.load()).equipments, name)?.id ?? null;
   }
 
   private async requireEquipment(id: string, status: 400 | 404 = 404) {

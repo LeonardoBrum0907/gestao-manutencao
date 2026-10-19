@@ -66,3 +66,16 @@ describe("nome do modelo de equipamento", () => {
     await rejectsTakenName(() => catalogOver(new FakeCatalogRepository()).updateEquipment("e2", { name: "Blistadeira CAM", archived: false }));
   });
 });
+
+// Regressão: "blistadeira cam" entrava ao lado de "Blistadeira CAM" e o mesmo modelo aparecia duas vezes.
+describe("nome do modelo que só muda maiúscula", () => {
+  it("recusa ao criar e ao renomear", async () => {
+    await rejectsTakenName(() => catalogOver(new FakeCatalogRepository()).createEquipment({ name: "blistadeira cam" }));
+    await rejectsTakenName(() => catalogOver(new FakeCatalogRepository()).updateEquipment("e2", { name: "BLISTADEIRA CAM", archived: false }));
+  });
+
+  it("deixa o próprio modelo trocar só a maiúscula", async () => {
+    const renamed = await catalogOver(new FakeCatalogRepository()).updateEquipment("e1", { name: "Blistadeira Cam", archived: false });
+    assert.equal(renamed.name, "Blistadeira Cam");
+  });
+});
