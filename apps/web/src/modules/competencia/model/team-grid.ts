@@ -15,6 +15,9 @@ export type TeamGridState = {
 
 export type TeamGrid = { columnBlocks: TeamColumnBlock[]; columns: TeamColumn[]; rowBlocks: TeamRowBlock[]; memberCount: number };
 
+// Aviso da grade quando os filtros não deixam nenhum técnico.
+export const EMPTY_TEAM_GRID_TEXT = "Nenhum técnico ativo com esses filtros.";
+
 type MemberFilter = Pick<TeamGridState, "shift" | "focus" | "memberIds">;
 
 // Sem técnico escolhido valem todos; com escolha, só eles, para comparar lado a lado.
