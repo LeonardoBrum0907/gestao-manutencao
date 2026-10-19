@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { PublicRpDirectoryDto } from "@manutencao/shared";
+import type { PublicRpDirectoryDto, RpDraftDto } from "@manutencao/shared";
 import {
   memberChoices,
   newPublicValues,
@@ -11,6 +11,7 @@ import {
   rememberMember,
   rememberedMember,
   withLine,
+  valuesFromPastedRp,
   withMachine,
 } from "./public-rp";
 
@@ -118,5 +119,31 @@ describe("memberChoices", () => {
       { value: "m1", label: "Rogério B" },
       { value: "m9", label: "Carla" },
     ]);
+  });
+});
+
+describe("valuesFromPastedRp", () => {
+  const noCause = { marked: false, text: null };
+  const directory: PublicRpDirectoryDto = { factories: [], lines, machines, members: [{ id: "m1", name: "Rogério B" }] };
+  function draft(patch: Partial<RpDraftDto> = {}): RpDraftDto {
+    return {
+      occurredAt: "2026-10-04T12:00:00.000Z", orderNumber: null, factoryId: null, lineId: null, line: "Cam 8", tag: "EBS-BLI-31",
+      machineId: null, subassemblyId: null, problem: "Alarme", description: null, repeatedFailure: false, repeatedTimes: null,
+      repeatedPeriod: null, causes: { material: noCause, machine: noCause, method: noCause, labor: noCause }, rootCause: null,
+      corrective: null, preventive: null, status: "corrected", basicConditionImpact: null, memberIds: [],
+      unmatchedTechnicians: "Zé", rawText: "texto", warnings: [], ...patch,
+    };
+  }
+
+  it("a TAG acha a máquina, a linha e a fábrica do cadastro", () => {
+    const values = valuesFromPastedRp(draft(), directory, "");
+    assert.deepEqual([values.machineId, values.lineId, values.factoryId, values.problem], ["mq1", "l1", "f2", "Alarme"]);
+    assert.equal(values.occurredAt, "2026-10-04");
+  });
+
+  it("sem técnico liberado no texto, entra o do aparelho; com técnico, fica o do texto", () => {
+    assert.deepEqual(valuesFromPastedRp(draft(), directory, "m1").memberIds, ["m1"]);
+    assert.deepEqual(valuesFromPastedRp(draft({ memberIds: ["m9"] }), directory, "m1").memberIds, ["m9"]);
+    assert.equal(valuesFromPastedRp(draft(), directory, "m1").unmatchedTechnicians, "");
   });
 });

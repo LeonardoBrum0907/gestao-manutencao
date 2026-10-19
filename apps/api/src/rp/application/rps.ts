@@ -6,11 +6,10 @@ import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
 import { mirrorProblem } from "../domain/rp";
 import type { RpDecisionPatch } from "../domain/rp-decision";
-import { matchLine, matchMembers } from "../domain/rp-match";
-import { parseRpText as readReports, type ParsedRp } from "../domain/rp-text";
 import { RpRepository, type RpWrite } from "../infra/rp.repository";
 import { parseRp, parseRpText, type RpInput } from "./parse-rp";
 import { parseRpList, type RpListQuery } from "./parse-rp-list";
+import { rpDrafts } from "./rp-drafts";
 
 const MEMBER_SUMMARY_LIMIT = 20;
 
@@ -25,16 +24,8 @@ export class Rps {
   // Lê o texto colado e já sugere linha, fábrica e técnicos do cadastro. Não grava nada.
   async parse(body: unknown): Promise<RpDraftDto[]> {
     const text = parseRpText(body);
-    const reports = readReports(text);
     const [members, lines] = await Promise.all([this.refs.memberDirectory(), this.refs.lineDirectory()]);
-    return reports.map((report) => {
-      const line = matchLine(report.line, report.tag, lines);
-      const match = matchMembers(report.technicians, members);
-      const warnings = [...report.warnings];
-      if (match.unmatched.length) warnings.push(`Técnico não encontrado no cadastro: ${match.unmatched.join(", ")}.`);
-      if (!line) warnings.push("Linha não encontrada no cadastro: ficou só com a linha e a TAG do texto. Escolha a fábrica antes de salvar.");
-      return draft(report, line?.id ?? null, line?.factoryId ?? null, match.memberIds, match.unmatched, warnings);
-    });
+    return rpDrafts(text, members, lines);
   }
 
   create(body: unknown): Promise<RpDto> {
@@ -142,39 +133,4 @@ export class Rps {
     }
     assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), savedSubassemblyId);
   }
-}
-
-function draft(
-  report: ParsedRp,
-  lineId: string | null,
-  factoryId: string | null,
-  memberIds: string[],
-  unmatched: string[],
-  warnings: string[],
-): RpDraftDto {
-  return {
-    occurredAt: report.date,
-    orderNumber: report.orderNumber,
-    factoryId,
-    lineId,
-    line: report.line,
-    tag: report.tag,
-    machineId: null,
-    subassemblyId: null,
-    problem: report.problem,
-    description: report.description,
-    repeatedFailure: report.repeatedFailure,
-    repeatedTimes: report.repeatedTimes,
-    repeatedPeriod: report.repeatedPeriod,
-    causes: report.causes,
-    rootCause: report.rootCause,
-    corrective: report.corrective,
-    preventive: report.preventive,
-    status: report.status,
-    basicConditionImpact: report.basicConditionImpact,
-    memberIds,
-    unmatchedTechnicians: unmatched.length ? unmatched.join(", ") : null,
-    rawText: report.rawText,
-    warnings,
-  };
 }
