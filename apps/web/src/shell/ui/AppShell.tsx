@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, Outlet, useMatch } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation, useMatch } from "react-router-dom";
 import { MENU_STATE } from "../../app/nav-trail";
 import { useSession } from "../data/session";
+import { loginReturnState } from "../model/login-return";
 import { Icon } from "../../design/ui/icons";
 import { NotebookIcon } from "../../design/ui/brand-mark";
 import { Sidebar } from "./Sidebar";
@@ -31,11 +32,13 @@ export function AppShell() {
   });
   // Telas de tabela larga usam a largura toda; as demais ficam numa coluna de leitura.
   const wide = useMatch("/competencias");
+  const location = useLocation();
 
   if (session.isPending) {
     return <p className="h-full overflow-y-auto bg-canvas p-8 text-sm text-muted">Carregando…</p>;
   }
-  if (!session.data) return <Navigate to="/login" replace />;
+  // Leva a tela pedida para o login devolver a pessoa a ela (link de aviso, link aberto no PC, sessão vencida).
+  if (!session.data) return <Navigate to="/login" replace state={loginReturnState(location)} />;
 
   return (
     <div className="app-shell flex h-full overflow-hidden bg-canvas text-app">
