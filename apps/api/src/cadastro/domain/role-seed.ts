@@ -1,6 +1,7 @@
 import { MEMBER_ROLES, type MatrixCategory, type MemberRoleName } from "@manutencao/shared";
 
 export type SeedRole = { name: string; matrixCategory: MatrixCategory | null; leadsTeams: boolean };
+export type ExistingRole = Pick<SeedRole, "leadsTeams">;
 
 // Num banco novo, Mecânico e Eletricista já nascem na categoria da matriz delas.
 const SEED_CATEGORY: Partial<Record<MemberRoleName, MatrixCategory>> = { mecânico: "mechanical", eletricista: "electrical" };
@@ -8,11 +9,11 @@ const SEED_CATEGORY: Partial<Record<MemberRoleName, MatrixCategory>> = { mecâni
 /**
  * As funções do SIGEM que a API cria ao subir: só num banco sem nenhuma função.
  * Antes ela recriava pelo nome exato a cada boot, e quem renomeava "mecânico" para "Mecânico" ficava com as duas.
- * @example rolesToSeed(0).length // 7: as seis do SIGEM e Supervisor
- * @example rolesToSeed(8) // []
+ * @example rolesToSeed([]).length // 7: as seis do SIGEM e Supervisor
+ * @example rolesToSeed([{ leadsTeams: false }]) // []
  */
-export function rolesToSeed(existingCount: number): SeedRole[] {
-  if (existingCount > 0) return [];
+export function rolesToSeed(existing: ExistingRole[]): SeedRole[] {
+  if (existing.length > 0) return [];
   const sigem = MEMBER_ROLES.map((name) => ({ name, matrixCategory: SEED_CATEGORY[name] ?? null, leadsTeams: false }));
   // Sem cargo no cadastro, o supervisor é quem tem uma função que lidera equipe.
   return [...sigem, { name: "Supervisor", matrixCategory: null, leadsTeams: true }];

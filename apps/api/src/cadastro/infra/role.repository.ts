@@ -19,7 +19,7 @@ export class RoleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async ensureSeed(): Promise<void> {
-    const seed = rolesToSeed(await this.prisma.memberRole.count());
+    const seed = rolesToSeed(await this.prisma.memberRole.findMany({ select: { leadsTeams: true } }));
     if (seed.length) await this.prisma.memberRole.createMany({ data: seed });
   }
 
