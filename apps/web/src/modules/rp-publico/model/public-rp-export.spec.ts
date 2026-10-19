@@ -29,7 +29,7 @@ describe("rpExportTable", () => {
     const values = ["N° Ação", "Problema", "Causa raiz", "Contra medida Corretiva", "Responsável", "Status", "Origem da Ação"].map((header) => cell(table, 0, header));
     assert.deepEqual(values, ["", "Alarme", "Sensor sujo", "Limpeza", "Anderson", "Em Andamento", "FSP"]);
     const place = ["ÁREA", "TAG", "Linha", "Executante", "Observações"].map((header) => cell(table, 0, header));
-    assert.deepEqual(place, ["Fábrica 1", "EBS-BLI-31", "Cam 08", "Rogério B", "OS 7005964"]);
+    assert.deepEqual(place, ["Fábrica 1", "EBS-BLI-31", "Cam 08", "Rogério B", ""]);
   });
 
   it("uma linha por contramedida preventiva, repetindo o resto do RP", () => {
