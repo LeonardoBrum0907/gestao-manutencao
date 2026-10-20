@@ -63,10 +63,6 @@ export class CatalogRepository {
     return this.prisma.matrixEquipment.findUnique({ where: { id } });
   }
 
-  findEquipmentByName(name: string) {
-    return this.prisma.matrixEquipment.findUnique({ where: { name } });
-  }
-
   async createEquipment(name: string): Promise<MatrixEquipmentDto> {
     return this.changing(async () => {
       const last = await this.prisma.matrixEquipment.aggregate({ _max: { position: true } });
