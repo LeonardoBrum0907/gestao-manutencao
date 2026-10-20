@@ -430,6 +430,10 @@ export type RecordListItemDto = Pick<
   | "machineId"
   | "subassemblyId"
   | "memberId"
+  // Lugar escrito à mão: pendência de chamado guarda a linha só em `line`; problema com "outra" linha, em `lineLabel`.
+  | "line"
+  | "tag"
+  | "lineLabel"
 >;
 
 // Lista paginada por cursor: nextCursor vem nulo na última página.

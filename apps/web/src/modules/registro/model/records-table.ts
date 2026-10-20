@@ -32,9 +32,15 @@ export function withNames(item: RecordListItemDto, names: RecordNames): RecordRo
   };
 }
 
-/** Lugar em uma linha: "MED 01 › Blistadeira › Desbobinador"; vazio quando o registro não aponta lugar. */
+/**
+ * Lugar em uma linha: "MED 01 › Blistadeira › Desbobinador"; vazio quando o registro não aponta lugar.
+ * Sem linha do cadastro, vale a escrita à mão: a pendência gerada num chamado guarda a linha só como texto.
+ * Ex.: `placeLabel(pendencia)` → `"CAM 01 › EBS-ENC-02"` (linha e TAG da ficha da tarefa).
+ */
 export function placeLabel(row: RecordRow): string {
-  return [row.lineName, row.machineName, row.subassemblyName].filter(Boolean).join(" › ");
+  const line = row.lineName ?? row.lineLabel ?? row.line;
+  const machine = row.machineName ?? row.tag;
+  return [line, machine, row.subassemblyName].filter(Boolean).join(" › ");
 }
 
 export const STATUS_SCOPES = ["abertos", "concluidos", "todos"] as const;
@@ -62,7 +68,7 @@ function inScope(status: RecordStatus, scope: StatusScope): boolean {
 export function matchesSearch(row: RecordRow, q: string): boolean {
   const words = plain(q).split(/\s+/).filter(Boolean);
   if (!words.length) return true;
-  const haystack = plain([row.body, placeLabel(row), row.machineTag ?? "", row.memberName ?? ""].join(" "));
+  const haystack = plain([row.body, placeLabel(row), row.machineTag ?? "", row.tag ?? "", row.memberName ?? ""].join(" "));
   return words.every((word) => haystack.includes(word));
 }
 

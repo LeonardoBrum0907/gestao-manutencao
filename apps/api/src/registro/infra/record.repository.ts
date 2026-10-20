@@ -161,6 +161,9 @@ const listSelect = {
   machineId: true,
   subassemblyId: true,
   memberId: true,
+  line: true,
+  tag: true,
+  lineLabel: true,
 } as const;
 
 function toListItem(row: {
@@ -178,6 +181,9 @@ function toListItem(row: {
   machineId: string | null;
   subassemblyId: string | null;
   memberId: string | null;
+  line: string | null;
+  tag: string | null;
+  lineLabel: string | null;
 }): RecordListItemDto {
   if (!isRecordType(row.type) || !isRecordStatus(row.status) || !isRecordOrigin(row.origin)) {
     throw new DomainError("invalid", 500, "Registro gravado está inválido.");
@@ -203,6 +209,9 @@ function toListItem(row: {
     machineId: row.machineId,
     subassemblyId: row.subassemblyId,
     memberId: row.memberId,
+    line: row.line,
+    tag: row.tag,
+    lineLabel: row.lineLabel,
   };
 }
 
@@ -298,7 +307,7 @@ export class RecordRepository {
     return {
       today: calendarDay(now),
       items: placed.map(({ row, group }) => {
-        const item = toListItem({ ...row, tone: null, lineId: null, machineId: null, subassemblyId: null, memberId: null });
+        const item = toListItem({ ...row, tone: null, lineId: null, machineId: null, subassemblyId: null, memberId: null, line: null, tag: null, lineLabel: null });
         return {
           id: item.id,
           type: item.type,
