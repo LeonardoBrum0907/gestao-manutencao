@@ -3,6 +3,8 @@ import { Link, Outlet, useParams } from "react-router-dom";
 import { NotebookIcon } from "../../../design/ui/brand-mark";
 import { ThemeToggle } from "../../../shell/ui/ThemeToggle";
 import { publicRpPath } from "../model/public-rp";
+import { rememberPublicCode } from "../model/public-rp-install";
+import { deviceStorage } from "./public-rp-parts";
 
 // Buscador que achar o endereço não guarda a página (a API também manda X-Robots-Tag).
 function useNoIndex() {
@@ -22,6 +24,8 @@ function useNoIndex() {
 export function PublicRpShell() {
   const { code = "" } = useParams();
   useNoIndex();
+  // O app instalado abre em /rp/abrir, sem código: guarda o link para achar a página de novo.
+  useEffect(() => rememberPublicCode(deviceStorage(), code), [code]);
   return (
     <div className="h-full overflow-y-auto bg-canvas text-app">
       <header className="border-b border-line bg-surface">

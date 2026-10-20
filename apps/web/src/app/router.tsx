@@ -25,6 +25,7 @@ import { PublicRpFormPage } from "../modules/rp-publico/ui/PublicRpFormPage";
 import { PublicRpListPage } from "../modules/rp-publico/ui/PublicRpListPage";
 import { PublicRpPage } from "../modules/rp-publico/ui/PublicRpPage";
 import { PublicRpShell } from "../modules/rp-publico/ui/PublicRpShell";
+import { PublicRpStart } from "../modules/rp-publico/ui/PublicRpStart";
 import { ChamadosPage } from "../modules/turno/ui/ChamadosPage";
 import { AppShell } from "../shell/ui/AppShell";
 import { LoginPage } from "../shell/ui/LoginPage";
@@ -71,6 +72,8 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       {/* Página pública de RPs: sem login, o código do link é a chave. Fica fora da casca do app. */}
+      {/* Início do app instalado pela página pública (public/rp-publico.webmanifest). */}
+      <Route path="/rp/abrir" element={<PublicRpStart />} />
       <Route path="/rp/abrir/:code" element={<PublicRpShell />}>
         <Route index element={<PublicRpListPage />} />
         <Route path="novo" element={<PublicRpFormPage />} />

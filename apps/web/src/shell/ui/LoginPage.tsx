@@ -5,6 +5,7 @@ import { Button, Card, Field, Notice, TextInput } from "../../design/ui/controls
 import { useLogin, useSession } from "../data/session";
 import { loginReturnPath } from "../model/login-return";
 import { BrandMark } from "../../design/ui/brand-mark";
+import { PublicRpShortcut } from "../../modules/rp-publico/ui/PublicRpShortcut";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function LoginPage() {
@@ -27,6 +28,7 @@ export function LoginPage() {
         <h1 className="sr-only">Caderno do Gestor</h1>
         <BrandMark size="large" />
         <p className="mt-3 text-[15px] text-muted">Registre rápido, organize depois.</p>
+        <PublicRpShortcut />
         <Card className="mt-6">
           <form className="flex flex-col gap-4" onSubmit={submit}>
             <Field label="E-mail">
