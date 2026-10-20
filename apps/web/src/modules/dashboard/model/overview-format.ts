@@ -97,3 +97,13 @@ export function paretoEmptyText(chamados: number): string {
   if (chamados === 1) return "O chamado do período não diz a máquina nem a linha.";
   return `Os ${chamados} chamados do período não dizem a máquina nem a linha.`;
 }
+
+/**
+ * Frase do tempo médio quando não dá para comparar. O tempo médio só conta chamado fechado
+ * (chamadoTotals na API), então o que falta pode ser o período atual, não o anterior.
+ * @example avgTimeMissingText(null) // "nenhum chamado fechado no período"
+ * @example avgTimeMissingText(45) // "o período anterior não teve chamado fechado"
+ */
+export function avgTimeMissingText(currentMinutes: number | null): string {
+  return currentMinutes === null ? "nenhum chamado fechado no período" : "o período anterior não teve chamado fechado";
+}

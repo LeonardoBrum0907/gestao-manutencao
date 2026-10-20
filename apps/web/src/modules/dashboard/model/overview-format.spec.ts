@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { axisTicks, barShare, compareTo, niceCeiling, formatDuration, minutesSince, paretoEmptyText, shortDate, weekLabel } from "./overview-format";
+import { avgTimeMissingText, axisTicks, barShare, compareTo, niceCeiling, formatDuration, minutesSince, paretoEmptyText, shortDate, weekLabel } from "./overview-format";
 
 describe("números do Dashboard", () => {
   it("conta minutos desde a abertura, sem negativo", () => {
@@ -54,5 +54,10 @@ describe("números do Dashboard", () => {
     assert.equal(paretoEmptyText(0), "Nenhum chamado no período.");
     assert.equal(paretoEmptyText(1), "O chamado do período não diz a máquina nem a linha.");
     assert.equal(paretoEmptyText(3), "Os 3 chamados do período não dizem a máquina nem a linha.");
+  });
+
+  it("sem tempo médio agora, diz que falta chamado fechado no período e não culpa o anterior", () => {
+    assert.equal(avgTimeMissingText(null), "nenhum chamado fechado no período");
+    assert.equal(avgTimeMissingText(45), "o período anterior não teve chamado fechado");
   });
 });

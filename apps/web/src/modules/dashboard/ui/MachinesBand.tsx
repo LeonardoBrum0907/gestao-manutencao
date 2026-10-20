@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { RP_FOUR_M, RP_FOUR_M_LABELS, type DashboardMachinesDto } from "@manutencao/shared";
-import { compareTo, formatDuration, paretoEmptyText, type Trend } from "../model/overview-format";
+import { avgTimeMissingText, compareTo, formatDuration, paretoEmptyText, type Trend } from "../model/overview-format";
 import { Band, BarList, Panel, type BarRow } from "./band";
 import { ColumnChart } from "./ColumnChart";
 
 // Seta e diferença para o período anterior. `lowerIsBetter`: menos chamados ou menos minutos é bom (verde).
-function TrendNote({ trend, lowerIsBetter, unit }: { trend: Trend | null; lowerIsBetter: boolean; unit: (value: number) => string }) {
-  if (!trend) return <span className="text-xs text-muted">sem período anterior para comparar</span>;
+// `missing`: o que dizer quando um dos dois períodos não tem número.
+type TrendNoteProps = { trend: Trend | null; lowerIsBetter: boolean; unit: (value: number) => string; missing: string };
+function TrendNote({ trend, lowerIsBetter, unit, missing }: TrendNoteProps) {
+  if (!trend) return <span className="text-xs text-muted">{missing}</span>;
   if (trend.direction === "same") return <span className="text-xs text-muted">igual ao período anterior</span>;
   const good = (trend.direction === "down") === lowerIsBetter;
   const arrow = trend.direction === "up" ? "▲" : "▼";
@@ -23,12 +25,17 @@ function Totals({ machines }: { machines: DashboardMachinesDto }) {
       <div className="flex flex-col gap-0.5 rounded-card border border-line bg-card px-4 py-3 shadow-card">
         <span className="text-xs font-medium text-muted">Chamados</span>
         <span className="text-3xl font-semibold leading-tight tabular-nums text-app">{machines.chamados}</span>
-        <TrendNote trend={compareTo(machines.chamados, machines.previousChamados)} lowerIsBetter unit={String} />
+        <TrendNote trend={compareTo(machines.chamados, machines.previousChamados)} lowerIsBetter unit={String} missing="sem período anterior para comparar" />
       </div>
       <div className="flex flex-col gap-0.5 rounded-card border border-line bg-card px-4 py-3 shadow-card">
         <span className="text-xs font-medium text-muted">Tempo médio de atendimento</span>
         <span className="text-3xl font-semibold leading-tight tabular-nums text-app">{machines.avgMinutes === null ? "—" : formatDuration(machines.avgMinutes)}</span>
-        <TrendNote trend={compareTo(machines.avgMinutes, machines.previousAvgMinutes)} lowerIsBetter unit={formatDuration} />
+        <TrendNote
+          trend={compareTo(machines.avgMinutes, machines.previousAvgMinutes)}
+          lowerIsBetter
+          unit={formatDuration}
+          missing={avgTimeMissingText(machines.avgMinutes)}
+        />
       </div>
     </div>
   );
