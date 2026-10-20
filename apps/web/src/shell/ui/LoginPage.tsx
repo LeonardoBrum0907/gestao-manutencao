@@ -1,18 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { errorMessage } from "../../app/http";
 import { Button, Card, Field, Notice, TextInput } from "../../design/ui/controls";
 import { useLogin, useSession } from "../data/session";
+import { loginReturnPath } from "../model/login-return";
 import { BrandMark } from "../../design/ui/brand-mark";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function LoginPage() {
   const session = useSession();
   const login = useLogin();
+  const location = useLocation();
   const [email, setEmail] = useState("gestor@local");
   const [password, setPassword] = useState("");
 
-  if (session.data) return <Navigate to="/meu-dia" replace />;
+  if (session.data) return <Navigate to={loginReturnPath(location.state)} replace />;
 
   function submit(event: FormEvent) {
     event.preventDefault();
