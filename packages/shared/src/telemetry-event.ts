@@ -15,7 +15,13 @@ export type TelemetryRequest = {
 export type TelemetryBreadcrumb = { message?: string; data?: Record<string, unknown> };
 
 /** O que a limpeza lê de um evento do Sentry. O tipo de verdade vem do SDK e tem mais campos. */
-export type TelemetryEvent = { request?: TelemetryRequest; user?: unknown; breadcrumbs?: TelemetryBreadcrumb[] };
+export type TelemetryEvent = {
+  request?: TelemetryRequest;
+  user?: unknown;
+  breadcrumbs?: TelemetryBreadcrumb[];
+  // Nome da transação: o SDK do Node monta com o caminho de verdade ("GET /api/public/rp/<código>/…").
+  transaction?: string;
+};
 
 // Campos de rastro que guardam endereço: url no fetch/xhr, from/to na navegação.
 const BREADCRUMB_URL_KEYS = ["url", "from", "to"] as const;
@@ -52,6 +58,40 @@ export function scrubTelemetryBreadcrumb<T extends TelemetryBreadcrumb>(crumb: T
 export function scrubTelemetryEvent<T extends TelemetryEvent>(event: T): T {
   delete event.user;
   if (event.request) scrubRequest(event.request);
+  if (event.transaction) event.transaction = telemetrySafeUrl(event.transaction);
   event.breadcrumbs?.forEach(scrubTelemetryBreadcrumb);
   return event;
 }
+
+/** Formato da opção `dataCollection` com tudo desligado. `never[]` cabe na lista de corpos do SDK. */
+export type PrivateDataCollection = {
+  userInfo: false;
+  cookies: false;
+  httpHeaders: false;
+  httpBodies: never[];
+  urlQueryParams: false;
+  databaseQueryData: false;
+  queues: false;
+  stackFrameVariables: false;
+  graphQL: { document: false; variables: false };
+  genAI: { inputs: false; outputs: false };
+};
+
+/**
+ * Opção `dataCollection` do Sentry (SDK 11) para API e tela: nada de usuário, cookies, cabeçalhos,
+ * corpos, consulta, dados de consulta ao banco nem variáveis locais (que guardariam nomes de técnicos
+ * e textos de RP). Fica o stack trace com as linhas de código em volta.
+ * @example Sentry.init({ dsn, dataCollection: SENTRY_PRIVATE_DATA_COLLECTION })
+ */
+export const SENTRY_PRIVATE_DATA_COLLECTION: PrivateDataCollection = {
+  userInfo: false,
+  cookies: false,
+  httpHeaders: false,
+  httpBodies: [],
+  urlQueryParams: false,
+  databaseQueryData: false,
+  queues: false,
+  stackFrameVariables: false,
+  graphQL: { document: false, variables: false },
+  genAI: { inputs: false, outputs: false },
+};
