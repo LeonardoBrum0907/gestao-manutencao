@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { closingInstant, instant } from "./chamado";
+import { closingInstant, instant, lineChamadosHref } from "./chamado";
 
 describe("hora de fechamento do chamado", () => {
   it("fechamento depois da abertura fica no mesmo dia", () => {
@@ -19,5 +19,19 @@ describe("hora de fechamento do chamado", () => {
   it("dia do fechamento igual ou anterior ao da abertura volta para a regra do mesmo dia ou do seguinte", () => {
     assert.deepEqual(closingInstant("2026-10-14", "15:10", "16:30", "2026-10-14"), instant("2026-10-14", "16:30"));
     assert.deepEqual(closingInstant("2026-10-14", "23:10", "01:20", "2026-10-12"), instant("2026-10-15", "01:20"));
+  });
+});
+
+describe("link para os chamados da linha", () => {
+  it("abre no dia do chamado mais recente, não em hoje", () => {
+    assert.equal(lineChamadosHref("l1", [{ day: "2026-10-19" }, { day: "2026-10-18" }]), "/turno/chamados?linha=l1&dia=2026-10-19");
+  });
+
+  it("sem chamados na linha, abre em hoje com o filtro da linha", () => {
+    assert.equal(lineChamadosHref("l1", []), "/turno/chamados?linha=l1");
+  });
+
+  it("codifica o id da linha", () => {
+    assert.equal(lineChamadosHref("a b", undefined), "/turno/chamados?linha=a%20b");
   });
 });
