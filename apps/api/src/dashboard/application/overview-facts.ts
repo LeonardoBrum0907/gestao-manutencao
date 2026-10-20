@@ -30,6 +30,7 @@ function openedAtOf(row: ChamadoRow): Date {
 
 /**
  * Chamados ainda não liberados, do aberto há mais tempo para o mais novo.
+ * Linha fora do cadastro vem com o nome escrito no chamado, como na tela de Chamados (antes saía "Sem linha").
  * @example openChamadoList(linhas, nomes) // [{ id, dayNumber: 2, lineName: "CAM 05", machineName: "Encartuchadeira", openedAt }]
  */
 export function openChamadoList(rows: readonly ChamadoRow[], lineNames: ReadonlyMap<string, string>): DashboardChamadoDto[] {
@@ -40,7 +41,7 @@ export function openChamadoList(rows: readonly ChamadoRow[], lineNames: Readonly
       id: row.id,
       dayNumber: row.dayNumber,
       body: row.body,
-      lineName: row.lineId ? (lineNames.get(row.lineId) ?? null) : null,
+      lineName: (row.lineId ? lineNames.get(row.lineId) : null) ?? row.lineLabel,
       machineName: row.machine?.name ?? null,
       openedAt: openedAtOf(row).toISOString(),
     }));
