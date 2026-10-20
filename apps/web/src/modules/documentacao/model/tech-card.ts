@@ -91,7 +91,16 @@ export function valuesFromCard(card: TechCardFields, machineLineId: string): Tec
  * @example withScopeKind(values, "machine") // { ...values, scopeKind: "machine", targetId: "" }
  */
 export function withScopeKind(values: TechCardFormValues, scopeKind: ScopeKind): TechCardFormValues {
-  return { ...values, scopeKind, targetId: "", subassemblyId: "", documentId: "" };
+  return withDocument({ ...values, scopeKind, targetId: "", subassemblyId: "" }, "");
+}
+
+/**
+ * Troca o documento de origem. Sem documento a página sai junto: o campo Página fica travado e a API recusa
+ * página sem documento ("A página precisa do documento"), então o valor velho prendia a ficha sem jeito de gravar.
+ * @example withDocument(values, "") // { ...values, documentId: "", page: "" }
+ */
+export function withDocument(values: TechCardFormValues, documentId: string): TechCardFormValues {
+  return { ...values, documentId, page: documentId ? values.page : "" };
 }
 
 /**

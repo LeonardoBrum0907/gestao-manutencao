@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TechCardHit } from "@manutencao/shared";
-import { bodyFromValues, emptyCardValues, formatBytes, missingScopeTarget, sourceLabel, valuesFromCard, withMachineLine, withScopeKind } from "./tech-card";
+import { bodyFromValues, emptyCardValues, formatBytes, missingScopeTarget, sourceLabel, valuesFromCard, withDocument, withMachineLine, withScopeKind } from "./tech-card";
 
 const card: TechCardHit = {
   id: "c1",
@@ -71,6 +71,24 @@ describe("formulário da ficha", () => {
     assert.equal(after.scopeKind, "machine");
     assert.deepEqual([after.targetId, after.subassemblyId, after.documentId], ["", "", ""]);
     assert.equal(after.title, "Servomotor");
+  });
+
+  // Regressão: a página ficava no campo travado ao tirar o documento e a API recusava com "A página precisa do documento (documentId)".
+  it("tirar o documento limpa a página, que só vale com documento", () => {
+    const before = { ...emptyCardValues({ targetId: "e1" }), documentId: "d1", page: "12", sheet: "166" };
+    const after = withDocument(before, "");
+    assert.deepEqual([after.documentId, after.page, after.sheet], ["", "", "166"]);
+    assert.equal(bodyFromValues(after).page, null);
+  });
+
+  it("trocar de documento guarda a página digitada", () => {
+    const before = { ...emptyCardValues({ targetId: "e1" }), documentId: "d1", page: "12" };
+    assert.deepEqual([withDocument(before, "d2").documentId, withDocument(before, "d2").page], ["d2", "12"]);
+  });
+
+  it("trocar o Vale para solta o documento e a página junto", () => {
+    const before = { ...emptyCardValues({ targetId: "e1" }), documentId: "d1", page: "12" };
+    assert.deepEqual([withScopeKind(before, "line").documentId, withScopeKind(before, "line").page], ["", ""]);
   });
 
   it("trocar a linha da máquina guarda a linha e solta a máquina da linha anterior", () => {
