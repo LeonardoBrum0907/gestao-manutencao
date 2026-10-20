@@ -38,7 +38,7 @@ import { useBehavior } from "../data/behavior";
 import { useMemberRecordList } from "../data/member-records";
 import { usePdi } from "../data/pdi";
 import { usePdiItems } from "../data/pdi-items";
-import { belowTarget, formatDay, isOverdue, itemCounts, sortItems, todayIso } from "../model/pdi-items";
+import { belowTarget, formatCompletedDay, formatDay, isOverdue, itemCounts, sortItems, todayIso } from "../model/pdi-items";
 import { usePerformance } from "../data/performance";
 import { formatScore, scoreBand, thisYear } from "../model/performance";
 import { parseReportSections, performanceBand, quartersEvaluated, REPORT_SECTIONS, reportSectionsFor } from "../model/report";
@@ -524,7 +524,7 @@ function Pdi({ memberId, isTechnician, year }: { memberId: string; isTechnician:
                 <td className={`n ${isOverdue(item, today) ? "late" : ""}`}>{formatDay(item.dueDate)}</td>
                 <td>
                   <Pill tone={statusTone(item, today)}>{isOverdue(item, today) ? "Atrasado" : PDI_ITEM_STATUS_LABELS[item.status]}</Pill>
-                  {item.completedAt ? <div className="muted">em {formatDay(item.completedAt.slice(0, 10))}</div> : null}
+                  {item.completedAt ? <div className="muted">em {formatCompletedDay(item.completedAt)}</div> : null}
                 </td>
               </tr>
             ))}
