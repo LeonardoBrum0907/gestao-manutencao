@@ -100,6 +100,23 @@ export function closingInstant(day: string, opened: string, closed: string, clos
   return close.getTime() < open.getTime() ? instant(addDays(day, 1), closed) : close;
 }
 
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
+}
+
+/**
+ * Dia do fechamento depois que o gestor troca o Dia do chamado: anda junto com a abertura, para o tempo de atendimento
+ * não mudar. Sem isso, um chamado de 35 min movido para o dia anterior era gravado com 24h35.
+ * @example closedDayAfterMove("2026-10-20", "2026-10-20", "2026-10-19") // "2026-10-19"
+ * @example closedDayAfterMove("2026-10-20", "2026-10-21", "2026-10-19") // "2026-10-20" (3º turno)
+ */
+export function closedDayAfterMove(day: string, closedDay: string, nextDay: string): string {
+  if (!closedDay || !DAY.test(day) || !DAY.test(nextDay)) return closedDay;
+  return addDays(closedDay, daysBetween(day, nextDay));
+}
+
 export function nowClock(): string {
   return clock(new Date().toISOString());
 }
