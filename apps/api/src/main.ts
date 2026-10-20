@@ -4,9 +4,11 @@ import { AppModule } from "./app.module";
 import { loadEnv } from "./env";
 import { mountMcp } from "./mcp/http/mount-mcp";
 import { requestLog } from "./observabilidade/http/request-log";
+import { startSentry } from "./observabilidade/infra/sentry";
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
+  if (env.sentry) startSentry(env.sentry);
   const app = await NestFactory.create(AppModule);
   // Antes do MCP para que os pedidos dele também apareçam no log.
   app.use(requestLog((line) => console.log(line)));

@@ -1,3 +1,5 @@
+import { readSentryConfig, type SentryConfig } from "./observabilidade/sentry-config";
+
 export type AppEnv = {
   databaseUrl: string;
   sessionSecret: string;
@@ -12,6 +14,8 @@ export type AppEnv = {
   gestorPassword: string | null;
   // Chaves do envio de avisos ao celular (Web Push). Nulas: Configurações › Avisos diz que faltam.
   vapid: VapidKeys | null;
+  // Destino dos erros no Sentry. Nulo: os erros vão só para o log.
+  sentry: SentryConfig | null;
 };
 
 /** Par de chaves VAPID do servidor e o contato que os serviços de push recebem junto (https: ou mailto:). */
@@ -84,5 +88,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
     mcpToken,
     gestorPassword,
     vapid: readVapidKeys(source, publicUrl),
+    sentry: readSentryConfig(source),
   };
 }
