@@ -709,9 +709,13 @@ export function MultiSelect({
           <Chevron open={open} />
         </button>
       </div>
-      <div ref={measureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex gap-1.5 whitespace-nowrap">
-        {picked.map((item) => chip(item, false))}
-        <span className="shrink-0 rounded-lg border border-line px-2 py-0.5 text-[13px] font-semibold">+{picked.length}</span>
+      {/* A fileira de medida tem todas as etiquetas lado a lado e passa da largura da tela; sem o recorte
+          (h-0 + overflow-hidden), a página inteira rolava para o lado no celular com muitos técnicos. */}
+      <div aria-hidden className="pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden">
+        <div ref={measureRef} className="flex w-max gap-1.5 whitespace-nowrap">
+          {picked.map((item) => chip(item, false))}
+          <span className="shrink-0 rounded-lg border border-line px-2 py-0.5 text-[13px] font-semibold">+{picked.length}</span>
+        </div>
       </div>
       {error ? <FieldError text={error} /> : null}
       {open ? (
