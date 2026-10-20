@@ -15,6 +15,8 @@ export type ChamadoRow = {
   body: string;
   status: string;
   lineId: string | null;
+  // Linha escrita à mão no chamado ("outra", fora do cadastro).
+  lineLabel: string | null;
   openedAt: Date | null;
   occurredAt: Date;
   durationMin: number | null;
@@ -54,6 +56,7 @@ export class OverviewRead {
         body: true,
         status: true,
         lineId: true,
+        lineLabel: true,
         openedAt: true,
         occurredAt: true,
         durationMin: true,
