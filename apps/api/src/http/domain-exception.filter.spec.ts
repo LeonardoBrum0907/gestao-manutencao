@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { ArgumentsHost, BadRequestException } from "@nestjs/common";
 import { DomainError } from "../kernel/domain-error";
+import { FakeErrorReporter } from "../observabilidade/application/fake-error-reporter";
 import { DomainExceptionFilter } from "./domain-exception.filter";
 
 class FakeHttpResponse {
@@ -20,14 +21,14 @@ class FakeHttpResponse {
 }
 
 function fakeHost(response: FakeHttpResponse): ArgumentsHost {
-  const request = { method: "POST", baseUrl: "", route: { path: "/api/records" } };
+  const request = { method: "POST", baseUrl: "", originalUrl: "/api/records", route: { path: "/api/records" } };
   const http = { getResponse: () => response, getRequest: () => request };
   return { switchToHttp: () => http } as unknown as ArgumentsHost;
 }
 
-function answer(exception: unknown): FakeHttpResponse {
+function answer(exception: unknown, reporter = new FakeErrorReporter()): FakeHttpResponse {
   const response = new FakeHttpResponse();
-  new DomainExceptionFilter().catch(exception, fakeHost(response));
+  new DomainExceptionFilter(reporter).catch(exception, fakeHost(response));
   return response;
 }
 
@@ -48,5 +49,19 @@ describe("filtro de erros da API", () => {
     const response = answer(new TypeError("Cannot read properties of undefined"));
     assert.equal(response.statusCode, 500);
     assert.deepEqual(response.body, { code: "unexpected", message: "Erro inesperado." });
+  });
+
+  it("avisa o erro inesperado com método e rota", () => {
+    const reporter = new FakeErrorReporter();
+    const error = new TypeError("Cannot read properties of undefined");
+    answer(error, reporter);
+    assert.deepEqual(reporter.reports, [{ error, scene: { method: "POST", route: "/api/records" } }]);
+  });
+
+  it("não avisa erro de domínio nem HttpException, que são respostas esperadas", () => {
+    const reporter = new FakeErrorReporter();
+    answer(new DomainError("not_found", 404, "Registro não encontrado."), reporter);
+    answer(new BadRequestException("Data inválida."), reporter);
+    assert.deepEqual(reporter.reports, []);
   });
 });
