@@ -14,6 +14,7 @@ import {
   shiftLabel,
   today,
 } from "../model/chamado";
+import { chamadosDaySummary } from "../model/chamado-summary";
 import { ChamadoPanel } from "./ChamadoPanel";
 import { CHAMADO_COLUMNS, chamadoStacked, type ChamadoTableRow } from "./chamado-table";
 
@@ -30,15 +31,6 @@ function groupByShift(items: ChamadoDto[]): Group[] {
     const count = `${mine.length} ${mine.length === 1 ? "chamado" : "chamados"}`;
     return [{ key: shift ?? "none", title: `${shift ? shiftLabel(shift) : "Sem turno"} · ${count}`, items: mine }];
   });
-}
-
-function summary(items: ChamadoDto[]): string {
-  if (!items.length) return "";
-  const parts = chamadoStatusChoices
-    .map((choice) => ({ label: choice.label.toLowerCase(), count: items.filter((item) => item.status === choice.value).length }))
-    .filter((part) => part.count > 0)
-    .map((part) => `${part.count} ${part.label}`);
-  return `${items.length} ${items.length === 1 ? "chamado" : "chamados"} · ${parts.join(" · ")}`;
 }
 
 export function ChamadosPage() {
@@ -183,7 +175,7 @@ export function ChamadosPage() {
 
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold text-app">{dayTitle(day)}</h2>
-        <p className="text-sm text-muted">{summary(shown)}</p>
+        <p className="text-sm text-muted">{chamadosDaySummary(shown)}</p>
       </div>
 
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
