@@ -6,7 +6,7 @@ import { NavTrail } from "../../../design/ui/nav-trail";
 import { usePreviewZoom, ZoomControls } from "../../../design/ui/sheet-preview";
 import { errorMessage } from "../../../app/http";
 import { useTeamMatrix } from "../data/matrix";
-import { teamGrid, type TeamGrid } from "../model/team-grid";
+import { emptyTeamGridNotice, teamGrid, type TeamGrid } from "../model/team-grid";
 import { teamKpis, trainingNeeds } from "../model/team-insights";
 import { readTeamCategory, readTeamSearch } from "../model/team-search";
 import { technicianCountLabel } from "../model/team-sheet";
@@ -74,6 +74,12 @@ function subtitle(team: TeamMatrixDto, grid: TeamGrid, shift: string, category: 
   return `Visão ${TEAM_MATRIX_VIEW_LABELS[team.layout.view]}${categoryText} · ${shiftText} · ${technicianCountLabel(grid.memberCount)} · qualificado com ${team.qualifiedAdherence}% ou mais`;
 }
 
+function SheetGridOrNotice({ team, grid, subtotals, legend }: { team: TeamMatrixDto; grid: TeamGrid; subtotals: boolean; legend: boolean }) {
+  const notice = emptyTeamGridNotice(grid);
+  if (notice) return <p className="muted">{notice}</p>;
+  return <TeamSheetGrid team={team} grid={grid} view={team.layout.view} parts={{ subtotals, legend }} />;
+}
+
 function SheetBody({ team, grid, sections }: { team: TeamMatrixDto; grid: TeamGrid; sections: readonly TeamSheetSection[] }) {
   const has = (key: TeamSheetSection) => sections.includes(key);
   return (
@@ -82,7 +88,7 @@ function SheetBody({ team, grid, sections }: { team: TeamMatrixDto; grid: TeamGr
       {has("grade") ? (
         <>
           <h2>Grade</h2>
-          <TeamSheetGrid team={team} grid={grid} view={team.layout.view} parts={{ subtotals: has("subtotais"), legend: has("legenda") }} />
+          <SheetGridOrNotice team={team} grid={grid} subtotals={has("subtotais")} legend={has("legenda")} />
         </>
       ) : null}
       {has("treino") ? (

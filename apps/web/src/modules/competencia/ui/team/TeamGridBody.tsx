@@ -1,6 +1,7 @@
 import type { TeamEquipmentDto, TeamMatrixDto, TeamMatrixView, TeamMemberDto } from "@manutencao/shared";
 import { Link } from "react-router-dom";
 import type { TeamColumn } from "../../model/team-columns";
+import { EMPTY_TEAM_GRID_TEXT } from "../../model/team-grid";
 import { cellTone, type CellTone } from "../../model/team-insights";
 import { blockQualified, cellOf, qualifiedCount, shiftLabel, type TeamRowBlock } from "../../model/team-rows";
 import { ScoreStack, stackTitle } from "../ScoreStack";
@@ -128,7 +129,7 @@ export function TeamGridBody({ team, columns, rowBlocks, view }: BodyProps) {
       {rowBlocks.every((block) => block.members.length === 0) ? (
         <tr>
           <td colSpan={width} className="px-4 py-4 text-sm text-muted">
-            Nenhum técnico ativo com esses filtros.
+            {EMPTY_TEAM_GRID_TEXT}
           </td>
         </tr>
       ) : null}
