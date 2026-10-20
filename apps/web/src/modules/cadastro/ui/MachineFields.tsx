@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { useMachines, useSaveSubassembly, useSubassemblies } from "../data/cadastro";
-import { subassemblyChoices } from "../model/machine-spot";
+import { subassemblyChoices, subassemblyPlaceholder } from "../model/machine-spot";
 
 // Novo subconjunto direto da ficha, no modelo da máquina escolhida.
 function NewSubassembly({ equipmentId, onCreated }: { equipmentId: string; onCreated: (id: string) => void }) {
@@ -94,7 +94,7 @@ export function MachineFields({
         {machine?.equipmentId ? (
           <Field label="Subconjunto">
             <SelectInput value={subassemblyId} onChange={(event) => onSubassemblyChange(event.target.value)}>
-              <option value="">{optional ? "Não sei" : "Escolha o subconjunto"}</option>
+              <option value="">{subassemblyPlaceholder(optional, choices.length)}</option>
               {choices.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}

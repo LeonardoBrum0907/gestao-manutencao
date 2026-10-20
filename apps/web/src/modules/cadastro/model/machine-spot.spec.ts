@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { SubassemblyDto } from "@manutencao/shared";
-import { subassemblyChoices, withMachineDefaults, withSubassemblyDefaults } from "./machine-spot";
+import { subassemblyChoices, subassemblyPlaceholder, withMachineDefaults, withSubassemblyDefaults } from "./machine-spot";
 
 function sub(id: string, scope: Partial<SubassemblyDto> = {}): SubassemblyDto {
   return { id, equipmentId: "blis", machineId: null, name: id, archived: false, ...scope };
@@ -44,5 +44,20 @@ describe("resposta da API antiga", () => {
 
   it("completa o subconjunto como do modelo todo", () => {
     assert.deepEqual(withSubassemblyDefaults({ id: "s1", equipmentId: "blis", name: "Desbobinador", archived: false }), sub("s1", { name: "Desbobinador" }));
+  });
+});
+
+describe("primeira opção do campo Subconjunto", () => {
+  it("ficha que aceita ficar sem subconjunto mostra Não sei", () => {
+    assert.equal(subassemblyPlaceholder(true, 2), "Não sei");
+  });
+
+  it("ficha que exige subconjunto pede para escolher", () => {
+    assert.equal(subassemblyPlaceholder(false, 2), "Escolha o subconjunto");
+  });
+
+  it("máquina sem nenhum subconjunto avisa em vez de pedir para escolher", () => {
+    assert.equal(subassemblyPlaceholder(false, 0), "Nenhum subconjunto nesta máquina");
+    assert.equal(subassemblyPlaceholder(true, 0), "Nenhum subconjunto nesta máquina");
   });
 });

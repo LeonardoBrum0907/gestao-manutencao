@@ -10,6 +10,17 @@ export function subassemblyChoices(subassemblies: SubassemblyDto[], machine: Sub
   return subassembliesOfMachine(subassemblies, machine, currentId);
 }
 
+/**
+ * Primeira opção do campo Subconjunto: "Não sei" onde a ficha aceita ficar sem, senão o pedido para escolher.
+ * Sem nenhum subconjunto para a máquina, diz isso: a lista abria só com "Escolha o subconjunto".
+ * @example subassemblyPlaceholder(true, 3) // "Não sei"
+ * @example subassemblyPlaceholder(false, 0) // "Nenhum subconjunto nesta máquina"
+ */
+export function subassemblyPlaceholder(optional: boolean, choices: number): string {
+  if (!choices) return "Nenhum subconjunto nesta máquina";
+  return optional ? "Não sei" : "Escolha o subconjunto";
+}
+
 // A tela pode publicar antes do deploy da API no PC (armadilha do PR #41): campo novo que não veio vira o padrão.
 type LegacyMachine = Omit<MachineDto, "hiddenSubassemblyIds"> & Partial<Pick<MachineDto, "hiddenSubassemblyIds">>;
 type LegacySubassembly = Omit<SubassemblyDto, "machineId"> & Partial<Pick<SubassemblyDto, "machineId">>;
