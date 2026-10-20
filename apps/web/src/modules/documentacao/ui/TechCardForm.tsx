@@ -3,7 +3,7 @@ import { Field, SelectInput, TextArea, TextInput } from "../../../design/ui/cont
 import { useLines, useMachines, useSubassemblies } from "../../cadastro/data/cadastro";
 import { useMatrixCatalog } from "../../competencia/data/catalog";
 import { useTechDocuments } from "../data/tech-docs";
-import { SCOPE_KINDS, SCOPE_KIND_LABELS, withMachineLine, withScopeKind, type ScopeKind, type TechCardFormValues } from "../model/tech-card";
+import { SCOPE_KINDS, SCOPE_KIND_LABELS, withDocument, withMachineLine, withScopeKind, type ScopeKind, type TechCardFormValues } from "../model/tech-card";
 
 type Props = {
   values: TechCardFormValues;
@@ -123,13 +123,13 @@ function DetailFields({ values, set }: { values: TechCardFormValues; set: Setter
   );
 }
 
-function SourceFields({ values, set, equipmentId }: { values: TechCardFormValues; set: Setter; equipmentId: string }) {
+function SourceFields({ values, set, onChange, equipmentId }: { values: TechCardFormValues; set: Setter; onChange: Props["onChange"]; equipmentId: string }) {
   const documents = useTechDocuments(equipmentId || undefined);
   const choices = (documents.data ?? []).filter((document) => !equipmentId || document.equipmentId === equipmentId);
   return (
     <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
       <Field label="Documento de origem">
-        <SelectInput value={values.documentId} onChange={(event) => set("documentId", event.target.value)}>
+        <SelectInput value={values.documentId} onChange={(event) => onChange(withDocument(values, event.target.value))}>
           <option value="">{choices.length ? "Sem documento" : "Nenhum documento cadastrado no modelo"}</option>
           {choices.map((document) => (
             <option key={document.id} value={document.id}>
@@ -201,7 +201,7 @@ export function TechCardForm({ values, onChange }: Props) {
           <TextInput value={values.tags} placeholder="Ex.: Rede, Elétrica" onChange={(event) => set("tags", event.target.value)} />
         </Field>
       </div>
-      <SourceFields values={values} set={set} equipmentId={equipmentId} />
+      <SourceFields values={values} set={set} onChange={onChange} equipmentId={equipmentId} />
       <label className="flex items-center gap-2 text-sm text-app">
         <input type="checkbox" checked={values.reviewNeeded} onChange={(event) => set("reviewNeeded", event.target.checked)} />
         Precisa de revisão (criada com dúvida; conferir no manual antes de confiar)
