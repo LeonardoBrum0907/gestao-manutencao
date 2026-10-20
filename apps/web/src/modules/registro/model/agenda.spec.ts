@@ -78,4 +78,8 @@ describe("títulos da Agenda", () => {
     assert.equal(agendaMonth(agendaWeek(today)), "Outubro de 2026");
     assert.equal(agendaMonth(agendaWeek("2026-10-29")), "Outubro – novembro de 2026");
   });
+
+  it("na virada do ano mostra os dois anos, para o dezembro não parecer do ano seguinte", () => {
+    assert.equal(agendaMonth(agendaWeek("2026-12-29")), "Dezembro de 2026 – janeiro de 2027");
+  });
 });
