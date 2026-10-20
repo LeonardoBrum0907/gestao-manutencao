@@ -22,6 +22,13 @@ describe("grade da Matriz da equipe", () => {
     assert.equal(teamGrid(team, { ...base, memberIds: [bia.id, ana.id], shift: "first" }).memberCount, 1);
   });
 
+  // Regressão: técnico escolhido e depois escondido pela Categoria deixava a grade vazia com o filtro "Todos" na tela.
+  it("técnico escolhido que não está na equipe carregada não esvazia a grade", () => {
+    const team = teamFixture();
+    assert.equal(teamGrid(team, { ...base, memberIds: ["fora-da-equipe"] }).memberCount, 4);
+    assert.equal(teamGrid(team, { ...base, memberIds: ["fora-da-equipe", "Ana"] }).memberCount, 1);
+  });
+
   it("número do topo de cobertura filtra as colunas pelo status do modelo", () => {
     const grid = teamGrid(teamFixture(), { ...base, focus: "none" });
     assert.deepEqual(grid.columns.map((column) => column.id), ["caixa"]);
@@ -39,7 +46,7 @@ describe("grade da Matriz da equipe", () => {
 // Regressão: a folha A4 saía com a grade vazia e sem aviso quando o turno filtrado não tinha técnico.
 describe("aviso da grade sem técnico", () => {
   it("avisa quando o filtro não deixa ninguém e some quando há técnico", () => {
-    assert.equal(emptyTeamGridNotice(teamGrid(teamFixture(), { ...base, memberIds: ["fora-da-equipe"] })), "Nenhum técnico ativo com esses filtros.");
+    assert.equal(emptyTeamGridNotice(teamGrid(teamFixture(), { ...base, memberIds: ["Davi"], shift: "first" })), "Nenhum técnico ativo com esses filtros.");
     assert.equal(emptyTeamGridNotice(teamGrid(teamFixture(), base)), null);
   });
 });
