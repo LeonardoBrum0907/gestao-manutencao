@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TechCardHit } from "@manutencao/shared";
-import { bodyFromValues, emptyCardValues, formatBytes, sourceLabel, valuesFromCard, withMachineLine, withScopeKind } from "./tech-card";
+import { bodyFromValues, emptyCardValues, formatBytes, missingScopeTarget, sourceLabel, valuesFromCard, withMachineLine, withScopeKind } from "./tech-card";
 
 const card: TechCardHit = {
   id: "c1",
@@ -86,5 +86,18 @@ describe("formulário da ficha", () => {
     assert.equal(formatBytes(500), "500 B");
     assert.equal(formatBytes(50_331_648), "48 MB");
     assert.equal(formatBytes(1_572_864), "1.5 MB");
+  });
+});
+
+// Antes a tela mostrava a mensagem da API para a IA ("equipmentId, machineId ou lineId").
+describe("o que falta escolher no Vale para", () => {
+  it("diz o modelo, a máquina ou a linha conforme o Vale para", () => {
+    assert.equal(missingScopeTarget(emptyCardValues()), "Falta escolher o modelo de equipamento.");
+    assert.equal(missingScopeTarget(emptyCardValues({ scopeKind: "machine", lineId: "l1" })), "Falta escolher a máquina.");
+    assert.equal(missingScopeTarget(emptyCardValues({ scopeKind: "line" })), "Falta escolher a linha.");
+  });
+
+  it("não reclama quando o alvo está escolhido", () => {
+    assert.equal(missingScopeTarget(emptyCardValues({ scopeKind: "machine", targetId: "m1", lineId: "l1" })), null);
   });
 });

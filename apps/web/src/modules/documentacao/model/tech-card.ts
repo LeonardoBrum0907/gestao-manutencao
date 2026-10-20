@@ -102,6 +102,22 @@ export function withMachineLine(values: TechCardFormValues, lineId: string): Tec
   return { ...values, lineId, targetId: "" };
 }
 
+const MISSING_TARGET: Record<ScopeKind, string> = {
+  equipment: "o modelo de equipamento",
+  machine: "a máquina",
+  line: "a linha",
+};
+
+/**
+ * O que falta escolher no "Vale para" antes de criar a ficha; null quando está completo.
+ * Sem isso a API respondia com a mensagem feita para a IA ("equipmentId, machineId ou lineId").
+ * @example missingScopeTarget(emptyCardValues()) // "Falta escolher o modelo de equipamento."
+ */
+export function missingScopeTarget(values: Pick<TechCardFormValues, "scopeKind" | "targetId">): string | null {
+  if (values.targetId.trim()) return null;
+  return `Falta escolher ${MISSING_TARGET[values.scopeKind]}.`;
+}
+
 const orNull = (value: string): string | null => value.trim() || null;
 
 /**

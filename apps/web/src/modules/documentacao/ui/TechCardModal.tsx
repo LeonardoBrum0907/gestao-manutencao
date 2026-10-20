@@ -6,7 +6,7 @@ import { DetailModal, PanelFooter, PanelSection, PanelTag } from "../../../desig
 import { useToast } from "../../../design/ui/toast";
 import { useMachines } from "../../cadastro/data/cadastro";
 import { techDocumentFileHref, useDeleteTechCard, useSaveTechCard } from "../data/tech-docs";
-import { bodyFromValues, emptyCardValues, sourceLabel, valuesFromCard, type ScopeStart, type TechCardFormValues } from "../model/tech-card";
+import { bodyFromValues, emptyCardValues, missingScopeTarget, sourceLabel, valuesFromCard, type ScopeStart, type TechCardFormValues } from "../model/tech-card";
 import { TechCardForm } from "./TechCardForm";
 
 type Props = {
@@ -108,8 +108,13 @@ export function TechCardModal({ card, start, onClose, onSaved }: Props) {
   const [initial] = useState<TechCardFormValues>(() => (card ? valuesFromCard(card, machineLineId) : emptyCardValues(start)));
   const [values, setValues] = useState(initial);
   const dirty = JSON.stringify(values) !== JSON.stringify(initial);
+  // O aviso do que falta escolher só aparece depois de tentar criar, e some assim que a escolha é feita.
+  const [triedSubmit, setTriedSubmit] = useState(false);
+  const missingTarget = triedSubmit ? missingScopeTarget(values) : null;
 
   function submit() {
+    setTriedSubmit(true);
+    if (missingScopeTarget(values)) return;
     save.mutate(bodyFromValues(values), {
       onSuccess: (saved) => {
         toast({ text: card ? "Ficha gravada." : "Ficha criada." });
@@ -136,6 +141,7 @@ export function TechCardModal({ card, start, onClose, onSaved }: Props) {
       }
       notice={
         <>
+          {missingTarget ? <Notice>{missingTarget}</Notice> : null}
           {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
           {card && removing ? (
             <RemoveConfirm
