@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../../app/http";
+import { runOnEnter } from "../../../design/enter-key";
 import { Button, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { useMachines, useSaveSubassembly, useSubassemblies } from "../data/cadastro";
 import { subassemblyChoices, subassemblyPlaceholder } from "../model/machine-spot";
@@ -10,6 +11,20 @@ function NewSubassembly({ equipmentId, onCreated }: { equipmentId: string; onCre
   const save = useSaveSubassembly();
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
+
+  function create() {
+    save.mutate(
+      { equipmentId, name, archived: false },
+      {
+        onSuccess: (item) => {
+          onCreated(item.id);
+          setName("");
+          setOpen(false);
+        },
+      },
+    );
+  }
+
   if (!open) {
     return (
       <button type="button" className="self-start text-sm font-semibold text-accent hover:underline" onClick={() => setOpen(true)}>
@@ -20,23 +35,14 @@ function NewSubassembly({ equipmentId, onCreated }: { equipmentId: string; onCre
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <TextInput aria-label="Nome do novo subconjunto" value={name} placeholder="Nome do subconjunto" onChange={(event) => setName(event.target.value)} />
-        <Button
-          tone="ghost"
-          disabled={save.isPending}
-          onClick={() =>
-            save.mutate(
-              { equipmentId, name, archived: false },
-              {
-                onSuccess: (item) => {
-                  onCreated(item.id);
-                  setName("");
-                  setOpen(false);
-                },
-              },
-            )
-          }
-        >
+        <TextInput
+          aria-label="Nome do novo subconjunto"
+          value={name}
+          placeholder="Nome do subconjunto"
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => runOnEnter(event, create)}
+        />
+        <Button tone="ghost" disabled={save.isPending} onClick={create}>
           Criar
         </Button>
       </div>
