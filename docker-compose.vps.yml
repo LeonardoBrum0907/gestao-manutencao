@@ -4,9 +4,20 @@
 # Banco e API ficam na rede interna do compose.
 #
 # Subir: docker compose -f docker-compose.vps.yml up -d --build
+
+# O driver json-file do Docker não apaga log velho: sem limite, o log cresce até encher o disco.
+# 5 arquivos de 10 MB por serviço guardam semanas de pedidos de um usuário só.
+# Vale para o container quando ele é recriado (o deploy recria a API; db e caddy no próximo `up -d`).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:18-alpine
+    logging: *logging
     restart: unless-stopped
     environment:
       POSTGRES_USER: manutencao
@@ -21,6 +32,7 @@ services:
       retries: 30
 
   api:
+    logging: *logging
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -55,6 +67,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
+    logging: *logging
     restart: unless-stopped
     environment:
       API_DOMAIN: "${API_DOMAIN:?Defina API_DOMAIN no .env, por exemplo srv123456.hstgr.cloud}"

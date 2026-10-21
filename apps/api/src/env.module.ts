@@ -1,5 +1,6 @@
 import { Global, Injectable, Module } from "@nestjs/common";
 import { AppEnv, loadEnv, type VapidKeys } from "./env";
+import type { SentryConfig } from "./observabilidade/sentry-config";
 
 @Injectable()
 export class EnvService implements AppEnv {
@@ -12,6 +13,7 @@ export class EnvService implements AppEnv {
   readonly mcpToken: string | null;
   readonly gestorPassword: string | null;
   readonly vapid: VapidKeys | null;
+  readonly sentry: SentryConfig | null;
 
   constructor() {
     const env = loadEnv();
@@ -24,6 +26,7 @@ export class EnvService implements AppEnv {
     this.mcpToken = env.mcpToken;
     this.gestorPassword = env.gestorPassword;
     this.vapid = env.vapid;
+    this.sentry = env.sentry;
   }
 }
 

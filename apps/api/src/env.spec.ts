@@ -15,6 +15,7 @@ describe("loadEnv", () => {
     assert.equal(env.attachmentDir, "/data/attachments");
     assert.equal(env.cookieSecure, false);
     assert.equal(env.vapid, null);
+    assert.equal(env.sentry, null);
   });
 
   it("lê as chaves de aviso junto com o resto", () => {
