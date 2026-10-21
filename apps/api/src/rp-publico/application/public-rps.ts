@@ -16,6 +16,7 @@ import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import { rpDrafts } from "../../rp/application/rp-drafts";
 import { decisionPatch, type RpDecisionPatch } from "../../rp/domain/rp-decision";
 import type { PublicWriteLimiter } from "../domain/write-limiter";
+import { publicRpManifest, type PublicRpManifest } from "../domain/public-rp-manifest";
 import { publicFieldsOf, toPublicListItem, toPublicRp } from "../domain/public-rp-view";
 import { parseBulkReview } from "./parse-bulk-review";
 import { parsePublicRp, parseReviewRequest } from "./parse-public-rp";
@@ -73,6 +74,11 @@ export class PublicRps {
   // A tela pergunta quem é o link para mostrar ou esconder o que é só do supervisor.
   access(code: string): Promise<PublicRpAccessDto> {
     return this.links.assertActive(code);
+  }
+
+  // Manifesto do app instalado pelo link; link trocado ou removido dá 404 e o celular não oferece instalar.
+  async manifest(code: string): Promise<PublicRpManifest> {
+    return publicRpManifest(code, await this.links.assertActive(code));
   }
 
   async directory(code: string): Promise<PublicRpDirectoryDto> {
