@@ -24,7 +24,7 @@ function useNoIndex() {
 export function PublicRpShell() {
   const { code = "" } = useParams();
   useNoIndex();
-  // O app instalado abre em /rp/abrir, sem código: guarda o link para achar a página de novo.
+  // Guarda o link para o login oferecer a volta aos RPs (app instalado antes do manifesto por link).
   useEffect(() => rememberPublicCode(deviceStorage(), code), [code]);
   return (
     <div className="h-full overflow-y-auto bg-canvas text-app">

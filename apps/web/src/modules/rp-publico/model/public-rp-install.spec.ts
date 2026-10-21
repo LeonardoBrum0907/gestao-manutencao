@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { publicCodeFromLink, publicStartTarget, rememberPublicCode, rememberedPublicCode } from "./public-rp-install";
+import { publicStartTarget, rememberPublicCode, rememberedPublicCode } from "./public-rp-install";
+
+const CODE = "k8F3qP0zLm2xV7sR9tW1yB4n";
 
 class FakeDeviceStorage {
   items = new Map<string, string>();
@@ -22,11 +24,11 @@ class BlockedDeviceStorage {
 }
 
 describe("link guardado no aparelho", () => {
-  it("guarda o código e o app instalado abre a página dele", () => {
+  it("guarda o código e o login acha a página dele", () => {
     const storage = new FakeDeviceStorage();
-    rememberPublicCode(storage, "k8F3abcd_-12");
-    assert.equal(rememberedPublicCode(storage), "k8F3abcd_-12");
-    assert.equal(publicStartTarget(storage), "/rp/abrir/k8F3abcd_-12");
+    rememberPublicCode(storage, CODE);
+    assert.equal(rememberedPublicCode(storage), CODE);
+    assert.equal(publicStartTarget(storage), `/rp/abrir/${CODE}`);
   });
 
   it("sem link guardado não há para onde ir", () => {
@@ -37,25 +39,13 @@ describe("link guardado no aparelho", () => {
   it("ignora código fora do formato da API", () => {
     const storage = new FakeDeviceStorage();
     rememberPublicCode(storage, "novo");
+    assert.equal(rememberedPublicCode(storage), "");
     storage.items.set("rp-publico-link", "../login");
     assert.equal(rememberedPublicCode(storage), "");
   });
 
   it("armazenamento bloqueado não quebra a tela", () => {
-    assert.doesNotThrow(() => rememberPublicCode(new BlockedDeviceStorage(), "k8F3abcd"));
+    assert.doesNotThrow(() => rememberPublicCode(new BlockedDeviceStorage(), CODE));
     assert.equal(rememberedPublicCode(new BlockedDeviceStorage()), "");
-  });
-});
-
-describe("publicCodeFromLink", () => {
-  it("aceita o endereço inteiro, o caminho ou só o código", () => {
-    assert.equal(publicCodeFromLink(" https://gestao-manutencao.vercel.app/rp/abrir/k8F3abcd/novo "), "k8F3abcd");
-    assert.equal(publicCodeFromLink("/rp/abrir/k8F3abcd?x=1"), "k8F3abcd");
-    assert.equal(publicCodeFromLink("k8F3abcd"), "k8F3abcd");
-  });
-
-  it("devolve vazio quando o texto não é um link da página", () => {
-    assert.equal(publicCodeFromLink("https://gestao-manutencao.vercel.app/meu-dia"), "");
-    assert.equal(publicCodeFromLink(""), "");
   });
 });

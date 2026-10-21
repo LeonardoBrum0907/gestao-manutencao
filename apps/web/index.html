@@ -11,10 +11,12 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta id="app-title" name="apple-mobile-web-app-title" content="Caderno" />
     <script>
-      // Página pública de RPs: instala um app à parte, que abre nos RPs e não no login do coordenador.
+      // Página pública de RPs: instala um app à parte, que abre no próprio link e não no login do coordenador.
       // O manifesto do app inteiro abre em "/", que sem login vai para /login (thread "PWA abrindo login no link público").
-      if (location.pathname.indexOf("/rp/abrir") === 0) {
-        document.getElementById("app-manifest").setAttribute("href", "/rp-publico.webmanifest");
+      // A API monta o manifesto com o código no start_url: no iPhone o app instalado não vê o que o Safari guardou.
+      var publicLink = location.pathname.match(/^\/rp\/abrir\/([A-Za-z0-9_-]{24})(?:\/|$)/);
+      if (publicLink) {
+        document.getElementById("app-manifest").setAttribute("href", "/api/public/rp/" + publicLink[1] + "/manifest");
         document.getElementById("app-title").setAttribute("content", "RPs");
       }
     </script>
