@@ -16,6 +16,16 @@ export class PublicRpController {
     return this.rps.access(code);
   }
 
+  // Manifesto do app instalável da página pública (index.html do web aponta para cá em /rp/abrir/:code).
+  // Antes de ":id" para "manifest" não ser lido como id de RP.
+  @Get("manifest")
+  @Header("Content-Type", "application/manifest+json; charset=utf-8")
+  @Header("Cache-Control", "no-cache")
+  @Header("X-Robots-Tag", "noindex")
+  manifest(@Param("code") code: string) {
+    return this.rps.manifest(code);
+  }
+
   @Get("directory")
   @Header("X-Robots-Tag", "noindex")
   directory(@Param("code") code: string) {

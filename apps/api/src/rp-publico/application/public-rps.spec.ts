@@ -54,6 +54,14 @@ describe("PublicRps: link", () => {
     await links.replace("n".repeat(24), NOW);
     await assert.rejects(service.page(CODE, {}), rejects(404));
   });
+
+  it("manifesto do app instalado: abre no link e some quando o link é trocado", async () => {
+    const { links, service } = await setup();
+    assert.equal((await service.manifest(CODE)).start_url, `/rp/abrir/${CODE}`);
+    assert.equal((await service.manifest(SUP)).name, "RPs · Carlos");
+    await links.replace("n".repeat(24), NOW);
+    await assert.rejects(service.manifest(CODE), rejects(404));
+  });
 });
 
 describe("PublicRps: lista e leitura", () => {
