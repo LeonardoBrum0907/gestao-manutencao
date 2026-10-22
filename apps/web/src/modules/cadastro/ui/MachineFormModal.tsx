@@ -85,7 +85,7 @@ export function MachineFormModal({
           </SelectInput>
         </Field>
         <p className="-mt-2 text-xs text-muted">
-          O modelo (ex.: Blistadeira M91) dá os subconjuntos da máquina e é o mesmo equipamento da matriz de habilidades. Se ainda não existe, crie aqui.
+          O modelo (ex.: Equipamento A) dá os subconjuntos da máquina e é o mesmo equipamento da matriz de habilidades. Se ainda não existe, crie aqui.
         </p>
         <NewEquipmentModel onCreated={(equipmentId) => setDraft({ ...draft, equipmentId })} />
         <div className="grid gap-4 sm:grid-cols-2">

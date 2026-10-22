@@ -192,7 +192,7 @@ export function TechCardForm({ values, onChange }: Props) {
       <DetailFields values={values} set={set} />
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Tag do dispositivo">
-          <TextInput value={values.deviceTag} placeholder="Ex.: -X1664" onChange={(event) => set("deviceTag", event.target.value)} />
+          <TextInput value={values.deviceTag} placeholder="Ex.: -X100" onChange={(event) => set("deviceTag", event.target.value)} />
         </Field>
         <Field label="Termo original (DE/EN)">
           <TextInput value={values.originalTerm} placeholder="Ex.: Folgemaschine" onChange={(event) => set("originalTerm", event.target.value)} />

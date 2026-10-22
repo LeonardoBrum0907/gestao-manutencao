@@ -109,7 +109,7 @@ export function DocumentationPage() {
             type="search"
             autoFocus
             value={typed}
-            placeholder="Ex.: 127, Verbund, 938580, -X1664, correia"
+            placeholder="Ex.: A-001, correia, sensor"
             className="text-base"
             onChange={(event) => setTyped(event.target.value)}
           />

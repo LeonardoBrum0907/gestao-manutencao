@@ -28,6 +28,8 @@ FALSO
 echo "docker $*" >> "$LOG"
 case "$*" in
   *"ps -q api") echo cid ;;
+  *"ps -q demo-api"|*"ps -q demo-db") echo cid-demo ;;
+  "inspect -f {{.State.Health.Status}} cid-demo") echo healthy ;;
   # Como o compose real: lista também a imagem da dependência db.
   *"config --images api") printf 'postgres:18-alpine\ncaderno-gestor-api\n' ;;
   # Antes do "build api": "up … --no-build api" também termina em "build api".
@@ -47,6 +49,11 @@ FALSO
 rodar() {
   : > "$LOG"; rm -f "$ESTADO"
   FALHA="$1" PATH="$falsos:$PATH" bash "$raiz/caderno-admin" deploy > "$raiz/saida" 2>&1
+}
+
+rodar_demo() {
+  : > "$LOG"
+  PATH="$falsos:$PATH" bash "$raiz/caderno-admin" demo "$@" > "$raiz/saida" 2>&1
 }
 
 falhas=0
@@ -77,5 +84,27 @@ conferir "API que não sobe sai com erro" test "$codigo" -ne 0
 conferir "API que não sobe volta o código" no_log "git reset --keep sha-anterior"
 conferir "API que não sobe sobe a imagem anterior" no_log "up -d --no-deps --no-build --force-recreate api"
 conferir "rollback espera a anterior ficar healthy" grep -q "API healthy" "$raiz/saida"
+
+touch "$raiz/repo/.env.demo"
+compose_demo="docker compose -p caderno-demo -f docker-compose.demo.yml --env-file $raiz/repo/.env.demo"
+
+rodar_demo dados; codigo=$?
+conferir "demo dados sai com 0" test "$codigo" -eq 0
+conferir "demo dados apaga só o banco da demonstração" no_log "$compose_demo exec -T demo-db dropdb -U manutencao --if-exists --force manutencao"
+conferir "demo dados carrega os dados genéricos" no_log "$compose_demo exec -T demo-api node apps/api/dist/demo/seed-demo.js"
+conferir "demo dados nunca usa o compose da produção" fora_do_log "docker-compose.vps.yml"
+
+rodar_demo publicar; codigo=$?
+conferir "demo publicar sai com 0" test "$codigo" -eq 0
+conferir "demo publicar sobe com build" no_log "$compose_demo up -d --build"
+conferir "demo publicar nunca usa o compose da produção" fora_do_log "docker-compose.vps.yml"
+
+rodar_demo logs caddy; codigo=$?
+conferir "demo logs recusa serviço que não é da demonstração" test "$codigo" -ne 0
+
+rm "$raiz/repo/.env.demo"
+rodar_demo dados; codigo=$?
+conferir "demo sem .env.demo recusa" test "$codigo" -ne 0
+conferir "demo sem .env.demo não chama o docker" fora_do_log "docker"
 
 exit "$falhas"

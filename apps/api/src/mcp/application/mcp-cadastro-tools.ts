@@ -20,7 +20,7 @@ const minQualified = z.number().int().min(0).max(99).describe("quantos técnicos
 const machineFields = {
   lineId: id("da linha"),
   name: name("nome da máquina (ex.: Encartuchadeira)"),
-  equipmentId: modelId(", a versão da máquina (ex.: Blistadeira M91); null tira o modelo").nullable().optional(),
+  equipmentId: modelId(", a versão da máquina (ex.: Equipamento A); null tira o modelo").nullable().optional(),
   tag: optionalText("TAG da máquina"),
   manufacturer: optionalText("fabricante"),
   status: z.enum(MACHINE_STATUSES).describe(statusHelp),
@@ -79,7 +79,7 @@ function registerModelTools(server: McpServer, uc: McpUseCases, log: ToolLog): v
     "criar_modelo",
     {
       title: "Criar modelo de equipamento",
-      description: "Cadastra um modelo de equipamento: a versão da máquina (ex.: Blistadeira M91). É o mesmo equipamento da matriz de competências; o nome não se repete.",
+      description: "Cadastra um modelo de equipamento: a versão da máquina (ex.: Equipamento A). É o mesmo equipamento da matriz de competências; o nome não se repete.",
       inputSchema: { name: name("nome do modelo"), minQualified: minQualified.optional() },
       annotations: CREATE,
     },

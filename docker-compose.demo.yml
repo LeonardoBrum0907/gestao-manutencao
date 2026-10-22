@@ -1,0 +1,87 @@
+# Demonstração na VPS: o app inteiro (tela, API e banco) com dados genéricos, para apresentar
+# sem mostrar nada da produção. Banco, anexos e segredos próprios; o Caddy da produção entrega
+# https://DEMO_DOMAIN pela rede caderno-borda (deploy/vps/caddy/Caddyfile).
+#
+# Roda do mesmo checkout da produção (a main publicada), com segredos em .env.demo. Quem sobe e
+# recarrega os dados é o caderno-admin (`demo publicar`, `demo dados`, `demo parar`):
+#   docker compose -p caderno-demo -f docker-compose.demo.yml --env-file .env.demo up -d --build
+# --env-file troca o .env da produção pelo .env.demo, e não há env_file nos serviços: a demonstração
+# não recebe as chaves VAPID, então nenhum aviso chega no celular.
+# Os serviços têm nomes próprios (demo-*) porque na rede caderno-borda um "api" se confundiria
+# com a API de teste.
+name: caderno-demo
+
+services:
+  demo-db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: manutencao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env.demo}
+      POSTGRES_DB: manutencao
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U manutencao -d manutencao"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  demo-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: postgresql://manutencao:${POSTGRES_PASSWORD}@demo-db:5432/manutencao?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:?Defina SESSION_SECRET no .env.demo}
+      GESTOR_PASSWORD: ${GESTOR_PASSWORD:?Defina GESTOR_PASSWORD no .env.demo}
+      COOKIE_SECURE: "true"
+      PUBLIC_URL: https://${DEMO_DOMAIN:?Defina DEMO_DOMAIN no .env.demo}
+      ATTACHMENT_DIR: /data/attachments
+      PORT: "3000"
+      # Libera a carga de dados genéricos (apps/api/src/demo/seed-demo.ts); só este compose tem.
+      DEMO_SEED: permitido
+    volumes:
+      - attachments:/data/attachments
+    networks:
+      default:
+      borda:
+        # Nome pelo qual o Caddy da produção acha esta API.
+        aliases: [caderno-demo-api]
+    depends_on:
+      demo-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # Só entrega os arquivos da tela: o Caddy manda /api e o MCP direto para a demo-api.
+  demo-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+    restart: unless-stopped
+    networks:
+      borda:
+        aliases: [caderno-demo-web]
+
+networks:
+  # Criada pelo docker-compose.vps.yml, que precisa estar no ar antes.
+  borda:
+    external: true
+    name: caderno-borda
+
+volumes:
+  pgdata:
+  attachments:

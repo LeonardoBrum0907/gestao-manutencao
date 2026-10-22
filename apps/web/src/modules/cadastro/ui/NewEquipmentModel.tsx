@@ -12,7 +12,7 @@ export function NewEquipmentModel({ onCreated }: { onCreated: (id: string) => vo
     <InlineCreate
       label="+ Novo modelo"
       inputLabel="Nome do novo modelo"
-      placeholder="Ex.: Blistadeira M91"
+      placeholder="Ex.: Equipamento A"
       pending={save.isPending}
       error={save.error}
       onCreate={async (name) => onCreated((await save.mutateAsync({ name, archived: false })).id)}
