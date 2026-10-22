@@ -7,6 +7,7 @@ import { Icon } from "../../../design/ui/icons";
 import { usePendingReviews, usePublicAccess, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
 import { publicRpPath, rememberMember, rememberedMember } from "../model/public-rp";
 import { toggleSelected } from "../model/public-rp-export";
+import { withoutPublicRpFilters } from "../model/public-rp-filters";
 import { PublicRpFilters } from "./PublicRpFilters";
 import { ExportBar, ExportIntro, ReviewBar, RpListCard } from "./PublicRpSelection";
 import { deviceStorage } from "./public-rp-parts";
@@ -103,7 +104,8 @@ function ListHeader({ code, supervisorName, exporting, onExport }: ListHeaderPro
 }
 
 /**
- * Lista da página pública: só os RPs criados nela, filtráveis pelo técnico do aparelho, pela situação e pelo pedido de revisão.
+ * Lista da página pública: só os RPs criados nela, filtráveis pelo técnico do aparelho, pelo pedido de revisão e pelos
+ * filtros da lista do coordenador (menos Fábrica e Linha do texto).
  * No link de um supervisor, marcar RPs mostra a barra de aprovar, recusar ou pedir revisão, e Exportar planilha mostra só
  * os aprovados para baixar. No link da equipe nada disso aparece (e a API recusa).
  * @example <Route index element={<PublicRpListPage />} />
@@ -155,7 +157,13 @@ export function PublicRpListPage() {
             </div>
             <PendingButton code={code} memberId={memberId} active={params.get("review") === "pending"} onToggle={() => setFilter("review", params.get("review") ? "" : "pending")} />
           </div>
-          <PublicRpFilters params={params} setFilter={setFilter} exporting={selection.exporting} />
+          <PublicRpFilters
+            params={params}
+            setFilter={setFilter}
+            exporting={selection.exporting}
+            lines={directory.data?.lines ?? []}
+            onClear={() => setParams(withoutPublicRpFilters(params, selection.exporting), { replace: true })}
+          />
         </div>
       </Card>
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
