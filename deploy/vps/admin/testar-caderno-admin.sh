@@ -8,7 +8,7 @@ raiz="$(mktemp -d)"
 trap 'rm -rf "$raiz"' EXIT
 falsos="$raiz/bin"
 mkdir -p "$falsos" "$raiz/repo/deploy/vps"
-export LOG="$raiz/log" ESTADO="$raiz/estado"
+export LOG="$raiz/log" ESTADO="$raiz/estado" RECARGA="$raiz/recarga"
 
 criar_falsos() {
   printf '#!/bin/sh\necho backup >> "$LOG"\n' > "$raiz/repo/deploy/vps/backup.sh"
@@ -35,6 +35,9 @@ case "$*" in
   # Antes do "build api": "up … --no-build api" também termina em "build api".
   *"up -d --no-deps --no-build"*api) echo x >> "$ESTADO" ;;
   *"build api") [ "${FALHA:-}" != build ];;
+  # Com FALHA=caddy, o primeiro reload acha a porta de administração ainda fechada, como no Caddy recém-criado.
+  *"caddy reload"*)
+    [ "${FALHA:-}" != caddy ] || [ -e "$RECARGA" ] || { touch "$RECARGA"; echo "connection refused" >&2; exit 1; } ;;
   "inspect -f {{.Image}} cid") echo sha256:velha ;;
   "inspect -f {{.State.Health.Status}} cid")
     # Com FALHA=saude, só a segunda subida (a do rollback) fica healthy.
@@ -47,7 +50,7 @@ FALSO
 }
 
 rodar() {
-  : > "$LOG"; rm -f "$ESTADO"
+  : > "$LOG"; rm -f "$ESTADO" "$RECARGA"
   FALHA="$1" PATH="$falsos:$PATH" bash "$raiz/caderno-admin" deploy > "$raiz/saida" 2>&1
 }
 
@@ -73,6 +76,11 @@ conferir "deploy normal guarda a imagem anterior" no_log "docker tag sha256:velh
 conferir "deploy normal relê o Caddyfile" no_log "caddy reload"
 conferir "deploy normal não volta versão" fora_do_log "reset --keep"
 conferir "deploy normal limpa imagens sem nome" no_log "docker image prune -f"
+
+rodar caddy; codigo=$?
+conferir "Caddy recém-criado sem porta de administração não derruba o deploy" test "$codigo" -eq 0
+conferir "Caddy recém-criado: tenta o reload de novo" test "$(grep -c "caddy reload" "$LOG")" -ge 2
+conferir "Caddy recém-criado não volta versão" fora_do_log "reset --keep"
 
 rodar build; codigo=$?
 conferir "build quebrado sai com erro" test "$codigo" -ne 0

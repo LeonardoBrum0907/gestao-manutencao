@@ -101,7 +101,18 @@ guardar_imagem_atual() {
 # Sobe o Caddy se o compose dele mudou e relê o Caddyfile sem derrubar conexões.
 atualizar_caddy() {
   compose up -d --no-deps caddy
-  compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+  recarregar_caddy
+}
+
+# Logo depois de recriado, o Caddy ainda não abriu a porta de administração (2019) e o reload
+# recusa a conexão: foi o que derrubou o deploy do #149 (2026-10-22). Tenta de novo por até ~20 s.
+recarregar_caddy() {
+  local tentativa
+  for tentativa in $(seq 1 10); do
+    compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile && return 0
+    sleep 2
+  done
+  return 1
 }
 
 # Volta o código e a imagem para a versão de antes e sai com erro, para o GitHub Actions ficar vermelho.
