@@ -58,6 +58,9 @@ services:
     restart: unless-stopped
     environment:
       API_DOMAIN: "${API_DOMAIN:?Defina API_DOMAIN no .env, por exemplo srv123456.hstgr.cloud}"
+      # Endereço da demonstração (docker-compose.demo.yml). Sem ele no .env, o Caddy só
+      # registra erro de certificado para demo.invalid; a produção não é afetada.
+      DEMO_DOMAIN: "${DEMO_DOMAIN:-demo.invalid}"
     ports:
       - "80:80"
       - "443:443"
@@ -68,9 +71,18 @@ services:
       - ./deploy/vps/caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - default
+      - borda
     depends_on:
       api:
         condition: service_healthy
+
+networks:
+  default:
+  # Só o Caddy e os ambientes à parte (demonstração) entram aqui; o banco e a API da produção ficam fora.
+  borda:
+    name: caderno-borda
 
 volumes:
   pgdata:

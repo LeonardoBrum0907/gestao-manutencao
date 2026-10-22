@@ -8,6 +8,8 @@ set -euo pipefail
 readonly DONO=leo
 readonly PASTA=/home/leo/caderno-gestor
 readonly SERVICOS="api db caddy"
+# Demonstração (docker-compose.demo.yml): roda do mesmo checkout, com os segredos dela neste arquivo.
+readonly ENV_DEMO="$PASTA/.env.demo"
 
 uso() {
   cat <<'TEXTO'
@@ -18,6 +20,11 @@ Uso: sudo caderno-admin <comando>
   deploy                     backup, git pull da main, rebuild da API e espera healthy;
                              se a API nova não subir, volta código e imagem para a versão anterior
   reiniciar api              reinicia só o container da API
+  demo publicar              sobe a demonstração com o código da main publicada
+  demo dados                 apaga o banco e os anexos da demonstração e carrega os dados genéricos
+  demo parar                 desliga a demonstração (banco e anexos ficam guardados)
+  demo status                containers da demonstração
+  demo logs <api|db|web> [N]
 TEXTO
 }
 
@@ -130,6 +137,57 @@ cmd_deploy() {
   docker image prune -f
 }
 
+# A demonstração nunca usa o compose nem o .env da produção: só lê o código do checkout.
+compose_demo() {
+  como_dono docker compose -p caderno-demo -f docker-compose.demo.yml --env-file "$ENV_DEMO" "$@"
+}
+
+esperar_api_demo() {
+  esperar_saudavel "$(compose_demo ps -q demo-api)" "API da demonstração" && return 0
+  echo "API da demonstração não ficou healthy; veja: sudo caderno-admin demo logs api" >&2
+  return 1
+}
+
+demo_publicar() {
+  como_dono git log --oneline -1
+  compose_demo up -d --build
+  esperar_api_demo
+}
+
+# Banco novo: a API sobe, roda as migrações e o cadastro de partida, e a carga troca o catálogo
+# do SIGEM pelos dados genéricos. A carga se recusa a rodar num banco que já tem cadastro.
+demo_dados() {
+  compose_demo up -d demo-db
+  esperar_saudavel "$(compose_demo ps -q demo-db)" "Banco da demonstração"
+  compose_demo stop demo-api
+  compose_demo exec -T demo-db dropdb -U manutencao --if-exists --force manutencao
+  compose_demo exec -T demo-db createdb -U manutencao manutencao
+  compose_demo up -d demo-api
+  esperar_api_demo
+  compose_demo exec -T demo-api sh -c 'rm -rf /data/attachments/* /data/attachments/.[!.]*'
+  compose_demo exec -T demo-api node apps/api/dist/demo/seed-demo.js
+}
+
+demo_logs() {
+  local servico="${1:-}" linhas="${2:-200}"
+  validar_logs "api db web" "$servico" "$linhas"
+  compose_demo logs --no-color --tail "$linhas" "demo-$servico"
+}
+
+cmd_demo() {
+  local acao="${1:-}"
+  shift || true
+  [[ -f "$ENV_DEMO" ]] || falhar "demonstração não montada: falta $ENV_DEMO (passos no README)"
+  case "$acao" in
+    publicar) demo_publicar ;;
+    dados) demo_dados ;;
+    parar) compose_demo stop ;;
+    status) compose_demo ps ;;
+    logs) demo_logs "$@" ;;
+    *) falhar "demo '$acao' desconhecido; esperado publicar, dados, parar, status ou logs" ;;
+  esac
+}
+
 cmd_reiniciar() {
   [[ "${1:-}" == api ]] || falhar "só 'reiniciar api' é permitido; recebido: '${1:-}'"
   compose restart api
@@ -145,6 +203,7 @@ principal() {
     backup) cmd_backup ;;
     deploy) cmd_deploy ;;
     reiniciar) cmd_reiniciar "$@" ;;
+    demo) cmd_demo "$@" ;;
     *) falhar "comando '$comando' desconhecido" ;;
   esac
 }

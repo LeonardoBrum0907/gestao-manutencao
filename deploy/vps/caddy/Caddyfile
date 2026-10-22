@@ -13,3 +13,11 @@
 		request_buffers 10MiB
 	}
 }
+
+# Demonstração (docker-compose.demo.yml): o app com dados genéricos, para apresentar.
+# A tela vem da demo-web; /api, /health e as rotas do MCP vão direto para a demo-api.
+{$DEMO_DOMAIN} {
+	@api path /api/* /health /mcp /mcp/* /authorize /token /register /revoke /.well-known/*
+	reverse_proxy @api caderno-demo-api:3000
+	reverse_proxy caderno-demo-web:80
+}
