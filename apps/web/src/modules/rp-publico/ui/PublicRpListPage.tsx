@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { RP_PUBLIC_DECISION_LABELS, RP_PUBLIC_DECISIONS, type PublicRpDirectoryDto, type PublicRpListItemDto } from "@manutencao/shared";
+import type { PublicRpDirectoryDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
-import { Button, Card, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
+import { Button, Card, Field, Notice, SelectInput } from "../../../design/ui/controls";
 import { Icon } from "../../../design/ui/icons";
-import { rpStatusOptions } from "../../rp/model/rp";
 import { usePendingReviews, usePublicAccess, usePublicDirectory, usePublicRpPages } from "../data/public-rp";
 import { publicRpPath, rememberMember, rememberedMember } from "../model/public-rp";
 import { toggleSelected } from "../model/public-rp-export";
+import { PublicRpFilters } from "./PublicRpFilters";
 import { ExportBar, ExportIntro, ReviewBar, RpListCard } from "./PublicRpSelection";
 import { deviceStorage } from "./public-rp-parts";
 import { useDragSelect } from "./use-drag-select";
@@ -50,39 +50,6 @@ function useRememberedMemberParam(params: URLSearchParams, setParams: (next: URL
     // Só na chegada: depois quem manda é o que a pessoa escolhe.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-}
-
-// Na exportação a avaliação fica presa em Aprovado: o filtro some para ninguém trocar sem querer.
-function Filters({ params, setFilter, exporting }: { params: URLSearchParams; setFilter: (key: string, value: string) => void; exporting: boolean }) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <Field label="Status da máquina">
-        <SelectInput value={params.get("status") ?? ""} onChange={(event) => setFilter("status", event.target.value)}>
-          <option value="">Todos</option>
-          {rpStatusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </SelectInput>
-      </Field>
-      {exporting ? null : (
-        <Field label="Avaliação do supervisor">
-          <SelectInput value={params.get("decision") ?? ""} onChange={(event) => setFilter("decision", event.target.value)}>
-            <option value="">Todas</option>
-            {RP_PUBLIC_DECISIONS.map((decision) => (
-              <option key={decision} value={decision}>
-                {RP_PUBLIC_DECISION_LABELS[decision]}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-      )}
-      <Field label="Buscar">
-        <TextInput type="search" value={params.get("q") ?? ""} placeholder="Problema, descrição ou causa" onChange={(event) => setFilter("q", event.target.value)} />
-      </Field>
-    </div>
-  );
 }
 
 // Marcar fica sempre à mão; Exportar é um modo à parte que mostra só os aprovados (export=1 e decision=approved
@@ -188,7 +155,7 @@ export function PublicRpListPage() {
             </div>
             <PendingButton code={code} memberId={memberId} active={params.get("review") === "pending"} onToggle={() => setFilter("review", params.get("review") ? "" : "pending")} />
           </div>
-          <Filters params={params} setFilter={setFilter} exporting={selection.exporting} />
+          <PublicRpFilters params={params} setFilter={setFilter} exporting={selection.exporting} />
         </div>
       </Card>
       {list.isError ? <Notice>{errorMessage(list.error)}</Notice> : null}
