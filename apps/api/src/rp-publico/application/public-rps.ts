@@ -33,8 +33,9 @@ import {
   type RpRevisionStore,
 } from "./ports";
 
-// Filtros que a lista pública aceita; a origem é sempre "public".
-const PUBLIC_FILTERS = ["memberId", "status", "review", "checked", "decision", "q", "from", "to", "lineId", "cursor", "limit"] as const;
+// Filtros que a lista pública aceita; a origem é sempre "public". Os mesmos da lista do coordenador,
+// menos Fábrica e Linha do texto (pedido do Léo, 2026-10-22).
+const PUBLIC_FILTERS = ["memberId", "status", "review", "checked", "decision", "q", "from", "to", "lineId", "tag", "repeated", "cursor", "limit"] as const;
 
 function publicQuery(query: RpListQuery): RpListQuery {
   const picked: RpListQuery = { source: "public" };
