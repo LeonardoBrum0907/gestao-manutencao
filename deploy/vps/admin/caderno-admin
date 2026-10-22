@@ -43,10 +43,15 @@ cmd_status() {
   free -h | head -2
 }
 
+validar_logs() {
+  local servicos="$1" servico="$2" linhas="$3"
+  [[ " $servicos " == *" $servico "* ]] || falhar "serviço '$servico' inválido; esperado um de: $servicos"
+  [[ "$linhas" =~ ^[0-9]{1,4}$ && "$linhas" -ge 1 && "$linhas" -le 2000 ]] || falhar "linhas '$linhas' inválido; esperado número de 1 a 2000"
+}
+
 cmd_logs() {
   local servico="${1:-}" linhas="${2:-200}"
-  [[ " $SERVICOS " == *" $servico "* ]] || falhar "serviço '$servico' inválido; esperado um de: $SERVICOS"
-  [[ "$linhas" =~ ^[0-9]{1,4}$ && "$linhas" -ge 1 && "$linhas" -le 2000 ]] || falhar "linhas '$linhas' inválido; esperado número de 1 a 2000"
+  validar_logs "$SERVICOS" "$servico" "$linhas"
   compose logs --no-color --tail "$linhas" "$servico"
 }
 
@@ -54,14 +59,19 @@ cmd_backup() {
   como_dono "$PASTA/deploy/vps/backup.sh"
 }
 
-# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
-esperar_api() {
-  local id tentativa
-  id="$(compose ps -q api)"
+# Espera o healthcheck de um container ficar healthy (até ~2 min).
+esperar_saudavel() {
+  local id="$1" nome="$2" tentativa
   for tentativa in $(seq 1 40); do
-    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "API healthy"; return 0; }
+    [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" == healthy ]] && { echo "$nome healthy"; return 0; }
     sleep 3
   done
+  return 1
+}
+
+# Espera o healthcheck do compose marcar a API como healthy (até ~2 min).
+esperar_api() {
+  esperar_saudavel "$(compose ps -q api)" API && return 0
   echo "API não ficou healthy; veja: sudo caderno-admin logs api" >&2
   return 1
 }
