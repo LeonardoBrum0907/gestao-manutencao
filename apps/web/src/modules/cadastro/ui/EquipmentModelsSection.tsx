@@ -62,7 +62,7 @@ export function EquipmentModelsSection() {
     <div>
       <SectionTitle
         title="Modelos de equipamento"
-        text="O tipo de cada máquina (ex.: Encartuchadeira CAM). Os subconjuntos ficam no modelo, e o modelo é o mesmo equipamento da matriz de habilidades. Também dá para criar o modelo no cadastro da máquina, em “+ Novo modelo”. Arquivado sai das listas, mas o histórico fica."
+        text="O tipo de cada máquina (ex.: Equipamento B). Os subconjuntos ficam no modelo, e o modelo é o mesmo equipamento da matriz de habilidades. Também dá para criar o modelo no cadastro da máquina, em “+ Novo modelo”. Arquivado sai das listas, mas o histórico fica."
       />
       {catalog.isPending ? <p className="text-sm text-muted">Carregando…</p> : null}
       {catalog.isError ? <Notice>{errorMessage(catalog.error)}</Notice> : null}
@@ -73,7 +73,7 @@ export function EquipmentModelsSection() {
             nameHeader="Modelo"
             emptyText="Nenhum modelo ativo."
             addLabel="Adicionar modelo"
-            placeholder="Ex.: Encartuchadeira CAM"
+            placeholder="Ex.: Equipamento B"
             onAdd={(name) => save.mutateAsync({ name, archived: false })}
             alternative={(equipment, done) => ({
               label: "Arquivar em vez disso",
