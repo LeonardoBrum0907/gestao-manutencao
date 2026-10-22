@@ -74,6 +74,12 @@ describe("PublicRps: lista e leitura", () => {
     assert.deepEqual(book.queries[0], { source: "public", memberId: "m1" });
   });
 
+  it("repassa TAG e falha repetida, mas não Fábrica nem Linha do texto", async () => {
+    const { book, service } = await setup();
+    await service.page(CODE, { lineId: "l1", tag: "EBS-BLI-31", repeated: "true", factoryId: "f1", line: "Cam 08" });
+    assert.deepEqual(book.queries[0], { source: "public", lineId: "l1", tag: "EBS-BLI-31", repeated: "true" });
+  });
+
   it("aceita o filtro de aprovados e diz quais o coordenador conferiu", async () => {
     const { book, service } = await setup();
     book.rows = [sampleRp({ id: "ok", checkedAt: NOW.toISOString() }), sampleRp({ id: "novo" })];
