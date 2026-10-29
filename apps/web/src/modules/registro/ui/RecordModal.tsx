@@ -30,7 +30,7 @@ function ModalBar({ record, titleId, onRemove }: { record: RecordDto | undefined
   const after = modal.neighbor(1);
   return (
     <header className="flex h-12 shrink-0 items-center gap-1 border-b border-line pl-4 pr-2">
-      <h2 id={titleId} className="mr-auto inline-flex items-center gap-1.5 text-[13px] text-app">
+      <h2 id={titleId} className="mr-auto inline-flex items-center gap-1.5 text-sm text-app">
         {record ? <Icon name={recordTypeIcon[record.type]} className="h-4 w-4 text-muted" /> : null}
         {record ? recordShortName(record.type) : "Registro"}
       </h2>

@@ -131,6 +131,13 @@ const paths = {
   ),
   send: <path d="M12 19V5M6 11l6-6 6 6" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  bell: (
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9" />
+      <path d="M10.2 20.5a2 2 0 0 0 3.6 0" />
+    </>
+  ),
   up: <path d="M6 15l6-6 6 6" />,
   down: <path d="M6 9l6 6 6-6" />,
   notes: <path d="M4 7h16M4 12h16M4 17h10" />,
