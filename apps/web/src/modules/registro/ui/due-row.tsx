@@ -23,7 +23,8 @@ export function DueRow({ record, onChange }: { record: RecordDto; onChange: (due
           clearable
           value={saved}
           onChange={(time) => onChange(withDueClock(current, time))}
-          className="text-app hover:!bg-card"
+          // 15px como as outras etiquetas da coluna lateral (o recordValueText, PR #153), escrito por inteiro para o Tailwind.
+          className="text-app hover:!bg-card !text-[15px]"
         />
       ) : null}
     </>

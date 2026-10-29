@@ -9,6 +9,7 @@ import { chamadoHref, shortDay } from "../../turno/model/chamado";
 import { useBoardChange } from "../data/board";
 import { useAddAttachment, useRemoveAttachment } from "../data/records";
 import { useRecordSave } from "./record-save";
+import { recordNoteText, recordValueText } from "./record-text";
 
 // Coluna principal do modal do registro: círculo e texto no alto, descrição, de onde veio e anexos.
 
@@ -104,8 +105,8 @@ function FromChamado({ chamadoId }: { chamadoId: string }) {
   if (!chamado.data) return null;
   const data = chamado.data;
   return (
-    <Link to={chamadoHref(data)} className="block rounded-lg border border-line px-3 py-2 text-sm transition hover:bg-chip">
-      <span className="block text-xs font-semibold text-muted">
+    <Link to={chamadoHref(data)} className={`block rounded-lg border border-line px-3 py-2 ${recordValueText} transition hover:bg-chip`}>
+      <span className={`block ${recordNoteText} font-semibold text-muted`}>
         Gerada do chamado{data.dayNumber ? ` nº ${data.dayNumber}` : ""} de {shortDay(data.day)}
       </span>
       <span className="mt-0.5 line-clamp-2 block text-app">{data.body}</span>
@@ -122,7 +123,7 @@ function Attachments({ record }: { record: RecordDto }) {
   return (
     <div className="flex flex-col gap-1">
       {record.attachments.map((attachment) => (
-        <div key={attachment.id} className="flex items-center gap-2 text-sm">
+        <div key={attachment.id} className={`flex items-center gap-2 ${recordValueText}`}>
           <Icon name="clip" className="h-4 w-4 text-muted" />
           <a className="min-w-0 truncate text-accent hover:underline" href={`/api/records/${record.id}/attachments/${attachment.id}`} target="_blank" rel="noopener">
             {attachment.fileName}
@@ -132,7 +133,7 @@ function Attachments({ record }: { record: RecordDto }) {
           </button>
         </div>
       ))}
-      <button type="button" onClick={() => input.current?.click()} disabled={add.isPending} className="inline-flex w-fit items-center gap-2 rounded-md px-1 py-1 text-sm text-muted transition hover:text-app disabled:opacity-50">
+      <button type="button" onClick={() => input.current?.click()} disabled={add.isPending} className={`inline-flex w-fit items-center gap-2 rounded-md px-1 py-1 ${recordValueText} text-muted transition hover:text-app disabled:opacity-50`}>
         <Icon name="plus" className="h-4 w-4" />
         {add.isPending ? "Anexando…" : "Anexar arquivo"}
       </button>
@@ -170,8 +171,8 @@ export function RecordMain({ record }: { record: RecordDto }) {
         />
       </div>
       <div className="flex items-start gap-2 pl-7">
-        <Icon name="notes" className="mt-1 h-4 w-4 shrink-0 text-muted" />
-        <InlineText value={record.notes ?? ""} placeholder="Descrição" className="text-sm text-app" onCommit={(notes) => save({ notes: notes.trim() || null })} />
+        <Icon name="notes" className="mt-1.5 h-4 w-4 shrink-0 text-muted" />
+        <InlineText value={record.notes ?? ""} placeholder="Descrição" className={`${recordValueText} leading-relaxed text-app`} onCommit={(notes) => save({ notes: notes.trim() || null })} />
       </div>
       {record.chamadoId ? (
         <div className="pl-8">

@@ -12,13 +12,14 @@ import { DueRow } from "./due-row";
 import { InlineText } from "./record-main";
 import { ReminderRow } from "./reminder-row";
 import { useRecordSave } from "./record-save";
+import { recordNoteText, recordValueText } from "./record-text";
 
 // Coluna lateral do modal do registro (como a do Todoist): cada campo grava assim que muda.
 
 function SideRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-1 border-b border-line py-3 first:pt-0">
-      <h3 className="text-xs font-semibold text-muted">{label}</h3>
+      <h3 className={`${recordNoteText} font-semibold text-muted`}>{label}</h3>
       <div className="flex flex-wrap items-center gap-1">{children}</div>
     </section>
   );
@@ -32,15 +33,15 @@ function TypeRow({ record }: { record: RecordDto }) {
     return (
       <span className="flex flex-col items-start gap-0.5">
         {chip}
-        <span className="text-xs text-muted">Escolha Tarefa, Problema ou Feedback para levar a Registros.</span>
+        <span className={`${recordNoteText} text-muted`}>Escolha Tarefa, Problema ou Feedback para levar a Registros.</span>
       </span>
     );
   }
   if (!blocked) return chip;
   return (
-    <span className="flex flex-col gap-0.5 text-[13px]">
+    <span className={`flex flex-col gap-0.5 ${recordValueText}`}>
       <span className="text-app">{recordShortName(record.type)}</span>
-      <span className="text-xs text-muted">{blocked}</span>
+      <span className={`${recordNoteText} text-muted`}>{blocked}</span>
     </span>
   );
 }
@@ -97,8 +98,8 @@ function TaskRows({ record }: { record: RecordDto }) {
       </SideRow>
       <SideRow label="Local">
         <FactoryChip value={record.factoryId ?? ""} onChange={(factoryId) => save({ factoryId: factoryId || null })} />
-        <InlineText value={record.line ?? ""} placeholder="Linha" singleLine className="text-[13px] text-app" onCommit={(line) => save({ line: line.trim() || null })} />
-        <InlineText value={record.tag ?? ""} placeholder="TAG" singleLine className="text-[13px] text-app" onCommit={(tag) => save({ tag: tag.trim() || null })} />
+        <InlineText value={record.line ?? ""} placeholder="Linha" singleLine className={`${recordValueText} text-app`} onCommit={(line) => save({ line: line.trim() || null })} />
+        <InlineText value={record.tag ?? ""} placeholder="TAG" singleLine className={`${recordValueText} text-app`} onCommit={(tag) => save({ tag: tag.trim() || null })} />
       </SideRow>
     </>
   );
@@ -125,7 +126,7 @@ function ProblemRows({ record }: { record: RecordDto }) {
         <StatusChip record={record} />
       </SideRow>
       <SideRow label="Onde">
-        {record.lineLabel && !record.lineId ? <span className="w-full text-[13px] text-app">{record.lineLabel}</span> : null}
+        {record.lineLabel && !record.lineId ? <span className={`w-full ${recordValueText} text-app`}>{record.lineLabel}</span> : null}
         <PlaceChips value={placeOf(record)} onChange={savePlace} />
       </SideRow>
       <SideRow label="Quem, se souber">
@@ -160,7 +161,7 @@ function WhenRow({ record }: { record: RecordDto }) {
       aria-label="Quando aconteceu"
       defaultValue={saved}
       onBlur={(event) => event.target.value && event.target.value !== saved && save({ occurredAt: fromLocalInput(event.target.value) })}
-      className="-ml-1 rounded-md bg-transparent px-1 py-1 text-[13px] text-app outline-none hover:bg-card focus:bg-card"
+      className={`-ml-1 rounded-md bg-transparent px-1 py-1 ${recordValueText} text-app outline-none hover:bg-card focus:bg-card`}
     />
   );
 }
@@ -179,7 +180,7 @@ export function RecordSide({ record }: { record: RecordDto }) {
       {record.type === "problem" ? <ProblemRows record={record} /> : null}
       {record.type === "feedback" ? <FeedbackRows record={record} /> : null}
       <SideRow label="Quando aconteceu">
-        <Icon name="calendar" className="h-3.5 w-3.5 text-muted" />
+        <Icon name="calendar" className="h-4 w-4 text-muted" />
         <WhenRow record={record} />
       </SideRow>
     </PlainChipsArea>
