@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { ChamadoBody, ChamadoDto, ChamadoShift, RecordPriority, RecordStatus } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
+import { TimeInput } from "../../../design/ui/time-input";
 import { PanelFooter, PanelSection, PanelTag, DetailModal } from "../../../design/ui/panel";
 import { RemovalPrompt } from "../../../design/ui/removal";
 import { useToast } from "../../../design/ui/toast";
@@ -375,7 +376,7 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
             <TextInput type="date" value={draft.day} onChange={(event) => set("day", event.target.value)} />
           </Field>
           <Field label="Abertura">
-            <TextInput type="time" value={draft.opened} onChange={(event) => set("opened", event.target.value)} />
+            <TimeInput clearable value={draft.opened} onChange={(time) => set("opened", time)} />
           </Field>
           <div className="flex min-w-0 flex-col gap-1.5 text-sm text-app">
             <span className="flex items-baseline justify-between gap-2">
@@ -386,7 +387,7 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
                 Agora
               </button>
             </span>
-            <TextInput id="chamado-fechamento" type="time" value={draft.closed} onChange={(event) => set("closed", event.target.value)} />
+            <TimeInput id="chamado-fechamento" aria-label="Fechamento" clearable value={draft.closed} onChange={(time) => set("closed", time)} />
             {draft.closed && draft.closedDay > draft.day ? <span className="text-xs text-muted">em {shortDay(draft.closedDay)}</span> : null}
           </div>
         </div>

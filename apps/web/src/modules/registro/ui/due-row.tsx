@@ -1,8 +1,8 @@
 import type { RecordDto } from "@manutencao/shared";
+import { TimeInput } from "../../../design/ui/time-input";
 import { dueDay, todayDay } from "../model/board";
 import { dueClockOf, withDueClock, withDueDay, type DueValue } from "../model/due-time";
 import { DueChip } from "./chips";
-import { recordValueText } from "./record-text";
 
 /**
  * Prazo da tarefa na ficha: o dia (Hoje, Amanhã, calendário) e, opcional, o horário. Sem horário vale o dia
@@ -16,14 +16,15 @@ export function DueRow({ record, onChange }: { record: RecordDto; onChange: (due
     <>
       <DueChip day={record.dueAt ? dueDay(record.dueAt) : null} today={todayDay()} onChange={(day) => onChange(withDueDay(current, day))} />
       {record.dueAt ? (
-        <input
-          key={saved}
-          type="time"
+        <TimeInput
+          variant="chip"
           aria-label="Horário do prazo"
-          defaultValue={saved}
-          // Grava ao sair do campo: o seletor muda a cada parte digitada.
-          onBlur={(event) => event.target.value !== saved && onChange(withDueClock(current, event.target.value))}
-          className={`rounded-md bg-transparent px-1 py-1 ${recordValueText} text-app outline-none hover:bg-card focus:bg-card`}
+          placeholder="Horário"
+          clearable
+          value={saved}
+          onChange={(time) => onChange(withDueClock(current, time))}
+          // 15px como as outras etiquetas da coluna lateral (o recordValueText, PR #153), escrito por inteiro para o Tailwind.
+          className="text-app hover:!bg-card !text-[15px]"
         />
       ) : null}
     </>
