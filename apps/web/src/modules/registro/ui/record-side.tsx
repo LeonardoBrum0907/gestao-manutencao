@@ -11,6 +11,7 @@ import { Chip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, T
 import { DueRow } from "./due-row";
 import { InlineText } from "./record-main";
 import { ReminderRow } from "./reminder-row";
+import { RepeatRow } from "./repeat-row";
 import { useRecordSave } from "./record-save";
 
 // Coluna lateral do modal do registro (como a do Todoist): cada campo grava assim que muda.
@@ -82,6 +83,9 @@ function TaskRows({ record }: { record: RecordDto }) {
     <>
       <SideRow label="Prazo">
         <DueRow record={record} onChange={(due) => save(due)} />
+      </SideRow>
+      <SideRow label="Repetir">
+        <RepeatRow record={record} onChange={(patch) => save(patch)} />
       </SideRow>
       <SideRow label="Lembretes">
         <ReminderRow record={record} />

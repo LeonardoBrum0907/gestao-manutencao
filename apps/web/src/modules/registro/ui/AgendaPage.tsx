@@ -12,7 +12,9 @@ import { CheckRow, InProgressChip } from "./checklist";
 import { useColumnsDnd, type ColumnDrop, type DndColumn } from "./columns-dnd";
 import { RecordModalHost } from "./RecordModal";
 import { useRecordLink } from "./record-link";
-import { AddTask, DueText, PassToToday, dueClock, taskRing, useTaskToggle } from "./task-parts";
+import { RepeatGhostList } from "./repeat-ghosts";
+import { repeatGhosts } from "../model/task-repeat";
+import { AddTask, DueText, PassToToday, RepeatMark, dueClock, taskRing, useTaskToggle } from "./task-parts";
 
 const navButton = "grid h-9 min-w-9 place-items-center rounded-control border border-line bg-surface px-2 text-sm text-app transition hover:bg-chip disabled:opacity-40";
 
@@ -77,6 +79,7 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
   const { fading, toggle } = useTaskToggle();
   const days = agendaWeek(addDays(today, week * AGENDA_DAYS));
   const lists = agendaLists(items, days, today);
+  const ghosts = repeatGhosts(items, days, today);
   const byId = new Map(items.map((item) => [item.id, item]));
   const dndLists: DndColumn[] = Object.entries(lists).map(([key, ids]) => ({ key, ids, accepts: key !== OVERDUE_KEY }));
 
@@ -102,8 +105,9 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
     const time = item.dueAt && listKey !== OVERDUE_KEY ? dueClock(item.dueAt, item.dueHasTime) : null;
     const info = (
       <>
-        {listKey === OVERDUE_KEY && item.dueAt ? <DueText dueAt={item.dueAt} hasTime={item.dueHasTime} today={today} overdue /> : null}
+        {listKey === OVERDUE_KEY && item.dueAt ? <DueText dueAt={item.dueAt} hasTime={item.dueHasTime} today={today} overdue repeat={item.repeat} /> : null}
         {time ? <span className="tabular-nums">{time}</span> : null}
+        {listKey !== OVERDUE_KEY ? <RepeatMark repeat={item.repeat} /> : null}
         {item.status === "in_progress" && !checked ? <InProgressChip /> : null}
       </>
     );
@@ -115,7 +119,7 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
         onToggle={() => toggle(item)}
         link={linkOf(item)}
         title={item.body}
-        info={listKey === OVERDUE_KEY || time || item.status === "in_progress" ? info : undefined}
+        info={listKey === OVERDUE_KEY || time || item.repeat || item.status === "in_progress" ? info : undefined}
       />
     );
   }
@@ -142,6 +146,7 @@ function AgendaBoard({ today, items }: { today: string; items: BoardItemDto[] })
                 footer={<AddTask id={`nova-tarefa-${day}`} day={day} today={today} label="Adicionar" />}
               >
                 <AgendaList listKey={key} ids={ids(key)} accepts renderCard={card} />
+                <RepeatGhostList ghosts={ghosts[day]} linkOf={(ghost) => linkOf(ghost.item)} />
               </AgendaDayColumn>
             );
           })}

@@ -8,6 +8,7 @@ import type {
   RecordPriority,
   RecordStatus,
   RecordType,
+  TaskRepeat,
 } from "@manutencao/shared";
 import { api } from "../../../app/http";
 
@@ -79,6 +80,8 @@ export type TaskSheetBody = {
   dueAt: string | null;
   dueHasTime: boolean;
   notes: string | null;
+  // Sem o campo, a API mantém a regra gravada; null tira a repetição.
+  repeat?: TaskRepeat | null;
 };
 
 export type FeedbackSheetBody = {

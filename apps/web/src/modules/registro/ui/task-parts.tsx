@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { RECORD_PRIORITY_LABELS, type BoardItemDto, type RecordPriority } from "@manutencao/shared";
+import { RECORD_PRIORITY_LABELS, taskRepeatLabel, type BoardItemDto, type RecordPriority, type TaskRepeat } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
+import { Icon } from "../../../design/ui/icons";
 import { useToast } from "../../../design/ui/toast";
 import { changeOnBoard, refreshRecords, useAddTask, useBoardChange } from "../data/board";
 import { dueLabel } from "../model/board";
@@ -47,8 +48,19 @@ export function dueClock(dueAt: string, hasTime: boolean): string | null {
   return hasTime ? dueClockOf(dueAt) : null;
 }
 
-/** Prazo com ícone: vermelho se atrasada, verde se hoje. Ex.: "📅 10 out". */
-export function DueText({ dueAt, hasTime, today, overdue }: { dueAt: string; hasTime: boolean; today: string; overdue: boolean }) {
+/** Setas da tarefa que se repete, com a regra no texto para leitor de tela e no "title". Ex.: `<RepeatMark repeat={item.repeat} />` */
+export function RepeatMark({ repeat }: { repeat: TaskRepeat | null }) {
+  if (!repeat) return null;
+  const label = taskRepeatLabel(repeat);
+  return (
+    <span title={label} aria-label={`Repete: ${label}`} role="img" className="inline-flex text-muted">
+      <Icon name="repeat" className="h-3.5 w-3.5" />
+    </span>
+  );
+}
+
+/** Prazo com ícone: vermelho se atrasada, verde se hoje; com as setas quando a tarefa se repete. Ex.: "📅 10 out". */
+export function DueText({ dueAt, hasTime, today, overdue, repeat = null }: { dueAt: string; hasTime: boolean; today: string; overdue: boolean; repeat?: TaskRepeat | null }) {
   const label = dueLabel(dueAt, today);
   const tone = overdue ? "text-danger" : label === "Hoje" ? "text-accent" : "text-muted";
   const time = dueClock(dueAt, hasTime);
@@ -57,6 +69,7 @@ export function DueText({ dueAt, hasTime, today, overdue }: { dueAt: string; has
       <CalendarIcon />
       {label}
       {time ? ` ${time}` : ""}
+      <RepeatMark repeat={repeat} />
     </span>
   );
 }

@@ -24,12 +24,13 @@ function currentFields(record: RecordDto): SheetFields {
     lineLabel: record.lineLabel,
     machineId: record.machineId,
     subassemblyId: record.subassemblyId,
+    repeat: record.repeat,
   };
 }
 
 function taskBody(fields: SheetFields): TaskSheetBody {
-  const { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes } = fields;
-  return { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes };
+  const { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes, repeat } = fields;
+  return { body, occurredAt, status, memberId, factoryId, tag, line, priority, dueAt, dueHasTime, notes, repeat };
 }
 
 function feedbackBody(fields: SheetFields): FeedbackSheetBody {
