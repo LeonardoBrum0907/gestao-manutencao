@@ -445,6 +445,12 @@ model Record {
   // Reabrir apaga; concluídos antes de 2026-10-12 ganharam o updatedAt. Chamado usa closedAt.
   completedAt   DateTime?
   reminders     TaskReminder[]
+  // Tarefa que se repete: a regra (task-repeat no shared). Ao concluir, nasce a próxima com a mesma regra.
+  repeat        Json?
+  // A tarefa anterior da série. Único: duas conclusões ao mesmo tempo não fazem nascer duas próximas.
+  repeatOfId    String?            @unique
+  repeatOf      Record?            @relation("TaskRepeat", fields: [repeatOfId], references: [id], onDelete: SetNull)
+  repeatNext    Record?            @relation("TaskRepeat")
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
