@@ -10,7 +10,7 @@ function member(id: string, name: string, extra: Partial<MemberDto> = {}): Membe
   };
 }
 
-const link = (memberId: string): RpSupervisorLinkDto => ({ id: `l-${memberId}`, memberId, name: "", code: "", createdAt: "" });
+const link = (memberId: string): RpSupervisorLinkDto => ({ id: `l-${memberId}`, memberId, name: "", code: "", createdAt: "", stillSupervisor: true });
 
 describe("supervisorChoices", () => {
   it("só supervisores ativos sem link, em ordem de nome", () => {
