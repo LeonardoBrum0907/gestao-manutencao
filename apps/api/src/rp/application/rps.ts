@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { RpDraftDto, RpDto, RpDuplicateDto, RpMemberSummaryDto, RpPageDto, RpSource } from "@manutencao/shared";
-import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
+import { assertMachineSpot, type MachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
@@ -55,7 +55,7 @@ export class Rps {
    */
   async updateFrom(id: string, input: RpInput): Promise<RpDto> {
     const current = await this.get(id);
-    await this.assertRefs(input, current.subassemblyId);
+    await this.assertRefs(input, current);
     return this.rps.update(id, this.write(input, current.problemRecordId));
   }
 
@@ -112,7 +112,7 @@ export class Rps {
     if (state === "taken") throw new DomainError("chamado", 409, "Este chamado já tem RP.");
   }
 
-  private async assertRefs(input: RpInput, savedSubassemblyId: string | null): Promise<void> {
+  private async assertRefs(input: RpInput, saved: MachineSpot | null): Promise<void> {
     const { fields } = input;
     if (!(await this.refs.factoryExists(fields.factoryId))) {
       throw new DomainError("factory", 400, "Fábrica não encontrada.");
@@ -123,6 +123,6 @@ export class Rps {
     if (!(await this.refs.membersExist(fields.memberIds))) {
       throw new DomainError("member", 400, "Colaborador não encontrado.");
     }
-    assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), savedSubassemblyId);
+    assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), saved);
   }
 }

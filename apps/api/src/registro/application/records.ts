@@ -103,7 +103,7 @@ export class Records {
     const input = parseProblemSheet(body);
     await Promise.all([this.assertMember(input.memberId), this.assertLine(input.lineId)]);
     const next = applyProblemSheet(state, input);
-    assertMachineSpot(next, await this.refs.machineSpot(next.machineId, next.subassemblyId), current.subassemblyId);
+    assertMachineSpot(next, await this.refs.machineSpot(next.machineId, next.subassemblyId), current);
     return next;
   }
 

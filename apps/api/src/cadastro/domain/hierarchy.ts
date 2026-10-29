@@ -65,9 +65,10 @@ export type MachineSpotRefs = {
 /**
  * Máquina e subconjunto escolhidos numa ficha (problema, RP) batem com o cadastro: a máquina é da linha
  * e o subconjunto é dela. Os dois são opcionais, mas subconjunto pede máquina e máquina pede linha.
+ * `saved` é o que a ficha já tinha gravado (nulo numa ficha nova).
  * Ex.: `assertMachineSpot({ lineId: "l1", machineId: "m1", subassemblyId: null }, await refs.machineSpot("m1", null), null)`
  */
-export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, savedSubassemblyId: string | null): void {
+export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, saved: MachineSpot | null): void {
   if (spot.subassemblyId && !spot.machineId) throw new DomainError("machine", 400, "Escolha a máquina do subconjunto.");
   if (!spot.machineId) return;
   if (!spot.lineId) throw new DomainError("machine", 400, "Escolha a linha da máquina.");
@@ -75,7 +76,7 @@ export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, save
   if (refs.machine.lineId !== spot.lineId) throw new DomainError("machine", 400, "Esta máquina não é da linha escolhida.");
   if (!spot.subassemblyId) return;
   if (!refs.subassembly) throw new DomainError("subassembly", 400, `Subconjunto não encontrado (id ${spot.subassemblyId}).`);
-  assertSubassemblyFits(refs.machine, refs.subassembly, savedSubassemblyId);
+  assertSubassemblyFits(refs.machine, refs.subassembly, saved?.subassemblyId ?? null);
 }
 
 // Nome para comparar: sem acento, minúsculo e com espaços simples.
