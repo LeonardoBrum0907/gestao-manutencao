@@ -2,7 +2,8 @@ import { readTaskRepeat, type RecordType, type TaskRepeat } from "@manutencao/sh
 import { DomainError } from "../../kernel/domain-error";
 
 const EXPECTED =
-  '{ every: "day" }, { every: "workday" }, { every: "week", interval: 1 ou 2, weekdays: [0 a 6], since: "AAAA-MM-DD" } ou { every: "month", dayOfMonth: 1 a 31 }';
+  '{ every: "day", interval?: 1 a 365 }, { every: "workday" }, { every: "week", interval: 1 a 52, weekdays: [0 a 6], since: "AAAA-MM-DD" } ' +
+  'ou { every: "month", dayOfMonth: 1 a 31, interval?: 1 a 12 }; interval acima de 1 pede since; until?: "AAAA-MM-DD" encerra a série';
 
 /**
  * Regra de repetição na ficha. Sem o campo, a regra fica como está (o MCP não manda); null tira a repetição.

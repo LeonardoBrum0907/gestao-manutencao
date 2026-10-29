@@ -60,6 +60,12 @@ describe("tarefa que se repete: ao salvar", () => {
     }
   });
 
+  it("série que passou da data final não faz nascer nada", async () => {
+    const { store, repeats } = setup({ source: { ...daily, repeat: { every: "day", until: "2026-11-02" } } });
+    assert.equal(await repeats.afterSave("t1", now), null);
+    assert.equal(store.inserted.length, 0);
+  });
+
   it("registro que não existe não faz nascer nada", async () => {
     const { repeats } = setup();
     assert.equal(await repeats.afterSave("sumiu", now), null);

@@ -1,10 +1,12 @@
-import { repeatDaysBetween, repeatDayAfter, repeatFallsOn, taskRepeatLabel, type BoardItemDto, type RecordDto, type TaskRepeat } from "@manutencao/shared";
+import { repeatDaysBetween, repeatDayAfter, taskRepeatLabel, type BoardItemDto, type RecordDto, type TaskRepeat } from "@manutencao/shared";
+import { addDays } from "./agenda";
 import { dueDay } from "./board";
 import { withDueDay } from "./due-time";
 
 // Campo "Repetir" da tarefa: as opções da ficha e as próximas vezes que a Agenda mostra apagadas.
 
-export const REPEAT_CHOICES = ["day", "workday", "week", "biweek", "month"] as const;
+// custom: Personalizar… (a cada N dias, semanas ou meses e até quando), editado em repeat-custom.
+export const REPEAT_CHOICES = ["day", "workday", "week", "biweek", "month", "custom"] as const;
 export type RepeatChoice = (typeof REPEAT_CHOICES)[number];
 
 const WEEKDAY_NAMES = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
@@ -23,10 +25,15 @@ export function repeatOfChoice(choice: RepeatChoice, anchor: string): TaskRepeat
   return { every: "week", interval: choice === "biweek" ? 2 : 1, weekdays: [weekdayOf(anchor)], since: anchor };
 }
 
-/** A escolha que a regra gravada corresponde. Ex.: `choiceOfRepeat({ every: "week", interval: 2, … })` → `"biweek"`. */
+/**
+ * A escolha que a regra gravada corresponde; com data final ou outro intervalo, é Personalizar.
+ * Ex.: `choiceOfRepeat({ every: "week", interval: 2, … })` → `"biweek"`; `choiceOfRepeat({ every: "day", interval: 3, … })` → `"custom"`.
+ */
 export function choiceOfRepeat(rule: TaskRepeat): RepeatChoice {
-  if (rule.every !== "week") return rule.every;
-  return rule.interval === 2 ? "biweek" : "week";
+  if (rule.until) return "custom";
+  if (rule.every === "week") return rule.interval === 1 ? "week" : rule.interval === 2 ? "biweek" : "custom";
+  if (rule.every === "workday") return "workday";
+  return (rule.interval ?? 1) === 1 ? rule.every : "custom";
 }
 
 /**
@@ -34,7 +41,9 @@ export function choiceOfRepeat(rule: TaskRepeat): RepeatChoice {
  * @example repeatChoiceLabel("week", null, "2026-11-02") // "Toda semana (segunda)"
  */
 export function repeatChoiceLabel(choice: RepeatChoice, current: TaskRepeat | null, anchor: string): string {
-  if (current && choiceOfRepeat(current) === choice) return taskRepeatLabel(current);
+  // A data final fica no campo Termina do Personalizar: no rótulo da etiqueta não cabe.
+  if (current && choiceOfRepeat(current) === choice) return taskRepeatLabel({ ...current, until: undefined });
+  if (choice === "custom") return "Personalizar…";
   if (choice === "day") return "Todo dia";
   if (choice === "workday") return "Dias úteis (seg a sex)";
   if (choice === "month") return `Todo mês (dia ${Number(anchor.slice(8))})`;
@@ -43,14 +52,13 @@ export function repeatChoiceLabel(choice: RepeatChoice, current: TaskRepeat | nu
 }
 
 /**
- * Liga ou desliga um dia na regra semanal; o último dia que sobrou não sai (semana sem dia não repete).
- * @example toggleWeekday({ every: "week", interval: 1, weekdays: [1], since: "2026-11-02" }, 3).weekdays // [1, 3]
+ * Liga ou desliga um dia da semana; o último dia que sobrou não sai (semana sem dia não repete).
+ * @example toggleWeekday([1], 3) // [1, 3]
  */
-export function toggleWeekday(rule: Extract<TaskRepeat, { every: "week" }>, weekday: number): TaskRepeat {
-  const has = rule.weekdays.includes(weekday);
-  if (has && rule.weekdays.length === 1) return rule;
-  const weekdays = has ? rule.weekdays.filter((day) => day !== weekday) : [...rule.weekdays, weekday].sort((a, b) => a - b);
-  return { ...rule, weekdays };
+export function toggleWeekday(weekdays: readonly number[], weekday: number): number[] {
+  const has = weekdays.includes(weekday);
+  if (has && weekdays.length === 1) return [...weekdays];
+  return has ? weekdays.filter((day) => day !== weekday) : [...weekdays, weekday].sort((a, b) => a - b);
 }
 
 /** O que a ficha grava ao mudar a repetição. */
@@ -62,8 +70,9 @@ export type RepeatPatch = { repeat: TaskRepeat | null; dueAt?: string | null; du
  */
 export function repeatPatch(record: Pick<RecordDto, "dueAt" | "dueHasTime">, repeat: TaskRepeat | null, today: string): RepeatPatch {
   if (!repeat || record.dueAt) return { repeat };
-  const day = repeatFallsOn(repeat, today) ? today : repeatDayAfter(repeat, today);
-  return { repeat, ...withDueDay(record, day) };
+  // O dia depois de ontem é hoje: entra hoje se a regra cai hoje, e respeita a data final da série.
+  const day = repeatDayAfter(repeat, addDays(today, -1));
+  return day ? { repeat, ...withDueDay(record, day) } : { repeat };
 }
 
 /** Uma próxima vez da tarefa na Agenda: ainda não existe, só mostra onde a série vai cair. */

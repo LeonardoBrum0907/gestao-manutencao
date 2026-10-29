@@ -28,6 +28,29 @@ describe("repetição: em que dia cai", () => {
   });
 });
 
+describe("repetição personalizada", () => {
+  it("a cada 3 dias conta a partir do início da série", () => {
+    const rule: TaskRepeat = { every: "day", interval: 3, since: "2026-11-02" };
+    assert.equal(repeatDayAfter(rule, "2026-11-02"), "2026-11-05");
+    assert.equal(repeatDayAfter(rule, "2026-11-06"), "2026-11-08");
+  });
+
+  it("a cada 3 semanas pula duas semanas", () => {
+    assert.equal(repeatDayAfter({ ...mondays, interval: 3 }, "2026-11-02"), "2026-11-23");
+  });
+
+  it("a cada 2 meses no dia 10 pula o mês do meio", () => {
+    assert.equal(repeatDayAfter({ every: "month", dayOfMonth: 10, interval: 2, since: "2026-11-10" }, "2026-11-10"), "2027-01-10");
+  });
+
+  it("depois da data final a série termina", () => {
+    const rule: TaskRepeat = { ...mondays, until: "2026-11-16" };
+    assert.equal(nextRepeatDay(rule, "2026-11-09", "2026-11-09"), "2026-11-16");
+    assert.equal(nextRepeatDay(rule, "2026-11-16", "2026-11-16"), null);
+    assert.deepEqual(repeatDaysBetween(rule, "2026-11-02", "2026-11-01", "2026-11-30"), ["2026-11-09", "2026-11-16"]);
+  });
+});
+
 describe("repetição: prazo da próxima ao concluir", () => {
   it("concluída no dia vem a próxima segunda", () => {
     assert.equal(nextRepeatDay(mondays, "2026-11-02", "2026-11-02"), "2026-11-09");
@@ -67,9 +90,11 @@ describe("repetição: ler e escrever a regra", () => {
     });
   });
 
-  it("recusa semana sem dia, intervalo 3 e mês 32", () => {
+  it("recusa semana sem dia, intervalo fora do limite, a cada N sem início, fim mal escrito e mês 32", () => {
     assert.equal(readTaskRepeat({ every: "week", interval: 1, weekdays: [], since: "2026-11-02" }), null);
-    assert.equal(readTaskRepeat({ every: "week", interval: 3, weekdays: [1], since: "2026-11-02" }), null);
+    assert.equal(readTaskRepeat({ every: "week", interval: 53, weekdays: [1], since: "2026-11-02" }), null);
+    assert.equal(readTaskRepeat({ every: "day", interval: 3 }), null);
+    assert.equal(readTaskRepeat({ every: "day", until: "30/11/2026" }), null);
     assert.equal(readTaskRepeat({ every: "month", dayOfMonth: 32 }), null);
     assert.equal(readTaskRepeat("toda segunda"), null);
   });
@@ -79,5 +104,19 @@ describe("repetição: ler e escrever a regra", () => {
     assert.equal(taskRepeatLabel({ ...mondays, weekdays: [0] }), "Todo domingo");
     assert.equal(taskRepeatLabel(biweekly), "A cada 2 semanas: seg e qua");
     assert.equal(taskRepeatLabel({ every: "month", dayOfMonth: 5 }), "Todo dia 5 do mês");
+    assert.equal(taskRepeatLabel({ every: "day", interval: 3, since: "2026-11-02" }), "A cada 3 dias");
+    assert.equal(taskRepeatLabel({ every: "month", dayOfMonth: 5, interval: 2, since: "2026-11-05", until: "2027-06-30" }), "A cada 2 meses no dia 5, até 30/06/2027");
+  });
+
+  // Regras gravadas antes do Personalizar continuam lidas igual.
+  it("regra simples continua sem os campos novos; a cada 1 some", () => {
+    assert.deepEqual(readTaskRepeat({ every: "day" }), { every: "day" });
+    assert.deepEqual(readTaskRepeat({ every: "month", dayOfMonth: 5, interval: 1, since: "2026-11-05" }), { every: "month", dayOfMonth: 5 });
+    assert.deepEqual(readTaskRepeat({ every: "day", interval: 3, since: "2026-11-02", until: "2026-12-01" }), {
+      every: "day",
+      interval: 3,
+      since: "2026-11-02",
+      until: "2026-12-01",
+    });
   });
 });

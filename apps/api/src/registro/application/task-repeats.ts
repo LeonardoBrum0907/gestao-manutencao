@@ -21,6 +21,7 @@ export class TaskRepeats {
     const found = await this.store.candidate(id);
     if (found && found.status !== "done" && found.hasNext) await this.store.removeOpenNext(id);
     if (!spawns(found)) return null;
-    return this.store.insertNext(id, nextTask(found.source, now), found.source.repeat);
+    const next = nextTask(found.source, now);
+    return next ? this.store.insertNext(id, next, found.source.repeat) : null;
   }
 }

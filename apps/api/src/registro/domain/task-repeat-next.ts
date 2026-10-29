@@ -24,10 +24,12 @@ export type NextTask = { state: RecordState; reminders: TaskReminderBody[] };
 /**
  * A próxima tarefa da série: mesmo texto, local, responsável, prioridade e lembretes, aberta, com o prazo no
  * dia seguinte da regra e o mesmo horário. Anexos e o que foi feito ficam só na concluída.
- * @example nextTask(tarefaDeSegunda, new Date("2026-11-02T18:00:00Z")).state.dueAt // segunda 09/11
+ * Nula quando a série terminou (a próxima data passa do "até" da regra).
+ * @example nextTask(tarefaDeSegunda, new Date("2026-11-02T18:00:00Z"))?.state.dueAt // segunda 09/11
  */
-export function nextTask(source: RepeatSource, now: Date): NextTask {
+export function nextTask(source: RepeatSource, now: Date): NextTask | null {
   const day = nextRepeatDay(source.repeat, source.dueAt ? calendarDay(source.dueAt) : null, calendarDay(now));
+  if (!day) return null;
   const dueAt = dueAtOnDay(day, source.dueAt);
   return { state: nextState(source, dueAt, now), reminders: shiftReminders(source.reminders, source.dueAt, dueAt) };
 }
