@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { RecordDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
+import { TimeInput } from "../../../design/ui/time-input";
 import { useToast } from "../../../design/ui/toast";
 import { useAddReminder } from "../data/reminders";
 import { dueDay, nextDay, todayDay } from "../model/board";
@@ -58,8 +59,9 @@ export function CustomReminder({ record, onBack, onDone }: { record: RecordDto; 
       <span className={`${recordNoteText} font-semibold text-muted`}>Dia</span>
       <DayChips choices={dayChoices(record, today)} day={day} onPick={setDay} />
       <span className={`${recordNoteText} font-semibold text-muted`}>Hora</span>
-      {/* Campo nativo até o seletor de hora próprio (PR #154, sendo refeito) entrar: aí ele substitui este input. */}
-      <input type="time" aria-label="Hora do lembrete" value={clock} onChange={(event) => setClock(event.target.value)} className={`self-start rounded-md border border-line bg-surface px-2 py-1 ${recordValueText} text-app`} />
+      <div className="w-36 self-start">
+        <TimeInput aria-label="Hora do lembrete" value={clock} onChange={setClock} />
+      </div>
       <FirePreview at={at} today={today} />
       <div className="flex gap-2">
         <button type="button" onClick={submit} disabled={!ready || add.isPending} className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-contrast disabled:opacity-50">
