@@ -3,12 +3,13 @@ import { SelectInput } from "../../../design/ui/controls";
 import { REPEAT_UNITS, clampInterval, customOfRepeat, repeatOfCustom, repeatUnitLabel, type CustomRepeat, type RepeatUnit } from "../model/repeat-custom";
 import { addDays } from "../model/agenda";
 import { toggleWeekday } from "../model/task-repeat";
+import { recordNoteText, recordValueText } from "./record-text";
 
 const WEEKDAY_LETTERS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const WEEKDAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 // Ao escolher "Termina em", a data sugerida fica um mês depois do prazo.
 const SUGGESTED_END_DAYS = 30;
-const fieldClass = "rounded-md border border-line bg-surface px-2 py-1 text-[13px] text-app";
+const fieldClass = `rounded-md border border-line bg-surface px-2 py-1 text-app ${recordValueText}`;
 
 /**
  * Os dias da semana da repetição (como no Todoist), a semana começando na segunda.
@@ -91,10 +92,10 @@ export function RepeatCustomPanel({ rule, anchor, onChange }: { rule: TaskRepeat
   const custom = customOfRepeat(rule, anchor);
   const change = (patch: Partial<CustomRepeat>) => onChange(repeatOfCustom({ ...custom, ...patch }));
   return (
-    <div className="mt-1 flex w-full flex-col gap-2 rounded-md border border-line bg-surface p-2 text-[13px] text-app">
+    <div className={`mt-1 flex w-full flex-col gap-2 rounded-md border border-line bg-surface p-2 text-app ${recordValueText}`}>
       <IntervalRow custom={custom} onChange={change} />
       {custom.unit === "week" ? <WeekdayToggles weekdays={custom.weekdays} onChange={(weekdays) => change({ weekdays })} /> : null}
-      {custom.unit === "month" ? <span className="text-muted">No dia {custom.dayOfMonth} de cada mês (o dia do prazo).</span> : null}
+      {custom.unit === "month" ? <span className={`text-muted ${recordNoteText}`}>No dia {custom.dayOfMonth} de cada mês (o dia do prazo).</span> : null}
       <UntilRow until={custom.until} anchor={anchor} onChange={(until) => change({ until })} />
     </div>
   );
