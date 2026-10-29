@@ -44,4 +44,21 @@ describe("PublicLinks", () => {
     await supervisors.revoke(carlos.id, NOW);
     await assert.rejects(links.assertActive(carlos.code), /não vale mais/);
   });
+
+  // O link ficava aprovando depois de a pessoa deixar de liderar equipe (auditoria de vínculos, 2026-10-29).
+  for (const [caso, holder] of [
+    ["deixa de liderar equipe", { status: "active", position: "technician" }],
+    ["fica inativa", { status: "inactive", position: "supervisor" }],
+    ["é excluída", null],
+  ] as const) {
+    it(`link de supervisor para de abrir quando a pessoa ${caso}`, async () => {
+      const supervisors = new FakeSupervisorLinkStore();
+      const links = new PublicLinks(new FakePublicLinkStore(), supervisors, () => NOW);
+      const carlos = await supervisors.create({ id: "m-carlos", name: "Carlos" }, "c".repeat(24), NOW);
+      if (holder) supervisors.holders.set("m-carlos", holder);
+      else supervisors.holders.delete("m-carlos");
+      await assert.rejects(links.assertActive(carlos.code), /não vale mais/);
+      await assert.rejects(links.assertSupervisor(carlos.code), /não vale mais/);
+    });
+  }
 });
