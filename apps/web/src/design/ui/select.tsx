@@ -19,7 +19,7 @@ import { FieldError, RequiredMark } from "./field-feedback";
 // Select próprio do sistema: no computador a lista abre embaixo do campo; no celular, num painel que sobe de baixo.
 // Escolher fecha na hora (o seletor nativo do Samsung Internet só fecha no "Concluir").
 
-const controlBase = "rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app transition";
+export const controlBase = "rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-app transition";
 const SEARCH_FROM = 9;
 
 // O Field passa o rótulo para o select, que não é um <select> e por isso não herda o nome do <label>.
@@ -249,7 +249,7 @@ type SelectProps = {
   icon?: ReactNode;
 };
 
-const chipTrigger = "control-focus inline-flex max-w-[16rem] items-center gap-1.5 rounded-md px-2 py-1 text-[13px] transition hover:bg-chip";
+export const chipTrigger = "control-focus inline-flex max-w-[16rem] items-center gap-1.5 rounded-md px-2 py-1 text-[13px] transition hover:bg-chip";
 
 export function SelectInput({
   value,

@@ -121,6 +121,12 @@ const paths = {
       <path d="M3.5 10h17M8 3v4M16 3v4" />
     </>
   ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
   flag: <path d="M5 21V4M5 4h11l-2 4 2 4H5" />,
   line: <path d="M3 7h18M3 12h18M3 17h18" />,
   tone: (

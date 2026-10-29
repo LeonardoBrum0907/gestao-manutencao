@@ -19,8 +19,13 @@ export function useIsPhone(): boolean {
 
 export type Place = { left: number; width: number; top?: number; bottom?: number; maxHeight: number };
 
+// Medidas da lista; o padrão é o do select. A grade de horas pede mais largura e altura e sobe
+// quando não cabe inteira embaixo do campo.
+export type PlacementSize = { minWidth?: number; maxHeight?: number; flipBelow?: number };
+
 // Posição da lista no computador: embaixo do campo, ou em cima quando não há espaço.
-export function usePlacement(open: boolean, anchor: RefObject<HTMLElement | null>): Place | null {
+export function usePlacement(open: boolean, anchor: RefObject<HTMLElement | null>, size: PlacementSize = {}): Place | null {
+  const { minWidth = 220, maxHeight: cap = 360, flipBelow = 240 } = size;
   const [place, setPlace] = useState<Place | null>(null);
   useLayoutEffect(() => {
     if (!open) {
@@ -32,10 +37,10 @@ export function usePlacement(open: boolean, anchor: RefObject<HTMLElement | null
       if (!box) return;
       const below = window.innerHeight - box.bottom - 12;
       const above = box.top - 12;
-      const up = below < 240 && above > below;
-      const width = Math.max(box.width, 220);
+      const up = below < flipBelow && above > below;
+      const width = Math.max(box.width, minWidth);
       const left = Math.max(8, Math.min(box.left, window.innerWidth - width - 8));
-      const maxHeight = Math.min(360, up ? above : below) - 6;
+      const maxHeight = Math.min(cap, up ? above : below) - 6;
       setPlace(up ? { left, width, bottom: window.innerHeight - box.top + 6, maxHeight } : { left, width, top: box.bottom + 6, maxHeight });
     }
     update();
@@ -45,7 +50,7 @@ export function usePlacement(open: boolean, anchor: RefObject<HTMLElement | null
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open, anchor]);
+  }, [open, anchor, minWidth, cap, flipBelow]);
   return place;
 }
 
