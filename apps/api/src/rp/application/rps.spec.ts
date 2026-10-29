@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { ProblemWrite } from "../../ports/problem-log";
 import { FakeCadastroRefs, FakeProblemLog, FakeRpStore } from "./fake-rp-stores";
+import { parseRp } from "./parse-rp";
 import { Rps } from "./rps";
 
 const noCause = { marked: false, text: null };
@@ -19,28 +21,56 @@ function setup() {
   return { store, problems, rps };
 }
 
-describe("Rps e o Problema espelho", () => {
-  it("criar o RP grava o Problema espelho com o texto e os técnicos", async () => {
+// RP gravado antes de 2026-10-29, ainda com o Problema espelho "rec-antigo".
+async function oldRp(store: FakeRpStore, problems: FakeProblemLog) {
+  const mirror = { origin: "rp", body: "Correia rompeu", status: "open" } as ProblemWrite;
+  problems.saved.set("rec-antigo", mirror);
+  const input = parseRp(body());
+  const rp = await store.insert({ fields: input.fields, occurredAt: input.occurredAt, rawText: "", problemRecordId: "rec-antigo" });
+  return { rp, mirror };
+}
+
+describe("Rps sem Problema em Registros", () => {
+  it("criar o RP não grava problema", async () => {
     const { problems, rps } = setup();
     const rp = await rps.create(body());
-    assert.ok(rp.problemRecordId);
-    const mirror = problems.saved.get(rp.problemRecordId);
-    assert.equal(mirror?.origin, "rp");
-    assert.equal(mirror?.body, "Correia rompeu");
-    assert.deepEqual(mirror?.memberIds, ["m1"]);
+    assert.equal(rp.problemRecordId, null);
+    assert.equal(problems.saved.size, 0);
   });
 
-  it("editar o RP leva o status para o espelho", async () => {
+  it("RP da página pública também não grava problema", async () => {
     const { problems, rps } = setup();
-    const rp = await rps.create(body());
-    await rps.update(rp.id, body({ status: "corrected" }));
-    assert.equal(problems.saved.get(rp.problemRecordId!)?.status, "done");
+    const rp = await rps.createFrom(parseRp(body()), "public");
+    assert.equal(rp.source, "public");
+    assert.equal(problems.saved.size, 0);
   });
 
-  it("excluir o RP apaga o espelho", async () => {
+  it("editar não cria problema", async () => {
     const { problems, rps } = setup();
     const rp = await rps.create(body());
+    const saved = await rps.update(rp.id, body({ status: "corrected" }));
+    assert.equal(saved.problemRecordId, null);
+    assert.equal(problems.saved.size, 0);
+  });
+
+  it("editar um RP antigo mantém a ligação e não mexe no espelho dele", async () => {
+    const { store, problems, rps } = setup();
+    const { rp, mirror } = await oldRp(store, problems);
+    const saved = await rps.update(rp.id, body({ status: "corrected", problem: "Correia trocada" }));
+    assert.equal(saved.problemRecordId, "rec-antigo");
+    assert.equal(problems.saved.get("rec-antigo"), mirror);
+  });
+
+  it("excluir um RP antigo apaga o espelho dele", async () => {
+    const { store, problems, rps } = setup();
+    const { rp } = await oldRp(store, problems);
     await rps.remove(rp.id);
     assert.equal(problems.saved.size, 0);
+  });
+
+  it("RP escrito a partir de um chamado continua ligado a ele", async () => {
+    const { rps } = setup();
+    const rp = await rps.create(body({ chamadoId: "ch1" }));
+    assert.equal(rp.chamadoId, "ch1");
   });
 });

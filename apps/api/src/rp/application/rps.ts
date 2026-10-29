@@ -4,7 +4,6 @@ import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
-import { mirrorProblem } from "../domain/rp";
 import type { RpDecisionPatch } from "../domain/rp-decision";
 import { RpRepository } from "../infra/rp.repository";
 import { parseRp, parseRpText, type RpInput } from "./parse-rp";
@@ -35,19 +34,14 @@ export class Rps {
   }
 
   /**
-   * Grava um RP já lido, com o Problema espelho. A página pública chama com origem "public".
+   * Grava um RP já lido. A página pública chama com origem "public".
+   * Desde 2026-10-29 o RP não cria Problema em Registros (pedido do Léo): o RP mora só na tela de RPs.
    * @example await rps.createFrom(parseRp(body), "public")
    */
   async createFrom(input: RpInput, origin: RpSource): Promise<RpDto> {
     await this.assertRefs(input, null);
     if (input.chamadoId) await this.assertChamado(input.chamadoId);
-    const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
-    try {
-      return await this.rps.insert(this.write(input, problem.id), input.chamadoId, origin);
-    } catch (error) {
-      await this.problems.remove(problem.id);
-      throw error;
-    }
+    return this.rps.insert(this.write(input, null), input.chamadoId, origin);
   }
 
   update(id: string, body: unknown): Promise<RpDto> {
@@ -55,21 +49,17 @@ export class Rps {
   }
 
   /**
-   * Regrava um RP já lido e acompanha o Problema espelho. Não mexe na origem nem no chamado.
+   * Regrava um RP já lido. Não mexe na origem, no chamado nem no Problema espelho dos RPs de antes de 2026-10-29,
+   * que fica guardado (fora de Registros) até o RP ser excluído.
    * @example await rps.updateFrom(id, parseRp(body))
    */
   async updateFrom(id: string, input: RpInput): Promise<RpDto> {
     const current = await this.get(id);
     await this.assertRefs(input, current.subassemblyId);
-    let problemId = current.problemRecordId;
-    if (problemId) {
-      await this.problems.replace(problemId, () => mirrorProblem(input.fields, input.occurredAt));
-    } else {
-      problemId = (await this.problems.save(mirrorProblem(input.fields, input.occurredAt))).id;
-    }
-    return this.rps.update(id, this.write(input, problemId));
+    return this.rps.update(id, this.write(input, current.problemRecordId));
   }
 
+  // RP de antes de 2026-10-29 ainda pode ter o Problema espelho: sai junto, para não ficar registro solto.
   async remove(id: string): Promise<void> {
     const current = await this.get(id);
     await this.rps.remove(id);
@@ -112,7 +102,7 @@ export class Rps {
     return this.rps.memberSummary(memberId, MEMBER_SUMMARY_LIMIT);
   }
 
-  private write(input: RpInput, problemRecordId: string): RpWrite {
+  private write(input: RpInput, problemRecordId: string | null): RpWrite {
     return { fields: input.fields, occurredAt: input.occurredAt, rawText: input.rawText, problemRecordId };
   }
 

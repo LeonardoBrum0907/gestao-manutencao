@@ -575,7 +575,8 @@ export type MemberMatrixDto = {
   byEquipment: (CompetencySummaryDto & { equipment: string })[];
 };
 
-// RP (Relatório Padrão de Manutenção): ficha própria, espelhada num Problema de origem "rp".
+// RP (Relatório Padrão de Manutenção): ficha própria. Até 2026-10-29 era espelhada num Problema de origem "rp";
+// os RPs desde então não criam problema e problemRecordId fica nulo.
 export const RP_STATUSES = ["analysis", "monitoring", "corrected", "producing"] as const;
 export type RpStatus = (typeof RP_STATUSES)[number];
 
