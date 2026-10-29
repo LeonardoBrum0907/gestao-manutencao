@@ -50,7 +50,7 @@ export function useRestoreRpRevision(id: string) {
     onSuccess: (rp) => {
       refreshRp(client, rp);
       void client.invalidateQueries({ queryKey: ["rp-revisions", id] });
-      // O Problema espelho acompanha o RP.
+      // A tela de Chamados mostra o status do RP no chamado de origem.
       invalidateRecords(client);
     },
   });

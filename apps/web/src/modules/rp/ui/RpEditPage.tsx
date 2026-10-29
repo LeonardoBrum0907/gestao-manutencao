@@ -45,12 +45,11 @@ export function RpEditPage() {
       <PageTitle
         eyebrow="Turno"
         title="RP"
-        text="Ficha do Relatório Padrão. Ao gravar, o Problema ligado nos Registros acompanha."
+        text="Ficha do Relatório Padrão."
         crumb={rpCrumb(data)}
         back={{ to: "/rp", label: "RPs" }}
       />
       <div className="-mt-4 mb-6 flex flex-wrap items-center gap-4 text-sm font-semibold empty:hidden">
-        {/* Sem link para o Problema: a ficha dele (/registros/:id) manda de volta para este RP. */}
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
       {data.source === "public" ? <RpOriginPanel rp={data} onRestored={() => setFormVersion((version) => version + 1)} /> : null}
@@ -65,7 +64,7 @@ export function RpEditPage() {
         extraActions={
           confirming ? (
             <span className="flex items-center gap-2 text-sm text-app">
-              Excluir este RP e o Problema ligado?
+              Excluir este RP?
               <Button
                 tone="danger"
                 disabled={remove.isPending}
