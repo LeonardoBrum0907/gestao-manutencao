@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { chamadoTask, nextDayNumber, noteOcorrencia, openChamado, type ChamadoInput } from "./shift";
+import { assertChamadoMachine, chamadoTask, nextDayNumber, noteOcorrencia, openChamado, type ChamadoInput } from "./shift";
 
 const now = new Date("2026-10-01T18:00:00.000Z");
 const opened = new Date("2026-10-01T12:00:00.000Z");
@@ -91,5 +91,16 @@ describe("ocorrência", () => {
       () => noteOcorrencia({ factoryId: "fab", line: "  ", body: "Ruído" }, now),
       (error: unknown) => error instanceof DomainError && error.code === "empty_body",
     );
+  });
+});
+
+describe("máquina do chamado", () => {
+  it("aceita máquina da linha do chamado e chamado sem máquina", () => {
+    assert.doesNotThrow(() => assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l1"));
+    assert.doesNotThrow(() => assertChamadoMachine({ lineId: "l1", machineId: null }, null));
+  });
+
+  it("recusa máquina de outra linha", () => {
+    assert.throws(() => assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l2"), /Essa máquina não é da linha escolhida/);
   });
 });

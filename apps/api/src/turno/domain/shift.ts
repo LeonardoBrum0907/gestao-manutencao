@@ -94,6 +94,16 @@ export function openChamado(input: ChamadoInput): ChamadoWrite {
   };
 }
 
+/**
+ * A máquina escolhida no chamado é da linha dele. `machineLine` é a linha da máquina no cadastro.
+ * Ex.: `assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l1")`
+ */
+export function assertChamadoMachine(write: Pick<ChamadoWrite, "lineId" | "machineId">, machineLine: string | null): void {
+  if (write.machineId && machineLine !== write.lineId) {
+    throw new DomainError("machine", 400, "Essa máquina não é da linha escolhida.");
+  }
+}
+
 // Número do chamado no dia: o seguinte ao maior já usado (os antigos foram digitados à mão).
 export function nextDayNumber(used: (number | null)[]): number {
   return used.reduce<number>((max, value) => (value !== null && value > max ? value : max), 0) + 1;
