@@ -6,17 +6,19 @@ import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
 import { mirrorProblem } from "../domain/rp";
 import type { RpDecisionPatch } from "../domain/rp-decision";
-import { RpRepository, type RpWrite } from "../infra/rp.repository";
+import { RpRepository } from "../infra/rp.repository";
 import { parseRp, parseRpText, type RpInput } from "./parse-rp";
 import { parseRpList, type RpListQuery } from "./parse-rp-list";
 import { rpDrafts } from "./rp-drafts";
+import type { RpStore, RpWrite } from "./rp-store";
 
 const MEMBER_SUMMARY_LIMIT = 20;
 
 @Injectable()
 export class Rps {
   constructor(
-    private readonly rps: RpRepository,
+    // O token é a classe do Postgres; o tipo é a interface, para o teste entrar com o FakeRpStore.
+    @Inject(RpRepository) private readonly rps: RpStore,
     @Inject(PROBLEM_LOG) private readonly problems: ProblemLogPort,
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}

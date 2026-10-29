@@ -16,6 +16,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import type { RpListFilter } from "../domain/rp-list";
 import { normalizeOrder, normalizeProblem } from "../domain/rp";
 import type { RpDecisionPatch } from "../domain/rp-decision";
+import type { RpStore, RpWrite } from "../application/rp-store";
 
 const include = { members: { orderBy: { position: "asc" as const } } };
 
@@ -110,13 +111,6 @@ function toListItem(row: Prisma.RpGetPayload<{ select: typeof listSelect }>): Rp
   };
 }
 
-export type RpWrite = {
-  fields: RpFields;
-  occurredAt: Date;
-  rawText: string;
-  problemRecordId: string | null;
-};
-
 function scalars(write: RpWrite) {
   const { fields } = write;
   return {
@@ -193,7 +187,7 @@ function decisionWhere(decision: RpPublicDecision): Prisma.RpWhereInput {
 }
 
 @Injectable()
-export class RpRepository {
+export class RpRepository implements RpStore {
   constructor(private readonly prisma: PrismaService) {}
 
   async find(id: string): Promise<RpDto | null> {
