@@ -14,6 +14,8 @@ import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet 
 import { AttachmentStorage } from "../infra/attachment.storage";
 import { RecordRepository } from "../infra/record.repository";
 import { parseCapture, parseEntrySheet, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
+import { parseRepeatChange } from "./parse-task-repeat";
+import { TaskRepeats } from "./task-repeats";
 
 function dtoToState(dto: RecordDto): RecordState {
   return {
@@ -55,6 +57,7 @@ export class Records {
   constructor(
     private readonly records: RecordRepository,
     private readonly storage: AttachmentStorage,
+    private readonly repeats: TaskRepeats,
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
 
@@ -77,7 +80,10 @@ export class Records {
     const state = retypeState(dtoToState(current), target);
     const next = await this.sheetState(current, state, body);
     const reminders = priorityReminders(current.priority, next, await this.records.reminderCount(id));
-    return this.records.update(id, next, current.memberIds, { retyped: target !== current.type, reminders });
+    const repeat = parseRepeatChange(body, next.type);
+    const saved = await this.records.update(id, next, current.memberIds, { retyped: target !== current.type, reminders, repeat });
+    await this.repeats.afterSave(id, new Date());
+    return saved;
   }
 
   // Aplica a ficha do tipo de destino (o tipo novo, quando a ficha troca o tipo).
@@ -119,6 +125,7 @@ export class Records {
       dueHasTime: boardDueHasTime(change, record.dueHasTime),
       order: change.order,
     });
+    if (change.status !== null) await this.repeats.afterSave(id, now);
   }
 
   // Todo registro pode ser excluído; o que tiver vínculo volta como aviso para o coordenador ler antes.

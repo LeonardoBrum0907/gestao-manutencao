@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import {
   isFeedbackTone,
   isRecordOrigin,
   isRecordPriority,
   isRecordStatus,
   isRecordType,
+  readTaskRepeat,
   type AttachmentDto,
   type BoardDto,
   type BoardGroup,
@@ -18,6 +19,7 @@ import {
   type RecordPageDto,
   type RecordStatus,
   type TaskReminderBody,
+  type TaskRepeat,
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -59,6 +61,7 @@ type Row = {
   machineId: string | null;
   subassemblyId: string | null;
   chamadoId: string | null;
+  repeat: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
   members: { memberId: string; position: number }[];
@@ -106,6 +109,7 @@ function toDto(row: Row): RecordDto {
     machineId: row.machineId,
     subassemblyId: row.subassemblyId,
     chamadoId: row.chamadoId,
+    repeat: readTaskRepeat(row.repeat),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     attachments: row.attachments.map(
@@ -245,6 +249,7 @@ const boardSelect = {
   boardPosition: true,
   updatedAt: true,
   completedAt: true,
+  repeat: true,
 } as const;
 
 function openOrDoneSince(since: Date): Prisma.RecordWhereInput {
@@ -311,6 +316,7 @@ export class RecordRepository {
           occurredAt: item.occurredAt,
           group,
           completedAt: row.completedAt ? row.completedAt.toISOString() : null,
+          repeat: readTaskRepeat(row.repeat),
         };
       }),
     };
@@ -483,7 +489,8 @@ export class RecordRepository {
     id: string,
     state: RecordState,
     previousMemberIds: string[],
-    options: { retyped?: boolean; reminders?: TaskReminderBody[] } = {},
+    // repeat: undefined mantém a regra de repetição; null tira.
+    options: { retyped?: boolean; reminders?: TaskReminderBody[]; repeat?: TaskRepeat | null } = {},
   ): Promise<RecordDto> {
     const sameMembers =
       previousMemberIds.length === state.memberIds.length && previousMemberIds.every((memberId, index) => memberId === state.memberIds[index]);
@@ -495,6 +502,7 @@ export class RecordRepository {
           ...(options.retyped ? { boardPosition: null } : {}),
           ...(sameMembers ? {} : { members: { deleteMany: {}, create: memberRows(state.memberIds) } }),
           ...(options.reminders?.length ? { reminders: { create: options.reminders.map(reminderWrite) } } : {}),
+          ...(options.repeat === undefined ? {} : { repeat: options.repeat ?? Prisma.DbNull }),
         },
         include,
       }),
