@@ -1,6 +1,7 @@
 import type { CompetencyLevel, GradeExpectedDto } from "./competency-matrix";
 import type { MatrixCategory } from "./matrix-category";
 import type { RpSource } from "./rp-public";
+import type { TaskRepeat } from "./task-repeat";
 
 // "entry" é o rascunho da Entrada: anotado rápido, vira tarefa, problema ou feedback quando o coordenador revisa.
 export const RECORD_TYPES = ["task", "feedback", "problem", "entry"] as const;
@@ -291,6 +292,8 @@ export type RecordDto = {
   subassemblyId: string | null;
   // Tarefa gerada de um chamado: aponta para ele.
   chamadoId: string | null;
+  // Tarefa que se repete: ao concluir, nasce a próxima (task-repeat).
+  repeat: TaskRepeat | null;
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentDto[];
@@ -449,7 +452,7 @@ export function isBoardTarget(value: string): value is BoardTarget {
   return (BOARD_TARGETS as readonly string[]).includes(value);
 }
 
-export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "dueHasTime" | "occurredAt"> & {
+export type BoardItemDto = Pick<RecordDto, "id" | "type" | "body" | "status" | "origin" | "priority" | "dueAt" | "dueHasTime" | "occurredAt" | "repeat"> & {
   group: BoardGroup;
   // Quando foi concluída: o Meu Dia mostra só as concluídas hoje.
   completedAt: string | null;
@@ -829,5 +832,6 @@ export * from "./tech-docs";
 export * from "./machine-parts";
 export * from "./push";
 export * from "./reminder";
+export * from "./task-repeat";
 export * from "./rp-public";
 export * from "./rp-whatsapp";
