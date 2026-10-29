@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { ChamadoDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
-import { chamadoTask, openChamado, type ChamadoWrite } from "../domain/shift";
+import { assertChamadoMachine, chamadoTask, openChamado, type ChamadoWrite } from "../domain/shift";
 import { ChamadoRepository } from "../infra/chamado.repository";
 import { parseChamado, parseChamadoList, parseChamadoTask, type ChamadoListQuery } from "./parse-shift";
 
@@ -32,7 +32,7 @@ export class Chamados {
   async edit(id: string, body: unknown): Promise<ChamadoDto> {
     const current = await this.get(id);
     const write = openChamado(parseChamado(body));
-    await this.assertRefs(write);
+    await this.assertRefs(write, current);
     return this.chamados.update(current, write);
   }
 
@@ -45,7 +45,7 @@ export class Chamados {
     return this.chamados.addTask(current, input, now);
   }
 
-  private async assertRefs(write: ChamadoWrite): Promise<void> {
+  private async assertRefs(write: ChamadoWrite, saved: ChamadoDto | null = null): Promise<void> {
     const [lineOk, membersOk, machineLine] = await Promise.all([
       write.lineId ? this.refs.lineExists(write.lineId) : true,
       this.refs.membersExist(write.memberIds),
@@ -53,8 +53,6 @@ export class Chamados {
     ]);
     if (!lineOk) throw new DomainError("line", 400, "Linha não encontrada.");
     if (!membersOk) throw new DomainError("member", 400, "Colaborador não encontrado.");
-    if (write.machineId && machineLine !== write.lineId) {
-      throw new DomainError("machine", 400, "Essa máquina não é da linha escolhida.");
-    }
+    assertChamadoMachine(write, machineLine, saved);
   }
 }

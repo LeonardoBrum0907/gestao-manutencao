@@ -59,7 +59,7 @@ export function useCheckDuplicate() {
   });
 }
 
-// O RP gravado já traz o Problema espelho: as listas de RP e de registros ficam velhas.
+// O RP gravado muda as listas de RP e o RP que a tela de Chamados mostra no chamado de origem.
 function invalidateRp(client: QueryClient, rp?: RpDto, goneId?: string) {
   if (rp) client.setQueryData(["rp", rp.id], rp);
   // A ficha apagada não pode ser buscada de novo: só as listas ficam velhas.

@@ -54,6 +54,15 @@ function SupervisorLinkActions({ link }: { link: RpSupervisorLinkDto }) {
   );
 }
 
+// A API já recusa o link de quem deixou de liderar equipe, ficou inativo ou foi excluído; o aviso explica por que ele parou de abrir.
+function NoLongerSupervisorTag() {
+  return (
+    <span className="rounded-control bg-danger-soft px-2 py-1 text-xs font-semibold text-danger" title="O link não abre mais. Remova-o ou devolva a função que lidera equipe.">
+      sem supervisor
+    </span>
+  );
+}
+
 // Supervisor é quem tem função que lidera equipe (Configurações › Funções); quem já tem link sai da lista.
 function NewSupervisorForm({ choices, hasLinks }: { choices: MemberDto[]; hasLinks: boolean }) {
   const create = useCreateSupervisorLink();
@@ -113,7 +122,10 @@ export function SupervisorLinksSection() {
           {links.data?.length === 0 ? <p className="text-sm text-muted">Nenhum supervisor ainda.</p> : null}
           {links.data?.map((link) => (
             <div key={link.id} className="flex flex-col gap-2 border-b border-line pb-4">
-              <p className="text-sm font-semibold text-app">{link.name}</p>
+              <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-app">
+                {link.name}
+                {link.stillSupervisor ? null : <NoLongerSupervisorTag />}
+              </p>
               <SupervisorLinkActions link={link} />
             </div>
           ))}

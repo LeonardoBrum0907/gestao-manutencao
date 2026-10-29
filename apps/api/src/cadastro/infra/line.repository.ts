@@ -6,6 +6,7 @@ import {
 } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { CadastroLaunches } from "../domain/launch-removal";
 
 type LineWrite = {
   name: string;
@@ -73,6 +74,15 @@ export class LineRepository {
 
   countTechCards(id: string) {
     return this.prisma.techCard.count({ where: { lineId: id } });
+  }
+
+  // O Problema espelho de RP antigo não conta à parte: o RP dele já conta.
+  async countLaunches(id: string): Promise<CadastroLaunches> {
+    const [records, rps] = await Promise.all([
+      this.prisma.record.count({ where: { lineId: id, origin: { not: "rp" } } }),
+      this.prisma.rp.count({ where: { lineId: id } }),
+    ]);
+    return { records, rps };
   }
 
   remove(id: string) {

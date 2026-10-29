@@ -3,6 +3,7 @@ import type { LineDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredBoolean, requiredString } from "../../kernel/parse";
 import { assertLineCanBeRemoved } from "../domain/hierarchy";
+import { assertNoLaunches } from "../domain/launch-removal";
 import { requireMachineStatus, requireName } from "../domain/names";
 import { FactoryRepository } from "../infra/factory.repository";
 import { LineRepository } from "../infra/line.repository";
@@ -36,6 +37,7 @@ export class Lines {
     if (await this.lines.countTechCards(id)) {
       throw new DomainError("line_in_use", 409, "Esta linha tem fichas de documentação técnica. Exclua ou mude as fichas antes.");
     }
+    assertNoLaunches("a linha", await this.lines.countLaunches(id), "Mude o status da linha para tirá-la de uso.");
   }
 
   async remove(id: string): Promise<void> {

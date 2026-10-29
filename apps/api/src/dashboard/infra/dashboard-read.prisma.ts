@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { dueRange } from "../../registro/domain/follow-up";
-import { notChamado } from "../../registro/infra/record.repository";
+import { inRegistros } from "../../registro/domain/registros-scope";
 import { PrismaService } from "../../prisma/prisma.service";
 import { RECENT_LIMIT } from "../domain/ranking";
 
@@ -30,20 +30,20 @@ export class DashboardRead {
     // Rascunho da Entrada ainda não é pendência: só conta depois de virar tarefa, problema ou feedback.
     const reviewed = { type: { not: "entry" } } as const;
     const [openCount, overdueCount, dueTodayCount, doneCount, recent, lines, members, byLine, byMember] = await Promise.all([
-      this.prisma.record.count({ where: { status: "open", ...notChamado, ...reviewed } }),
+      this.prisma.record.count({ where: { status: "open", ...inRegistros, ...reviewed } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("overdue", now) } }),
       this.prisma.record.count({ where: { type: "task", ...notDone, dueAt: dueRange("today", now) } }),
-      this.prisma.record.count({ where: { status: "done", ...notChamado, ...reviewed } }),
+      this.prisma.record.count({ where: { status: "done", ...inRegistros, ...reviewed } }),
       this.prisma.record.findMany({
-        where: notChamado,
+        where: inRegistros,
         select: { id: true, type: true, body: true, occurredAt: true, status: true },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         take: RECENT_LIMIT,
       }),
       this.prisma.line.findMany({ select: { id: true, name: true } }),
       this.prisma.member.findMany({ select: { id: true, name: true, status: true } }),
-      this.prisma.record.groupBy({ by: ["lineId"], where: { status: "open", lineId: { not: null }, ...notChamado }, _count: { _all: true } }),
-      this.prisma.record.groupBy({ by: ["memberId"], where: { status: "open", memberId: { not: null }, ...notChamado }, _count: { _all: true } }),
+      this.prisma.record.groupBy({ by: ["lineId"], where: { status: "open", lineId: { not: null }, ...inRegistros }, _count: { _all: true } }),
+      this.prisma.record.groupBy({ by: ["memberId"], where: { status: "open", memberId: { not: null }, ...inRegistros }, _count: { _all: true } }),
     ]);
     return {
       openCount,

@@ -12,6 +12,7 @@ import type {
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
+import type { SupervisorHolder } from "../domain/supervisor-holder";
 
 // O que a página pública usa do módulo de RP (a classe Rps cumpre isto).
 export interface RpBook {
@@ -39,7 +40,8 @@ export interface SupervisorLinkStore {
   // null quando o link não existe ou já foi removido.
   replaceCode(id: string, code: string): Promise<RpSupervisorLinkDto | null>;
   revoke(id: string, at: Date): Promise<boolean>;
-  findActive(code: string): Promise<{ id: string; name: string } | null>;
+  // holder: a situação de hoje de quem recebeu o link (null se foi excluído do cadastro).
+  findActive(code: string): Promise<{ id: string; name: string; holder: SupervisorHolder } | null>;
   // Colaborador com função que lidera equipe (cargo supervisor); null se não existe ou não é supervisor.
   findSupervisor(memberId: string): Promise<SupervisorMember | null>;
 }

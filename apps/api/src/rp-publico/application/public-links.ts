@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { PublicRpAccessDto, RpPublicLinkStateDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { isPublicLinkCodeShape, newPublicLinkCode } from "../domain/link-code";
+import { holdsSupervisorLink } from "../domain/supervisor-holder";
 import { PUBLIC_CLOCK, PUBLIC_LINK_STORE, SUPERVISOR_LINK_STORE, type Clock, type PublicLinkStore, type SupervisorLinkStore } from "./ports";
 
 export const LINK_GONE_MESSAGE = "Este link de RPs não vale mais. Peça o link novo ao coordenador.";
@@ -39,7 +40,7 @@ export class PublicLinks {
     if (!isPublicLinkCodeShape(code)) throw new DomainError("not_found", 404, LINK_GONE_MESSAGE);
     if (await this.store.isActive(code)) return { role: "team" };
     const supervisor = await this.supervisors.findActive(code);
-    if (!supervisor) throw new DomainError("not_found", 404, LINK_GONE_MESSAGE);
+    if (!supervisor || !holdsSupervisorLink(supervisor.holder)) throw new DomainError("not_found", 404, LINK_GONE_MESSAGE);
     return { role: "supervisor", supervisorName: supervisor.name };
   }
 
