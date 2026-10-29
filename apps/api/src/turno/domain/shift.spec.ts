@@ -103,4 +103,13 @@ describe("máquina do chamado", () => {
   it("recusa máquina de outra linha", () => {
     assert.throws(() => assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l2"), /Essa máquina não é da linha escolhida/);
   });
+
+  // A máquina m1 foi para a linha l2 no cadastro depois do chamado (conferência dos vínculos, PR #152).
+  it("aceita a linha e a máquina que o chamado já tinha, mesmo com a máquina mudada de linha", () => {
+    assert.doesNotThrow(() => assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l2", { lineId: "l1", machineId: "m1" }));
+  });
+
+  it("recusa a máquina mudada num chamado que tinha outra máquina", () => {
+    assert.throws(() => assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l2", { lineId: "l1", machineId: "m3" }), /Essa máquina/);
+  });
 });

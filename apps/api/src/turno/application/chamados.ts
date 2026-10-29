@@ -32,7 +32,7 @@ export class Chamados {
   async edit(id: string, body: unknown): Promise<ChamadoDto> {
     const current = await this.get(id);
     const write = openChamado(parseChamado(body));
-    await this.assertRefs(write);
+    await this.assertRefs(write, current);
     return this.chamados.update(current, write);
   }
 
@@ -45,7 +45,7 @@ export class Chamados {
     return this.chamados.addTask(current, input, now);
   }
 
-  private async assertRefs(write: ChamadoWrite): Promise<void> {
+  private async assertRefs(write: ChamadoWrite, saved: ChamadoDto | null = null): Promise<void> {
     const [lineOk, membersOk, machineLine] = await Promise.all([
       write.lineId ? this.refs.lineExists(write.lineId) : true,
       this.refs.membersExist(write.memberIds),
@@ -53,6 +53,6 @@ export class Chamados {
     ]);
     if (!lineOk) throw new DomainError("line", 400, "Linha não encontrada.");
     if (!membersOk) throw new DomainError("member", 400, "Colaborador não encontrado.");
-    assertChamadoMachine(write, machineLine);
+    assertChamadoMachine(write, machineLine, saved);
   }
 }
