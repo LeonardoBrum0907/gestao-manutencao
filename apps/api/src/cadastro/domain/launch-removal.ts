@@ -18,5 +18,6 @@ export function assertNoLaunches(label: string, launches: CadastroLaunches, alte
     launches.rps > 0 ? plural(launches.rps, "RP", "RPs") : null,
   ].filter((item): item is string => item !== null);
   if (!found.length) return;
-  throw new DomainError("cadastro_in_use", 409, `Não dá para excluir ${label}: ${found.join(" e ")} apontam para ela. ${alternative}`);
+  const verb = launches.records + launches.rps === 1 ? "aponta" : "apontam";
+  throw new DomainError("cadastro_in_use", 409, `Não dá para excluir ${label}: ${found.join(" e ")} ${verb} para ela. ${alternative}`);
 }

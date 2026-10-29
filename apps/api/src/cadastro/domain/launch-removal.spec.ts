@@ -23,4 +23,8 @@ describe("exclusão com lançamentos ligados", () => {
   it("recusa só com RP", () => {
     assert.throws(() => assertNoLaunches("a fábrica", { records: 0, rps: 3 }, ALT), /3 RPs apontam/);
   });
+
+  it("um lançamento só fica no singular", () => {
+    assert.throws(() => assertNoLaunches("a fábrica", { records: 0, rps: 1 }, ALT), /: 1 RP aponta para ela\./);
+  });
 });
