@@ -829,5 +829,6 @@ export * from "./tech-docs";
 export * from "./machine-parts";
 export * from "./push";
 export * from "./reminder";
+export * from "./task-repeat";
 export * from "./rp-public";
 export * from "./rp-whatsapp";
