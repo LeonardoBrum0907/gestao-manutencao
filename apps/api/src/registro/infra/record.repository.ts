@@ -28,6 +28,7 @@ import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
 import { reminderWrite } from "../../lembrete/domain/reminder-input";
 import { completionStep } from "./record-completion";
+import { inRegistros } from "../domain/registros-scope";
 
 const include = {
   attachments: { orderBy: { createdAt: "asc" as const } },
@@ -212,11 +213,9 @@ function involving(memberId: string): Prisma.RecordWhereInput {
 }
 
 // Os filtros vão para o banco: antes a API trazia todos os registros e filtrava no Node.
-// Chamado tem tela própria (Turno › Chamados) e fica fora de Registros; o que sobra dele vira Tarefa.
-export const notChamado = { origin: { not: "chamado" } } as const;
 
 function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput {
-  const and: Prisma.RecordWhereInput[] = [notChamado];
+  const and: Prisma.RecordWhereInput[] = [inRegistros];
   if (filter.types) and.push({ type: { in: filter.types } });
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
   if (filter.lineIds) and.push({ lineId: { in: filter.lineIds } });
@@ -281,7 +280,7 @@ export class RecordRepository {
     const rows = await this.prisma.record.findMany({
       where: {
         AND: [
-          notChamado,
+          inRegistros,
           { type: "task" },
           openOrDoneSince(doneSince(now)),
         ],
@@ -319,7 +318,7 @@ export class RecordRepository {
   // Problemas em aberto e os resolvidos da semana; a tela agrupa por linha ou situação.
   async problemBoard(now: Date): Promise<ProblemBoardDto> {
     const rows = await this.prisma.record.findMany({
-      where: { AND: [notChamado, { type: "problem" }, openOrDoneSince(doneSince(now))] },
+      where: { AND: [inRegistros, { type: "problem" }, openOrDoneSince(doneSince(now))] },
       select: {
         id: true,
         body: true,
@@ -446,7 +445,7 @@ export class RecordRepository {
   // Os cinco números da ficha, contados no banco em vez de somar a lista inteira da pessoa.
   async memberSummary(memberId: string, now: Date): Promise<MemberRecordSummaryDto> {
     const mine = involving(memberId);
-    const pending = { type: { not: "feedback" }, ...notChamado } as const;
+    const pending = { type: { not: "feedback" }, ...inRegistros } as const;
     const [open, overdue, done, chamados, feedbacks] = await Promise.all([
       this.prisma.record.count({ where: { AND: [mine, pending, { status: { not: "done" } }] } }),
       this.prisma.record.count({
