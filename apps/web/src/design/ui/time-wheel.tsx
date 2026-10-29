@@ -26,11 +26,14 @@ type TimeWheelProps = {
 };
 
 // Linha que está no centro; muda enquanto rola, para o número do meio ficar destacado na hora.
+// follow devolve a linha nova quando ela mudou, ou null.
 function useCenterRow(row: number, startTop: number) {
   const [center, setCenter] = useState(() => Math.round(startTop / row));
-  const follow = (top: number) => {
+  const follow = (top: number): number | null => {
     const next = Math.round(top / row);
-    if (next !== center) setCenter(next);
+    if (next === center) return null;
+    setCenter(next);
+    return next;
   };
   return { center, follow };
 }
@@ -46,7 +49,7 @@ function useTypedJump(items: string[]) {
 }
 
 /**
- * Roda sem fim de um seletor. `value` só vale ao abrir; depois a roda manda `onChange` quando para de rolar.
+ * Roda sem fim de um seletor. `value` só vale ao abrir; depois a roda manda `onChange` a cada número que chega ao centro.
  * Ex.: `<TimeWheel label="Hora" items={CLOCK_HOURS} value="14" row={36} sizeClass="w-16 text-xl" onChange={setHour} />`
  */
 export function TimeWheel({ label, items, value, row, sizeClass, autoFocus = false, onChange }: TimeWheelProps) {
@@ -71,10 +74,12 @@ export function TimeWheel({ label, items, value, row, sizeClass, autoFocus = fal
     if (!wheel) return;
     const top = loopedTop(wheel.scrollTop, count, row);
     if (Math.abs(top - wheel.scrollTop) >= 1) wheel.scrollTop = top;
-    onChange(items[wheelIndex(top, row, count)]);
   }
+  // Avisa a cada número que passa pelo centro, não só quando para: tocar em Pronto com a roda ainda
+  // girando grava o número que está à vista (antes gravava o anterior).
   function onScroll() {
-    follow(ref.current?.scrollTop ?? 0);
+    const moved = follow(ref.current?.scrollTop ?? 0);
+    if (moved !== null) onChange(items[wheelIndex(moved * row, row, count)]);
     window.clearTimeout(settleTimer.current);
     settleTimer.current = window.setTimeout(settle, SETTLE_MS);
   }
