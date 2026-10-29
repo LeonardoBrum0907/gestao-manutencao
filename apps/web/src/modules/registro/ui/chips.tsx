@@ -10,10 +10,12 @@ import { priorityLabel, recordShortName, recordTypeIcon, toneLabel } from "../mo
 // Etiquetas do cartão de adicionar (no estilo do Todoist): cada uma abre a lista de escolha e,
 // quando tem valor, ganha um × para tirar.
 
-const chipIcon = (name: IconName) => <Icon name={name} className="h-3.5 w-3.5" />;
+const chipIcon = (name: IconName, size: string) => <Icon name={name} className={size} />;
 
-// Na coluna lateral do modal do registro as etiquetas aparecem sem borda, alinhadas ao rótulo.
+// Na coluna lateral do modal do registro as etiquetas aparecem sem borda, alinhadas ao rótulo, e com letra maior
+// (15px, o recordValueText de record-text.ts; escrito por inteiro para o Tailwind gerar a classe).
 const PlainChips = createContext(false);
+const plainTrigger = "hover:!bg-card !text-[15px]";
 
 /** Etiquetas sem borda dentro dele. Ex.: `<PlainChipsArea><PriorityChip … /></PlainChipsArea>` */
 export function PlainChipsArea({ children }: { children: ReactNode }) {
@@ -39,21 +41,22 @@ export function Chip({ label, value, icon, tone = "text-app", onChange, onClear,
   const plain = useContext(PlainChips);
   const filled = value !== "";
   const frame = plain ? "-ml-2" : "border border-line bg-surface";
+  const iconSize = plain ? "h-4 w-4" : "h-3.5 w-3.5";
   return (
     <span className={`inline-flex items-center rounded-md ${frame} ${filled ? tone : "text-muted"}`}>
       <SelectInput
         variant="chip"
         aria-label={label}
         value={value}
-        icon={chipIcon(icon)}
-        className={plain ? "hover:!bg-card" : ""}
+        icon={chipIcon(icon, iconSize)}
+        className={plain ? plainTrigger : ""}
         onChange={(event) => onChange(event.target.value)}
       >
         {children}
       </SelectInput>
       {filled && onClear ? (
         <button type="button" aria-label={`Tirar ${label.toLowerCase()}`} onClick={onClear} className="-ml-1 grid h-7 w-6 place-items-center rounded-md text-muted hover:text-app">
-          <Icon name="close" className="h-3 w-3" />
+          <Icon name="close" className={plain ? "h-3.5 w-3.5" : "h-3 w-3"} />
         </button>
       ) : null}
     </span>
@@ -77,6 +80,7 @@ type PickerInput = HTMLInputElement & { showPicker?: () => void };
 export function DueChip({ day, today, onChange }: { day: string | null; today: string; onChange: (day: string | null) => void }) {
   const picker = useRef<PickerInput>(null);
   const [typing, setTyping] = useState(false);
+  const typingText = useContext(PlainChips) ? "text-[15px]" : "text-[13px]";
   const tomorrow = nextDay(today);
   const custom = day && day !== today && day !== tomorrow ? day : null;
 
@@ -109,7 +113,7 @@ export function DueChip({ day, today, onChange }: { day: string | null; today: s
           onChange(event.target.value || null);
           setTyping(false);
         }}
-        className={typing ? "ml-1 rounded-md border border-line bg-surface px-2 py-1 text-[13px] text-app" : "pointer-events-none absolute inset-0 opacity-0"}
+        className={typing ? `ml-1 rounded-md border border-line bg-surface px-2 py-1 ${typingText} text-app` : "pointer-events-none absolute inset-0 opacity-0"}
       />
     </span>
   );

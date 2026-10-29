@@ -7,29 +7,30 @@ import { useAddReminder, useRemoveReminder, useTaskReminders } from "../data/rem
 import { todayDay } from "../model/board";
 import { fromLocalInput, nowLocalInput } from "../model/record";
 import { beforeOptions, reminderText } from "../model/reminders";
+import { recordNoteText, recordValueText } from "./record-text";
 
 type ReminderTab = "at" | "before";
 
-const fieldClass = "rounded-md border border-line bg-surface px-2 py-1 text-[13px] text-app";
+const fieldClass = `rounded-md border border-line bg-surface px-2 py-1.5 ${recordValueText} text-app`;
 
 function ReminderItem({ reminder, record }: { reminder: TaskReminderDto; record: RecordDto }) {
   const remove = useRemoveReminder(record.id);
   const toast = useToast();
   const text = reminderText(reminder, record, todayDay());
   return (
-    <li className="flex w-full items-start justify-between gap-2 text-[13px]">
+    <li className={`flex w-full items-start justify-between gap-2 ${recordValueText}`}>
       <span className="min-w-0">
         <span className="text-app">{text.label}</span>
-        {text.when ? <span className="block text-xs text-muted">{text.when}</span> : null}
+        {text.when ? <span className={`block ${recordNoteText} text-muted`}>{text.when}</span> : null}
       </span>
       <button
         type="button"
         aria-label={`Tirar lembrete ${text.label}`}
         disabled={remove.isPending}
         onClick={() => remove.mutate(reminder.id, { onError: (error) => toast({ text: errorMessage(error) }) })}
-        className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-muted hover:text-app disabled:opacity-50"
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted hover:text-app disabled:opacity-50"
       >
-        <Icon name="close" className="h-3 w-3" />
+        <Icon name="close" className="h-3.5 w-3.5" />
       </button>
     </li>
   );
@@ -38,7 +39,7 @@ function ReminderItem({ reminder, record }: { reminder: TaskReminderDto; record:
 function TabButton({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: string }) {
   const tone = active ? "bg-accent-soft font-semibold text-app" : "text-muted hover:text-app";
   return (
-    <button type="button" aria-pressed={active} disabled={disabled} onClick={onClick} className={`rounded-md px-2 py-1 text-xs disabled:opacity-50 ${tone}`}>
+    <button type="button" aria-pressed={active} disabled={disabled} onClick={onClick} className={`rounded-md px-2.5 py-1 text-sm disabled:opacity-50 ${tone}`}>
       {children}
     </button>
   );
@@ -64,7 +65,7 @@ function ReminderInputs({ record, draft, onChange }: { record: RecordDto; draft:
           {beforeOptions(record.dueHasTime).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       )}
-      {!record.dueAt ? <span className="text-xs text-muted">Para lembrar antes do prazo, escolha o prazo primeiro.</span> : null}
+      {!record.dueAt ? <span className={`${recordNoteText} text-muted`}>Para lembrar antes do prazo, escolha o prazo primeiro.</span> : null}
     </>
   );
 }
@@ -79,10 +80,10 @@ function ReminderForm({ record, onDone }: { record: RecordDto; onDone: () => voi
     <div className="flex w-full flex-col gap-2 rounded-md border border-line bg-card p-2">
       <ReminderInputs record={record} draft={draft} onChange={setDraft} />
       <div className="flex gap-2">
-        <button type="button" onClick={submit} disabled={add.isPending || (draft.tab === "at" && !draft.at)} className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-contrast disabled:opacity-50">
+        <button type="button" onClick={submit} disabled={add.isPending || (draft.tab === "at" && !draft.at)} className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-contrast disabled:opacity-50">
           Adicionar lembrete
         </button>
-        <button type="button" onClick={onDone} className="rounded-md px-2 py-1 text-xs text-muted hover:text-app">Cancelar</button>
+        <button type="button" onClick={onDone} className="rounded-md px-2 py-1.5 text-sm text-muted hover:text-app">Cancelar</button>
       </div>
     </div>
   );
@@ -105,8 +106,8 @@ export function ReminderRow({ record }: { record: RecordDto }) {
       {adding ? (
         <ReminderForm record={record} onDone={() => setAdding(false)} />
       ) : (
-        <button type="button" onClick={() => setAdding(true)} className="-ml-1 inline-flex items-center gap-1 self-start rounded-md px-1 py-1 text-[13px] text-muted hover:bg-card hover:text-app">
-          <Icon name="plus" className="h-3.5 w-3.5" />
+        <button type="button" onClick={() => setAdding(true)} className={`-ml-1 inline-flex items-center gap-1.5 self-start rounded-md px-1 py-1 ${recordValueText} text-muted hover:bg-card hover:text-app`}>
+          <Icon name="plus" className="h-4 w-4" />
           Lembrete
         </button>
       )}
