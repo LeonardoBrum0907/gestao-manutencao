@@ -1,5 +1,6 @@
 import {
   RP_FOUR_M,
+  canonicalBasicConditionImpact,
   RP_STATUSES,
   RP_STATUS_LABELS,
   type RpCauseDto,
@@ -118,7 +119,7 @@ export function valuesFromRp(rp: RpDto | RpDraftDto): RpFormValues {
     corrective: rp.corrective ?? "",
     preventive: rp.preventive ?? "",
     status: rp.status,
-    basicConditionImpact: rp.basicConditionImpact ?? "",
+    basicConditionImpact: canonicalBasicConditionImpact(rp.basicConditionImpact) ?? "",
     memberIds: rp.memberIds,
     unmatchedTechnicians: rp.unmatchedTechnicians ?? "",
   };

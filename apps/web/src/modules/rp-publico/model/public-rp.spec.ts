@@ -146,4 +146,9 @@ describe("valuesFromPastedRp", () => {
     assert.deepEqual(valuesFromPastedRp(draft({ memberIds: ["m9"] }), directory, "m1").memberIds, ["m9"]);
     assert.equal(valuesFromPastedRp(draft(), directory, "m1").unmatchedTechnicians, "");
   });
+
+  it("o impacto em condição básica vira Sim ou Não; texto que não diz nenhum dos dois fica", () => {
+    const impact = (text: string | null) => valuesFromPastedRp(draft({ basicConditionImpact: text }), directory, "").basicConditionImpact;
+    assert.deepEqual([impact("(  ) Sim.  ( X ) Não."), impact("N/A"), impact(null), impact("Precisa requalificar")], ["Não", "Não", "", "Precisa requalificar"]);
+  });
 });
