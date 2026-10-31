@@ -24,7 +24,7 @@ function fullRp(): RpWhatsappInput {
     preventive: "Informar o preparador do ferramental.",
     status: "monitoring",
     technicians: ["Rogério B", "Douglas"],
-    basicConditionImpact: "Sim, faca 2 sem ajuste.",
+    basicConditionImpact: "Sim",
   };
 }
 

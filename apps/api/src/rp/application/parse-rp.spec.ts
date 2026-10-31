@@ -30,6 +30,11 @@ describe("parseRp", () => {
     }
   });
 
+  it("grava o impacto em condição básica como Sim ou Não quando dá para ler", () => {
+    const impacts = ["não", "N/A", "( X ) Sim (  ) Não", "Precisa requalificar", " "].map((text) => parseRp({ ...valid, basicConditionImpact: text }).fields.basicConditionImpact);
+    assert.deepEqual(impacts, ["Não", "Não", "Sim", "Precisa requalificar", null]);
+  });
+
   it("recusa técnicos que não sejam texto", () => {
     assert.throws(() => parseRp({ ...valid, memberIds: [1] }), DomainError);
   });

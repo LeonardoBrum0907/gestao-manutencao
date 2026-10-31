@@ -74,7 +74,7 @@ describe("parseRpText com relatórios reais do WhatsApp", () => {
     assert.ok(rp.preventive?.startsWith("Foi instruído operador"));
     assert.equal(rp.status, "corrected");
     assert.deepEqual(rp.technicians, ["Willian Jonh", "Paulo Paniguel"]);
-    assert.equal(rp.basicConditionImpact, null);
+    assert.equal(rp.basicConditionImpact, "Não"); // "N/A" no texto
   });
 
   it("separa os três relatórios colados de uma vez", () => {
@@ -149,12 +149,20 @@ describe("parseRpText em outras formas", () => {
     assert.equal(rp.status, "corrected");
   });
 
-  it("trata N/A, na e não como 4M vazio e N/A no impacto como nulo", () => {
+  it("trata N/A, na e não como 4M vazio e N/A no impacto como Não", () => {
     const rp = only(
       ["PROBLEMA: x", "4M", "- MATERIAL: N/A", "- MÁQUINA: não", "- MÉTODO: na", "- MÃO DE OBRA: X", "IMPACTO EM CONDIÇÃO BÁSICA?", "N/A"].join("\n"),
     );
     assert.deepEqual(Object.values(rp.causes).map((cause) => cause.marked), [false, false, false, true]);
-    assert.equal(rp.basicConditionImpact, null);
+    // Sim/Não desde 2026-10-31: N/A no impacto é "sem impacto".
+    assert.equal(rp.basicConditionImpact, "Não");
+  });
+
+  it("lê o quadrinho marcado do impacto em condição básica como Sim ou Não", () => {
+    const text = (answer: string) => ["PROBLEMA: x", "IMPACTO EM CONDIÇÃO BÁSICA? (Necessidade de qualificação?):*.", answer].join("\n");
+    assert.equal(only(text("(  ) Sim.  ( X ) Não.")).basicConditionImpact, "Não");
+    assert.equal(only(text("( X ) Sim.  (  ) Não.")).basicConditionImpact, "Sim");
+    assert.equal(only(text("não")).basicConditionImpact, "Não");
   });
 
   it("junta técnicos separados por vírgula, 'e' e '/'", () => {

@@ -64,7 +64,7 @@ const rpFields = {
   rootCause: optionalText("causa raiz"),
   corrective: optionalText("ação corretiva"),
   preventive: optionalText("ação preventiva"),
-  basicConditionImpact: optionalText("impacto na condição básica"),
+  basicConditionImpact: optionalText("impacto em condição básica: \"Sim\" ou \"Não\""),
   memberIds: z.array(z.string()).optional().describe("ids dos técnicos"),
   unmatchedTechnicians: optionalText("técnicos do texto que não estão no cadastro"),
   rawText: z.string().optional().describe("texto original do WhatsApp, quando veio de ler_rp"),
