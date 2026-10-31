@@ -1,4 +1,4 @@
-import { RP_FOUR_M, isRpStatus, type RpCauseDto, type RpFields, type RpFourM } from "@manutencao/shared";
+import { RP_FOUR_M, canonicalBasicConditionImpact, isRpStatus, type RpCauseDto, type RpFields, type RpFourM } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalString, readObject, requiredString } from "../../kernel/parse";
 import { RP_TEXT_MAX_LENGTH } from "../domain/rp-text";
@@ -65,7 +65,7 @@ export function parseRp(body: unknown): RpInput {
     corrective: optionalString(source, "corrective"),
     preventive: optionalString(source, "preventive"),
     status,
-    basicConditionImpact: optionalString(source, "basicConditionImpact"),
+    basicConditionImpact: canonicalBasicConditionImpact(optionalString(source, "basicConditionImpact")),
     memberIds: stringList(source, "memberIds"),
     unmatchedTechnicians: optionalString(source, "unmatchedTechnicians"),
   };

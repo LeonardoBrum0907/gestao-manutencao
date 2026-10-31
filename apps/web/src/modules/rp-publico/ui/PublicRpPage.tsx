@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import { RP_FOUR_M, RP_FOUR_M_LABELS, type PublicRpDirectoryDto, type PublicRpDto } from "@manutencao/shared";
+import { RP_FOUR_M, RP_FOUR_M_LABELS, canonicalBasicConditionImpact, type PublicRpDirectoryDto, type PublicRpDto } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, Notice, TextArea } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
@@ -47,7 +47,7 @@ function RpDetails({ rp, directory }: { rp: PublicRpDto; directory: PublicRpDire
       <div className="sm:col-span-2"><Item label="Contramedida corretiva (o que foi feito agora?)">{rp.corrective}</Item></div>
       <div className="sm:col-span-2"><Item label="Contramedida preventiva (como evitar repetir?)">{rp.preventive}</Item></div>
       <Item label="Técnico">{rp.memberNames.join(", ")}</Item>
-      <Item label="Impacto em condição básica?">{rp.basicConditionImpact}</Item>
+      <Item label="Impacto em condição básica?">{canonicalBasicConditionImpact(rp.basicConditionImpact)}</Item>
     </dl>
   );
 }

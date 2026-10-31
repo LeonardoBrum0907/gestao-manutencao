@@ -835,3 +835,4 @@ export * from "./reminder";
 export * from "./task-repeat";
 export * from "./rp-public";
 export * from "./rp-whatsapp";
+export * from "./rp-basic-condition";

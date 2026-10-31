@@ -54,4 +54,9 @@ describe("rpWhatsappText: texto do RP no modelo do grupo", () => {
   it("junta os técnicos com vírgula", () => {
     assert.match(rpWhatsappText(sample()), /\*TÉCNICO:\* Rogério B, Douglas\n/);
   });
+
+  it("escreve o impacto em condição básica como Sim ou Não, mesmo o texto antigo", () => {
+    assert.match(rpWhatsappText(sample({ basicConditionImpact: "N/A" })), /\*IMPACTO EM CONDIÇÃO BÁSICA\?\* Não$/);
+    assert.match(rpWhatsappText(sample({ basicConditionImpact: "Sim" })), /\*IMPACTO EM CONDIÇÃO BÁSICA\?\* Sim$/);
+  });
 });

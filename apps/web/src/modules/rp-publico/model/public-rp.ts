@@ -1,5 +1,6 @@
 import {
   RP_FOUR_M,
+  canonicalBasicConditionImpact,
   type PublicRpBody,
   type PublicRpDirectoryDto,
   type PublicRpDto,
@@ -97,7 +98,7 @@ export function valuesFromPublicRp(rp: PublicRpDto): RpFormValues {
     corrective: rp.corrective ?? "",
     preventive: rp.preventive ?? "",
     status: rp.status,
-    basicConditionImpact: rp.basicConditionImpact ?? "",
+    basicConditionImpact: canonicalBasicConditionImpact(rp.basicConditionImpact) ?? "",
     memberIds: rp.memberIds,
     unmatchedTechnicians: "",
   };

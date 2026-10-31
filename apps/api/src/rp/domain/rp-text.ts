@@ -1,4 +1,4 @@
-import type { RpFourM, RpStatus } from "@manutencao/shared";
+import { basicConditionAnswer, type RpFourM, type RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { causeDetail } from "./rp-cause";
 
@@ -316,7 +316,8 @@ function parseChunk(lines: string[]): ParsedRp {
     corrective: orNull(text("corrective")),
     preventive: orNull(text("preventive")),
     status: status ?? "analysis",
-    basicConditionImpact: isEmptyValue(impact) ? null : impact,
+    // Sim/Não desde 2026-10-31: "não" e "N/A" deixaram de ser vazio e viram "Não" (ver rp-basic-condition no shared).
+    basicConditionImpact: basicConditionAnswer(impact) ?? (isEmptyValue(impact) ? null : impact),
     technicians,
     rawText: lines.join("\n").trim(),
     warnings,

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { RP_FOUR_M, RP_FOUR_M_LABELS, type RpFourM } from "@manutencao/shared";
 import { Field, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
 import { rpStatusOptions, type RpFormValues } from "../model/rp";
+import { BasicConditionChoice } from "./BasicConditionChoice";
 
 /**
  * Bloco do formulário com título, separado do anterior por uma linha.
@@ -98,9 +99,12 @@ export function RpReportSections({ values, set, setCause, errors = {}, required 
             ))}
           </SelectInput>
         </Field>
-        <Field label="Impacto em condição básica" required={required.has("basicConditionImpact")} error={errors.basicConditionImpact}>
-          <TextArea value={values.basicConditionImpact} onChange={(event) => set("basicConditionImpact", event.target.value)} />
-        </Field>
+        <BasicConditionChoice
+          value={values.basicConditionImpact}
+          onChange={(next) => set("basicConditionImpact", next)}
+          required={required.has("basicConditionImpact")}
+          error={errors.basicConditionImpact}
+        />
       </Section>
     </>
   );

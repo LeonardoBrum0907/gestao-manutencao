@@ -1,4 +1,5 @@
 import type { RpCauseDto, RpFourM, RpStatus } from "./index";
+import { canonicalBasicConditionImpact } from "./rp-basic-condition";
 
 // Texto do Relatório Padrão no mesmo modelo que o time cola no grupo do WhatsApp. O leitor do app
 // (apps/api/src/rp/domain/rp-text.ts) lê este texto de volta com os mesmos campos: o spec de ida e volta
@@ -110,6 +111,6 @@ export function rpWhatsappText(input: RpWhatsappInput): string {
     ...statusSection(input.status),
     `*TÉCNICO:* ${input.technicians.join(", ")}`.trimEnd(),
     "",
-    `*IMPACTO EM CONDIÇÃO BÁSICA?* ${input.basicConditionImpact ?? ""}`.trimEnd(),
+    `*IMPACTO EM CONDIÇÃO BÁSICA?* ${canonicalBasicConditionImpact(input.basicConditionImpact) ?? ""}`.trimEnd(),
   ].join("\n");
 }
