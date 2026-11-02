@@ -165,7 +165,8 @@ export type RpPublicLinkStateDto = { link: RpPublicLinkDto | null };
  * Link pessoal de um supervisor: o mesmo endereço da página pública, com o código dele.
  * memberId é o supervisor no cadastro (null se o colaborador foi excluído).
  */
-export type RpSupervisorLinkDto = { id: string; memberId: string | null; name: string; code: string; createdAt: string };
+// stillSupervisor: a pessoa segue no cadastro, não está desligada e lidera equipe; falso, o link não abre mais.
+export type RpSupervisorLinkDto = { id: string; memberId: string | null; name: string; code: string; createdAt: string; stillSupervisor: boolean };
 
 // O coordenador escolhe um colaborador com função que lidera equipe.
 export type RpSupervisorLinkBody = { memberId: string };

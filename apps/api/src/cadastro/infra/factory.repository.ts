@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { FactoryDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { CadastroLaunches } from "../domain/launch-removal";
 
 @Injectable()
 export class FactoryRepository {
@@ -27,6 +28,15 @@ export class FactoryRepository {
 
   countLines(id: string) {
     return this.prisma.line.count({ where: { factoryId: id } });
+  }
+
+  // O Problema espelho de RP antigo não conta à parte: o RP dele já conta.
+  async countLaunches(id: string): Promise<CadastroLaunches> {
+    const [records, rps] = await Promise.all([
+      this.prisma.record.count({ where: { factoryId: id, origin: { not: "rp" } } }),
+      this.prisma.rp.count({ where: { factoryId: id } }),
+    ]);
+    return { records, rps };
   }
 
   remove(id: string) {

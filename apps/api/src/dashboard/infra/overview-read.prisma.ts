@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { dueRange } from "../../registro/domain/follow-up";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { QuarterRef } from "../domain/people";
+import { inRegistros } from "../../registro/domain/registros-scope";
 
 const chamado = { origin: "chamado" } as const;
 const machineSelect = { select: { name: true, line: { select: { name: true } } } } as const;
@@ -116,7 +117,7 @@ export class OverviewRead {
 
   // Tarefas e problemas que entraram ou foram concluídos desde a data (chamado e rascunho ficam de fora).
   async flow(since: Date): Promise<{ created: Date[]; completed: Date[] }> {
-    const kinds: Prisma.RecordWhereInput = { type: { in: ["task", "problem"] }, origin: { not: "chamado" } };
+    const kinds: Prisma.RecordWhereInput = { type: { in: ["task", "problem"] }, ...inRegistros };
     const [created, completed] = await Promise.all([
       this.prisma.record.findMany({ where: { ...kinds, createdAt: { gte: since } }, select: { createdAt: true } }),
       this.prisma.record.findMany({ where: { ...kinds, completedAt: { gte: since } }, select: { completedAt: true } }),

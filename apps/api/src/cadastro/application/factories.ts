@@ -3,6 +3,7 @@ import type { FactoryDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { readObject, requiredString } from "../../kernel/parse";
 import { assertFactoryCanBeRemoved } from "../domain/factory-removal";
+import { assertNoLaunches } from "../domain/launch-removal";
 import { requireName } from "../domain/names";
 import { FactoryRepository } from "../infra/factory.repository";
 
@@ -32,6 +33,7 @@ export class Factories {
     if (!current) throw new DomainError("not_found", 404, "Fábrica não encontrada.");
     const lines = await this.factories.countLines(id);
     assertFactoryCanBeRemoved(lines);
+    assertNoLaunches("a fábrica", await this.factories.countLaunches(id), "Troque a fábrica nesses lançamentos antes.");
   }
 
   async remove(id: string): Promise<void> {

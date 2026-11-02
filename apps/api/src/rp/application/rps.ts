@@ -1,22 +1,23 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { RpDraftDto, RpDto, RpDuplicateDto, RpMemberSummaryDto, RpPageDto, RpSource } from "@manutencao/shared";
-import { assertMachineSpot } from "../../cadastro/domain/hierarchy";
+import { assertMachineSpot, type MachineSpot } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { PROBLEM_LOG, type ProblemLogPort } from "../../ports/problem-log";
-import { mirrorProblem } from "../domain/rp";
 import type { RpDecisionPatch } from "../domain/rp-decision";
-import { RpRepository, type RpWrite } from "../infra/rp.repository";
+import { RpRepository } from "../infra/rp.repository";
 import { parseRp, parseRpText, type RpInput } from "./parse-rp";
 import { parseRpList, type RpListQuery } from "./parse-rp-list";
 import { rpDrafts } from "./rp-drafts";
+import type { RpStore, RpWrite } from "./rp-store";
 
 const MEMBER_SUMMARY_LIMIT = 20;
 
 @Injectable()
 export class Rps {
   constructor(
-    private readonly rps: RpRepository,
+    // O token é a classe do Postgres; o tipo é a interface, para o teste entrar com o FakeRpStore.
+    @Inject(RpRepository) private readonly rps: RpStore,
     @Inject(PROBLEM_LOG) private readonly problems: ProblemLogPort,
     @Inject(CADASTRO_REFS) private readonly refs: CadastroRefs,
   ) {}
@@ -33,19 +34,14 @@ export class Rps {
   }
 
   /**
-   * Grava um RP já lido, com o Problema espelho. A página pública chama com origem "public".
+   * Grava um RP já lido. A página pública chama com origem "public".
+   * Desde 2026-10-29 o RP não cria Problema em Registros (pedido do Léo): o RP mora só na tela de RPs.
    * @example await rps.createFrom(parseRp(body), "public")
    */
   async createFrom(input: RpInput, origin: RpSource): Promise<RpDto> {
     await this.assertRefs(input, null);
     if (input.chamadoId) await this.assertChamado(input.chamadoId);
-    const problem = await this.problems.save(mirrorProblem(input.fields, input.occurredAt));
-    try {
-      return await this.rps.insert(this.write(input, problem.id), input.chamadoId, origin);
-    } catch (error) {
-      await this.problems.remove(problem.id);
-      throw error;
-    }
+    return this.rps.insert(this.write(input, null), input.chamadoId, origin);
   }
 
   update(id: string, body: unknown): Promise<RpDto> {
@@ -53,21 +49,17 @@ export class Rps {
   }
 
   /**
-   * Regrava um RP já lido e acompanha o Problema espelho. Não mexe na origem nem no chamado.
+   * Regrava um RP já lido. Não mexe na origem, no chamado nem no Problema espelho dos RPs de antes de 2026-10-29,
+   * que fica guardado (fora de Registros) até o RP ser excluído.
    * @example await rps.updateFrom(id, parseRp(body))
    */
   async updateFrom(id: string, input: RpInput): Promise<RpDto> {
     const current = await this.get(id);
-    await this.assertRefs(input, current.subassemblyId);
-    let problemId = current.problemRecordId;
-    if (problemId) {
-      await this.problems.replace(problemId, () => mirrorProblem(input.fields, input.occurredAt));
-    } else {
-      problemId = (await this.problems.save(mirrorProblem(input.fields, input.occurredAt))).id;
-    }
-    return this.rps.update(id, this.write(input, problemId));
+    await this.assertRefs(input, current);
+    return this.rps.update(id, this.write(input, current.problemRecordId));
   }
 
+  // RP de antes de 2026-10-29 ainda pode ter o Problema espelho: sai junto, para não ficar registro solto.
   async remove(id: string): Promise<void> {
     const current = await this.get(id);
     await this.rps.remove(id);
@@ -110,7 +102,7 @@ export class Rps {
     return this.rps.memberSummary(memberId, MEMBER_SUMMARY_LIMIT);
   }
 
-  private write(input: RpInput, problemRecordId: string): RpWrite {
+  private write(input: RpInput, problemRecordId: string | null): RpWrite {
     return { fields: input.fields, occurredAt: input.occurredAt, rawText: input.rawText, problemRecordId };
   }
 
@@ -120,7 +112,7 @@ export class Rps {
     if (state === "taken") throw new DomainError("chamado", 409, "Este chamado já tem RP.");
   }
 
-  private async assertRefs(input: RpInput, savedSubassemblyId: string | null): Promise<void> {
+  private async assertRefs(input: RpInput, saved: MachineSpot | null): Promise<void> {
     const { fields } = input;
     if (!(await this.refs.factoryExists(fields.factoryId))) {
       throw new DomainError("factory", 400, "Fábrica não encontrada.");
@@ -131,6 +123,6 @@ export class Rps {
     if (!(await this.refs.membersExist(fields.memberIds))) {
       throw new DomainError("member", 400, "Colaborador não encontrado.");
     }
-    assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), savedSubassemblyId);
+    assertMachineSpot(fields, await this.refs.machineSpot(fields.machineId, fields.subassemblyId), saved);
   }
 }

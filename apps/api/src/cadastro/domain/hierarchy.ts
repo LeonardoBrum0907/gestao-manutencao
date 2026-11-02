@@ -65,17 +65,32 @@ export type MachineSpotRefs = {
 /**
  * Máquina e subconjunto escolhidos numa ficha (problema, RP) batem com o cadastro: a máquina é da linha
  * e o subconjunto é dela. Os dois são opcionais, mas subconjunto pede máquina e máquina pede linha.
+ * `saved` é o que a ficha já tinha gravado (nulo numa ficha nova).
  * Ex.: `assertMachineSpot({ lineId: "l1", machineId: "m1", subassemblyId: null }, await refs.machineSpot("m1", null), null)`
  */
-export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, savedSubassemblyId: string | null): void {
+export function assertMachineSpot(spot: MachineSpot, refs: MachineSpotRefs, saved: MachineSpot | null): void {
   if (spot.subassemblyId && !spot.machineId) throw new DomainError("machine", 400, "Escolha a máquina do subconjunto.");
   if (!spot.machineId) return;
   if (!spot.lineId) throw new DomainError("machine", 400, "Escolha a linha da máquina.");
   if (!refs.machine) throw new DomainError("machine", 400, `Máquina não encontrada (id ${spot.machineId}).`);
-  if (refs.machine.lineId !== spot.lineId) throw new DomainError("machine", 400, "Esta máquina não é da linha escolhida.");
+  if (refs.machine.lineId !== spot.lineId && !keepsSavedPlace(spot, saved)) {
+    throw new DomainError("machine", 400, "Esta máquina não é da linha escolhida.");
+  }
   if (!spot.subassemblyId) return;
   if (!refs.subassembly) throw new DomainError("subassembly", 400, `Subconjunto não encontrado (id ${spot.subassemblyId}).`);
-  assertSubassemblyFits(refs.machine, refs.subassembly, savedSubassemblyId);
+  assertSubassemblyFits(refs.machine, refs.subassembly, saved?.subassemblyId ?? null);
+}
+
+/**
+ * A ficha continua com a linha e a máquina que já tinha: vale mesmo se a máquina mudou de linha no cadastro depois,
+ * porque a ficha conta onde ela estava naquele dia. Sem isso o RP ou o problema não salvava mais (PR #152).
+ * Ex.: `keepsSavedPlace({ lineId: "l1", machineId: "m1" }, { lineId: "l1", machineId: "m1" })` // true
+ */
+export function keepsSavedPlace(
+  spot: Pick<MachineSpot, "lineId" | "machineId">,
+  saved: Pick<MachineSpot, "lineId" | "machineId"> | null,
+): boolean {
+  return saved !== null && saved.machineId !== null && saved.machineId === spot.machineId && saved.lineId === spot.lineId;
 }
 
 // Nome para comparar: sem acento, minúsculo e com espaços simples.

@@ -3,6 +3,7 @@ import { DomainError } from "../../kernel/domain-error";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
+import type { SupervisorHolder } from "../domain/supervisor-holder";
 import type { PublicDirectoryStore, PublicLinkStore, RevisionWrite, RpBook, RpRevisionStore, SupervisorLinkStore, SupervisorMember } from "./ports";
 
 // Classes falsas dos testes da página pública: guardam tudo em memória.
@@ -124,13 +125,18 @@ export class FakeSupervisorLinkStore implements SupervisorLinkStore {
     { id: "m-carlos", name: "Carlos" },
     { id: "m-ana", name: "Ana" },
   ];
+  // Situação de hoje no cadastro; quem não está aqui foi excluído.
+  holders = new Map<string, NonNullable<SupervisorHolder>>([
+    ["m-carlos", { status: "active", position: "supervisor" }],
+    ["m-ana", { status: "active", position: "supervisor" }],
+  ]);
 
   async list(): Promise<RpSupervisorLinkDto[]> {
     return this.links.filter((link) => !link.revokedAt).map(({ revokedAt: _revoked, ...link }) => link);
   }
 
   async create(supervisor: SupervisorMember, code: string, at: Date): Promise<RpSupervisorLinkDto> {
-    const link = { id: `sup${this.links.length + 1}`, memberId: supervisor.id, name: supervisor.name, code, createdAt: at.toISOString() };
+    const link = { id: `sup${this.links.length + 1}`, memberId: supervisor.id, name: supervisor.name, code, createdAt: at.toISOString(), stillSupervisor: true };
     this.links.push({ ...link, revokedAt: null });
     return link;
   }
@@ -149,9 +155,9 @@ export class FakeSupervisorLinkStore implements SupervisorLinkStore {
     return true;
   }
 
-  async findActive(code: string): Promise<{ id: string; name: string } | null> {
+  async findActive(code: string): Promise<{ id: string; name: string; holder: SupervisorHolder } | null> {
     const link = this.links.find((item) => item.code === code && !item.revokedAt);
-    return link ? { id: link.id, name: link.name } : null;
+    return link ? { id: link.id, name: link.name, holder: (link.memberId && this.holders.get(link.memberId)) || null } : null;
   }
 
   async findSupervisor(memberId: string): Promise<SupervisorMember | null> {

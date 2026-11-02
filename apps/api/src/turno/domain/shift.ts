@@ -1,4 +1,5 @@
 import type { ChamadoShift, RecordPriority, RecordStatus } from "@manutencao/shared";
+import { keepsSavedPlace } from "../../cadastro/domain/hierarchy";
 import { DomainError } from "../../kernel/domain-error";
 import type { ProblemWrite } from "../../ports/problem-log";
 
@@ -92,6 +93,19 @@ export function openChamado(input: ChamadoInput): ChamadoWrite {
     status: input.status,
     notes: input.notes?.trim() || null,
   };
+}
+
+type ChamadoPlace = Pick<ChamadoWrite, "lineId" | "machineId">;
+
+/**
+ * A máquina escolhida no chamado é da linha dele. `machineLine` é a linha da máquina no cadastro; `saved`, o que o
+ * chamado já tinha gravado (a máquina pode ter mudado de linha depois, ver keepsSavedPlace).
+ * Ex.: `assertChamadoMachine({ lineId: "l1", machineId: "m1" }, "l1")`
+ */
+export function assertChamadoMachine(write: ChamadoPlace, machineLine: string | null, saved: ChamadoPlace | null = null): void {
+  if (write.machineId && machineLine !== write.lineId && !keepsSavedPlace(write, saved)) {
+    throw new DomainError("machine", 400, "Essa máquina não é da linha escolhida.");
+  }
 }
 
 // Número do chamado no dia: o seguinte ao maior já usado (os antigos foram digitados à mão).

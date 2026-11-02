@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DomainError } from "../../kernel/domain-error";
-import { assertLineCanBeRemoved, assertMachineSpot, assertSubassemblyFits, assertSubassemblyNameAvailable } from "./hierarchy";
+import { assertLineCanBeRemoved, assertMachineSpot, assertSubassemblyFits, assertSubassemblyNameAvailable, keepsSavedPlace } from "./hierarchy";
 
 function refused(run: () => void, code: string) {
   assert.throws(run, (error: unknown) => {
@@ -119,6 +119,17 @@ describe("máquina e subconjunto de uma ficha", () => {
     refusedSaying(() => assertMachineSpot({ lineId: "uhlmann-01", machineId: "m1", subassemblyId: null }, refs, null), "Esta máquina não é da linha escolhida.");
   });
 
+  // A máquina m1 foi da Uhlmann 01 para a MED 03 no cadastro depois que a ficha foi gravada (conferência dos vínculos, PR #152).
+  it("aceita a linha e a máquina que a ficha já tinha, mesmo com a máquina mudada de linha", () => {
+    const saved = { lineId: "uhlmann-01", machineId: "m1", subassemblyId: "s1" };
+    assert.doesNotThrow(() => assertMachineSpot({ lineId: "uhlmann-01", machineId: "m1", subassemblyId: "s1" }, refs, saved));
+  });
+
+  it("recusa escolher de novo a máquina mudada numa ficha que tinha outra", () => {
+    const saved = { lineId: "uhlmann-01", machineId: "m2", subassemblyId: null };
+    refusedSaying(() => assertMachineSpot({ lineId: "uhlmann-01", machineId: "m1", subassemblyId: null }, refs, saved), "Esta máquina não é da linha escolhida.");
+  });
+
   it("recusa máquina ou subconjunto que não existem", () => {
     refusedSaying(() => assertMachineSpot({ lineId: "med-03", machineId: "m9", subassemblyId: null }, { machine: null, subassembly: null }, null), "Máquina não encontrada (id m9).");
     refusedSaying(() => assertMachineSpot({ lineId: "med-03", machineId: "m1", subassemblyId: "s9" }, { machine, subassembly: null }, null), "Subconjunto não encontrado (id s9).");
@@ -127,5 +138,14 @@ describe("máquina e subconjunto de uma ficha", () => {
   it("recusa subconjunto de outro modelo", () => {
     const other = { ...subassembly, equipmentId: "blistadeira-cam" };
     refusedSaying(() => assertMachineSpot({ lineId: "med-03", machineId: "m1", subassemblyId: "s1" }, { machine, subassembly: other }, null), "Este subconjunto não é do modelo desta máquina.");
+  });
+});
+
+describe("lugar já gravado na ficha", () => {
+  it("vale só quando a linha e a máquina continuam as mesmas", () => {
+    assert.equal(keepsSavedPlace({ lineId: "l1", machineId: "m1" }, { lineId: "l1", machineId: "m1" }), true);
+    assert.equal(keepsSavedPlace({ lineId: "l2", machineId: "m1" }, { lineId: "l1", machineId: "m1" }), false);
+    assert.equal(keepsSavedPlace({ lineId: "l1", machineId: "m1" }, { lineId: "l1", machineId: "m2" }), false);
+    assert.equal(keepsSavedPlace({ lineId: "l1", machineId: "m1" }, null), false);
   });
 });
