@@ -53,7 +53,7 @@ export function RpEditPage() {
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
       {data.source === "public" ? <RpOriginPanel rp={data} onRestored={() => setFormVersion((version) => version + 1)} /> : null}
-      <RpAttentionBox rpId={data.id} lineId={data.lineId} />
+      <RpAttentionBox rpId={data.id} />
       <RpForm
         key={formVersion}
         id={data.id}
