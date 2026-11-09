@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Notice, PageTitle } from "../../../design/ui/controls";
 import { errorMessage } from "../../../app/http";
-import { RpAttentionBox } from "../../pos-preventiva/ui/RpAttentionBox";
 import { useChamado } from "../../turno/data/shift";
 import { chamadoHref, shortDay } from "../../turno/model/chamado";
 import { useDeleteRp, useRp } from "../data/rp";
@@ -53,7 +52,6 @@ export function RpEditPage() {
         {data.chamadoId ? <ChamadoLink chamadoId={data.chamadoId} /> : null}
       </div>
       {data.source === "public" ? <RpOriginPanel rp={data} onRestored={() => setFormVersion((version) => version + 1)} /> : null}
-      <RpAttentionBox rpId={data.id} />
       <RpForm
         key={formVersion}
         id={data.id}
