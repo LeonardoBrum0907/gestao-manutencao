@@ -19,6 +19,7 @@ import {
   chamadoStatusChoices,
   chamadoStatusLabel,
   clock,
+  closedDayAfterMove,
   closingInstant,
   dayOf,
   instant,
@@ -373,7 +374,14 @@ export function ChamadoPanel({ chamado, day, onClose, onCreated }: { chamado: Ch
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Dia">
-            <TextInput type="date" value={draft.day} onChange={(event) => set("day", event.target.value)} />
+            <TextInput
+              type="date"
+              value={draft.day}
+              onChange={(event) => {
+                const day = event.target.value;
+                setDraft((current) => ({ ...current, day, closedDay: closedDayAfterMove(current.day, current.closedDay, day) }));
+              }}
+            />
           </Field>
           <Field label="Abertura">
             <TimeInput clearable value={draft.opened} onChange={(time) => set("opened", time)} />
