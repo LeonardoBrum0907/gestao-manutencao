@@ -63,10 +63,18 @@ export function agendaDayTitle(day: string, today: string): { date: string; name
 
 const monthYear = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", month: "long", year: "numeric" });
 
-/** Mês da semana mostrada. Ex.: `agendaMonth(["2026-10-29", …, "2026-11-04"])` → `"Outubro – novembro de 2026"`. */
+/**
+ * Mês da semana mostrada. Ex.: `agendaMonth(["2026-10-29", …, "2026-11-04"])` → `"Outubro – novembro de 2026"`.
+ * Na virada do ano os dois anos aparecem: só "de 2027" no fim fazia o dezembro parecer de 2027.
+ * Ex.: `agendaMonth(["2026-12-29", …, "2027-01-04"])` → `"Dezembro de 2026 – janeiro de 2027"`.
+ */
 export function agendaMonth(days: readonly string[]): string {
   const first = monthYear.format(new Date(`${days[0]}T12:00:00Z`));
   const last = monthYear.format(new Date(`${days[days.length - 1]}T12:00:00Z`));
-  const label = first === last ? first : `${first.split(" de ")[0]} – ${last}`;
+  const label = first === last ? first : `${sameYear(days) ? first.split(" de ")[0] : first} – ${last}`;
   return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function sameYear(days: readonly string[]): boolean {
+  return days[0].slice(0, 4) === days[days.length - 1].slice(0, 4);
 }
