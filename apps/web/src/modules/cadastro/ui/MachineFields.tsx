@@ -1,47 +1,22 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { errorMessage } from "../../../app/http";
-import { Button, Field, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
+import { Field, SelectInput } from "../../../design/ui/controls";
+import { InlineCreate } from "../../../design/ui/inline-create";
 import { useMachines, useSaveSubassembly, useSubassemblies } from "../data/cadastro";
 import { subassemblyChoices, subassemblyPlaceholder } from "../model/machine-spot";
 
-// Novo subconjunto direto da ficha, no modelo da máquina escolhida.
+// Novo subconjunto direto da ficha, no modelo da máquina escolhida. Usa o InlineCreate, que trata o Enter: o campo
+// próprio daqui enviava a ficha inteira no Enter (PR #143).
 function NewSubassembly({ equipmentId, onCreated }: { equipmentId: string; onCreated: (id: string) => void }) {
   const save = useSaveSubassembly();
-  const [name, setName] = useState("");
-  const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
-      <button type="button" className="self-start text-sm font-semibold text-accent hover:underline" onClick={() => setOpen(true)}>
-        + Novo subconjunto
-      </button>
-    );
-  }
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <TextInput aria-label="Nome do novo subconjunto" value={name} placeholder="Nome do subconjunto" onChange={(event) => setName(event.target.value)} />
-        <Button
-          tone="ghost"
-          disabled={save.isPending}
-          onClick={() =>
-            save.mutate(
-              { equipmentId, name, archived: false },
-              {
-                onSuccess: (item) => {
-                  onCreated(item.id);
-                  setName("");
-                  setOpen(false);
-                },
-              },
-            )
-          }
-        >
-          Criar
-        </Button>
-      </div>
-      {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-    </div>
+    <InlineCreate
+      label="+ Novo subconjunto"
+      inputLabel="Nome do novo subconjunto"
+      placeholder="Nome do subconjunto"
+      pending={save.isPending}
+      error={save.error}
+      onCreate={async (name) => onCreated((await save.mutateAsync({ equipmentId, name, archived: false })).id)}
+    />
   );
 }
 

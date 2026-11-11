@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { errorMessage } from "../../app/http";
+import { runOnEnter } from "../enter-key";
 import { Button, Notice, TextInput } from "./controls";
 
 export type InlineCreateProps = {
@@ -50,11 +51,7 @@ export function InlineCreate({ label, inputLabel, placeholder, pending, error, o
           value={name}
           placeholder={placeholder}
           onChange={(event) => setName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") return;
-            event.preventDefault();
-            create();
-          }}
+          onKeyDown={(event) => runOnEnter(event, create)}
         />
         <Button tone="ghost" disabled={pending} onClick={create}>
           Criar
