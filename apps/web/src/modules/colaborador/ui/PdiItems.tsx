@@ -17,7 +17,7 @@ import { useMatrix } from "../../competencia/data/matrix";
 import { entriesById, equipmentName, skillState } from "../../competencia/model/matrix";
 import { usePdiItems, useRemovePdiItem, useSavePdiItem } from "../data/pdi-items";
 import { usePerformance } from "../data/performance";
-import { belowTarget, formatDay, isOverdue, itemCounts, sortItems, todayIso, type PdiItemWrite } from "../model/pdi-items";
+import { belowTarget, formatCompletedDay, formatDay, isOverdue, itemCounts, sortItems, todayIso, type PdiItemWrite } from "../model/pdi-items";
 import { formatScore, thisYear } from "../model/performance";
 
 export const emptyPdiItem: PdiItemWrite = {
@@ -246,7 +246,7 @@ export function PdiItems({ member }: { member: MemberDto }) {
                 {item.competencyId ? ` · Competência: ${competencyName.get(item.competencyId) ?? ""}` : ""}
                 {item.lineId ? ` · ${lineName.get(item.lineId) ?? ""}` : ""}
                 {item.skillId ? ` · Matriz: ${skillText.get(item.skillId) ?? ""}` : ""}
-                {item.completedAt ? ` · Concluído em ${formatDay(item.completedAt.slice(0, 10))}` : ""}
+                {item.completedAt ? ` · Concluído em ${formatCompletedDay(item.completedAt)}` : ""}
               </p>
               {item.notes ? <p className="whitespace-pre-line text-sm text-app">{item.notes}</p> : null}
               <div className="flex gap-2">

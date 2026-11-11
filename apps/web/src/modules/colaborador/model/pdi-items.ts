@@ -32,6 +32,15 @@ export function formatDay(day: string | null): string {
   return `${date}/${month}/${year}`;
 }
 
+/**
+ * Dia de conclusão de um item do PDI, no fuso do gestor. completedAt é um instante em UTC: cortar a data do texto
+ * (slice(0, 10)) mostrava o dia seguinte para o que foi concluído depois das 21h de Brasília.
+ * @example formatCompletedDay("2026-10-20T01:30:00.000Z") // "19/10/2026"
+ */
+export function formatCompletedDay(completedAt: string): string {
+  return formatDay(todayIso(new Date(completedAt)));
+}
+
 // Abertos primeiro (prazo mais próximo na frente, sem prazo por último), depois concluídos e cancelados.
 export function sortItems(items: PdiItemDto[]): PdiItemDto[] {
   const rank = (item: PdiItemDto) => (isOpen(item) ? 0 : item.status === "done" ? 1 : 2);
