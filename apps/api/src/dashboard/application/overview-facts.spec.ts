@@ -17,6 +17,7 @@ function chamado(partial: Partial<ChamadoRow>): ChamadoRow {
     body: "Esteira de saída travando",
     status: "open",
     lineId: "cam05",
+    lineLabel: null,
     openedAt: null,
     occurredAt: new Date("2026-10-12T10:00:00.000Z"),
     durationMin: null,
@@ -54,6 +55,11 @@ describe("chamados para o dashboard", () => {
     assert.equal(list[1].lineName, "CAM 05");
     assert.equal(list[1].machineName, "Encartuchadeira");
     assert.equal(list[0].lineName, null);
+  });
+
+  it("chamado com linha fora do cadastro mostra a linha escrita, não \"Sem linha\"", () => {
+    const list = openChamadoList([chamado({ lineId: null, lineLabel: "Utilidades" })], lineNames);
+    assert.equal(list[0].lineName, "Utilidades");
   });
 
   it("sem hora de abertura usa a data do chamado", () => {
