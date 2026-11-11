@@ -108,3 +108,15 @@ export function nowClock(): string {
 export function chamadoHref(chamado: Pick<ChamadoDto, "id" | "day">): string {
   return `/turno/chamados?dia=${chamado.day}&abrir=${chamado.id}`;
 }
+
+/**
+ * Lista de Chamados filtrada pela linha, aberta no dia do chamado mais recente (a lista vem do mais novo
+ * para o mais antigo). A tela de Chamados mostra um dia só: sem o dia, o link da máquina abria em hoje
+ * e mostrava "Nenhum chamado neste dia" mesmo com chamados recentes na linha.
+ * @example lineChamadosHref("l1", [{ day: "2026-10-19" }]) // "/turno/chamados?linha=l1&dia=2026-10-19"
+ */
+export function lineChamadosHref(lineId: string, newestFirst: readonly Pick<ChamadoDto, "day">[] | undefined): string {
+  const href = `/turno/chamados?linha=${encodeURIComponent(lineId)}`;
+  const latest = newestFirst?.[0];
+  return latest ? `${href}&dia=${latest.day}` : href;
+}

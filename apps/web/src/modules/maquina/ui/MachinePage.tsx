@@ -14,7 +14,7 @@ import { groupBySubassembly } from "../../pos-preventiva/model/post-preventive";
 import { flattenRp, useRpPages } from "../../rp/data/rp";
 import { formatRpDay, rpStatusChipClass, rpStatusLabel } from "../../rp/model/rp";
 import { useChamadosOfLine } from "../../turno/data/shift";
-import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, shortDay } from "../../turno/model/chamado";
+import { chamadoHref, chamadoStatusChipClass, chamadoStatusLabel, lineChamadosHref, shortDay } from "../../turno/model/chamado";
 import { AttentionSheetOptions } from "./AttentionSheetOptions";
 import { MachineSubassembliesCard } from "./MachineSubassembliesCard";
 import { ATTENTION_COLUMNS, HISTORY_COLUMNS, attentionStacked, historyStacked, type MachineRecordRow } from "./machine-history-table";
@@ -70,6 +70,16 @@ function RecentChamados({ lineId, machineId }: { lineId: string; machineId: stri
         </li>
       ))}
     </ul>
+  );
+}
+
+// Mesma consulta da lista ao lado (o React Query reaproveita), para abrir Chamados num dia que tem chamado.
+function LineChamadosLink({ lineId }: { lineId: string }) {
+  const chamados = useChamadosOfLine(lineId, RECENT_CHAMADOS);
+  return (
+    <Link to={lineChamadosHref(lineId, chamados.data)} className="text-sm font-semibold text-accent hover:underline">
+      Abrir Chamados
+    </Link>
   );
 }
 
@@ -195,11 +205,7 @@ export function MachinePage() {
           <div className="mt-6">
             <SectionTitle
               title={`Chamados da linha ${line.name}`}
-              action={
-                <Link to={`/turno/chamados?linha=${line.id}`} className="text-sm font-semibold text-accent hover:underline">
-                  Abrir Chamados
-                </Link>
-              }
+              action={<LineChamadosLink lineId={line.id} />}
             />
             <RecentChamados lineId={line.id} machineId={machine.id} />
           </div>
