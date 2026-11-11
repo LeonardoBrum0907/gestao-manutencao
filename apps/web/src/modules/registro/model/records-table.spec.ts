@@ -26,6 +26,9 @@ function item(id: string, partial: Partial<RecordListItemDto> = {}): RecordListI
     machineId: null,
     subassemblyId: null,
     memberId: null,
+    line: null,
+    tag: null,
+    lineLabel: null,
     ...partial,
   };
 }
@@ -38,6 +41,17 @@ describe("linhas de Registros", () => {
   it("junta os nomes do cadastro e monta o lugar", () => {
     assert.equal(placeLabel(problem), "MED 01 › Blistadeira › Desbobinador");
     assert.equal(placeLabel(withNames(item("t"), names)), "");
+  });
+
+  it("usa o lugar escrito à mão quando não há linha do cadastro (pendência gerada num chamado)", () => {
+    const pendencia = withNames(item("t", { body: "Trocar a correia", line: "CAM 01", tag: "EBS-ENC-02" }), names);
+    assert.equal(placeLabel(pendencia), "CAM 01 › EBS-ENC-02");
+    assert.equal(matchesSearch(pendencia, "cam 01 correia"), true);
+    assert.equal(matchesSearch(pendencia, "enc-02"), true);
+    const outra = withNames(item("p", { type: "problem", lineLabel: "Utilidades" }), names);
+    assert.equal(placeLabel(outra), "Utilidades");
+    const cadastrada = withNames(item("p", { type: "problem", lineId: "l1", line: "texto velho" }), names);
+    assert.equal(placeLabel(cadastrada), "MED 01");
   });
 
   it("procura sem acento, em todas as palavras, no texto, no lugar e na pessoa", () => {
