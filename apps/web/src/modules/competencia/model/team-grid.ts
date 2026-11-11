@@ -29,13 +29,16 @@ export function emptyTeamGridNotice(grid: Pick<TeamGrid, "memberCount">): string
 
 type MemberFilter = Pick<TeamGridState, "shift" | "focus" | "memberIds">;
 
-// Sem técnico escolhido valem todos; com escolha, só eles, para comparar lado a lado.
+// Sem técnico escolhido valem todos; com escolha, só eles, para comparar lado a lado. Só conta a escolha de quem
+// veio na equipe: a Categoria esconde técnicos e o filtro "Técnicos" não lista os escondidos, então mostrava
+// "Todos" com a grade vazia.
 function visibleMembers(members: readonly TeamMemberDto[], filter: MemberFilter): TeamMemberDto[] {
+  const chosen = filter.memberIds.filter((id) => members.some((member) => member.id === id));
   return members.filter(
     (member) =>
       (!filter.shift || member.shift === filter.shift) &&
       (filter.focus !== "pdi" || member.pdiOverdue > 0) &&
-      (filter.memberIds.length === 0 || filter.memberIds.includes(member.id)),
+      (chosen.length === 0 || chosen.includes(member.id)),
   );
 }
 
