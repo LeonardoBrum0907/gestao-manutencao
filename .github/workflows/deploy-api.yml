@@ -1,7 +1,9 @@
 # Deploy automático da API na VPS quando a main muda em algo que a API usa.
 # A tela não passa por aqui: a Vercel publica sozinha.
-# A chave em VPS_SSH_KEY só roda `caderno-admin deploy` na VPS (authorized_keys com
-# command= forçado, montado por deploy/vps/admin/instalar-deploy-github.sh).
+# Os testes rodam aqui; só depois o Coolify (coolify.leobrum.run) monta e publica a API.
+# O Coolify troca o container só quando o HEALTHCHECK do apps/api/Dockerfile passa, e
+# mantém a versão anterior no ar se o deploy falhar.
+# Segredo COOLIFY_TOKEN: token da API do Coolify com as permissões read e deploy.
 name: Deploy da API
 
 on:
@@ -11,8 +13,6 @@ on:
       - apps/api/**
       - packages/shared/**
       - pnpm-lock.yaml
-      - docker-compose.vps.yml
-      - deploy/vps/caddy/**
       - .github/workflows/deploy-api.yml
   workflow_dispatch:
 
@@ -23,6 +23,12 @@ concurrency:
 
 permissions:
   contents: read
+
+env:
+  COOLIFY_URL: https://coolify.leobrum.run
+  # Aplicação caderno-api no projeto caderno-gestor (production) do Coolify.
+  COOLIFY_API_UUID: ndr8ptsky8jtzgaojusc9ns5
+  API_URL: https://api.leobrum.run
 
 jobs:
   testes:
@@ -44,21 +50,38 @@ jobs:
     needs: testes
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
     steps:
-      - name: Preparar a chave SSH
-        env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+      - name: Pedir o deploy ao Coolify
+        id: pedido
         run: |
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy
-          chmod 600 ~/.ssh/deploy
-          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-      - name: Backup, pull da main, rebuild da API e espera healthy
+          resposta=$(curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_API_UUID")
+          echo "$resposta"
+          id=$(jq -r '.deployments[0].deployment_uuid // empty' <<<"$resposta")
+          if [ -z "$id" ]; then
+            echo "O Coolify não devolveu deployment_uuid (esperado: {\"deployments\":[{\"deployment_uuid\":…}]})." >&2
+            exit 1
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      - name: Esperar o Coolify terminar (até 25 min)
         env:
-          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
-        run: ssh -i ~/.ssh/deploy -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "$VPS_SSH_HOST"
+          DEPLOY_ID: ${{ steps.pedido.outputs.id }}
+        run: |
+          for _ in $(seq 1 150); do
+            situacao=$(curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1/deployments/$DEPLOY_ID" | jq -r '.status')
+            echo "$(date +%T) $situacao"
+            case "$situacao" in
+              finished) exit 0 ;;
+              failed|cancelled-by-user|skipped)
+                echo "Deploy $DEPLOY_ID terminou como '$situacao' (esperado: finished). Veja Deployment Logs no Coolify." >&2
+                exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "Deploy $DEPLOY_ID não terminou em 25 min." >&2
+          exit 1
       - name: Conferir o /health pela internet
-        env:
-          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
-        run: curl -fsS --retry 5 --retry-delay 5 "https://${VPS_SSH_HOST#*@}/health"
+        run: curl -fsS --retry 5 --retry-delay 5 "$API_URL/health"
