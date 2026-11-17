@@ -16,19 +16,19 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://srv2063513.hstgr.cloud/api/:path*"
+      "destination": "https://api.leobrum.run/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://srv2063513.hstgr.cloud/health"
+      "destination": "https://api.leobrum.run/health"
     },
     {
       "source": "/:route(mcp|authorize|token|register|revoke)",
-      "destination": "https://srv2063513.hstgr.cloud/:route"
+      "destination": "https://api.leobrum.run/:route"
     },
     {
       "source": "/.well-known/:path*",
-      "destination": "https://srv2063513.hstgr.cloud/.well-known/:path*"
+      "destination": "https://api.leobrum.run/.well-known/:path*"
     },
     {
       "source": "/(.*)",
