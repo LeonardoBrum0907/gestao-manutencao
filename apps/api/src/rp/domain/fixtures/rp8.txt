@@ -1,0 +1,47 @@
+*RELATÓRIO  MANUTENÇÃO*
+
+*DATA:* 31/10/2026
+*LINHA:* Med 04
+*TAG:*ebs-bli-17
+ORDEM: n/a
+
+*PROBLEMA (o que ocorreu?):* 
+- Acumulo  na chamada do cartucho. 
+
+*DESCRIÇÃO DO PROBLEMA (o que foi observado?):* 
+- cartucho caindo em cima da esteira de transporte.
+
+*FALHA REPETIDA?*  
+(X) Não  
+( ) Sim → Quantas vezes? 
+Período aproximado: n/a
+
+*4M – POSSÍVEIS CAUSAS*  
+(Preencher somente o que se aplica)
+
+- *MATERIAL:*  
+
+- *MÁQUINA:* x
+
+- *MÉTODO:*  
+
+- *MÃO DE  OBRA* 
+
+*CAUSA RAIZ*
+- Sensor do magazine sem ajuste na sensibilidade.
+
+*CONTRAMEDIDA CORRETIVA (o que foi feito agora?):*  
+- Realizado a substituição do sensor.
+
+*CONTRAMEDIDA PREVENTIVA (como evitar repetir?):*  
+- Entender o motivo junto a automação.
+
+TÉCNICO: Paulo B / Ronildo / Alexandre 
+
+STATUS:*  
+( ) Em análise  
+(X) Corrigido  
+( ) Em monitoramento  
+
+
+*IMPACTO EM CONDIÇÃO BÁSICA? (Necessidade de qualificação?):*

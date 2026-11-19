@@ -259,3 +259,12 @@ describe("parseRpText em outras formas", () => {
     assert.throws(() => parseRpText("   "), DomainError);
   });
 });
+
+describe("parseRpText: 4M e status como o time marca", () => {
+  it("lê rótulo com espaço a mais, sem jogar a MÃO DE  OBRA no MÉTODO (MED 04, 2026-10-31)", () => {
+    const rp = only(fixture("rp8"));
+    assert.deepEqual(rp.causes.method, { marked: false, text: null });
+    assert.deepEqual(rp.causes.labor, { marked: false, text: null });
+    assert.equal(rp.causes.machine.marked, true);
+  });
+});

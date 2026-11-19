@@ -2,6 +2,7 @@ import { basicConditionAnswer, type RpFourM, type RpStatus } from "@manutencao/s
 import { DomainError } from "../../kernel/domain-error";
 import { causeDetail } from "./rp-cause";
 import { gestorToday, readRpDate } from "./rp-date";
+import { afterMarkedBox, leadingBox } from "./rp-marks";
 
 // Lê o texto do Relatório Padrão que circula no WhatsApp. Função pura: nunca grava nada e nunca
 // falha por texto estranho, só devolve o que achou e uma lista de avisos para o gestor conferir.
@@ -62,6 +63,12 @@ const ALIASES: [Field, string][] = [
   ["tag", "TAG"],
   ["impact", "IMPACTO"],
 ];
+
+// "MÃO DE  OBRA" com dois espaços (MED 04, 2026-10-31) não casava e o texto ia parar no MÉTODO.
+const ALIAS_PATTERNS: [Field, RegExp][] = ALIASES.map(([field, alias]) => [
+  field,
+  new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+"), "y"),
+]);
 
 const FOUR_M_FIELDS: Field[] = ["material", "machine", "method", "labor"];
 // Campos de uma linha só. O modelo do Renan (desde 2026-11-01) escreve "*LINHA* CAM 6", sem dois-pontos: para
@@ -135,13 +142,16 @@ function matchLabel(line: string): LabelHit | null {
   const folded = fold(line);
   let i = 0;
   while (i < line.length && MARKER.test(line[i]!)) i++;
-  for (const [field, alias] of ALIASES) {
-    if (!folded.startsWith(alias, i)) continue;
-    const after = folded[i + alias.length];
+  for (const [field, pattern] of ALIAS_PATTERNS) {
+    pattern.lastIndex = i;
+    const found = pattern.exec(folded);
+    if (!found) continue;
+    const aliasEnd = i + found[0].length;
+    const after = folded[aliasEnd];
     if (after !== undefined && /[A-Z0-9]/.test(after)) continue;
-    const { end, confirmed } = readLabelEnd(line, folded, i + alias.length);
+    const { end, confirmed } = readLabelEnd(line, folded, aliasEnd);
     if (confirmed || end >= line.length) return { field, valueStart: end };
-    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, i + alias.length, end) : null;
+    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, aliasEnd, end) : null;
     if (shortEnd !== null) return { field, valueStart: shortEnd };
   }
   return null;
