@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { emptyRpValues } from "./rp";
-import { withMachineFromTag } from "./rp-machine-tag";
+import { tagLineConflict, withMachineFromTag } from "./rp-machine-tag";
 
 const lines = [
   { id: "cam01", factoryId: "f1" },
@@ -38,5 +38,24 @@ describe("máquina do RP colado pela TAG", () => {
     const tags = ["EBS-BLI-01.", "EBS BLI 01", "ebs-bli-1", "EBSBLI01"];
     const found = tags.map((tag) => withMachineFromTag({ ...emptyRpValues(), tag }, machines, lines).machineId);
     assert.deepEqual(found, ["bli01", "bli01", "bli01", "bli01"]);
+  });
+});
+
+const namedLines = [
+  { id: "cam01", name: "CAM 01" },
+  { id: "cam05", name: "CAM 05" },
+];
+const namedMachines = machines.map((machine) => ({ ...machine, name: machine.id === "bli01" ? "Blistadeira" : "Encartuchadeira" }));
+
+describe("aviso de TAG de outra linha", () => {
+  it("avisa quando a TAG é de uma máquina de outra linha", () => {
+    const values = { ...emptyRpValues(), lineId: "cam05", tag: "EBS-BLI-01" };
+    assert.equal(tagLineConflict(values, namedMachines, namedLines), "A TAG EBS-BLI-01 é da Blistadeira da CAM 01, mas a linha lida foi CAM 05. Confira a linha e a máquina.");
+  });
+
+  it("não avisa com máquina escolhida, sem linha, TAG da mesma linha ou TAG desconhecida", () => {
+    const base = { ...emptyRpValues(), lineId: "cam05", tag: "EBS-BLI-01" };
+    const quiet = [{ ...base, machineId: "enc05" }, { ...base, lineId: "" }, { ...base, tag: "EBS-ENC-05" }, { ...base, tag: "XYZ" }];
+    assert.deepEqual(quiet.map((values) => tagLineConflict(values, namedMachines, namedLines)), [null, null, null, null]);
   });
 });

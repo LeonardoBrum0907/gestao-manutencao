@@ -24,3 +24,21 @@ export function withMachineFromTag(
   const factoryId = lines.find((line) => line.id === machine.lineId)?.factoryId ?? values.factoryId;
   return { ...values, machineId: machine.id, lineId: machine.lineId, factoryId };
 }
+
+/**
+ * Aviso para o RP colado quando a TAG é de uma máquina de outra linha (ex.: "Med 8" com a TAG da Blistadeira da
+ * MED 06). Nesse caso withMachineFromTag deixa a máquina em branco, e sem o aviso ninguém percebe.
+ * @example tagLineConflict(valores, maquinas, linhas) // "A TAG EBS-BLI-21 é da Blistadeira da MED 06, mas …"
+ */
+export function tagLineConflict(
+  values: RpFormValues,
+  machines: readonly Pick<MachineDto, "lineId" | "tag" | "name">[],
+  lines: readonly Pick<LineDto, "id" | "name">[],
+): string | null {
+  if (values.machineId || !values.lineId || !values.tag.trim()) return null;
+  const found = machinesWithTag(values.tag, machines);
+  if (found.length !== 1 || found[0].lineId === values.lineId) return null;
+  const lineName = (id: string) => lines.find((line) => line.id === id)?.name ?? "outra linha";
+  const machine = found[0];
+  return `A TAG ${values.tag.trim()} é da ${machine.name} da ${lineName(machine.lineId)}, mas a linha lida foi ${lineName(values.lineId)}. Confira a linha e a máquina.`;
+}
