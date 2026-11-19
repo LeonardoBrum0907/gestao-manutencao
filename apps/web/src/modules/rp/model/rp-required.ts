@@ -34,3 +34,7 @@ export function requiredFieldErrors(values: RpFormValues, keys: readonly RpField
   }
   return errors;
 }
+
+// Os mesmos que a API recusa sem (apps/api/src/rp/application/parse-rp.ts): o gestor vê antes de gravar.
+/** Campos obrigatórios do RP do gestor. */
+export const MANAGER_RP_REQUIRED: readonly RpFieldKey[] = ["occurredAt", "factoryId", "problem", "status"];

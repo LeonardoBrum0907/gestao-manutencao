@@ -41,6 +41,13 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+/* Campo obrigatório vazio ou com erro (data-invalid, posto pelo Field e pelo MultiSelect): borda e fundo em vermelho
+   para achar no meio do formulário, além da mensagem embaixo. Pedido do Léo (2026-11-19) para o RP colado. */
+[data-invalid] > :is(input, textarea, button[role="combobox"], .border-line) {
+  border-color: var(--danger);
+  background-color: var(--danger-soft);
+}
+
 /* Roda do seletor de horário (time-wheel.tsx): rola sem barra, como a do alarme do celular. */
 .time-wheel {
   scrollbar-width: none;

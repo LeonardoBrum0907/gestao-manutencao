@@ -104,7 +104,8 @@ export function PublicRpForm({
   // Campo-isca: escondido de quem usa a tela; robô que preenche tudo cai aqui.
   const [website, setWebsite] = useState("");
   // Os erros só aparecem depois da primeira tentativa de gravar; a partir daí somem conforme a pessoa corrige.
-  const [tried, setTried] = useState(false);
+  // Vindo do texto colado, já aparecem: o técnico vê de cara o que a leitura não preencheu (pedido do Léo, 2026-11-19).
+  const [tried, setTried] = useState(Boolean(pasteWarnings));
   const formRef = useRef<HTMLFormElement>(null);
   const errors: RpFieldErrors = tried ? publicRpFormErrors(values, directory.machines) : {};
   const hasErrors = Object.keys(errors).length > 0;
