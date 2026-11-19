@@ -201,6 +201,19 @@ function splitReports(lines: string[]): string[][] {
   return chunks;
 }
 
+type BoxedCause = { field: Field; marked: boolean; value: string };
+
+// Modelo do Renan (desde 2026-11-01): o 4M vem com quadrinho na frente, "(X) *MÁQUINA*" e "() *MATERIAL*".
+// Antes o leitor não via o rótulo atrás do quadrinho e nenhuma causa saía marcada.
+function boxedCause(line: string): BoxedCause | null {
+  const box = leadingBox(line);
+  if (!box) return null;
+  const hit = matchLabel(box.rest);
+  if (!hit || !FOUR_M_FIELDS.includes(hit.field)) return null;
+  const detail = box.rest.slice(hit.valueStart).trim();
+  return { field: hit.field, marked: box.marked, value: box.marked ? `X ${detail}` : "" };
+}
+
 function stripBullet(line: string): string {
   return line.replace(/^[\s*_\-•·.–—]+/, "").trim();
 }
@@ -309,6 +322,13 @@ function parseChunk(lines: string[], today: string): ParsedRp {
     if (isFourMHeader(line)) {
       fourMSeen = true;
       current = null;
+      continue;
+    }
+    const boxed = boxedCause(line);
+    if (boxed) {
+      // Quadrinho vazio: as linhas de baixo não são detalhe desta causa.
+      current = boxed.marked ? boxed.field : null;
+      values.set(boxed.field, [...(values.get(boxed.field) ?? []), boxed.value]);
       continue;
     }
     const hit = matchLabel(line);

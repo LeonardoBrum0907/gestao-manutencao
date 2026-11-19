@@ -280,4 +280,18 @@ describe("parseRpText: 4M e status como o time marca", () => {
     assert.deepEqual([only(fixture("rp4")).repeatedTimes, only(fixture("rp4")).repeatedPeriod], [null, null]);
     assert.deepEqual([only(fixture("rp6")).repeatedTimes, only(fixture("rp6")).repeatedPeriod], ["3", null]);
   });
+
+  it("lê o 4M com quadrinho na frente do rótulo (modelo do Renan)", () => {
+    const rp = only(fixture("rp4"));
+    assert.deepEqual(rp.causes.machine, { marked: true, text: null });
+    assert.deepEqual(rp.causes.material, { marked: false, text: null });
+    assert.deepEqual(rp.causes.labor, { marked: false, text: null });
+  });
+
+  it("detalhe embaixo do quadrinho marcado vira o texto da causa", () => {
+    const rp = only("PROBLEMA: x\n4M\n( ) *MATERIAL*\n(✅) *MÁQUINA*\n- Rolamento travado.\n() *MÉTODO*");
+    assert.deepEqual(rp.causes.machine, { marked: true, text: "Rolamento travado." });
+    assert.equal(rp.causes.method.marked, false);
+    assert.equal(rp.causes.material.marked, false);
+  });
 });
