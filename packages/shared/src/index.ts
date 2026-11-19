@@ -580,7 +580,8 @@ export type MemberMatrixDto = {
 
 // RP (Relatório Padrão de Manutenção): ficha própria. Até 2026-10-29 era espelhada num Problema de origem "rp";
 // os RPs desde então não criam problema e problemRecordId fica nulo.
-export const RP_STATUSES = ["analysis", "monitoring", "corrected", "producing"] as const;
+// "stopped" desde 2026-11-19 (pedido do Léo): o modelo do Renan tem "( ) Parado (aguardando qualificação)".
+export const RP_STATUSES = ["analysis", "monitoring", "corrected", "producing", "stopped"] as const;
 export type RpStatus = (typeof RP_STATUSES)[number];
 
 export const RP_STATUS_LABELS: Record<RpStatus, string> = {
@@ -588,6 +589,7 @@ export const RP_STATUS_LABELS: Record<RpStatus, string> = {
   monitoring: "Em monitoramento",
   corrected: "Corrigido",
   producing: "Produzindo",
+  stopped: "Parado (aguardando qualificação)",
 };
 
 export function isRpStatus(value: string): value is RpStatus {

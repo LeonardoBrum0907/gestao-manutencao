@@ -46,7 +46,7 @@ const rpFields = {
   occurredAt: z.string().min(1).describe("dia do relatório, AAAA-MM-DD"),
   factoryId: id("da fábrica"),
   problem: z.string().min(1).describe("problema, em uma linha"),
-  status: z.enum(RP_STATUSES).describe("analysis = em análise, monitoring = em acompanhamento, corrected = corrigido, producing = produzindo"),
+  status: z.enum(RP_STATUSES).describe("analysis = em análise, monitoring = em acompanhamento, corrected = corrigido, producing = produzindo, stopped = parado (aguardando qualificação)"),
   orderNumber: optionalText("número da ordem (OS)"),
   lineId: id("da linha").nullable().optional(),
   line: optionalText("linha como veio no texto, quando não está no cadastro"),
