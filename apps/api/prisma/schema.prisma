@@ -195,6 +195,8 @@ model Member {
   area         String?
   status       String
   registration String?
+  // Como o time chama a pessoa nos RPs do WhatsApp ("Zé Tavares, Zé"); mais de um jeito separado por vírgula.
+  nickname     String?
   contact      String?
   notes        String?
   // Aparece na lista de técnicos do formulário da página pública de RPs.
