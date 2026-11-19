@@ -169,6 +169,7 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
               <span className={memberStatusClass(member.status)}>{memberStatusLabel(member.status)}</span>
             </Detail>
             <Detail label="Matrícula">{member.registration}</Detail>
+            <Detail label="Apelido">{member.nickname}</Detail>
             <Detail label="Contato">{member.contact}</Detail>
           </dl>
           {member.notes ? <p className="mt-4 whitespace-pre-line text-sm text-muted">{member.notes}</p> : null}

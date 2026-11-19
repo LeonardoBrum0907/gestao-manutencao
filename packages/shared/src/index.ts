@@ -241,6 +241,8 @@ export type MemberDto = {
   area: string | null;
   status: MemberStatus;
   registration: string | null;
+  // Como o time chama a pessoa nos RPs do WhatsApp; ajuda o Colar do RP a achar o técnico.
+  nickname: string | null;
   contact: string | null;
   notes: string | null;
   // Aparece na lista de técnicos do formulário da página pública de RPs.

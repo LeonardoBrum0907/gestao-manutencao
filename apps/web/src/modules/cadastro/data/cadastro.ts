@@ -307,6 +307,7 @@ export type MemberWrite = {
   area: string | null;
   status: MemberDto["status"];
   registration: string | null;
+  nickname: string | null;
   contact: string | null;
   notes: string | null;
 };

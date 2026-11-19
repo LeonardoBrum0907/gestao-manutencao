@@ -95,8 +95,7 @@ export class PublicRps {
   async parse(code: string, body: unknown): Promise<RpDraftDto[]> {
     await this.links.assertActive(code);
     const text = parseRpText(body);
-    const directory = await this.people.directory();
-    const members = directory.members.map((member) => ({ ...member, active: true }));
+    const [directory, members] = await Promise.all([this.people.directory(), this.people.allowedMemberRefs()]);
     return rpDrafts(text, members, directory.lines);
   }
 

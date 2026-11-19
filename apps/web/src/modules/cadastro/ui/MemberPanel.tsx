@@ -20,6 +20,7 @@ const empty: MemberWrite = {
   area: "",
   status: "active",
   registration: "",
+  nickname: "",
   contact: "",
   notes: "",
 };
@@ -35,6 +36,7 @@ function fromDto(member: MemberDto): MemberWrite {
     area: member.area ?? "",
     status: member.status,
     registration: member.registration ?? "",
+    nickname: member.nickname ?? "",
     contact: member.contact ?? "",
     notes: member.notes ?? "",
   };
@@ -50,6 +52,7 @@ function toBody(draft: MemberWrite): MemberWrite {
     ...draft,
     area: blankToNull(draft.area),
     registration: blankToNull(draft.registration),
+    nickname: blankToNull(draft.nickname),
     contact: blankToNull(draft.contact),
     notes: blankToNull(draft.notes),
   };
@@ -171,6 +174,14 @@ export function MemberPanel({
         <PanelSection title="Identificação">
           <Field label="Nome">
             <TextInput value={draft.name} placeholder="Nome completo" onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+          </Field>
+          {/* O Colar do RP procura o técnico também por aqui: "Zé" no WhatsApp acha o José Tavares. */}
+          <Field label="Apelido (como aparece nos RPs)">
+            <TextInput
+              value={draft.nickname ?? ""}
+              placeholder="Ex.: Zé Tavares, Zé"
+              onChange={(event) => setDraft({ ...draft, nickname: event.target.value })}
+            />
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
             {/* Sem campo Cargo: a função diz se a pessoa lidera equipe (Configurações › Funções e graus). */}
