@@ -1,0 +1,48 @@
+O *RELATÓRIO PADRÃO – MANUTENÇÃO*
+
+*DATA* 18/11/2026
+*LINHA* CAM 6
+*TAG* EBS-ECT-15
+
+*PROBLEMA (o que ocorreu?)*
+Alarme de Fricção Máquina S14.
+
+*DESCRIÇÃO DO PROBLEMA (o que foi observado?)*
+O Alarme não sai e não deixa Ligar a Máquina. 
+
+*FALHA REPETIDA?*  
+(X) Não  
+() Sim → Quantas vezes? N/A.
+Período aproximado: N/A.
+
+*4M – POSSÍVEIS CAUSAS*  
+(Preencher somente o que se aplica)
+
+() *MATERIAL*
+
+
+(X) *MÁQUINA*
+
+
+()  *MÉTODO*
+
+
+()  *MÃO DE OBRA*
+
+*CAUSA RAIZ (por que aconteceu?)* 
+O Sensor não é o Correto (Original).
+
+*CONTRAMEDIDA CORRETIVA (o que foi feito agora?)*
+Na Ausência do Sensor Correto, foi Intalado um Sensor Equivalente, porém PNP NO. 
+
+*CONTRAMEDIDA PREVENTIVA (o que fazer para evitar?)*
+Precisa Comprar um Sensor Original.
+
+*STATUS*
+(X) Parado (aguardando qualificação)
+() Em análise  
+(X) Corrigido  
+() Em monitoramento  
+
+*TÉCNICO*
+Pedro e Renan

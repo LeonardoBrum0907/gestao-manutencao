@@ -89,7 +89,78 @@ describe("parseRpText com relatórios reais do WhatsApp", () => {
   });
 });
 
+// Textos de produção (conferidos em 2026-11-19), encurtados.
+describe("parseRpText com os modelos que o time passou a usar", () => {
+  it("RP4: modelo do Renan, rótulos em negrito sem dois-pontos", () => {
+    const rp = only(fixture("rp4"));
+    assert.equal(rp.date, "2026-11-18");
+    assert.equal(rp.line, "CAM 6");
+    assert.equal(rp.tag, "EBS-ECT-15");
+    assert.equal(rp.problem, "Alarme de Fricção Máquina S14.");
+    assert.deepEqual(rp.technicians, ["Pedro", "Renan"]);
+    assert.ok(!rp.warnings.some((warning) => warning.startsWith("Data")));
+  });
+
+  it("RP5: ORDEM DE SERVIÇO abaixo da TAG, sem engolir a linha", () => {
+    const rp = only(fixture("rp5"));
+    assert.equal(rp.tag, "EBS-ECT-19");
+    assert.equal(rp.orderNumber, "7730936");
+    assert.equal(rp.line, "Mediseal #02");
+  });
+
+  it("RP6: pergunta do modelo na linha de baixo do rótulo fica fora do texto", () => {
+    const rp = only(fixture("rp6"));
+    assert.equal(rp.problem, "Falha leitor de dados variáveis.");
+    assert.ok(rp.description?.startsWith("Máquina apresentando"));
+    assert.equal(rp.rootCause, "Surto eletrônico na comunicação.");
+    assert.equal(rp.corrective, "Verificado os cabos de rede.");
+    assert.equal(rp.preventive, "Entrar em contato com fabricante.");
+  });
+
+  it("RP7: pergunta sem '?' ainda separa a descrição do problema", () => {
+    const rp = only(fixture("rp7"));
+    assert.equal(rp.problem, "Máquina inoperante / não liga.");
+    assert.equal(rp.description, "IHM travada e desligando-se sozinha de forma intermitente.");
+  });
+
+  it("separa dois relatórios com título 'RELATÓRIO MANUTENÇÃO' ou 'O *RELATÓRIO PADRÃO'", () => {
+    const reports = parseRpText([fixture("rp4"), "", fixture("rp5"), "", fixture("rp6")].join("\n"));
+    assert.deepEqual(reports.map((rp) => rp.tag), ["EBS-ECT-15", "EBS-ECT-19", "EBS-BLI-33"]);
+  });
+
+  it("separa dois relatórios sem título nem traços pela segunda DATA", () => {
+    const reports = parseRpText(["DATA: 01/11/2026", "PROBLEMA: a", "TÉCNICO: Ana", "DATA: 02/11/2026", "PROBLEMA: b"].join("\n"));
+    assert.deepEqual(reports.map((rp) => [rp.date, rp.problem]), [["2026-11-01", "a"], ["2026-11-02", "b"]]);
+  });
+});
+
 describe("parseRpText em outras formas", () => {
+  it("lê rótulo com traço e outros nomes para ordem e técnicos", () => {
+    const rp = only(["LINHA - MED 06", "OS: 123", "PROBLEMA: x", "TÉCNICOS RESPONSÁVEIS: Ana"].join("\n"));
+    assert.equal(rp.line, "MED 06");
+    assert.equal(rp.orderNumber, "123");
+    assert.deepEqual(rp.technicians, ["Ana"]);
+    for (const label of ["Responsável:", "Executado por:", "Técnico(s):", "Manutentores:"]) {
+      assert.deepEqual(only(`PROBLEMA: x\n${label} Bruno`).technicians, ["Bruno"], label);
+    }
+    for (const label of ["O.S.:", "Nº OS:", "ORDEM DE SERVIÇO:"]) {
+      assert.equal(only(`PROBLEMA: x\n${label} 456`).orderNumber, "456", label);
+    }
+  });
+
+  it("trata ordem n/a como vazia e avisa da data sem ano", () => {
+    const rp = parseRpText("PROBLEMA: x\nORDEM: n/a\nDATA: 18/11", "2026-11-19")[0]!;
+    assert.equal(rp.orderNumber, null);
+    assert.equal(rp.date, "2026-11-18");
+    assert.ok(rp.warnings.includes("Data sem ano: usei 2026. Confira a data."));
+  });
+
+  it("não lê frase em negrito no meio do texto como rótulo de campo longo", () => {
+    const rp = only(["PROBLEMA: x", "CONTRAMEDIDA CORRETIVA:", "*Problema* resolvido trocando o sensor."].join("\n"));
+    assert.equal(rp.problem, "x");
+    assert.ok(rp.corrective?.includes("resolvido trocando o sensor"));
+  });
+
   it("lê rótulos sem asteriscos, em outra ordem e sem acento", () => {
     const rp = only(
       [

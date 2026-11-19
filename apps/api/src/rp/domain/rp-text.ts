@@ -34,10 +34,18 @@ const ALIASES: [Field, string][] = [
   ["repeated", "FALHA REPETIDA"],
   ["rootCause", "CAUSA RAIZ"],
   ["labor", "MAO DE OBRA"],
+  ["technicians", "TECNICOS RESPONSAVEIS"],
+  ["technicians", "TECNICO RESPONSAVEL"],
+  ["technicians", "EXECUTADO POR"],
   ["technicians", "EXECUTANTES"],
   ["technicians", "EXECUTANTE"],
+  ["technicians", "MANUTENTORES"],
+  ["technicians", "RESPONSAVEIS"],
+  ["technicians", "RESPONSAVEL"],
+  ["technicians", "TECNICO(S)"],
   ["technicians", "TECNICOS"],
   ["technicians", "TECNICO"],
+  ["order", "ORDEM DE SERVICO"],
   ["description", "DESCRICAO"],
   ["problem", "PROBLEMA"],
   ["material", "MATERIAL"],
@@ -45,6 +53,10 @@ const ALIASES: [Field, string][] = [
   ["method", "METODO"],
   ["status", "STATUS"],
   ["order", "ORDEM"],
+  ["order", "Nº OS"],
+  ["order", "N° OS"],
+  ["order", "O.S"],
+  ["order", "OS"],
   ["line", "LINHA"],
   ["date", "DATA"],
   ["tag", "TAG"],
@@ -52,6 +64,9 @@ const ALIASES: [Field, string][] = [
 ];
 
 const FOUR_M_FIELDS: Field[] = ["material", "machine", "method", "labor"];
+// Campos de uma linha só. O modelo do Renan (desde 2026-11-01) escreve "*LINHA* CAM 6", sem dois-pontos: para
+// eles, o negrito fechado logo depois do nome ou um traço ("LINHA - MED 06") também confirmam o rótulo.
+const SHORT_FIELDS: Field[] = ["date", "line", "tag", "order", "technicians"];
 const LONG_TEXT_FIELDS: Field[] = ["problem", "description", "rootCause", "corrective", "preventive", "impact"];
 
 // Texto sem acento e em maiúsculas, com o mesmo comprimento do original (precisa estar em NFC).
@@ -76,8 +91,16 @@ const SEPARATOR = /^\s*[-_=*]{3,}\s*$/;
 
 type LabelHit = { field: Field; valueStart: number };
 
+// "(o que foi observado)" às vezes vem sem "?": as perguntas do modelo começam com O QUE, POR QUE ou COMO.
 function isPrompt(group: string): boolean {
-  return /\?|PREENCHER|NECESSIDADE|COMO EVITAR/.test(group);
+  return /\?|PREENCHER|NECESSIDADE|COMO EVITAR|^\(\s*(O QUE|POR QUE|COMO)\b/.test(group);
+}
+
+// "*(o que ocorreu?):*" sozinho na linha de baixo do rótulo: é a pergunta do modelo, não o valor.
+function isPromptLine(line: string): boolean {
+  const bare = fold(line).replace(/^[\s*_]+|[\s*_:.]+$/g, "");
+  const inner = /^(\([^()]*)\)$/.exec(bare);
+  return inner !== null && isPrompt(inner[1]!);
 }
 
 type LabelEnd = { end: number; confirmed: boolean };
@@ -117,14 +140,23 @@ function matchLabel(line: string): LabelHit | null {
     const after = folded[i + alias.length];
     if (after !== undefined && /[A-Z0-9]/.test(after)) continue;
     const { end, confirmed } = readLabelEnd(line, folded, i + alias.length);
-    if (!confirmed && end < line.length) continue;
-    return { field, valueStart: end };
+    if (confirmed || end >= line.length) return { field, valueStart: end };
+    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, i + alias.length, end) : null;
+    if (shortEnd !== null) return { field, valueStart: shortEnd };
   }
   return null;
 }
 
+// "*LINHA* CAM 6" ou "LINHA - MED 06": só para os campos de uma linha, onde não há frase solta para confundir.
+function readShortLabelEnd(line: string, aliasEnd: number, end: number): number | null {
+  if (line.slice(aliasEnd, end).includes("*")) return end;
+  const dash = /^[-–]\s+/.exec(line.slice(end));
+  return dash ? end + dash[0].length : null;
+}
+
+// "RELATÓRIO PADRÃO – MANUTENÇÃO", "RELATÓRIO  MANUTENÇÃO", "RELATÓRIO DE MANUTENÇÃO" e "O *RELATÓRIO PADRÃO".
 function isTitle(line: string): boolean {
-  return /^[\s*_]*RELATORIO PADRAO\b/.test(fold(line));
+  return /^[\s*_]*(O\s+)?[\s*_]*RELATORIO\s+(PADRAO|DE\s+MANUTENCAO|MANUTENCAO)\b/.test(fold(line));
 }
 
 function isFourMHeader(line: string): boolean {
@@ -136,18 +168,23 @@ function splitReports(lines: string[]): string[][] {
   const chunks: string[][] = [];
   let current: string[] = [];
   let seenLabel = false;
+  let seenDate = false;
   const flush = () => {
     if (current.some((line) => matchLabel(line))) chunks.push(current);
     current = [];
     seenLabel = false;
+    seenDate = false;
   };
   for (const line of lines) {
     if (SEPARATOR.test(line)) {
       flush();
       continue;
     }
-    if (isTitle(line) && seenLabel) flush();
-    if (matchLabel(line)) seenLabel = true;
+    const hit = matchLabel(line);
+    // Dois relatórios colados sem título nem traços: uma segunda DATA começa o próximo.
+    if ((isTitle(line) && seenLabel) || (hit?.field === "date" && seenDate)) flush();
+    if (hit) seenLabel = true;
+    if (hit?.field === "date") seenDate = true;
     current.push(line);
   }
   flush();
@@ -160,6 +197,7 @@ function stripBullet(line: string): string {
 
 function blockText(lines: string[]): string {
   return lines
+    .filter((line) => !isPromptLine(line))
     .map(stripBullet)
     .filter(Boolean)
     .join("\n");
@@ -275,6 +313,8 @@ function parseChunk(lines: string[], today: string): ParsedRp {
   const text = (field: Field) => blockText(values.get(field) ?? []);
   const lineOf = (field: Field) => values.get(field) ?? [];
   const joined = (field: Field) => (values.get(field) ?? []).join("\n");
+  // Linha, TAG e ordem cabem numa linha: o que vem embaixo sem rótulo conhecido não é deles.
+  const firstLine = (field: Field) => text(field).split("\n")[0] ?? "";
 
   const dateText = text("date");
   const { date, guessedYear } = readRpDate(dateText, today);
@@ -300,9 +340,9 @@ function parseChunk(lines: string[], today: string): ParsedRp {
 
   return {
     date,
-    orderNumber: orNull(text("order")),
-    line: orNull(text("line")),
-    tag: orNull(text("tag")),
+    orderNumber: isEmptyValue(firstLine("order")) ? null : firstLine("order"),
+    line: orNull(firstLine("line")),
+    tag: orNull(firstLine("tag")),
     problem,
     description: orNull(text("description")),
     repeatedFailure: repeated.repeated,
@@ -325,7 +365,7 @@ export const RP_TEXT_MAX_LENGTH = 20_000;
 
 /**
  * Lê um ou mais Relatórios Padrão colados do WhatsApp. `today` (AAAA-MM-DD, fuso do gestor) completa a data sem ano.
- * @example parseRpText("*DATA:* 18/11\n*LINHA:* MED 06\n*PROBLEMA:* x", "2026-11-19")[0].date // "2026-11-18"
+ * @example parseRpText("*DATA* 18/11\n*LINHA* MED 06\n*PROBLEMA:* x", "2026-11-19")[0].date // "2026-11-18"
  */
 export function parseRpText(input: string, today: string = gestorToday()): ParsedRp[] {
   if (input.length > RP_TEXT_MAX_LENGTH * 10) {
