@@ -1,5 +1,6 @@
 import type { RpDraftDto } from "@manutencao/shared";
-import { matchLine, matchMembers, type LineRef, type MemberRef } from "../domain/rp-match";
+import { matchLine, type LineRef } from "../domain/rp-match";
+import { matchMembers, type MemberRef } from "../domain/rp-member-match";
 import { parseRpText, type ParsedRp } from "../domain/rp-text";
 
 /**
