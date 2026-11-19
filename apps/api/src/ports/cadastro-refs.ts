@@ -1,6 +1,9 @@
 import type { MemberPosition } from "@manutencao/shared";
 import type { MachineSpotRefs } from "../cadastro/domain/hierarchy";
 
+/** Colaborador para casar com o nome escrito no RP: a equipe desempata dois com o mesmo primeiro nome. */
+export type MemberTextRef = { id: string; name: string; active: boolean; teamId: string | null };
+
 export interface CadastroRefs {
   factoryExists(id: string): Promise<boolean>;
   lineExists(id: string): Promise<boolean>;
@@ -12,7 +15,7 @@ export interface CadastroRefs {
   // Linha e modelo da máquina e o subconjunto, para conferir a escolha de uma ficha. Id nulo volta nulo.
   machineSpot(machineId: string | null, subassemblyId: string | null): Promise<MachineSpotRefs>;
   // Leitura para casar nomes, linhas e TAGs de texto colado com o cadastro.
-  memberDirectory(): Promise<{ id: string; name: string; active: boolean }[]>;
+  memberDirectory(): Promise<MemberTextRef[]>;
   lineDirectory(): Promise<{ id: string; name: string; internalCode: string | null; factoryId: string }[]>;
 }
 

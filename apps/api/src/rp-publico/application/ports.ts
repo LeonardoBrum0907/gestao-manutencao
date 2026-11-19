@@ -9,6 +9,7 @@ import type {
   RpSource,
   RpSupervisorLinkDto,
 } from "@manutencao/shared";
+import type { MemberTextRef } from "../../ports/cadastro-refs";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
@@ -60,6 +61,8 @@ export interface PublicDirectoryStore {
   // Liberados na ficha do colaborador e não inativos.
   allowedMemberIds(): Promise<string[]>;
   memberNames(ids: string[]): Promise<Map<string, string>>;
+  // Os liberados, com a equipe, para casar os nomes do texto colado.
+  allowedMemberRefs(): Promise<MemberTextRef[]>;
   // null quando o colaborador não existe.
   setMemberPublicRp(memberId: string, enabled: boolean): Promise<{ id: string; publicRp: boolean } | null>;
 }

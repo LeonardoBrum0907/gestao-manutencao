@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { PublicRpDirectoryDto } from "@manutencao/shared";
 import { PrismaService } from "../../prisma/prisma.service";
+import type { MemberTextRef } from "../../ports/cadastro-refs";
 import type { PublicDirectoryStore } from "../application/ports";
 
 // Liberado na ficha e ainda na casa: férias e afastado continuam aparecendo.
@@ -23,6 +24,11 @@ export class PublicDirectoryRepository implements PublicDirectoryStore {
   async allowedMemberIds(): Promise<string[]> {
     const rows = await this.prisma.member.findMany({ where: allowedWhere, select: { id: true } });
     return rows.map((row) => row.id);
+  }
+
+  async allowedMemberRefs(): Promise<MemberTextRef[]> {
+    const rows = await this.prisma.member.findMany({ where: allowedWhere, select: { id: true, name: true, teamId: true } });
+    return rows.map((row) => ({ ...row, active: true }));
   }
 
   async memberNames(ids: string[]): Promise<Map<string, string>> {

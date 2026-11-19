@@ -1,5 +1,6 @@
 import type { PublicRpDirectoryDto, RpDto, RpListItemDto, RpPageDto, RpPublicLinkDto, RpRevisionDto, RpSource, RpSupervisorLinkDto } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
+import type { MemberTextRef } from "../../ports/cadastro-refs";
 import type { RpInput } from "../../rp/application/parse-rp";
 import type { RpListQuery } from "../../rp/application/parse-rp-list";
 import type { RpDecisionPatch } from "../../rp/domain/rp-decision";
@@ -197,6 +198,10 @@ export class FakePublicDirectoryStore implements PublicDirectoryStore {
 
   async allowedMemberIds(): Promise<string[]> {
     return (await this.allowed()).map((person) => person.id);
+  }
+
+  async allowedMemberRefs(): Promise<MemberTextRef[]> {
+    return (await this.allowed()).map(({ id, name }) => ({ id, name, active: true, teamId: null }));
   }
 
   async memberNames(ids: string[]): Promise<Map<string, string>> {

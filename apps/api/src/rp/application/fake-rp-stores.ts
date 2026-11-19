@@ -1,6 +1,6 @@
 import type { MemberPosition, RecordDto, RpDto, RpDuplicateDto, RpListItemDto, RpPageDto, RpSource } from "@manutencao/shared";
 import type { MachineSpotRefs } from "../../cadastro/domain/hierarchy";
-import type { CadastroRefs } from "../../ports/cadastro-refs";
+import type { CadastroRefs, MemberTextRef } from "../../ports/cadastro-refs";
 import type { ProblemLogPort, ProblemWrite } from "../../ports/problem-log";
 import type { RpDecisionPatch } from "../domain/rp-decision";
 import type { RpStore, RpWrite } from "./rp-store";
@@ -132,7 +132,7 @@ export class FakeCadastroRefs implements CadastroRefs {
     return { machine: null, subassembly: null };
   }
 
-  async memberDirectory(): Promise<{ id: string; name: string; active: boolean }[]> {
+  async memberDirectory(): Promise<MemberTextRef[]> {
     return [];
   }
 
