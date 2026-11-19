@@ -1,0 +1,42 @@
+*RELATÓRIO PADRÃO – MANUTENÇÃO*
+*DATA:* 30/10/2026
+*LINHA:* Blisterflex 6
+*TAG:* EBS-BLI-33
+
+*PROBLEMA*
+*(o que ocorreu?):* 
+Falha leitor de dados variáveis.
+
+*DESCRIÇÃO DO PROBLEMA* 
+*(o que foi observado?):*
+Máquina apresentando alarme falha leitor de dados variáveis.
+
+*FALHA REPETIDA?*  
+( ) Não  
+( X ) Sim → Quantas vezes? 3
+Período aproximado: __________________
+
+*4M – POSSÍVEIS CAUSAS*  
+(Preencher somente o que se aplica)
+- *MATERIAL:* 
+- *MÁQUINA:*  
+- *MÉTODO:*  
+- *MÃO DE OBRA:*  
+
+*CAUSA RAIZ*
+*(por que aconteceu?):*  
+Surto eletrônico na comunicação.
+
+*CONTRAMEDIDA CORRETIVA*  
+*(o que foi feito agora?):*  
+Verificado os cabos de rede.
+
+*CONTRAMEDIDA PREVENTIVA*
+*(como evitar repetir?):*  
+Entrar em contato com fabricante.
+ *STATUS:*  
+(X) Em análise  
+() Corrigido  
+() Em monitoramento  
+
+*TÉCNICO:* FabioRS/EliasM

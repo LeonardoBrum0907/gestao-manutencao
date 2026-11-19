@@ -2,12 +2,15 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { Link } from "react-router-dom";
 import type { RpDuplicateDto, RpFourM } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
+import { revealFirstInvalid } from "../../../design/ui/field-feedback";
 import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { useFactories, useLines, useMembers } from "../../cadastro/data/cadastro";
 import { memberOptionLabel } from "../../cadastro/model/labels";
 import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { useCheckDuplicate, useSaveRp } from "../data/rp";
 import { bodyFromValues, formatRpDay, type RpFormValues } from "../model/rp";
+import { openPasteWarnings } from "../model/rp-paste-warnings";
+import { MANAGER_RP_REQUIRED, requiredFieldErrors } from "../model/rp-required";
 import { RpReportSections, Section } from "./RpReportSections";
 
 function DuplicateNotice({ items, onConfirm, busy }: { items: RpDuplicateDto[]; onConfirm: () => void; busy: boolean }) {
@@ -67,6 +70,10 @@ export function RpForm({
   const [values, setValues] = useState(initial);
   const [duplicates, setDuplicates] = useState<RpDuplicateDto[]>([]);
   const [saved, setSaved] = useState(false);
+  // Vindo do texto colado (ou editando), o que ficou faltando já aparece marcado; no RP em branco, só depois de tentar gravar.
+  const [tried, setTried] = useState(Boolean(rawText || id));
+  const formRef = useRef<HTMLFormElement>(null);
+  const errors = tried ? requiredFieldErrors(values, MANAGER_RP_REQUIRED) : {};
 
   function set<K extends keyof RpFormValues>(key: K, value: RpFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -100,13 +107,18 @@ export function RpForm({
 
   // Ao chegar do texto colado já confere se o relatório existe; só RP novo precisa disso.
   useEffect(() => {
-    if (id || !initial.problem.trim() || !initial.factoryId) return;
+    if (id || !initial.problem.trim() || !initial.factoryId || !initial.occurredAt) return;
     check.mutate(bodyFromValues(initial, rawText), { onSuccess: setDuplicates });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setTried(true);
+    if (Object.keys(requiredFieldErrors(values, MANAGER_RP_REQUIRED)).length) {
+      revealFirstInvalid(formRef.current);
+      return;
+    }
     if (id) {
       persist();
       return;
@@ -125,13 +137,14 @@ export function RpForm({
 
   const busy = save.isPending || check.isPending;
   const unmatched = values.unmatchedTechnicians.trim();
+  const shownWarnings = openPasteWarnings(warnings, initial, values);
 
   return (
     <Card>
-      <form className="flex flex-col gap-6" noValidate onSubmit={(event) => void submit(event)}>
-        {warnings.length ? (
+      <form ref={formRef} className="flex flex-col gap-6" noValidate onSubmit={(event) => void submit(event)}>
+        {shownWarnings.length ? (
           <ul className="flex flex-col gap-1 rounded-control bg-chip p-3 text-sm text-app">
-            {warnings.map((warning) => (
+            {shownWarnings.map((warning) => (
               <li key={warning}>⚠ {warning}</li>
             ))}
           </ul>
@@ -140,7 +153,7 @@ export function RpForm({
 
         <Section title="Identificação">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Data">
+            <Field label="Data" required error={errors.occurredAt}>
               <TextInput type="date" value={values.occurredAt} onChange={(event) => set("occurredAt", event.target.value)} />
             </Field>
             <Field label="Ordem">
@@ -157,7 +170,7 @@ export function RpForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Fábrica">
+            <Field label="Fábrica" required error={errors.factoryId}>
               <SelectInput value={values.factoryId} onChange={(event) => set("factoryId", event.target.value)}>
                 <option value="">Escolha a fábrica</option>
                 {factories.data?.map((factory) => (
@@ -187,7 +200,7 @@ export function RpForm({
           ) : null}
         </Section>
 
-        <RpReportSections values={values} set={set} setCause={setCause} />
+        <RpReportSections values={values} set={set} setCause={setCause} errors={errors} />
 
         <Section title="Técnicos">
           <MultiSelect

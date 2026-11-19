@@ -1,5 +1,6 @@
 import type { PublicRpDirectoryDto } from "@manutencao/shared";
 import type { RpFormValues } from "../../rp/model/rp";
+import { requiredFieldErrors, type RpFieldKey, type RpFormErrors } from "../../rp/model/rp-required";
 
 // Os mesmos limites que a API confere (apps/api/src/rp-publico/application/parse-public-rp.ts): a tela avisa
 // embaixo de cada campo antes de mandar, e o servidor continua sendo a última palavra.
@@ -8,8 +9,7 @@ const LONG_MAX = 2000;
 const SHORT_FIELDS = ["orderNumber", "line", "tag", "repeatedTimes", "repeatedPeriod"] as const;
 const LONG_FIELDS = ["problem", "description", "rootCause", "corrective", "preventive", "basicConditionImpact"] as const;
 
-export type RpFieldKey = keyof RpFormValues;
-export type RpFormErrors = Partial<Record<RpFieldKey, string>>;
+export type { RpFieldKey, RpFormErrors };
 
 // O técnico preenche o RP inteiro pela página pública (pedido do Léo, 2026-10-19); o 4M e a ordem continuam opcionais.
 // "line" é o nome da linha: vem do cadastro ao escolher a linha ou é escrito à mão em "Outra linha".
@@ -29,21 +29,6 @@ export const RP_REQUIRED_FIELDS: readonly RpFieldKey[] = [
   "memberIds",
 ];
 
-const REQUIRED_MESSAGES: Partial<Record<RpFieldKey, string>> = {
-  occurredAt: "Informe a data do relatório.",
-  factoryId: "Escolha a fábrica.",
-  problem: "Descreva o que ocorreu.",
-  status: "Escolha o status.",
-  memberIds: "Escolha pelo menos um técnico.",
-  line: "Escolha a linha ou escreva o nome dela.",
-  tag: "Informe a TAG.",
-  description: "Conte o que foi observado.",
-  rootCause: "Diga por que aconteceu.",
-  corrective: "Diga o que foi feito agora.",
-  preventive: "Diga como evitar que se repita.",
-  basicConditionImpact: "Informe o impacto em condição básica.",
-};
-
 type DirectoryMachine = PublicRpDirectoryDto["machines"][number];
 
 /**
@@ -52,11 +37,6 @@ type DirectoryMachine = PublicRpDirectoryDto["machines"][number];
  */
 export function machineRequired(values: RpFormValues, machines: DirectoryMachine[]): boolean {
   return Boolean(values.lineId) && machines.some((machine) => machine.lineId === values.lineId);
-}
-
-function isEmpty(value: RpFormValues[RpFieldKey]): boolean {
-  if (Array.isArray(value)) return value.length === 0;
-  return typeof value === "string" && !value.trim();
 }
 
 function tooLong(text: string, max: number): string | null {
@@ -76,10 +56,7 @@ function lengthErrors(values: RpFormValues): RpFormErrors {
  * @example publicRpFormErrors({ ...valores, problem: "" }, directory.machines).problem // "Descreva o que ocorreu."
  */
 export function publicRpFormErrors(values: RpFormValues, machines: DirectoryMachine[]): RpFormErrors {
-  const errors = lengthErrors(values);
-  for (const key of RP_REQUIRED_FIELDS) {
-    if (isEmpty(values[key])) errors[key] = REQUIRED_MESSAGES[key];
-  }
+  const errors = { ...lengthErrors(values), ...requiredFieldErrors(values, RP_REQUIRED_FIELDS) };
   if (machineRequired(values, machines) && !values.machineId) errors.machineId = "Escolha a máquina.";
   return Object.fromEntries(Object.entries(errors).filter(([, message]) => message)) as RpFormErrors;
 }

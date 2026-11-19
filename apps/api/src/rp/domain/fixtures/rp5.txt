@@ -1,0 +1,57 @@
+RELATÓRIO DE MANUTENÇÃO
+
+DATA: 17/09/2026
+LINHA: Mediseal #02
+TAG: EBS-ECT-19
+ORDEM DE SERVIÇO: 7730936
+
+PROBLEMA (o que ocorreu?)
+
+- Acúmulo de cartuchos na saída da esteira.
+
+DESCRIÇÃO DO PROBLEMA (o que foi observado?)
+
+- Durante a inspeção, a esteira estava parada.
+
+FALHA REPETIDA?
+
+(✅) Não
+( ) Sim → Quantas vezes?
+Período aproximado: Não se aplica.
+
+4M – POSSÍVEIS CAUSAS
+
+(Preencher somente o que se aplica)
+
+- MATERIAL: Não se aplica.
+
+- MÁQUINA: Sim
+  
+  - Rompimento do eixo motriz.
+
+- MÉTODO: Não se aplica.
+
+- MÃO DE OBRA:  Sim
+- Possível  falha na execução em tensionar a correia.
+
+CAUSA RAIZ (por que aconteceu?)
+
+- Tensionamento excessivo da correia de tração.
+
+CONTRAMEDIDA CORRETIVA (o que foi feito agora?)
+
+- Efetuada a substituição do eixo motriz.
+
+*Obs.:* EIXO DA POLIA MOTRIZ ESTAVA COM OS PONTOS DO ROLAMENTOS PUNCIONADO; 
+
+CONTRAMEDIDA PREVENTIVA (como evitar repetir?)
+
+- Aguardando aquisição de tensionador.
+
+STATUS:
+
+( ) Em análise
+(✅) Corrigido
+( ) Em monitoramento
+
+TÉCNICOS: Lucas.J / Emerson.G / Diego.S / Jonas

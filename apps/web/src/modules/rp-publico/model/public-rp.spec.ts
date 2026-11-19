@@ -141,6 +141,11 @@ describe("valuesFromPastedRp", () => {
     assert.equal(values.occurredAt, "2026-10-04");
   });
 
+  // Antes abria com a data de hoje e o RP era gravado com o dia errado sem ninguém perceber.
+  it("texto sem data lida deixa a data vazia para preencher", () => {
+    assert.equal(valuesFromPastedRp(draft({ occurredAt: null }), directory, "").occurredAt, "");
+  });
+
   it("sem técnico liberado no texto, entra o do aparelho; com técnico, fica o do texto", () => {
     assert.deepEqual(valuesFromPastedRp(draft(), directory, "m1").memberIds, ["m1"]);
     assert.deepEqual(valuesFromPastedRp(draft({ memberIds: ["m9"] }), directory, "m1").memberIds, ["m9"]);

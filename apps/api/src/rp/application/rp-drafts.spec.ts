@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import { rpPasteWarningFields } from "@manutencao/shared";
 import { rpDrafts } from "./rp-drafts";
 
 const rp1 = readFileSync(join(__dirname, "..", "domain", "fixtures", "rp1.txt"), "utf8");
@@ -20,5 +21,12 @@ describe("rpDrafts", () => {
     assert.deepEqual([draft!.lineId, draft!.memberIds, draft!.unmatchedTechnicians], [null, [], "Rogério B"]);
     assert.ok(draft!.warnings.some((warning) => warning.includes("Técnico não encontrado no cadastro: Rogério B")));
     assert.ok(draft!.warnings.some((warning) => warning.startsWith("Linha não encontrada")));
+  });
+
+  // A tela some com o aviso quando a pessoa preenche o campo dele: um texto de aviso novo precisa entrar no mapa do shared.
+  it("todo aviso de um texto quase vazio aponta o campo que o resolve", () => {
+    const [draft] = rpDrafts("RELATÓRIO PADRÃO\nLINHA: Zeta 99\nDATA: 40/40\nTÉCNICOS: Fulano", [], []);
+    assert.ok(draft!.warnings.length >= 4, draft!.warnings.join(" | "));
+    for (const warning of draft!.warnings) assert.ok(rpPasteWarningFields(warning).length, `aviso sem campo: ${warning}`);
   });
 });

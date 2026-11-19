@@ -1,0 +1,15 @@
+*RELATÓRIO PADRÃO – MANUTENÇÃO*
+*DATA:* 23/10/2026
+*LINHA:* Cam 3
+*TAG:* EBS-ECT-04
+*ORDEM:* 7767814
+
+*PROBLEMA (o que ocorreu?):*
+Máquina inoperante / não liga.
+*DESCRIÇÃO DO PROBLEMA (o que foi observado):*
+IHM travada e desligando-se sozinha de forma intermitente.
+
+*STATUS:*
+(X) Corrigido
+
+*TÉCNICO:* Leandro / Guilherme

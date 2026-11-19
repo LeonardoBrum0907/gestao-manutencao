@@ -8,7 +8,7 @@ import { usePublicDirectory, usePublicRp } from "../data/public-rp";
 import { newPublicValues, publicRpPath, rememberedMember, valuesFromPastedRp, valuesFromPublicRp } from "../model/public-rp";
 import { tagLineConflict } from "../../rp/model/rp-machine-tag";
 import { PublicRpForm } from "./PublicRpForm";
-import { PastePanel, PasteWarnings } from "./PublicRpPaste";
+import { PastePanel } from "./PublicRpPaste";
 import { deviceStorage } from "./public-rp-parts";
 
 // O técnico do aparelho já vem marcado, se ainda estiver liberado.
@@ -34,8 +34,7 @@ function NewForm({ code, directory, onSaved }: { code: string; directory: Public
   return (
     <>
       <PastePanel code={code} onRead={read} />
-      {pasted ? <PasteWarnings warnings={conflict ? [...pasted.warnings, conflict] : pasted.warnings} /> : null}
-      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} onSaved={onSaved} />
+      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} pasteWarnings={pasted ? (conflict ? [...pasted.warnings, conflict] : pasted.warnings) : undefined} onSaved={onSaved} />
     </>
   );
 }

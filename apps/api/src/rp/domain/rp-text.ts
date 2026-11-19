@@ -1,6 +1,7 @@
 import { basicConditionAnswer, type RpFourM, type RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { causeDetail } from "./rp-cause";
+import { gestorToday, readRpDate } from "./rp-date";
 
 // Lê o texto do Relatório Padrão que circula no WhatsApp. Função pura: nunca grava nada e nunca
 // falha por texto estranho, só devolve o que achou e uma lista de avisos para o gestor conferir.
@@ -33,10 +34,18 @@ const ALIASES: [Field, string][] = [
   ["repeated", "FALHA REPETIDA"],
   ["rootCause", "CAUSA RAIZ"],
   ["labor", "MAO DE OBRA"],
+  ["technicians", "TECNICOS RESPONSAVEIS"],
+  ["technicians", "TECNICO RESPONSAVEL"],
+  ["technicians", "EXECUTADO POR"],
   ["technicians", "EXECUTANTES"],
   ["technicians", "EXECUTANTE"],
+  ["technicians", "MANUTENTORES"],
+  ["technicians", "RESPONSAVEIS"],
+  ["technicians", "RESPONSAVEL"],
+  ["technicians", "TECNICO(S)"],
   ["technicians", "TECNICOS"],
   ["technicians", "TECNICO"],
+  ["order", "ORDEM DE SERVICO"],
   ["description", "DESCRICAO"],
   ["problem", "PROBLEMA"],
   ["material", "MATERIAL"],
@@ -44,6 +53,10 @@ const ALIASES: [Field, string][] = [
   ["method", "METODO"],
   ["status", "STATUS"],
   ["order", "ORDEM"],
+  ["order", "Nº OS"],
+  ["order", "N° OS"],
+  ["order", "O.S"],
+  ["order", "OS"],
   ["line", "LINHA"],
   ["date", "DATA"],
   ["tag", "TAG"],
@@ -51,6 +64,9 @@ const ALIASES: [Field, string][] = [
 ];
 
 const FOUR_M_FIELDS: Field[] = ["material", "machine", "method", "labor"];
+// Campos de uma linha só. O modelo do Renan (desde 2026-11-01) escreve "*LINHA* CAM 6", sem dois-pontos: para
+// eles, o negrito fechado logo depois do nome ou um traço ("LINHA - MED 06") também confirmam o rótulo.
+const SHORT_FIELDS: Field[] = ["date", "line", "tag", "order", "technicians"];
 const LONG_TEXT_FIELDS: Field[] = ["problem", "description", "rootCause", "corrective", "preventive", "impact"];
 
 // Texto sem acento e em maiúsculas, com o mesmo comprimento do original (precisa estar em NFC).
@@ -75,8 +91,44 @@ const SEPARATOR = /^\s*[-_=*]{3,}\s*$/;
 
 type LabelHit = { field: Field; valueStart: number };
 
+// "(o que foi observado)" às vezes vem sem "?": as perguntas do modelo começam com O QUE, POR QUE ou COMO.
 function isPrompt(group: string): boolean {
-  return /\?|PREENCHER|NECESSIDADE|COMO EVITAR/.test(group);
+  return /\?|PREENCHER|NECESSIDADE|COMO EVITAR|^\(\s*(O QUE|POR QUE|COMO)\b/.test(group);
+}
+
+// "*(o que ocorreu?):*" sozinho na linha de baixo do rótulo: é a pergunta do modelo, não o valor.
+function isPromptLine(line: string): boolean {
+  const bare = fold(line).replace(/^[\s*_]+|[\s*_:.]+$/g, "");
+  const inner = /^(\([^()]*)\)$/.exec(bare);
+  return inner !== null && isPrompt(inner[1]!);
+}
+
+type LabelEnd = { end: number; confirmed: boolean };
+
+function skipBlanks(line: string, from: number): number {
+  let j = from;
+  while (j < line.length && /[\s*_]/.test(line[j]!)) j++;
+  return j;
+}
+
+// Depois do nome do rótulo: aceita até três ':', '?', '.' ou '(pergunta do modelo)' e diz onde começa o valor.
+function readLabelEnd(line: string, folded: string, start: number): LabelEnd {
+  let j = skipBlanks(line, start);
+  let confirmed = false;
+  for (let step = 0; step < 3; step++) {
+    const char = line[j];
+    if (char === ":" || char === "?" || char === ".") {
+      j = skipBlanks(line, j + 1);
+    } else if (char === "(") {
+      const close = line.indexOf(")", j);
+      if (close < 0 || !isPrompt(folded.slice(j, close))) break;
+      j = skipBlanks(line, close + 1);
+    } else {
+      break;
+    }
+    confirmed = true;
+  }
+  return { end: j, confirmed };
 }
 
 function matchLabel(line: string): LabelHit | null {
@@ -87,36 +139,24 @@ function matchLabel(line: string): LabelHit | null {
     if (!folded.startsWith(alias, i)) continue;
     const after = folded[i + alias.length];
     if (after !== undefined && /[A-Z0-9]/.test(after)) continue;
-    let j = i + alias.length;
-    let confirmed = false;
-    const skip = () => {
-      while (j < line.length && /[\s*_]/.test(line[j]!)) j++;
-    };
-    skip();
-    for (let step = 0; step < 3; step++) {
-      const char = line[j];
-      if (char === ":" || char === "?" || char === ".") {
-        confirmed = true;
-        j++;
-        skip();
-      } else if (char === "(") {
-        const close = line.indexOf(")", j);
-        if (close < 0 || !isPrompt(folded.slice(j, close))) break;
-        confirmed = true;
-        j = close + 1;
-        skip();
-      } else {
-        break;
-      }
-    }
-    if (!confirmed && j < line.length) continue;
-    return { field, valueStart: j };
+    const { end, confirmed } = readLabelEnd(line, folded, i + alias.length);
+    if (confirmed || end >= line.length) return { field, valueStart: end };
+    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, i + alias.length, end) : null;
+    if (shortEnd !== null) return { field, valueStart: shortEnd };
   }
   return null;
 }
 
+// "*LINHA* CAM 6" ou "LINHA - MED 06": só para os campos de uma linha, onde não há frase solta para confundir.
+function readShortLabelEnd(line: string, aliasEnd: number, end: number): number | null {
+  if (line.slice(aliasEnd, end).includes("*")) return end;
+  const dash = /^[-–]\s+/.exec(line.slice(end));
+  return dash ? end + dash[0].length : null;
+}
+
+// "RELATÓRIO PADRÃO – MANUTENÇÃO", "RELATÓRIO  MANUTENÇÃO", "RELATÓRIO DE MANUTENÇÃO" e "O *RELATÓRIO PADRÃO".
 function isTitle(line: string): boolean {
-  return /^[\s*_]*RELATORIO PADRAO\b/.test(fold(line));
+  return /^[\s*_]*(O\s+)?[\s*_]*RELATORIO\s+(PADRAO|DE\s+MANUTENCAO|MANUTENCAO)\b/.test(fold(line));
 }
 
 function isFourMHeader(line: string): boolean {
@@ -128,18 +168,23 @@ function splitReports(lines: string[]): string[][] {
   const chunks: string[][] = [];
   let current: string[] = [];
   let seenLabel = false;
+  let seenDate = false;
   const flush = () => {
     if (current.some((line) => matchLabel(line))) chunks.push(current);
     current = [];
     seenLabel = false;
+    seenDate = false;
   };
   for (const line of lines) {
     if (SEPARATOR.test(line)) {
       flush();
       continue;
     }
-    if (isTitle(line) && seenLabel) flush();
-    if (matchLabel(line)) seenLabel = true;
+    const hit = matchLabel(line);
+    // Dois relatórios colados sem título nem traços: uma segunda DATA começa o próximo.
+    if ((isTitle(line) && seenLabel) || (hit?.field === "date" && seenDate)) flush();
+    if (hit) seenLabel = true;
+    if (hit?.field === "date") seenDate = true;
     current.push(line);
   }
   flush();
@@ -152,6 +197,7 @@ function stripBullet(line: string): string {
 
 function blockText(lines: string[]): string {
   return lines
+    .filter((line) => !isPromptLine(line))
     .map(stripBullet)
     .filter(Boolean)
     .join("\n");
@@ -166,18 +212,6 @@ function isEmptyValue(text: string): boolean {
 function orNull(text: string): string | null {
   const value = text.trim();
   return value ? value : null;
-}
-
-function parseDate(text: string): string | null {
-  const match = /(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})/.exec(text);
-  if (!match) return null;
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  let year = Number(match[3]);
-  if (match[3]!.length === 2) year += 2000;
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function afterLabel(line: string, label: RegExp): string | null {
@@ -250,7 +284,7 @@ export type ParsedRp = {
   warnings: string[];
 };
 
-function parseChunk(lines: string[]): ParsedRp {
+function parseChunk(lines: string[], today: string): ParsedRp {
   const values = new Map<Field, string[]>();
   let current: Field | null = null;
   let fourMSeen = false;
@@ -279,10 +313,13 @@ function parseChunk(lines: string[]): ParsedRp {
   const text = (field: Field) => blockText(values.get(field) ?? []);
   const lineOf = (field: Field) => values.get(field) ?? [];
   const joined = (field: Field) => (values.get(field) ?? []).join("\n");
+  // Linha, TAG e ordem cabem numa linha: o que vem embaixo sem rótulo conhecido não é deles.
+  const firstLine = (field: Field) => text(field).split("\n")[0] ?? "";
 
   const dateText = text("date");
-  const date = parseDate(dateText);
+  const { date, guessedYear } = readRpDate(dateText, today);
   if (!date) warnings.push(dateText ? "Data inválida: confira a data." : "Data não encontrada: confira a data.");
+  if (guessedYear) warnings.push(`Data sem ano: usei ${date!.slice(0, 4)}. Confira a data.`);
 
   const repeated = parseRepeated(lineOf("repeated"));
   const causes = {} as Record<RpFourM, ParsedRpCause>;
@@ -303,9 +340,9 @@ function parseChunk(lines: string[]): ParsedRp {
 
   return {
     date,
-    orderNumber: orNull(text("order")),
-    line: orNull(text("line")),
-    tag: orNull(text("tag")),
+    orderNumber: isEmptyValue(firstLine("order")) ? null : firstLine("order"),
+    line: orNull(firstLine("line")),
+    tag: orNull(firstLine("tag")),
     problem,
     description: orNull(text("description")),
     repeatedFailure: repeated.repeated,
@@ -326,12 +363,16 @@ function parseChunk(lines: string[]): ParsedRp {
 
 export const RP_TEXT_MAX_LENGTH = 20_000;
 
-export function parseRpText(input: string): ParsedRp[] {
+/**
+ * Lê um ou mais Relatórios Padrão colados do WhatsApp. `today` (AAAA-MM-DD, fuso do gestor) completa a data sem ano.
+ * @example parseRpText("*DATA* 18/11\n*LINHA* MED 06\n*PROBLEMA:* x", "2026-11-19")[0].date // "2026-11-18"
+ */
+export function parseRpText(input: string, today: string = gestorToday()): ParsedRp[] {
   if (input.length > RP_TEXT_MAX_LENGTH * 10) {
     throw new DomainError("invalid", 400, "O texto é grande demais.");
   }
   const lines = clean(input).split("\n");
-  const reports = splitReports(lines).map(parseChunk);
+  const reports = splitReports(lines).map((chunk) => parseChunk(chunk, today));
   if (!reports.length) {
     throw new DomainError("rp_not_found", 400, "Não encontrei um Relatório Padrão nesse texto.");
   }
