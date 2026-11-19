@@ -18,6 +18,8 @@ export function rpStatusLabel(status: RpStatus): string {
 }
 
 export function rpStatusChipClass(status: RpStatus): string {
+  // Máquina parada esperando qualificação pede atenção: mesmo tom vermelho das pendências abertas.
+  if (status === "stopped") return "rounded-control bg-danger-soft px-2 py-1 text-xs font-semibold text-danger";
   if (status === "monitoring") return "rounded-control bg-accent-soft px-2 py-1 text-xs font-semibold text-accent";
   if (status === "corrected" || status === "producing") return "rounded-control bg-chip px-2 py-1 text-xs font-medium text-muted";
   return "rounded-control bg-chip px-2 py-1 text-xs font-semibold text-app";
