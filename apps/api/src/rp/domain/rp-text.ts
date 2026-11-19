@@ -1,6 +1,7 @@
 import { basicConditionAnswer, type RpFourM, type RpStatus } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { causeDetail } from "./rp-cause";
+import { gestorToday, readRpDate } from "./rp-date";
 
 // Lê o texto do Relatório Padrão que circula no WhatsApp. Função pura: nunca grava nada e nunca
 // falha por texto estranho, só devolve o que achou e uma lista de avisos para o gestor conferir.
@@ -175,18 +176,6 @@ function orNull(text: string): string | null {
   return value ? value : null;
 }
 
-function parseDate(text: string): string | null {
-  const match = /(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})/.exec(text);
-  if (!match) return null;
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  let year = Number(match[3]);
-  if (match[3]!.length === 2) year += 2000;
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
 function afterLabel(line: string, label: RegExp): string | null {
   const match = label.exec(fold(line));
   if (!match) return null;
@@ -257,7 +246,7 @@ export type ParsedRp = {
   warnings: string[];
 };
 
-function parseChunk(lines: string[]): ParsedRp {
+function parseChunk(lines: string[], today: string): ParsedRp {
   const values = new Map<Field, string[]>();
   let current: Field | null = null;
   let fourMSeen = false;
@@ -288,8 +277,9 @@ function parseChunk(lines: string[]): ParsedRp {
   const joined = (field: Field) => (values.get(field) ?? []).join("\n");
 
   const dateText = text("date");
-  const date = parseDate(dateText);
+  const { date, guessedYear } = readRpDate(dateText, today);
   if (!date) warnings.push(dateText ? "Data inválida: confira a data." : "Data não encontrada: confira a data.");
+  if (guessedYear) warnings.push(`Data sem ano: usei ${date!.slice(0, 4)}. Confira a data.`);
 
   const repeated = parseRepeated(lineOf("repeated"));
   const causes = {} as Record<RpFourM, ParsedRpCause>;
@@ -333,12 +323,16 @@ function parseChunk(lines: string[]): ParsedRp {
 
 export const RP_TEXT_MAX_LENGTH = 20_000;
 
-export function parseRpText(input: string): ParsedRp[] {
+/**
+ * Lê um ou mais Relatórios Padrão colados do WhatsApp. `today` (AAAA-MM-DD, fuso do gestor) completa a data sem ano.
+ * @example parseRpText("*DATA:* 18/11\n*LINHA:* MED 06\n*PROBLEMA:* x", "2026-11-19")[0].date // "2026-11-18"
+ */
+export function parseRpText(input: string, today: string = gestorToday()): ParsedRp[] {
   if (input.length > RP_TEXT_MAX_LENGTH * 10) {
     throw new DomainError("invalid", 400, "O texto é grande demais.");
   }
   const lines = clean(input).split("\n");
-  const reports = splitReports(lines).map(parseChunk);
+  const reports = splitReports(lines).map((chunk) => parseChunk(chunk, today));
   if (!reports.length) {
     throw new DomainError("rp_not_found", 400, "Não encontrei um Relatório Padrão nesse texto.");
   }
