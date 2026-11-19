@@ -8,6 +8,7 @@ import { memberOptionLabel } from "../../cadastro/model/labels";
 import { MachineFields } from "../../cadastro/ui/MachineFields";
 import { useCheckDuplicate, useSaveRp } from "../data/rp";
 import { bodyFromValues, formatRpDay, type RpFormValues } from "../model/rp";
+import { openPasteWarnings } from "../model/rp-paste-warnings";
 import { RpReportSections, Section } from "./RpReportSections";
 
 function DuplicateNotice({ items, onConfirm, busy }: { items: RpDuplicateDto[]; onConfirm: () => void; busy: boolean }) {
@@ -126,13 +127,14 @@ export function RpForm({
 
   const busy = save.isPending || check.isPending;
   const unmatched = values.unmatchedTechnicians.trim();
+  const shownWarnings = openPasteWarnings(warnings, initial, values);
 
   return (
     <Card>
       <form className="flex flex-col gap-6" noValidate onSubmit={(event) => void submit(event)}>
-        {warnings.length ? (
+        {shownWarnings.length ? (
           <ul className="flex flex-col gap-1 rounded-control bg-chip p-3 text-sm text-app">
-            {warnings.map((warning) => (
+            {shownWarnings.map((warning) => (
               <li key={warning}>⚠ {warning}</li>
             ))}
           </ul>

@@ -7,7 +7,7 @@ import { useToast } from "../../../design/ui/toast";
 import { usePublicDirectory, usePublicRp } from "../data/public-rp";
 import { newPublicValues, publicRpPath, rememberedMember, valuesFromPastedRp, valuesFromPublicRp } from "../model/public-rp";
 import { PublicRpForm } from "./PublicRpForm";
-import { PastePanel, PasteWarnings } from "./PublicRpPaste";
+import { PastePanel } from "./PublicRpPaste";
 import { deviceStorage } from "./public-rp-parts";
 
 // O técnico do aparelho já vem marcado, se ainda estiver liberado.
@@ -32,8 +32,7 @@ function NewForm({ code, directory, onSaved }: { code: string; directory: Public
   return (
     <>
       <PastePanel code={code} onRead={read} />
-      {pasted ? <PasteWarnings warnings={pasted.warnings} /> : null}
-      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} onSaved={onSaved} />
+      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} pasteWarnings={pasted?.warnings} onSaved={onSaved} />
     </>
   );
 }

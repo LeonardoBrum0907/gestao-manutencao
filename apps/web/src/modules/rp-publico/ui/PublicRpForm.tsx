@@ -4,11 +4,13 @@ import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextInput } from "../../../design/ui/controls";
 import { revealFirstInvalid } from "../../../design/ui/field-feedback";
 import type { RpFormValues } from "../../rp/model/rp";
+import { openPasteWarnings } from "../../rp/model/rp-paste-warnings";
 import { RpReportSections, Section, type RpFieldErrors } from "../../rp/ui/RpReportSections";
 import { useSavePublicRp } from "../data/public-rp";
 import { memberChoices, publicBodyFromValues, withLine, withMachine } from "../model/public-rp";
 import { machineRequired, publicRpFormErrors, RP_REQUIRED_FIELDS } from "../model/public-rp-validation";
 import { ReviewRequestNotice } from "./public-rp-parts";
+import { PasteWarnings } from "./PublicRpPaste";
 
 const PUBLIC_REQUIRED = new Set(RP_REQUIRED_FIELDS);
 
@@ -78,6 +80,7 @@ function PlaceSection({ values, set, update, directory, errors }: PlaceSectionPr
 
 /**
  * Formulário do RP na página pública, na ordem do texto do WhatsApp. Técnicos: só os liberados pelo coordenador.
+ * Veio do texto colado: pasteWarnings traz os avisos da leitura, que somem conforme o técnico corrige o campo.
  * @example <PublicRpForm code={code} directory={directory} initial={newPublicValues(memberId)} onSaved={abrir} />
  */
 export function PublicRpForm({
@@ -85,12 +88,14 @@ export function PublicRpForm({
   directory,
   initial,
   current = null,
+  pasteWarnings,
   onSaved,
 }: {
   code: string;
   directory: PublicRpDirectoryDto;
   initial: RpFormValues;
   current?: PublicRpDto | null;
+  pasteWarnings?: string[];
   onSaved: (rp: PublicRpDto) => void;
 }) {
   const save = useSavePublicRp(code, current?.id);
@@ -119,51 +124,54 @@ export function PublicRpForm({
   }
 
   return (
-    <Card>
-      <form ref={formRef} className="flex flex-col gap-6" noValidate onSubmit={submit}>
-        <p className="text-sm text-muted">
-          Campos com <span className="font-semibold text-danger">*</span> são obrigatórios.
-        </p>
-        {current?.reviewRequest ? (
-          <ReviewRequestNotice text={current.reviewRequest} at={current.reviewRequestedAt}>
-            <label className="flex items-center gap-2 font-medium">
-              <input type="checkbox" checked={revised} onChange={(event) => setRevised(event.target.checked)} />
-              Revisado: corrigi o que foi pedido
-            </label>
-          </ReviewRequestNotice>
-        ) : null}
-        <PlaceSection values={values} set={set} update={setValues} directory={directory} errors={errors} />
-        <RpReportSections values={values} set={set} setCause={setCause} errors={errors} required={PUBLIC_REQUIRED} />
-        <Section title="Técnico">
-          <MultiSelect
-            label="Técnicos"
-            placeholder="Selecione quem atendeu"
-            emptyText="O coordenador ainda não liberou técnicos para esta página."
-            options={memberChoices(directory.members, current)}
-            value={values.memberIds}
-            onChange={(memberIds) => set("memberIds", memberIds)}
-            required
-            error={errors.memberIds}
+    <>
+      {pasteWarnings ? <PasteWarnings warnings={openPasteWarnings(pasteWarnings, initial, values)} /> : null}
+      <Card>
+        <form ref={formRef} className="flex flex-col gap-6" noValidate onSubmit={submit}>
+          <p className="text-sm text-muted">
+            Campos com <span className="font-semibold text-danger">*</span> são obrigatórios.
+          </p>
+          {current?.reviewRequest ? (
+            <ReviewRequestNotice text={current.reviewRequest} at={current.reviewRequestedAt}>
+              <label className="flex items-center gap-2 font-medium">
+                <input type="checkbox" checked={revised} onChange={(event) => setRevised(event.target.checked)} />
+                Revisado: corrigi o que foi pedido
+              </label>
+            </ReviewRequestNotice>
+          ) : null}
+          <PlaceSection values={values} set={set} update={setValues} directory={directory} errors={errors} />
+          <RpReportSections values={values} set={set} setCause={setCause} errors={errors} required={PUBLIC_REQUIRED} />
+          <Section title="Técnico">
+            <MultiSelect
+              label="Técnicos"
+              placeholder="Selecione quem atendeu"
+              emptyText="O coordenador ainda não liberou técnicos para esta página."
+              options={memberChoices(directory.members, current)}
+              value={values.memberIds}
+              onChange={(memberIds) => set("memberIds", memberIds)}
+              required
+              error={errors.memberIds}
+            />
+          </Section>
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="hidden"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
           />
-        </Section>
-        <input
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          className="hidden"
-          value={website}
-          onChange={(event) => setWebsite(event.target.value)}
-        />
-        {hasErrors ? <Notice>Corrija os campos marcados acima.</Notice> : null}
-        {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
-        <div>
-          <Button type="submit" disabled={save.isPending}>
-            {save.isPending ? "Gravando…" : current ? "Gravar alterações" : "Gravar relatório"}
-          </Button>
-        </div>
-      </form>
-    </Card>
+          {hasErrors ? <Notice>Corrija os campos marcados acima.</Notice> : null}
+          {save.isError ? <Notice>{errorMessage(save.error)}</Notice> : null}
+          <div>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending ? "Gravando…" : current ? "Gravar alterações" : "Gravar relatório"}
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </>
   );
 }
