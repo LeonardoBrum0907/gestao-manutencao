@@ -837,3 +837,4 @@ export * from "./task-repeat";
 export * from "./rp-public";
 export * from "./rp-whatsapp";
 export * from "./rp-basic-condition";
+export * from "./rp-place-key";
