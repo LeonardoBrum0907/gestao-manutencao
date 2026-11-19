@@ -279,10 +279,21 @@ function parseStatuses(lines: string[]): RpStatus[] {
   return [...new Set(marked)];
 }
 
+// "Renan (eletricista)", "Téc. Renan", "Diego." e "Israel Vieira*": fica só o nome para casar com o cadastro.
+function technicianName(text: string): string {
+  return stripBullet(text)
+    .replace(/\([^()]*\)/g, " ")
+    .replace(/^t[eé]c(?:nico)?\.?\s+/i, "")
+    .replace(/[\s.*_]+$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Separa por quebra de linha, vírgula, ';', '/', '&', '+', " e " e, desde 2026-11-19, traço com espaços ("Pedro - Renan").
 function parseTechnicians(text: string): string[] {
   return text
-    .split(/\s*(?:\n|,|;|\/|&|\+|\se\s)\s*/i)
-    .map(stripBullet)
+    .split(/\s*(?:\n|,|;|\/|&|\+|\se\s|\s[-–—]\s)\s*/i)
+    .map(technicianName)
     .filter(Boolean);
 }
 

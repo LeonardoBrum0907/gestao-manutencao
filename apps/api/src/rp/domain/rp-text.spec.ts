@@ -317,4 +317,10 @@ describe("parseRpText: 4M e status como o time marca", () => {
     const rp = only("PROBLEMA: x\nFALHA REPETIDA?\n( ) Não\n(✅) Sim → Quantas vezes? 2");
     assert.deepEqual([rp.repeatedFailure, rp.repeatedTimes], [true, "2"]);
   });
+
+  it("separa técnicos por traço e tira cargo, \"Téc.\" e ponto do fim", () => {
+    assert.deepEqual(only("PROBLEMA: x\nTÉCNICOS: Pedro - Renan – Ana").technicians, ["Pedro", "Renan", "Ana"]);
+    assert.deepEqual(only("PROBLEMA: x\nTÉCNICOS: Renan (eletricista), Téc. Bruno, Diego., Israel Vieira*").technicians, ["Renan", "Bruno", "Diego", "Israel Vieira"]);
+    assert.deepEqual(only("PROBLEMA: x\nTÉCNICOS: Lucas.J / Ana-Maria").technicians, ["Lucas.J", "Ana-Maria"]);
+  });
 });
