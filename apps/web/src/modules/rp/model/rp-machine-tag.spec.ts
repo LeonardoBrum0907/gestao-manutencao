@@ -32,4 +32,11 @@ describe("máquina do RP colado pela TAG", () => {
     assert.equal(withMachineFromTag({ ...emptyRpValues(), tag: "XYZ" }, machines, lines).machineId, "");
     assert.equal(withMachineFromTag({ ...emptyRpValues(), tag: "EBS-BLI-01", machineId: "outra" }, machines, lines).machineId, "outra");
   });
+
+  // TAGs como vieram nos RPs de produção (2026-11-19).
+  it("acha a máquina com ponto no fim, espaço no lugar do traço ou sem o zero", () => {
+    const tags = ["EBS-BLI-01.", "EBS BLI 01", "ebs-bli-1", "EBSBLI01"];
+    const found = tags.map((tag) => withMachineFromTag({ ...emptyRpValues(), tag }, machines, lines).machineId);
+    assert.deepEqual(found, ["bli01", "bli01", "bli01", "bli01"]);
+  });
 });
