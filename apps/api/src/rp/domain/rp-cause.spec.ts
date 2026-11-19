@@ -20,4 +20,10 @@ describe("detalhe da causa do 4M", () => {
     assert.equal(causeDetail("Simulação errada no setup"), "Simulação errada no setup");
     assert.equal(causeDetail("y"), "y");
   });
+
+  it("tira o ✅ e o ✔️ usados no lugar do X", () => {
+    assert.equal(causeDetail("✅ Rolamento"), "Rolamento");
+    assert.equal(causeDetail("(✅)"), null);
+    assert.equal(causeDetail("✔️ - Correia"), "Correia");
+  });
 });

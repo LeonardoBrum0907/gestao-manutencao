@@ -259,3 +259,62 @@ describe("parseRpText em outras formas", () => {
     assert.throws(() => parseRpText("   "), DomainError);
   });
 });
+
+describe("parseRpText: 4M e status como o time marca", () => {
+  it("lê rótulo com espaço a mais, sem jogar a MÃO DE  OBRA no MÉTODO (MED 04, 2026-10-31)", () => {
+    const rp = only(fixture("rp8"));
+    assert.deepEqual(rp.causes.method, { marked: false, text: null });
+    assert.deepEqual(rp.causes.labor, { marked: false, text: null });
+    assert.equal(rp.causes.machine.marked, true);
+  });
+
+  it("\"Não se aplica.\" no 4M deixa a causa sem marcar (MEDISEAL 02)", () => {
+    const rp = only(fixture("rp5"));
+    assert.deepEqual(rp.causes.material, { marked: false, text: null });
+    assert.deepEqual(rp.causes.method, { marked: false, text: null });
+    assert.equal(rp.causes.machine.text, "Rompimento do eixo motriz.");
+    assert.equal(rp.causes.labor.marked, true);
+  });
+
+  it("vezes e período com N/A, \"Não se aplica\" ou traços ficam vazios", () => {
+    assert.deepEqual([only(fixture("rp4")).repeatedTimes, only(fixture("rp4")).repeatedPeriod], [null, null]);
+    assert.deepEqual([only(fixture("rp6")).repeatedTimes, only(fixture("rp6")).repeatedPeriod], ["3", null]);
+  });
+
+  it("lê o 4M com quadrinho na frente do rótulo (modelo do Renan)", () => {
+    const rp = only(fixture("rp4"));
+    assert.deepEqual(rp.causes.machine, { marked: true, text: null });
+    assert.deepEqual(rp.causes.material, { marked: false, text: null });
+    assert.deepEqual(rp.causes.labor, { marked: false, text: null });
+  });
+
+  it("detalhe embaixo do quadrinho marcado vira o texto da causa", () => {
+    const rp = only("PROBLEMA: x\n4M\n( ) *MATERIAL*\n(✅) *MÁQUINA*\n- Rolamento travado.\n() *MÉTODO*");
+    assert.deepEqual(rp.causes.machine, { marked: true, text: "Rolamento travado." });
+    assert.equal(rp.causes.method.marked, false);
+    assert.equal(rp.causes.material.marked, false);
+  });
+
+  it("status marcado com ✅ vale como o X (MEDISEAL 02)", () => {
+    const rp = only(fixture("rp5"));
+    assert.equal(rp.status, "corrected");
+    assert.ok(!rp.warnings.some((warning) => warning.startsWith("Status")));
+  });
+
+  it("lê o status Parado (aguardando qualificação) e avisa quando há mais de um marcado", () => {
+    const rp = only(fixture("rp4"));
+    assert.equal(rp.status, "stopped");
+    assert.ok(rp.warnings.includes("Status com 2 opções marcadas: usei a primeira. Confira o status."));
+  });
+
+  it("três status com ✅ ficam no primeiro, com aviso (CAM 05, 2026-11-17)", () => {
+    const rp = only(fixture("rp9"));
+    assert.equal(rp.status, "analysis");
+    assert.ok(rp.warnings.includes("Status com 3 opções marcadas: usei a primeira. Confira o status."));
+  });
+
+  it("falha repetida marcada com ✅ no Sim", () => {
+    const rp = only("PROBLEMA: x\nFALHA REPETIDA?\n( ) Não\n(✅) Sim → Quantas vezes? 2");
+    assert.deepEqual([rp.repeatedFailure, rp.repeatedTimes], [true, "2"]);
+  });
+});

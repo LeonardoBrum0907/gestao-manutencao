@@ -1,7 +1,7 @@
 // No 4M do Relatório Padrão o técnico marca a causa com "X" ou "sim" e às vezes escreve o detalhe ao lado,
 // como "MÁQUINA: X (FERRAMENTAL)". A marca vira o "marcado" da ficha; o texto da causa fica só com o detalhe.
 
-const MARK = /^(?:\(\s*x\s*\)|\[\s*x\s*\]|x|sim|✓|✔|☑)(?=$|[\s\-–:,.;(])/i;
+const MARK = /^(?:\(\s*(?:x|✅)\s*\)|\[\s*x\s*\]|x|sim|✅|✓|✔\uFE0F?|☑\uFE0F?)(?=$|[\s\-–:,.;(])/iu;
 const SEPARATORS = /^[\s\-–:,.;]+/;
 const WRAPPED = /^\(([^()]*)\)$/;
 

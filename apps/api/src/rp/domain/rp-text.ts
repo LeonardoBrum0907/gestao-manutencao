@@ -2,6 +2,7 @@ import { basicConditionAnswer, type RpFourM, type RpStatus } from "@manutencao/s
 import { DomainError } from "../../kernel/domain-error";
 import { causeDetail } from "./rp-cause";
 import { gestorToday, readRpDate } from "./rp-date";
+import { afterMarkedBox, leadingBox } from "./rp-marks";
 
 // Lê o texto do Relatório Padrão que circula no WhatsApp. Função pura: nunca grava nada e nunca
 // falha por texto estranho, só devolve o que achou e uma lista de avisos para o gestor conferir.
@@ -62,6 +63,12 @@ const ALIASES: [Field, string][] = [
   ["tag", "TAG"],
   ["impact", "IMPACTO"],
 ];
+
+// "MÃO DE  OBRA" com dois espaços (MED 04, 2026-10-31) não casava e o texto ia parar no MÉTODO.
+const ALIAS_PATTERNS: [Field, RegExp][] = ALIASES.map(([field, alias]) => [
+  field,
+  new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+"), "y"),
+]);
 
 const FOUR_M_FIELDS: Field[] = ["material", "machine", "method", "labor"];
 // Campos de uma linha só. O modelo do Renan (desde 2026-11-01) escreve "*LINHA* CAM 6", sem dois-pontos: para
@@ -135,13 +142,16 @@ function matchLabel(line: string): LabelHit | null {
   const folded = fold(line);
   let i = 0;
   while (i < line.length && MARKER.test(line[i]!)) i++;
-  for (const [field, alias] of ALIASES) {
-    if (!folded.startsWith(alias, i)) continue;
-    const after = folded[i + alias.length];
+  for (const [field, pattern] of ALIAS_PATTERNS) {
+    pattern.lastIndex = i;
+    const found = pattern.exec(folded);
+    if (!found) continue;
+    const aliasEnd = i + found[0].length;
+    const after = folded[aliasEnd];
     if (after !== undefined && /[A-Z0-9]/.test(after)) continue;
-    const { end, confirmed } = readLabelEnd(line, folded, i + alias.length);
+    const { end, confirmed } = readLabelEnd(line, folded, aliasEnd);
     if (confirmed || end >= line.length) return { field, valueStart: end };
-    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, i + alias.length, end) : null;
+    const shortEnd = SHORT_FIELDS.includes(field) ? readShortLabelEnd(line, aliasEnd, end) : null;
     if (shortEnd !== null) return { field, valueStart: shortEnd };
   }
   return null;
@@ -191,6 +201,19 @@ function splitReports(lines: string[]): string[][] {
   return chunks;
 }
 
+type BoxedCause = { field: Field; marked: boolean; value: string };
+
+// Modelo do Renan (desde 2026-11-01): o 4M vem com quadrinho na frente, "(X) *MÁQUINA*" e "() *MATERIAL*".
+// Antes o leitor não via o rótulo atrás do quadrinho e nenhuma causa saía marcada.
+function boxedCause(line: string): BoxedCause | null {
+  const box = leadingBox(line);
+  if (!box) return null;
+  const hit = matchLabel(box.rest);
+  if (!hit || !FOUR_M_FIELDS.includes(hit.field)) return null;
+  const detail = box.rest.slice(hit.valueStart).trim();
+  return { field: hit.field, marked: box.marked, value: box.marked ? `X ${detail}` : "" };
+}
+
 function stripBullet(line: string): string {
   return line.replace(/^[\s*_\-•·.–—]+/, "").trim();
 }
@@ -203,10 +226,12 @@ function blockText(lines: string[]): string {
     .join("\n");
 }
 
-const EMPTY_VALUES = new Set(["", "NA", "N/A", "N A", "NAO", "NADA", "-"]);
+// "Não se aplica." no 4M marcava a causa (MEDISEAL 02 e CAM 05) e "____" do modelo virava o período.
+const EMPTY_VALUES = new Set(["", "NA", "N/A", "N A", "NAO", "NADA", "-", "NAO SE APLICA", "NAO APLICA"]);
 
 function isEmptyValue(text: string): boolean {
-  return EMPTY_VALUES.has(fold(text).replace(/[\s.]+$/g, "").trim());
+  const bare = fold(text).replace(/[\s.]+$/g, "").trim();
+  return EMPTY_VALUES.has(bare) || /^_+$/.test(bare);
 }
 
 function orNull(text: string): string | null {
@@ -225,12 +250,11 @@ function parseRepeated(lines: string[]): { repeated: boolean; times: string | nu
   let times: string | null = null;
   let period: string | null = null;
   for (const line of lines) {
-    const folded = fold(line);
-    if (/\(\s*X\s*\)\s*SIM/.test(folded)) repeated = true;
+    if (/^\s*SIM\b/.test(afterMarkedBox(fold(line)) ?? "")) repeated = true;
     const asked = afterLabel(line, /QUANTAS VEZES\??\s*:?/);
-    if (asked !== null && asked) times = asked;
+    if (asked !== null && !isEmptyValue(asked)) times = asked;
     const range = afterLabel(line, /PERIODO APROXIMADO\s*:?/);
-    if (range !== null && range) period = range;
+    if (range !== null && !isEmptyValue(range)) period = range;
   }
   return { repeated, times, period };
 }
@@ -240,18 +264,19 @@ const STATUS_OPTIONS: [RegExp, RpStatus][] = [
   [/MONITORAMENTO/, "monitoring"],
   [/CORRIGIDO/, "corrected"],
   [/PRODUZINDO/, "producing"],
+  [/PARADO/, "stopped"],
 ];
 
-function parseStatus(lines: string[]): RpStatus | null {
-  for (const line of lines) {
-    const folded = fold(line);
-    const marked = /\(\s*X\s*\)\s*(.*)$/.exec(folded);
-    if (!marked) continue;
-    for (const [pattern, status] of STATUS_OPTIONS) {
-      if (pattern.test(marked[1]!)) return status;
-    }
-  }
-  return null;
+function markedStatus(line: string): RpStatus | null {
+  const after = afterMarkedBox(fold(line));
+  if (after === null) return null;
+  return STATUS_OPTIONS.find(([pattern]) => pattern.test(after))?.[1] ?? null;
+}
+
+// Todos os status com quadrinho marcado, na ordem do texto. O ✅ no lugar do X (CAM 05, 2026-11-17) também vale.
+function parseStatuses(lines: string[]): RpStatus[] {
+  const marked = lines.map(markedStatus).filter((status): status is RpStatus => status !== null);
+  return [...new Set(marked)];
 }
 
 function parseTechnicians(text: string): string[] {
@@ -299,6 +324,13 @@ function parseChunk(lines: string[], today: string): ParsedRp {
       current = null;
       continue;
     }
+    const boxed = boxedCause(line);
+    if (boxed) {
+      // Quadrinho vazio: as linhas de baixo não são detalhe desta causa.
+      current = boxed.marked ? boxed.field : null;
+      values.set(boxed.field, [...(values.get(boxed.field) ?? []), boxed.value]);
+      continue;
+    }
     const hit = matchLabel(line);
     const fourMAllowed = fourMSeen || current === null || current === "repeated" || (current !== null && FOUR_M_FIELDS.includes(current));
     if (hit && (!FOUR_M_FIELDS.includes(hit.field) || fourMAllowed) && !(current && LONG_TEXT_FIELDS.includes(current) && hit.field === current)) {
@@ -328,8 +360,10 @@ function parseChunk(lines: string[], today: string): ParsedRp {
     causes[key] = isEmptyValue(value) ? { marked: false, text: null } : { marked: true, text: causeDetail(value) };
   }
 
-  const status = parseStatus(lineOf("status"));
+  const statuses = parseStatuses(lineOf("status"));
+  const status = statuses[0] ?? null;
   if (!status) warnings.push("Status não marcado: ficou em análise.");
+  if (statuses.length > 1) warnings.push(`Status com ${statuses.length} opções marcadas: usei a primeira. Confira o status.`);
 
   const problem = text("problem");
   if (!problem) warnings.push("Não encontrei o problema: preencha antes de salvar.");

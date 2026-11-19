@@ -1,0 +1,48 @@
+*RELATÓRIO  MANUTENÇÃO*
+
+*DATA:* 17/11/2026.
+*LINHA:* Cam#05.
+*TAG:* EBS-ECX-09
+
+*PROBLEMA (o que ocorreu?):* 
+* Ruído no conjunto motoredutor da esteira de transporte de cartuchos.
+
+*DESCRIÇÃO DO PROBLEMA (o que foi observado?):* 
+* Durante o funcionamento do motoredutor existe um ruído de atrito.
+
+*FALHA REPETIDA?*  
+(✅) Não  
+( ) Sim → Quantas vezes? 
+Período aproximado: 
+
+*4M – POSSÍVEIS CAUSAS*  
+(Preencher somente o que se aplica)
+
+- *MATERIAL:*  Não se aplica.
+
+- *MÁQUINA:*  Sim 
+- Ruído no mecanismo do motoredutor.
+
+- *MÉTODO:*  Não se aplica.
+
+- *MÃO DE OBRA:*  Não se aplica.
+
+*CAUSA RAIZ (por que aconteceu?):*  
+* Em análise.
+
+*CONTRAMEDIDA CORRETIVA (o que foi feito agora?):*  
+*FUP#01: 00:30*
+* Desmontagem do subconjunto motoredutor.
+
+*OBS:*
+* Para conhecimento de todos este ruído já havia sido mapeado.
+
+*CONTRAMEDIDA PREVENTIVA (como evitar repetir?):*  
+* Seguir criteriosamente o plano de inspeção.
+
+*STATUS:*  
+(✅) Em análise  
+(✅) Corrigido  
+(✅) Em monitoramento  
+
+*TÉCNICO:* Emerson / Jonas

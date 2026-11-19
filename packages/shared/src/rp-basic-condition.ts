@@ -5,8 +5,8 @@
 export const RP_BASIC_CONDITION_ANSWERS = ["Sim", "Não"] as const;
 export type RpBasicConditionAnswer = (typeof RP_BASIC_CONDITION_ANSWERS)[number];
 
-// "( X ) Não", "(x)Sim": o quadrinho marcado do modelo do WhatsApp.
-const MARKED_BOX = /\(\s*x\s*\)\s*(sim|nao)\b/;
+// "( X ) Não", "(x)Sim": o quadrinho marcado do modelo do WhatsApp. O time às vezes marca com ✅ (2026-11-17).
+const MARKED_BOX = /\(\s*(?:x|✅|✔\uFE0F?|☑\uFE0F?|✓)\s*\)\s*(sim|nao)\b/u;
 const FIRST_WORD = /^(sim|nao)\b/;
 // "N/A", "NA", "não se aplica": sem impacto, conta como Não.
 const NOT_APPLICABLE = /^(n\s*\/\s*a|na|nao se aplica|nao aplica)$/;

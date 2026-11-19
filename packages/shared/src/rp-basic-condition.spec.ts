@@ -15,6 +15,11 @@ describe("basicConditionAnswer: Sim ou Não do impacto em condição básica", (
     assert.equal(basicConditionAnswer("(X)Sim ( )Não"), "Sim");
   });
 
+  it("lê o quadrinho marcado com ✅ ou ✔️ no lugar do X", () => {
+    assert.equal(basicConditionAnswer("( ) Sim  (✅) Não"), "Não");
+    assert.equal(basicConditionAnswer("(✔️) Sim ( ) Não"), "Sim");
+  });
+
   it("conta N/A e não se aplica como Não", () => {
     assert.deepEqual(["N/A", "NA", "n/a.", "Não se aplica"].map(basicConditionAnswer), ["Não", "Não", "Não", "Não"]);
   });

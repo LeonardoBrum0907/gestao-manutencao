@@ -30,6 +30,7 @@ const WHATSAPP_STATUS_OPTIONS: [RpStatus, string][] = [
   ["corrected", "Corrigido"],
   ["monitoring", "Em monitoramento"],
   ["producing", "Produzindo"],
+  ["stopped", "Parado (aguardando qualificação)"],
 ];
 
 const WHATSAPP_FOUR_M: [RpFourM, string][] = [
