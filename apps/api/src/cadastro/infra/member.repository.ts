@@ -21,6 +21,7 @@ type MemberWrite = {
   area: string | null;
   status: MemberStatus;
   registration: string | null;
+  nickname: string | null;
   contact: string | null;
   notes: string | null;
 };
@@ -36,6 +37,7 @@ function toDto(row: {
   area: string | null;
   status: string;
   registration: string | null;
+  nickname: string | null;
   contact: string | null;
   notes: string | null;
   publicRp: boolean;
@@ -60,6 +62,7 @@ function toDto(row: {
     area: row.area,
     status: row.status,
     registration: row.registration,
+    nickname: row.nickname,
     contact: row.contact,
     notes: row.notes,
     publicRp: row.publicRp,

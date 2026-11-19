@@ -61,8 +61,8 @@ export class PrismaCadastroRefs implements CadastroRefs {
   }
 
   async memberDirectory() {
-    const rows = await this.prisma.member.findMany({ select: { id: true, name: true, status: true, teamId: true } });
-    return rows.map((row) => ({ id: row.id, name: row.name, active: row.status === "active", teamId: row.teamId }));
+    const rows = await this.prisma.member.findMany({ select: { id: true, name: true, status: true, nickname: true, teamId: true } });
+    return rows.map(({ status, ...row }) => ({ ...row, active: status === "active" }));
   }
 
   async lineDirectory() {

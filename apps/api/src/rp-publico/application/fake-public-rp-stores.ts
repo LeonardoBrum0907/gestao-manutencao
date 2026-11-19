@@ -201,7 +201,7 @@ export class FakePublicDirectoryStore implements PublicDirectoryStore {
   }
 
   async allowedMemberRefs(): Promise<MemberTextRef[]> {
-    return (await this.allowed()).map(({ id, name }) => ({ id, name, active: true, teamId: null }));
+    return (await this.allowed()).map(({ id, name }) => ({ id, name, active: true, nickname: null, teamId: null }));
   }
 
   async memberNames(ids: string[]): Promise<Map<string, string>> {

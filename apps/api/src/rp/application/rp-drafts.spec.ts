@@ -29,4 +29,9 @@ describe("rpDrafts", () => {
     assert.ok(draft!.warnings.length >= 4, draft!.warnings.join(" | "));
     for (const warning of draft!.warnings) assert.ok(rpPasteWarningFields(warning).length, `aviso sem campo: ${warning}`);
   });
+
+  it("acha o técnico pelo apelido do cadastro", () => {
+    const [draft] = rpDrafts("PROBLEMA: x\nTÉCNICOS: Zé", [{ id: "j1", name: "José Tavares", active: true, nickname: "Zé Tavares, Zé", teamId: null }], []);
+    assert.deepEqual([draft!.memberIds, draft!.unmatchedTechnicians], [["j1"], null]);
+  });
 });

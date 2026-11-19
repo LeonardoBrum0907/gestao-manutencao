@@ -1,8 +1,8 @@
 import type { MemberPosition } from "@manutencao/shared";
 import type { MachineSpotRefs } from "../cadastro/domain/hierarchy";
 
-/** Colaborador para casar com o nome escrito no RP: a equipe desempata dois com o mesmo primeiro nome. */
-export type MemberTextRef = { id: string; name: string; active: boolean; teamId: string | null };
+/** Colaborador para casar com o nome escrito no RP: o apelido acha, a equipe desempata dois com o mesmo nome. */
+export type MemberTextRef = { id: string; name: string; active: boolean; nickname: string | null; teamId: string | null };
 
 export interface CadastroRefs {
   factoryExists(id: string): Promise<boolean>;

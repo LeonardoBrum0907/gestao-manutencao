@@ -80,6 +80,7 @@ export class Members {
       area: optionalString(source, "area"),
       status: requireMemberStatus(requiredString(source, "status", "Escolha o status.")),
       registration: optionalString(source, "registration"),
+      nickname: optionalString(source, "nickname"),
       contact: optionalString(source, "contact"),
       notes: optionalString(source, "notes"),
     };

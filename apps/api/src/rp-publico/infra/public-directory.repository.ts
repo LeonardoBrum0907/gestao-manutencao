@@ -27,7 +27,7 @@ export class PublicDirectoryRepository implements PublicDirectoryStore {
   }
 
   async allowedMemberRefs(): Promise<MemberTextRef[]> {
-    const rows = await this.prisma.member.findMany({ where: allowedWhere, select: { id: true, name: true, teamId: true } });
+    const rows = await this.prisma.member.findMany({ where: allowedWhere, select: { id: true, name: true, nickname: true, teamId: true } });
     return rows.map((row) => ({ ...row, active: true }));
   }
 
