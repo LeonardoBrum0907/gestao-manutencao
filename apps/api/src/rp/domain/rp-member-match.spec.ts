@@ -37,3 +37,43 @@ describe("matchMembers", () => {
     assert.deepEqual(matchMembers(["Douglas", "Douglas S"], members).memberIds, ["m2"]);
   });
 });
+
+// Nomes reais do cadastro e jeitos que aparecem nos RPs de produção (conferidos em 2026-11-19).
+const plant: MemberRef[] = [
+  { id: "fabio", name: "FABIO ROGERIO DA SILVA", active: true, teamId: "t1" },
+  { id: "elias", name: "ELIAS DOUGLAS MACAMBIRA", active: true, teamId: "t1" },
+  { id: "emerson-g", name: "EMERSON CARLOS GERALDO", active: true, teamId: "t1" },
+  { id: "emerson-l", name: "Emerson Justino de Lima", active: true, teamId: "t2" },
+  { id: "jonas", name: "JONAS VERZOLI MONTEIRO", active: true, teamId: "t1" },
+  { id: "jose", name: "JOSE TAVARES DE ALMEIDA NETO", active: true, teamId: "t2", nickname: "Zé Tavares, Zé" },
+  { id: "diego-f", name: "DIEGO HENRIQUE MARTINS FRANCISCO", active: true, teamId: "t2" },
+  { id: "diego-s", name: "DIEGO STELA RAMOS", active: true, teamId: "t2" },
+];
+
+describe("matchMembers com o jeito que o time escreve", () => {
+  it("separa iniciais coladas no nome: FabioRS e EliasM", () => {
+    assert.deepEqual(matchMembers(["FabioRS", "EliasM"], plant).memberIds, ["fabio", "elias"]);
+  });
+
+  it("acha pelo nome do meio quando ninguém tem esse primeiro nome", () => {
+    assert.deepEqual(matchMembers(["Douglas"], plant).memberIds, ["elias"]);
+  });
+
+  it("acha pelo apelido do cadastro, sem acento nem caixa", () => {
+    assert.deepEqual(matchMembers(["ze tavares"], plant).memberIds, ["jose"]);
+    assert.deepEqual(matchMembers(["Zé"], plant).memberIds, ["jose"]);
+  });
+
+  it("desempata pela equipe dos outros técnicos do mesmo RP", () => {
+    assert.deepEqual(matchMembers(["Emerson", "Jonas"], plant), { memberIds: ["emerson-g", "jonas"], unmatched: [] });
+  });
+
+  it("sem desempate pela equipe, o nome fica como veio", () => {
+    assert.deepEqual(matchMembers(["Diego", "Jonas"], plant), { memberIds: ["jonas"], unmatched: ["Diego"] });
+    assert.deepEqual(matchMembers(["Emerson"], plant), { memberIds: [], unmatched: ["Emerson"] });
+  });
+
+  it("nome com letra maiúscula no meio não vira inicial", () => {
+    assert.deepEqual(matchMembers(["McDonald"], plant).unmatched, ["McDonald"]);
+  });
+});
