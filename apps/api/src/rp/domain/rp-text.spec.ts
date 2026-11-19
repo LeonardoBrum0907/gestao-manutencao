@@ -294,4 +294,27 @@ describe("parseRpText: 4M e status como o time marca", () => {
     assert.equal(rp.causes.method.marked, false);
     assert.equal(rp.causes.material.marked, false);
   });
+
+  it("status marcado com ✅ vale como o X (MEDISEAL 02)", () => {
+    const rp = only(fixture("rp5"));
+    assert.equal(rp.status, "corrected");
+    assert.ok(!rp.warnings.some((warning) => warning.startsWith("Status")));
+  });
+
+  it("lê o status Parado (aguardando qualificação) e avisa quando há mais de um marcado", () => {
+    const rp = only(fixture("rp4"));
+    assert.equal(rp.status, "stopped");
+    assert.ok(rp.warnings.includes("Status com 2 opções marcadas: usei a primeira. Confira o status."));
+  });
+
+  it("três status com ✅ ficam no primeiro, com aviso (CAM 05, 2026-11-17)", () => {
+    const rp = only(fixture("rp9"));
+    assert.equal(rp.status, "analysis");
+    assert.ok(rp.warnings.includes("Status com 3 opções marcadas: usei a primeira. Confira o status."));
+  });
+
+  it("falha repetida marcada com ✅ no Sim", () => {
+    const rp = only("PROBLEMA: x\nFALHA REPETIDA?\n( ) Não\n(✅) Sim → Quantas vezes? 2");
+    assert.deepEqual([rp.repeatedFailure, rp.repeatedTimes], [true, "2"]);
+  });
 });

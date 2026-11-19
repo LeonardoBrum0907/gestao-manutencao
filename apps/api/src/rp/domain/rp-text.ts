@@ -250,8 +250,7 @@ function parseRepeated(lines: string[]): { repeated: boolean; times: string | nu
   let times: string | null = null;
   let period: string | null = null;
   for (const line of lines) {
-    const folded = fold(line);
-    if (/\(\s*X\s*\)\s*SIM/.test(folded)) repeated = true;
+    if (/^\s*SIM\b/.test(afterMarkedBox(fold(line)) ?? "")) repeated = true;
     const asked = afterLabel(line, /QUANTAS VEZES\??\s*:?/);
     if (asked !== null && !isEmptyValue(asked)) times = asked;
     const range = afterLabel(line, /PERIODO APROXIMADO\s*:?/);
@@ -265,18 +264,19 @@ const STATUS_OPTIONS: [RegExp, RpStatus][] = [
   [/MONITORAMENTO/, "monitoring"],
   [/CORRIGIDO/, "corrected"],
   [/PRODUZINDO/, "producing"],
+  [/PARADO/, "stopped"],
 ];
 
-function parseStatus(lines: string[]): RpStatus | null {
-  for (const line of lines) {
-    const folded = fold(line);
-    const marked = /\(\s*X\s*\)\s*(.*)$/.exec(folded);
-    if (!marked) continue;
-    for (const [pattern, status] of STATUS_OPTIONS) {
-      if (pattern.test(marked[1]!)) return status;
-    }
-  }
-  return null;
+function markedStatus(line: string): RpStatus | null {
+  const after = afterMarkedBox(fold(line));
+  if (after === null) return null;
+  return STATUS_OPTIONS.find(([pattern]) => pattern.test(after))?.[1] ?? null;
+}
+
+// Todos os status com quadrinho marcado, na ordem do texto. O ✅ no lugar do X (CAM 05, 2026-11-17) também vale.
+function parseStatuses(lines: string[]): RpStatus[] {
+  const marked = lines.map(markedStatus).filter((status): status is RpStatus => status !== null);
+  return [...new Set(marked)];
 }
 
 function parseTechnicians(text: string): string[] {
@@ -360,8 +360,10 @@ function parseChunk(lines: string[], today: string): ParsedRp {
     causes[key] = isEmptyValue(value) ? { marked: false, text: null } : { marked: true, text: causeDetail(value) };
   }
 
-  const status = parseStatus(lineOf("status"));
+  const statuses = parseStatuses(lineOf("status"));
+  const status = statuses[0] ?? null;
   if (!status) warnings.push("Status não marcado: ficou em análise.");
+  if (statuses.length > 1) warnings.push(`Status com ${statuses.length} opções marcadas: usei a primeira. Confira o status.`);
 
   const problem = text("problem");
   if (!problem) warnings.push("Não encontrei o problema: preencha antes de salvar.");
