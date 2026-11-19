@@ -3,6 +3,9 @@ import type { RpFormValues } from "./rp";
 
 // O time escreve a TAG com caixa, espaços e pontuação variados ("ebs-bli-01", "EBS-BLI- 01", "EBS-DOB-34.",
 // "EBS BLI 6"): sameRpPlace compara só letras e números, sem zero à esquerda.
+function machinesWithTag<Machine extends Pick<MachineDto, "tag">>(tag: string, machines: readonly Machine[]): Machine[] {
+  return machines.filter((machine) => machine.tag && sameRpPlace(tag, machine.tag));
+}
 
 /**
  * Escolhe a máquina do RP colado pela TAG do texto, que o parser não liga ao cadastro. Só escolhe quando uma única
@@ -15,7 +18,7 @@ export function withMachineFromTag(
   lines: readonly Pick<LineDto, "id" | "factoryId">[],
 ): RpFormValues {
   if (values.machineId || !values.tag.trim()) return values;
-  const found = machines.filter((machine) => machine.tag && sameRpPlace(values.tag, machine.tag));
+  const found = machinesWithTag(values.tag, machines);
   if (found.length !== 1 || (values.lineId && values.lineId !== found[0].lineId)) return values;
   const machine = found[0];
   const factoryId = lines.find((line) => line.id === machine.lineId)?.factoryId ?? values.factoryId;
