@@ -213,10 +213,12 @@ function blockText(lines: string[]): string {
     .join("\n");
 }
 
-const EMPTY_VALUES = new Set(["", "NA", "N/A", "N A", "NAO", "NADA", "-"]);
+// "Não se aplica." no 4M marcava a causa (MEDISEAL 02 e CAM 05) e "____" do modelo virava o período.
+const EMPTY_VALUES = new Set(["", "NA", "N/A", "N A", "NAO", "NADA", "-", "NAO SE APLICA", "NAO APLICA"]);
 
 function isEmptyValue(text: string): boolean {
-  return EMPTY_VALUES.has(fold(text).replace(/[\s.]+$/g, "").trim());
+  const bare = fold(text).replace(/[\s.]+$/g, "").trim();
+  return EMPTY_VALUES.has(bare) || /^_+$/.test(bare);
 }
 
 function orNull(text: string): string | null {
@@ -238,9 +240,9 @@ function parseRepeated(lines: string[]): { repeated: boolean; times: string | nu
     const folded = fold(line);
     if (/\(\s*X\s*\)\s*SIM/.test(folded)) repeated = true;
     const asked = afterLabel(line, /QUANTAS VEZES\??\s*:?/);
-    if (asked !== null && asked) times = asked;
+    if (asked !== null && !isEmptyValue(asked)) times = asked;
     const range = afterLabel(line, /PERIODO APROXIMADO\s*:?/);
-    if (range !== null && range) period = range;
+    if (range !== null && !isEmptyValue(range)) period = range;
   }
   return { repeated, times, period };
 }

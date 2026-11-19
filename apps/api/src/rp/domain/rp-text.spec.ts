@@ -267,4 +267,17 @@ describe("parseRpText: 4M e status como o time marca", () => {
     assert.deepEqual(rp.causes.labor, { marked: false, text: null });
     assert.equal(rp.causes.machine.marked, true);
   });
+
+  it("\"Não se aplica.\" no 4M deixa a causa sem marcar (MEDISEAL 02)", () => {
+    const rp = only(fixture("rp5"));
+    assert.deepEqual(rp.causes.material, { marked: false, text: null });
+    assert.deepEqual(rp.causes.method, { marked: false, text: null });
+    assert.equal(rp.causes.machine.text, "Rompimento do eixo motriz.");
+    assert.equal(rp.causes.labor.marked, true);
+  });
+
+  it("vezes e período com N/A, \"Não se aplica\" ou traços ficam vazios", () => {
+    assert.deepEqual([only(fixture("rp4")).repeatedTimes, only(fixture("rp4")).repeatedPeriod], [null, null]);
+    assert.deepEqual([only(fixture("rp6")).repeatedTimes, only(fixture("rp6")).repeatedPeriod], ["3", null]);
+  });
 });
