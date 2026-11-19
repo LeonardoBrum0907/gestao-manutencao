@@ -840,3 +840,4 @@ export * from "./rp-public";
 export * from "./rp-whatsapp";
 export * from "./rp-basic-condition";
 export * from "./rp-paste-warnings";
+export * from "./rp-place-key";

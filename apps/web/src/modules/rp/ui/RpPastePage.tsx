@@ -8,7 +8,7 @@ import { useChamado } from "../../turno/data/shift";
 import { chamadoHref } from "../../turno/model/chamado";
 import { useParseRp } from "../data/rp";
 import { emptyRpValues, valuesFromRp, type RpFormValues } from "../model/rp";
-import { withMachineFromTag } from "../model/rp-machine-tag";
+import { tagLineConflict, withMachineFromTag } from "../model/rp-machine-tag";
 import { RpForm } from "./RpForm";
 
 // RP escrito a partir de um chamado: já vem com dia, linha, TAG, técnicos e o problema.
@@ -113,6 +113,8 @@ function PasteRp() {
 
   // A ficha guarda os valores iniciais ao abrir: espera o cadastro para a TAG achar a máquina.
   const draft = lines.isPending || machines.isPending ? undefined : drafts?.[index];
+  const initial = draft ? withMachineFromTag(valuesFromRp(draft), machines.data ?? [], lines.data ?? []) : null;
+  const conflict = initial ? tagLineConflict(initial, machines.data ?? [], lines.data ?? []) : null;
   return (
     <div className="mx-auto max-w-3xl">
       <PageTitle
@@ -141,7 +143,7 @@ function PasteRp() {
           </div>
         </Card>
       ) : null}
-      {draft && drafts ? (
+      {draft && drafts && initial ? (
         <div ref={reportTop} className="flex scroll-mt-4 flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold text-app">
@@ -154,9 +156,9 @@ function PasteRp() {
           </div>
           <RpForm
             key={`${index}-${draft.rawText.length}`}
-            initial={withMachineFromTag(valuesFromRp(draft), machines.data ?? [], lines.data ?? [])}
+            initial={initial}
             rawText={draft.rawText}
-            warnings={draft.warnings}
+            warnings={conflict ? [...draft.warnings, conflict] : draft.warnings}
             submitLabel={index + 1 < drafts.length ? "Salvar e ir para o próximo" : "Salvar RP"}
             onSaved={() => next(true)}
             onSkip={() => next(false)}

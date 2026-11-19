@@ -6,6 +6,7 @@ import { Notice } from "../../../design/ui/controls";
 import { useToast } from "../../../design/ui/toast";
 import { usePublicDirectory, usePublicRp } from "../data/public-rp";
 import { newPublicValues, publicRpPath, rememberedMember, valuesFromPastedRp, valuesFromPublicRp } from "../model/public-rp";
+import { tagLineConflict } from "../../rp/model/rp-machine-tag";
 import { PublicRpForm } from "./PublicRpForm";
 import { PastePanel } from "./PublicRpPaste";
 import { deviceStorage } from "./public-rp-parts";
@@ -28,11 +29,12 @@ function NewForm({ code, directory, onSaved }: { code: string; directory: Public
   const [pasted, setPasted] = useState<{ draft: RpDraftDto; warnings: string[]; count: number } | null>(null);
   const memberId = deviceMember(directory);
   const initial = pasted ? valuesFromPastedRp(pasted.draft, directory, memberId) : newPublicValues(memberId);
+  const conflict = pasted ? tagLineConflict(initial, directory.machines, directory.lines) : null;
   const read = (draft: RpDraftDto, warnings: string[]) => setPasted((before) => ({ draft, warnings, count: (before?.count ?? 0) + 1 }));
   return (
     <>
       <PastePanel code={code} onRead={read} />
-      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} pasteWarnings={pasted?.warnings} onSaved={onSaved} />
+      <PublicRpForm key={pasted?.count ?? 0} code={code} directory={directory} initial={initial} pasteWarnings={pasted ? (conflict ? [...pasted.warnings, conflict] : pasted.warnings) : undefined} onSaved={onSaved} />
     </>
   );
 }
