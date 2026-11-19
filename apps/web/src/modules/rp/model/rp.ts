@@ -101,7 +101,9 @@ export function emptyRpValues(): RpFormValues {
 
 export function valuesFromRp(rp: RpDto | RpDraftDto): RpFormValues {
   return {
-    occurredAt: rp.occurredAt ? dayOf(rp.occurredAt) : todayLocal(),
+    // Texto colado sem data lida: fica vazio para o gestor preencher. Antes abria com hoje e gravava o dia errado
+    // (2 RPs de produção, 2026-11-02 e 2026-11-19).
+    occurredAt: rp.occurredAt ? dayOf(rp.occurredAt) : "",
     orderNumber: rp.orderNumber ?? "",
     factoryId: rp.factoryId ?? "",
     lineId: rp.lineId ?? "",

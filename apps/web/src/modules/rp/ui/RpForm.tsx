@@ -100,13 +100,14 @@ export function RpForm({
 
   // Ao chegar do texto colado já confere se o relatório existe; só RP novo precisa disso.
   useEffect(() => {
-    if (id || !initial.problem.trim() || !initial.factoryId) return;
+    if (id || !initial.problem.trim() || !initial.factoryId || !initial.occurredAt) return;
     check.mutate(bodyFromValues(initial, rawText), { onSuccess: setDuplicates });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (!values.occurredAt) return;
     if (id) {
       persist();
       return;
@@ -140,7 +141,7 @@ export function RpForm({
 
         <Section title="Identificação">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Data">
+            <Field label="Data" required error={values.occurredAt ? undefined : "Informe a data do relatório."}>
               <TextInput type="date" value={values.occurredAt} onChange={(event) => set("occurredAt", event.target.value)} />
             </Field>
             <Field label="Ordem">
