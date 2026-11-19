@@ -79,6 +79,34 @@ function isPrompt(group: string): boolean {
   return /\?|PREENCHER|NECESSIDADE|COMO EVITAR/.test(group);
 }
 
+type LabelEnd = { end: number; confirmed: boolean };
+
+function skipBlanks(line: string, from: number): number {
+  let j = from;
+  while (j < line.length && /[\s*_]/.test(line[j]!)) j++;
+  return j;
+}
+
+// Depois do nome do rótulo: aceita até três ':', '?', '.' ou '(pergunta do modelo)' e diz onde começa o valor.
+function readLabelEnd(line: string, folded: string, start: number): LabelEnd {
+  let j = skipBlanks(line, start);
+  let confirmed = false;
+  for (let step = 0; step < 3; step++) {
+    const char = line[j];
+    if (char === ":" || char === "?" || char === ".") {
+      j = skipBlanks(line, j + 1);
+    } else if (char === "(") {
+      const close = line.indexOf(")", j);
+      if (close < 0 || !isPrompt(folded.slice(j, close))) break;
+      j = skipBlanks(line, close + 1);
+    } else {
+      break;
+    }
+    confirmed = true;
+  }
+  return { end: j, confirmed };
+}
+
 function matchLabel(line: string): LabelHit | null {
   const folded = fold(line);
   let i = 0;
@@ -87,30 +115,9 @@ function matchLabel(line: string): LabelHit | null {
     if (!folded.startsWith(alias, i)) continue;
     const after = folded[i + alias.length];
     if (after !== undefined && /[A-Z0-9]/.test(after)) continue;
-    let j = i + alias.length;
-    let confirmed = false;
-    const skip = () => {
-      while (j < line.length && /[\s*_]/.test(line[j]!)) j++;
-    };
-    skip();
-    for (let step = 0; step < 3; step++) {
-      const char = line[j];
-      if (char === ":" || char === "?" || char === ".") {
-        confirmed = true;
-        j++;
-        skip();
-      } else if (char === "(") {
-        const close = line.indexOf(")", j);
-        if (close < 0 || !isPrompt(folded.slice(j, close))) break;
-        confirmed = true;
-        j = close + 1;
-        skip();
-      } else {
-        break;
-      }
-    }
-    if (!confirmed && j < line.length) continue;
-    return { field, valueStart: j };
+    const { end, confirmed } = readLabelEnd(line, folded, i + alias.length);
+    if (!confirmed && end < line.length) continue;
+    return { field, valueStart: end };
   }
   return null;
 }
