@@ -26,7 +26,8 @@ export function isFeedbackTone(value: string): value is FeedbackTone {
 export const RECORD_PRIORITIES = ["low", "medium", "high"] as const;
 export type RecordPriority = (typeof RECORD_PRIORITIES)[number];
 
-export const RECORD_ORIGINS = ["inbox", "chamado", "ocorrencia", "rp"] as const;
+// "ficha": observação gravada na ficha do colaborador; fica fora de Registros (pedido do Léo, 2026-11-20).
+export const RECORD_ORIGINS = ["inbox", "chamado", "ocorrencia", "rp", "ficha"] as const;
 export type RecordOrigin = (typeof RECORD_ORIGINS)[number];
 
 export const MACHINE_STATUSES = [
@@ -76,6 +77,7 @@ export const RECORD_ORIGIN_LABELS: Record<RecordOrigin, string> = {
   chamado: "Chamado",
   ocorrencia: "Ocorrência",
   rp: "RP",
+  ficha: "Ficha do colaborador",
 };
 
 export const RECORD_PRIORITY_LABELS: Record<RecordPriority, string> = {
