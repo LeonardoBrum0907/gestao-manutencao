@@ -4,7 +4,7 @@ import { NotebookIcon } from "../../../design/ui/brand-mark";
 import { ThemeToggle } from "../../../shell/ui/ThemeToggle";
 import { publicRpPath } from "../model/public-rp";
 import { rememberPublicCode } from "../model/public-rp-install";
-import { deviceStorage } from "./public-rp-parts";
+import { deviceStorage } from "../../../app/device-storage";
 
 // Buscador que achar o endereço não guarda a página (a API também manda X-Robots-Tag).
 function useNoIndex() {

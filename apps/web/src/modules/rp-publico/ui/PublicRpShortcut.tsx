@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card } from "../../../design/ui/controls";
 import { publicStartTarget } from "../model/public-rp-install";
-import { deviceStorage } from "./public-rp-parts";
+import { deviceStorage } from "../../../app/device-storage";
 
 /**
  * Atalho no login para quem já abriu a página de RPs neste aparelho. O app instalado antes do manifesto
