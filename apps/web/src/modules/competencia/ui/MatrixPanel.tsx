@@ -35,6 +35,7 @@ import {
 } from "../model/matrix";
 import { Chevron } from "../../../design/ui/select";
 import { ScoreStack, StackLegend, stackTitle } from "./ScoreStack";
+import { useMatrixFold, type MatrixFold } from "./use-matrix-fold";
 
 function Summary({ summary }: { summary: CompetencySummaryDto }) {
   return (
@@ -232,23 +233,6 @@ function SkillRow({
 const linkButton = "text-xs font-semibold text-accent hover:underline disabled:cursor-default disabled:text-muted disabled:no-underline";
 
 // Faixa de título do subconjunto: mais escura e em negrito, para não se confundir com as habilidades abaixo.
-/**
- * Subconjuntos recolhidos dentro de um equipamento. Começam todos abertos; com busca ativa ficam todos
- * abertos, para o resultado nunca ficar escondido.
- * @example const subgroups = useCollapsedSubgroups(); subgroups.isOpen("Desbobinador", query)
- */
-function useCollapsedSubgroups(): { isOpen: (name: string, query: string) => boolean; toggle: (name: string) => void } {
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const isOpen = (name: string, query: string) => Boolean(query.trim()) || !collapsed.has(name);
-  const toggle = (name: string) =>
-    setCollapsed((current) => {
-      const next = new Set(current);
-      if (!next.delete(name)) next.add(name);
-      return next;
-    });
-  return { isOpen, toggle };
-}
-
 // Clicar no nome recolhe ou expande as habilidades do subconjunto.
 function SubgroupHeader({
   name,
@@ -294,8 +278,7 @@ function Equipment({
   catalog,
   matrix,
   equipment,
-  open,
-  onToggle,
+  fold,
   query,
   onChange,
   onBulk,
@@ -304,20 +287,18 @@ function Equipment({
   catalog: MatrixCatalogDto;
   matrix: MemberMatrixDto;
   equipment: string;
-  open: boolean;
-  onToggle: () => void;
+  fold: MatrixFold;
   query: string;
   onChange: (write: SkillWrite) => void;
   onBulk: (writes: SkillWrite[]) => void;
   bulkPending: boolean;
 }) {
-  const subgroups = useCollapsedSubgroups();
   const summary = matrix.byEquipment.find((item) => item.equipment === equipment);
   const entries = entriesById(matrix.entries);
   const byLevel = matrix.expectedByLevel;
   const skills = skillsOf(catalog, equipment).filter((skill) => matchesSearch(skill, query));
   if (query && skills.length === 0) return null;
-  const expanded = open || Boolean(query);
+  const expanded = fold.openEquipment === equipment || Boolean(query);
   // "Atende o esperado": só o que ainda está sem nota (e não é "não se aplica"); o que já tem nota não muda.
   const fill = (list: MatrixSkillDto[]) => () =>
     onBulk(
@@ -333,7 +314,7 @@ function Equipment({
       <button
         type="button"
         aria-expanded={expanded}
-        onClick={onToggle}
+        onClick={() => fold.toggleOpenEquipment(equipment)}
         className="flex w-full flex-wrap items-center justify-between gap-3 bg-accent-soft px-4 py-3 text-left transition hover:brightness-[0.97] sm:px-5"
       >
         <span className="text-base font-bold text-accent-ink">{equipmentName(catalog, equipment)}</span>
@@ -371,12 +352,12 @@ function Equipment({
               <SubgroupHeader
                 name={group.subgroup}
                 tally={subgroupTally(group.skills, entries, byLevel)}
-                expanded={subgroups.isOpen(group.subgroup, query)}
-                onToggle={() => subgroups.toggle(group.subgroup)}
+                expanded={fold.isSubgroupOpen(equipment, group.subgroup, query)}
+                onToggle={() => fold.toggleSubgroup(equipment, group.subgroup)}
                 fillDisabled={bulkPending || pendingExpected(group.skills, entries, byLevel).length === 0}
                 onFill={fill(group.skills)}
               />
-              {subgroups.isOpen(group.subgroup, query) ? (
+              {fold.isSubgroupOpen(equipment, group.subgroup, query) ? (
                 <ul>
                   {group.skills.map((skill) => (
                     <SkillRow
@@ -406,9 +387,7 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
   // ?equipamento= (vindo da Matriz da equipe) abre e mostra esse equipamento.
   const [params] = useSearchParams();
   const wanted = params.get("equipamento");
-  const [open, setOpen] = useState<string | null>(
-    wanted && matrix.equipments.includes(wanted) ? wanted : (matrix.equipments[0] ?? null),
-  );
+  const fold = useMatrixFold(matrix.equipments, wanted);
   useEffect(() => {
     if (wanted && matrix.equipments.includes(wanted)) document.getElementById(`equipamento-${wanted}`)?.scrollIntoView({ block: "start" });
     // Só ao abrir a tela.
@@ -471,8 +450,7 @@ function Matrix({ catalog, matrix }: { catalog: MatrixCatalogDto; matrix: Member
                 catalog={catalog}
                 matrix={matrix}
                 equipment={equipment}
-                open={open === equipment}
-                onToggle={() => setOpen(open === equipment ? null : equipment)}
+                fold={fold}
                 query={query}
                 onChange={(write) => setSkill.mutate(write)}
                 onBulk={(writes) => writes.length && setSkills.mutate(writes)}

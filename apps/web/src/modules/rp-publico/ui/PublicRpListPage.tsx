@@ -10,7 +10,7 @@ import { toggleSelected } from "../model/public-rp-export";
 import { withoutPublicRpFilters } from "../model/public-rp-filters";
 import { PublicRpFilters } from "./PublicRpFilters";
 import { ExportBar, ExportIntro, ReviewBar, RpListCard } from "./PublicRpSelection";
-import { deviceStorage } from "./public-rp-parts";
+import { deviceStorage } from "../../../app/device-storage";
 import { useDragSelect } from "./use-drag-select";
 
 // "Quem sou": o aparelho lembra, e a lista abre nos RPs da pessoa. Não é login.

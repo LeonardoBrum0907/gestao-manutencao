@@ -9,7 +9,7 @@ import { newPublicValues, publicRpPath, rememberedMember, valuesFromPastedRp, va
 import { tagLineConflict } from "../../rp/model/rp-machine-tag";
 import { PublicRpForm } from "./PublicRpForm";
 import { PastePanel } from "./PublicRpPaste";
-import { deviceStorage } from "./public-rp-parts";
+import { deviceStorage } from "../../../app/device-storage";
 
 // O técnico do aparelho já vem marcado, se ainda estiver liberado.
 function deviceMember(directory: PublicRpDirectoryDto): string {
