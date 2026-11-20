@@ -24,6 +24,15 @@ export function recordShortName(type: RecordType): string {
   return RECORD_TYPE_LABELS[type].short;
 }
 
+/**
+ * Registro que se edita no próprio modal: o da Entrada e a observação da ficha do colaborador.
+ * Os outros (chamado, ocorrência, RP) mudam na ficha de origem.
+ * @example opensInModal("ficha") // true
+ */
+export function opensInModal(origin: RecordOrigin): boolean {
+  return origin === "inbox" || origin === "ficha";
+}
+
 export function originLabel(origin: RecordOrigin): string {
   return RECORD_ORIGIN_LABELS[origin];
 }

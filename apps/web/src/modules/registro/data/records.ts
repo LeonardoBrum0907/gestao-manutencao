@@ -15,15 +15,16 @@ import { api } from "../../../app/http";
 const PAGE_SIZE = 50;
 
 // Listas de registros crescem sem limite: vêm 50 por vez, com os filtros aplicados no servidor.
-export function useRecordPages(scope: string, params: URLSearchParams, options: { enabled?: boolean } = {}) {
+export function useRecordPages(scope: string, params: URLSearchParams, options: { enabled?: boolean; path?: string } = {}) {
+  const path = options.path ?? "/api/records";
   const search = params.toString();
   return useInfiniteQuery({
-    queryKey: ["records", "list", scope, search],
+    queryKey: ["records", "list", scope, path, search],
     queryFn: ({ pageParam }) => {
       const query = new URLSearchParams(params);
       query.set("limit", String(PAGE_SIZE));
       if (pageParam) query.set("cursor", pageParam);
-      return api<RecordPageDto>(`/api/records?${query}`);
+      return api<RecordPageDto>(`${path}?${query}`);
     },
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,

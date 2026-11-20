@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { recordStatusLabel } from "./record";
+import { opensInModal, recordStatusLabel } from "./record";
 
 describe("situação do registro", () => {
   it("usa a palavra de cada tipo, como a lista de Registros mostra", () => {
@@ -15,5 +15,16 @@ describe("situação do registro", () => {
   it("em andamento é igual para tarefa e problema", () => {
     assert.equal(recordStatusLabel("task", "in_progress"), "Em andamento");
     assert.equal(recordStatusLabel("problem", "in_progress"), "Em andamento");
+  });
+});
+
+describe("registro que abre no modal", () => {
+  it("o da Entrada e a observação da ficha se editam no modal", () => {
+    assert.equal(opensInModal("inbox"), true);
+    assert.equal(opensInModal("ficha"), true);
+  });
+
+  it("chamado, ocorrência e RP mudam na ficha de origem", () => {
+    for (const origin of ["chamado", "ocorrencia", "rp"] as const) assert.equal(opensInModal(origin), false);
   });
 });

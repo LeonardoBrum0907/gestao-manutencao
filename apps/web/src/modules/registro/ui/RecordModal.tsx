@@ -7,7 +7,7 @@ import { useDialogFocus } from "../../../design/ui/dialog";
 import { Icon, type IconName } from "../../../design/ui/icons";
 import { RowMenu } from "../../../design/ui/row-menu";
 import { useRecord } from "../data/records";
-import { recordShortName, recordTypeIcon } from "../model/record";
+import { opensInModal, recordShortName, recordTypeIcon } from "../model/record";
 import { RecordMain } from "./record-main";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
 import { RecordSide } from "./record-side";
@@ -56,7 +56,7 @@ function OtherOrigin({ record }: { record: RecordDto }) {
 }
 
 function ModalBody({ record }: { record: RecordDto }) {
-  if (record.origin !== "inbox") return <OtherOrigin record={record} />;
+  if (!opensInModal(record.origin)) return <OtherOrigin record={record} />;
   return (
     <div className="grid min-h-0 flex-1 content-start overflow-y-auto md:content-stretch md:grid-cols-[minmax(0,1fr)_17rem] md:overflow-hidden">
       <div className="px-4 py-5 sm:px-6 md:overflow-y-auto">

@@ -58,6 +58,7 @@ export function sheetBody(record: RecordDto, patch: SheetPatch, type: RecordType
 
 /** Por que o tipo deste registro não troca (nulo quando troca). Espelha assertRetype da API. */
 export function retypeBlock(record: RecordDto): string | null {
+  if (record.origin === "ficha") return "Observação da ficha do colaborador continua feedback.";
   if (record.origin !== "inbox") return "Este registro veio de outra ficha e não troca de tipo.";
   if (record.chamadoId) return "Tarefa gerada de chamado continua tarefa.";
   if (record.attachments.length) return "Só a tarefa guarda anexo: tire os anexos para trocar o tipo.";

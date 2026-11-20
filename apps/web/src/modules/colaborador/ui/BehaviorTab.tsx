@@ -15,12 +15,14 @@ import {
 } from "@manutencao/shared";
 import { errorMessage } from "../../../app/http";
 import { Button, Card, Field, MultiSelect, Notice, SelectInput, TextArea, TextInput } from "../../../design/ui/controls";
-import { flattenPages, useCaptureRecord } from "../../registro/data/records";
+import { flattenPages } from "../../registro/data/records";
 import { formatWhen, fromLocalInput, nowLocalInput, toneChipClass, toneLabel, toneOptions } from "../../registro/model/record";
 import { useBehaviorTags } from "../../cadastro/data/behavior-tags";
 import { useBehavior, useSaveBehavior, type BehaviorWrite } from "../data/behavior";
 import { behaviorTagChoices, replaceGroupTags } from "../model/behavior-tags";
-import { useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
+import { RecordModalHost } from "../../registro/ui/RecordModal";
+import { useRecordLink } from "../../registro/ui/record-link";
+import { useCaptureObservation, useMemberRecordList, useMemberRecordSummary } from "../data/member-records";
 
 function writable({ punctuality, productivity, collaboration, tags }: MemberBehaviorDto): BehaviorWrite {
   return { punctuality, productivity, collaboration, tags };
@@ -111,7 +113,7 @@ function Tags({ behavior, catalog, onChange }: { behavior: MemberBehaviorDto; ca
 }
 
 function NewObservation({ memberId, onDone }: { memberId: string; onDone: () => void }) {
-  const capture = useCaptureRecord();
+  const capture = useCaptureObservation(memberId);
   const [tone, setTone] = useState<FeedbackTone>("positive");
   const [when, setWhen] = useState(nowLocalInput());
   const [body, setBody] = useState("");
@@ -119,7 +121,7 @@ function NewObservation({ memberId, onDone }: { memberId: string; onDone: () => 
   function submit(event: FormEvent) {
     event.preventDefault();
     capture.mutate(
-      { type: "feedback", body, occurredAt: fromLocalInput(when), memberId, tone },
+      { body, occurredAt: fromLocalInput(when), tone },
       { onSuccess: onDone },
     );
   }
@@ -161,6 +163,7 @@ function History({ member }: { member: MemberDto }) {
   const summary = useMemberRecordSummary(member.id);
   const [adding, setAdding] = useState(false);
   const feedbacks = flattenPages(records.data?.pages);
+  const linkOf = useRecordLink();
   return (
     <section className="overflow-hidden rounded-card border border-line bg-card shadow-card">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -177,16 +180,16 @@ function History({ member }: { member: MemberDto }) {
       {records.isError ? <Notice>{errorMessage(records.error)}</Notice> : null}
       {records.isSuccess && feedbacks.length === 0 && !adding ? (
         <p className="border-t border-t-line px-4 py-3 text-sm text-muted">
-          Nenhuma observação ainda. Os feedbacks registrados com {member.name} como alvo aparecem aqui.
+          Nenhuma observação ainda. Aparecem aqui as observações gravadas nesta ficha e os feedbacks de Registros com {member.name} como alvo.
         </p>
       ) : null}
       <ul>
         {feedbacks.map((record) => (
-          <li key={record.id} className="border-t border-t-line px-4 py-3">
+          <li key={record.id} data-record-id={record.id} className="border-t border-t-line px-4 py-3">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <span className={toneChipClass(record.tone)}>{record.tone ? toneLabel(record.tone) : "Sem tom"}</span>
               <span>{formatWhen(record.occurredAt)}</span>
-              <Link to={`/registros/${record.id}`} className="ml-auto font-medium text-accent hover:underline">
+              <Link to={linkOf(record).to} state={linkOf(record).state} className="ml-auto font-medium text-accent hover:underline">
                 Abrir
               </Link>
             </div>
@@ -201,6 +204,7 @@ function History({ member }: { member: MemberDto }) {
           </Button>
         </div>
       ) : null}
+      <RecordModalHost />
     </section>
   );
 }
