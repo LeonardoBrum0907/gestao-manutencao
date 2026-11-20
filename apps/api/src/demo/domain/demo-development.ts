@@ -3,36 +3,14 @@ import {
   PERFORMANCE_SCORES,
   PRODUCTIVITY_LEVELS,
   type BehaviorRating,
-  type ChamadoShift,
   type PdiItemStatus,
   type PerformanceScore,
   type ProductivityLevel,
 } from "@manutencao/shared";
 import type { DemoRandom } from "./demo-random";
 
-// Matriz, avaliação, comportamento e PDI dos técnicos da demonstração. As notas sobem com o grau
-// (Júnior a Especialista) e variam um pouco, para a matriz da equipe ter lacunas e destaques.
-
-const MODELS_BY_SHIFT: Record<ChamadoShift, string[]> = { first: ["a", "b"], second: ["a", "c"], third: ["b", "c"] };
-const ALL_MODELS = ["a", "b", "c"];
-const SPECIALIST = 3;
-
-/**
- * Modelos em que o técnico trabalha: dois pelo turno; o especialista conhece os três.
- * @example demoModelsOf("second", 1) // ["a", "c"]
- */
-export function demoModelsOf(shift: ChamadoShift, gradeIndex: number): string[] {
-  return gradeIndex >= SPECIALIST ? ALL_MODELS : MODELS_BY_SHIFT[shift];
-}
-
-/**
- * Nota de 0 a 4 numa habilidade, perto do grau (Júnior ~2, Sênior em diante ~4); nulo = ainda não avaliada.
- * @example demoSkillScore(demoRandom(3), 0) // 1, 2 ou 3 (ou null)
- */
-export function demoSkillScore(random: DemoRandom, gradeIndex: number): number | null {
-  if (random.chance(0.1)) return null;
-  return Math.min(4, Math.max(0, gradeIndex + 2 + random.int(-1, 1)));
-}
+// Avaliação, comportamento e PDI dos técnicos da demonstração, melhores com o grau (Júnior a
+// Especialista). A matriz de competências tem o cenário próprio em demo-matrix.ts.
 
 /**
  * Nota da avaliação de desempenho (10, 8, 6, 4 ou 2), melhor com o grau.
@@ -76,30 +54,33 @@ export type DemoPdiItem = {
 export type DemoPdi = { member: string; sponsor: string[]; development: string[]; items: DemoPdiItem[] };
 
 /**
- * PDI de quatro técnicos: linhas em que é padrinho ou está aprendendo e as ações combinadas.
- * @example DEMO_PDIS[0].items[0].title // "Acompanhar a troca da Peça 1 no Subconjunto 2"
+ * PDI de seis técnicos: linhas em que é padrinho ou está aprendendo e as ações combinadas.
+ * @example DEMO_PDIS[2].items[0].title // "Acompanhar a troca da Peça 1 no Subconjunto 2"
  */
 export const DEMO_PDIS: readonly DemoPdi[] = [
+  // As referências da matriz (demo-matrix.ts) são os padrinhos das linhas dos seus equipamentos.
+  { member: "c3", sponsor: ["l1", "l4"], development: [], items: [] },
+  { member: "c8", sponsor: ["l3", "l5"], development: [], items: [] },
   {
-    member: "c1", sponsor: ["l1"], development: ["l2"], items: [
-      { title: "Acompanhar a troca da Peça 1 no Subconjunto 2", skill: { model: "a", index: 4 }, competencyIndex: null, line: "l2", responsible: "c3", dueInDays: 20, status: "in_progress" },
+    member: "c1", sponsor: [], development: ["l2"], items: [
+      { title: "Acompanhar a troca da Peça 1 no Subconjunto 2", skill: { model: "a", index: 6 }, competencyIndex: null, line: "l2", responsible: "c3", dueInDays: 20, status: "in_progress" },
       { title: "Apresentar a análise do RP 0003 para o turno", skill: null, competencyIndex: 11, line: null, responsible: "s1", dueInDays: 35, status: "planned" },
     ],
   },
   {
     member: "c5", sponsor: [], development: ["l3"], items: [
       { title: "Fazer a troca de formato do Equipamento C com o padrinho", skill: { model: "c", index: 0 }, competencyIndex: null, line: "l3", responsible: "c7", dueInDays: 15, status: "planned" },
-      { title: "Curso de leitura de diagrama elétrico", skill: { model: "a", index: 11 }, competencyIndex: 3, line: null, responsible: null, dueInDays: -10, status: "done" },
+      { title: "Curso de leitura de diagrama elétrico", skill: { model: "a", index: 18 }, competencyIndex: 3, line: null, responsible: null, dueInDays: -10, status: "done" },
     ],
   },
   {
-    member: "c10", sponsor: ["l4"], development: [], items: [
+    member: "c10", sponsor: [], development: ["l4"], items: [
       { title: "Registrar as horas em todos os atendimentos", skill: null, competencyIndex: 6, line: null, responsible: "s3", dueInDays: 30, status: "in_progress" },
     ],
   },
   {
-    member: "c6", sponsor: ["l3"], development: ["l5"], items: [
-      { title: "Treinar o diagnóstico do painel do Equipamento B", skill: { model: "b", index: 11 }, competencyIndex: null, line: "l5", responsible: "c9", dueInDays: 45, status: "planned" },
+    member: "c6", sponsor: [], development: ["l5"], items: [
+      { title: "Treinar o diagnóstico do painel do Equipamento B", skill: { model: "b", index: 18 }, competencyIndex: null, line: "l5", responsible: "c8", dueInDays: 45, status: "planned" },
     ],
   },
 ];

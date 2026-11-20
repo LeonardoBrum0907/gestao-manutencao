@@ -17,11 +17,12 @@ describe("cadastro da demonstração", () => {
     assert.ok(catalog.lines.every((line) => factories.has(line.factory)));
   });
 
-  it("dá a cada modelo 12 habilidades numeradas, 8 de mecânico e 4 de eletricista", () => {
+  it("dá a cada modelo 20 habilidades numeradas, 12 de mecânico e 8 de eletricista", () => {
     const skills = demoSkills();
-    assert.equal(skills.length, 12);
-    assert.equal(skills.filter((skill) => skill.category === "electrical").length, 4);
-    assert.equal(skills[11].text, "Habilidade 12: diagnosticar falha elétrica");
+    assert.equal(skills.length, 20);
+    assert.equal(skills.filter((skill) => skill.category === "electrical").length, 8);
+    assert.equal(skills[18].text, "Habilidade 19: diagnosticar falha elétrica");
+    assert.equal(skills[18].subgroup, "Subconjunto 4 · Painel elétrico");
   });
 
   it("acha o modelo da máquina e avisa quando a máquina não existe", () => {

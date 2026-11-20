@@ -1,7 +1,8 @@
 import type { BehaviorTagDto } from "@manutencao/shared";
 import { demoDay } from "../domain/demo-calendar";
 import { demoSkills } from "../domain/demo-catalog";
-import { DEMO_PDIS, demoBehavior, demoModelsOf, demoPerformanceScore, demoQuarters, demoSkillScore, type DemoPdi } from "../domain/demo-development";
+import { DEMO_PDIS, demoBehavior, demoPerformanceScore, demoQuarters, type DemoPdi } from "../domain/demo-development";
+import { DEMO_GRADE_EXPECTED, DEMO_MATRIX_PROFILES, DEMO_QUALIFIED_ADHERENCE, demoMatrixScores, type DemoMatrixProfile } from "../domain/demo-matrix";
 import type { DemoPeople, DemoPerson } from "../domain/demo-people";
 import type { DemoRandom } from "../domain/demo-random";
 import type { DemoIds, DemoServices } from "./demo-services";
@@ -16,26 +17,39 @@ export async function seedDevelopment(context: DevelopmentContext, people: DemoP
   const technicians = people.people.filter((person) => person.role !== "Supervisor");
   const competencies = (await context.services.competencies.list()).filter((item) => !item.archived).map((item) => item.id);
   const tags = await context.services.behaviorTags.list();
+  await seedMatrixRules(context.services);
+  for (const profile of DEMO_MATRIX_PROFILES) {
+    await seedMatrix(context, profile, people);
+  }
   for (const person of technicians) {
-    await seedMatrix(context, person);
     await seedPerformance(context, person, competencies);
     await seedBehavior(context, person, tags);
   }
   for (const pdi of DEMO_PDIS) await seedPdi(context, pdi, competencies);
 }
 
-async function seedMatrix({ services, ids, random }: DevelopmentContext, person: DemoPerson): Promise<void> {
+// Esperado por grau e aderência que qualifica iguais aos da produção, para o cenário ler como lá.
+async function seedMatrixRules(services: DemoServices): Promise<void> {
+  const grades = await services.grades.list();
+  for (const [index, expected] of DEMO_GRADE_EXPECTED.entries()) {
+    const grade = grades.at(index);
+    if (grade) await services.grades.setExpected(grade.id, { expected });
+  }
+  await services.matrixSettings.update({ qualifiedAdherence: DEMO_QUALIFIED_ADHERENCE });
+}
+
+async function seedMatrix({ services, ids }: DevelopmentContext, profile: DemoMatrixProfile, people: DemoPeople): Promise<void> {
+  const person = people.people.find((item) => item.key === profile.member);
+  if (!person) throw new Error(`Demonstração: perfil da matriz para "${profile.member}", que não está na equipe (c1 a c12).`);
   const memberId = ids.get("person", person.key);
-  const grade = person.gradeIndex ?? 0;
-  const models = demoModelsOf(person.shift, grade);
+  const models = Object.keys(profile.targets);
   await services.memberMatrix.setEquipments(memberId, { equipments: models.map((model) => ids.get("model", model)) });
   const category = person.role === "eletricista" ? "electrical" : "mechanical";
-  const entries = models.flatMap((model) =>
-    demoSkills().flatMap((skill, index) => {
-      const score = skill.category === category ? demoSkillScore(random, grade) : null;
-      return score === null ? [] : [{ skillId: ids.get("skill", `${model}|${index}`), score }];
-    }),
-  );
+  const expected = DEMO_GRADE_EXPECTED[person.gradeIndex ?? 0];
+  const entries = models.flatMap((model) => {
+    const scores = demoMatrixScores({ skills: demoSkills(), category, expected, target: profile.targets[model], strong: profile.strong, salt: `${person.key}|${model}` });
+    return scores.flatMap((score, index) => (score === null ? [] : [{ skillId: ids.get("skill", `${model}|${index}`), score }]));
+  });
   await services.memberMatrix.setSkills(memberId, { entries });
 }
 
