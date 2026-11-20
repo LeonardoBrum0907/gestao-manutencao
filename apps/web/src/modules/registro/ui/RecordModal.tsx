@@ -7,7 +7,7 @@ import { useDialogFocus } from "../../../design/ui/dialog";
 import { Icon, type IconName } from "../../../design/ui/icons";
 import { RowMenu } from "../../../design/ui/row-menu";
 import { useRecord } from "../data/records";
-import { opensInModal, recordShortName, recordTypeIcon } from "../model/record";
+import { opensInModal, recordKindName, recordTypeIcon } from "../model/record";
 import { RecordMain } from "./record-main";
 import { RecordRemoveDialog } from "./RecordRemoveDialog";
 import { RecordSide } from "./record-side";
@@ -32,7 +32,7 @@ function ModalBar({ record, titleId, onRemove }: { record: RecordDto | undefined
     <header className="flex h-12 shrink-0 items-center gap-1 border-b border-line pl-4 pr-2">
       <h2 id={titleId} className="mr-auto inline-flex items-center gap-1.5 text-sm text-app">
         {record ? <Icon name={recordTypeIcon[record.type]} className="h-4 w-4 text-muted" /> : null}
-        {record ? recordShortName(record.type) : "Registro"}
+        {record ? recordKindName(record) : "Registro"}
       </h2>
       <BarButton label="Registro de cima" icon="up" disabled={!before} onClick={() => before && modal.go(before)} />
       <BarButton label="Registro de baixo" icon="down" disabled={!after} onClick={() => after && modal.go(after)} />

@@ -18,7 +18,7 @@ const listOf: Record<RecordType, string> = {
 export function sheetRedirect(record: Pick<RecordDto, "id" | "type" | "origin" | "occurredAt" | "memberId">, rpId: string | null = null): string | null {
   if (record.origin === "chamado") return chamadoHref({ id: record.id, day: dayOf(new Date(record.occurredAt)) });
   if (record.origin === "inbox") return `${listOf[record.type]}registro=${record.id}`;
-  // Observação da ficha não está na lista de Registros: abre no histórico da ficha do colaborador.
+  // Feedback da ficha não está na lista de Registros: abre na ficha do colaborador.
   if (record.origin === "ficha" && record.memberId) return `/cadastro/colaboradores/${record.memberId}/comportamento?registro=${record.id}`;
   // O problema de um RP é só o espelho: a ficha de verdade é a do RP, onde ele se altera e se exclui.
   if (record.origin === "rp" && rpId) return `/rp/${rpId}`;

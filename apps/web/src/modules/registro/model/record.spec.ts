@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { opensInModal, recordStatusLabel } from "./record";
+import { opensInModal, recordKindName, recordStatusLabel } from "./record";
 
 describe("situação do registro", () => {
   it("usa a palavra de cada tipo, como a lista de Registros mostra", () => {
@@ -26,5 +26,19 @@ describe("registro que abre no modal", () => {
 
   it("chamado, ocorrência e RP mudam na ficha de origem", () => {
     for (const origin of ["chamado", "ocorrencia", "rp"] as const) assert.equal(opensInModal(origin), false);
+  });
+});
+
+describe("nome do registro na tela", () => {
+  it("feedback de Registros se chama Observação", () => {
+    assert.equal(recordKindName({ type: "feedback", origin: "inbox" }), "Observação");
+  });
+
+  it("o gravado na ficha do colaborador é o Feedback", () => {
+    assert.equal(recordKindName({ type: "feedback", origin: "ficha" }), "Feedback");
+  });
+
+  it("os outros tipos mantêm o nome", () => {
+    assert.equal(recordKindName({ type: "task", origin: "inbox" }), "Tarefa");
   });
 });

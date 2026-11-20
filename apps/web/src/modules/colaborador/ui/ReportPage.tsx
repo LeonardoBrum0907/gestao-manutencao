@@ -12,6 +12,7 @@ import {
   skillFitsCategory,
   type MemberDto,
   type PdiItemDto,
+  type RecordListItemDto,
 } from "@manutencao/shared";
 import { Button, Card, Notice } from "../../../design/ui/controls";
 import { useLines, useMembers, useTeams } from "../../cadastro/data/cadastro";
@@ -140,10 +141,44 @@ function Profile({ member, teamLine }: { member: MemberDto; teamLine: string }) 
   );
 }
 
+// Feedback é o que o gestor gravou na ficha; Observação é o que veio de Registros (troca de nomes de 2026-11-20).
+function NotesTable({ title, empty, items }: { title: string; empty: string; items: RecordListItemDto[] }) {
+  return (
+    <>
+      <h3>{title}</h3>
+      {items.length === 0 ? (
+        <p className="muted">{empty}</p>
+      ) : (
+        <table>
+          <tbody>
+            {items.map((record) => (
+              <tr key={record.id}>
+                <td className="n muted">{formatWhen(record.occurredAt)}</td>
+                <td className="n">
+                  {record.tone ? (
+                    <Pill tone={record.tone === "positive" ? "ok" : record.tone === "negative" ? "bad" : "neutral"}>
+                      {toneLabel(record.tone)}
+                    </Pill>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td>{record.body}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
+  );
+}
+
 function Behavior({ memberId }: { memberId: string }) {
   const behavior = useBehavior(memberId);
   const feedbacks = useMemberRecordList(memberId, "feedback");
-  const items = flattenPages(feedbacks.data?.pages);
+  const observations = useMemberRecordList(memberId, "observation");
+  const feedbackItems = flattenPages(feedbacks.data?.pages);
+  const observationItems = flattenPages(observations.data?.pages);
   const data = behavior.data;
   const tags = useBehaviorTags();
   const tagLabel = new Map((tags.data ?? []).map((tag) => [tag.id, tag.name] as const));
@@ -174,30 +209,8 @@ function Behavior({ memberId }: { memberId: string }) {
           ))}
         </p>
       ) : null}
-      <h3>Histórico de observações</h3>
-      {items.length === 0 ? (
-        <p className="muted">Nenhuma observação registrada.</p>
-      ) : (
-        <table>
-          <tbody>
-            {items.map((record) => (
-              <tr key={record.id}>
-                <td className="n muted">{formatWhen(record.occurredAt)}</td>
-                <td className="n">
-                  {record.tone ? (
-                    <Pill tone={record.tone === "positive" ? "ok" : record.tone === "negative" ? "bad" : "neutral"}>
-                      {toneLabel(record.tone)}
-                    </Pill>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td>{record.body}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <NotesTable title="Feedbacks" empty="Nenhum feedback registrado." items={feedbackItems} />
+      <NotesTable title="Observações" empty="Nenhuma observação registrada." items={observationItems} />
     </>
   );
 }

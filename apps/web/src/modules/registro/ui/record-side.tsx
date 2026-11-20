@@ -5,7 +5,7 @@ import { Icon } from "../../../design/ui/icons";
 import { useToast } from "../../../design/ui/toast";
 import { useFactories } from "../../cadastro/data/cadastro";
 import { useBoardChange } from "../data/board";
-import { fromLocalInput, recordShortName, recordStatusLabel, toLocalInput } from "../model/record";
+import { fromLocalInput, recordKindName, recordShortName, recordStatusLabel, toLocalInput } from "../model/record";
 import { retypeBlock } from "../model/record-sheet";
 import { Chip, MemberChip, PlaceChips, PlainChipsArea, PriorityChip, ToneChip, TypeChip, noPlace, type PlaceValue } from "./chips";
 import { DueRow } from "./due-row";
@@ -34,14 +34,14 @@ function TypeRow({ record }: { record: RecordDto }) {
     return (
       <span className="flex flex-col items-start gap-0.5">
         {chip}
-        <span className={`${recordNoteText} text-muted`}>Escolha Tarefa, Problema ou Feedback para levar a Registros.</span>
+        <span className={`${recordNoteText} text-muted`}>Escolha Tarefa, Problema ou Observação para levar a Registros.</span>
       </span>
     );
   }
   if (!blocked) return chip;
   return (
     <span className={`flex flex-col gap-0.5 ${recordValueText}`}>
-      <span className="text-app">{recordShortName(record.type)}</span>
+      <span className="text-app">{recordKindName(record)}</span>
       <span className={`${recordNoteText} text-muted`}>{blocked}</span>
     </span>
   );
@@ -171,7 +171,7 @@ function WhenRow({ record }: { record: RecordDto }) {
 }
 
 /**
- * Coluna lateral: tipo (troca de Tarefa para Problema ou Feedback) e os campos do tipo.
+ * Coluna lateral: tipo (troca de Tarefa para Problema ou Observação) e os campos do tipo.
  * Ex.: `<RecordSide record={record} />`
  */
 export function RecordSide({ record }: { record: RecordDto }) {

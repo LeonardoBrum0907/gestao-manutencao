@@ -7,7 +7,7 @@ import { columnDropId, useColumnsDnd, type ColumnDrop } from "./columns-dnd";
 import { ChecklistBox, FrameFooter, GroupBand, gridClass, gridStyle, useFrameColumns, type ChecklistFrame } from "./checklist-table";
 import type { RecordLink } from "./record-link";
 
-// Peças do checklist de Registros (Tarefas, Problemas e Feedbacks): grupos com linhas finas, círculo
+// Peças do checklist de Registros (Tarefas, Problemas e Observações): grupos com linhas finas, círculo
 // para concluir e arrastar para reordenar ou levar a outro grupo.
 
 export type ChecklistGroup = {

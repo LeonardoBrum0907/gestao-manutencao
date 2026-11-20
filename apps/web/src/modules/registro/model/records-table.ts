@@ -91,7 +91,7 @@ export function defaultRecordOrder(a: RecordRow, b: RecordRow): number {
 export const GROUP_MODES = ["nenhum", "tipo", "linha", "maquina", "situacao", "pessoa"] as const;
 export type GroupMode = (typeof GROUP_MODES)[number];
 
-const typeTitle: Record<RecordType, string> = { task: "Tarefas", problem: "Problemas", feedback: "Feedbacks", entry: "Rascunhos" };
+const typeTitle: Record<RecordType, string> = { task: "Tarefas", problem: "Problemas", feedback: "Observações", entry: "Rascunhos" };
 const statusTitle: Record<RecordStatus, string> = { in_progress: "Em andamento", open: "Abertos", done: "Concluídos" };
 
 const NO_GROUP = "sem";

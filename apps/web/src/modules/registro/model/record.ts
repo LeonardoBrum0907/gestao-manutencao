@@ -25,7 +25,17 @@ export function recordShortName(type: RecordType): string {
 }
 
 /**
- * Registro que se edita no próprio modal: o da Entrada e a observação da ficha do colaborador.
+ * Nome do registro na tela. O tipo "feedback" de Registros se chama Observação; o gravado na ficha do
+ * colaborador (origem "ficha") é o Feedback completo do gestor (troca de nomes pedida pelo Léo em 2026-11-20).
+ * @example recordKindName({ type: "feedback", origin: "ficha" }) // "Feedback"
+ */
+export function recordKindName(record: { type: RecordType; origin: RecordOrigin }): string {
+  if (record.type === "feedback" && record.origin === "ficha") return "Feedback";
+  return recordShortName(record.type);
+}
+
+/**
+ * Registro que se edita no próprio modal: o da Entrada e o feedback da ficha do colaborador.
  * Os outros (chamado, ocorrência, RP) mudam na ficha de origem.
  * @example opensInModal("ficha") // true
  */

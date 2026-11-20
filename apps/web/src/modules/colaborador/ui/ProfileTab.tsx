@@ -183,7 +183,7 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
       {summary.isPending ? <p className="text-sm text-muted">Carregando registros…</p> : null}
       {summary.data ? (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <Stat label="Em aberto" value={summary.data.open} />
             <Stat
               label="Vencidas"
@@ -193,6 +193,7 @@ export function ProfileTab({ member, members, teams }: { member: MemberDto; memb
             <Stat label="Concluídos" value={summary.data.done} tone="text-accent" />
             <Stat label="Chamados" value={summary.data.chamados} />
             <Stat label="Feedbacks" value={summary.data.feedbacks} />
+            <Stat label="Observações" value={summary.data.observations} />
           </div>
           <RecordList title="Em aberto" total={summary.data.open} query={open} empty="Nada em aberto com esta pessoa." />
           <MemberRpList memberId={member.id} />
