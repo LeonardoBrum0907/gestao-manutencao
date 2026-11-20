@@ -26,3 +26,11 @@ A pedido do Léo, o RP não cria mais Problema em Registros. O que ficou do espe
 - Os problemas `origin = "rp"` gravados antes continuam no banco, escondidos de Registros, Dashboard e ficha do colaborador por `inRegistros` (`apps/api/src/registro/domain/registros-scope.ts`). Excluir o RP ainda apaga o espelho dele. Apagar os que sobraram é passo à parte, com o ok do Léo.
 - `Rp.problemRecordId` fica nulo nos RPs novos. A coluna só sai depois que nenhum código ler (regra das migrações: dois PRs).
 - Código que só serve ao espelho antigo: `GET /api/rp/by-problem/:recordId` (rota pública, perguntar antes), `RpMirror` em `RecordSheetPage.tsx`, o desvio de `origin === "rp"` em `sheet-redirect.ts` e `board.ts`, o `rpId` do quadro de Problemas e o aviso de RP em `record-removal.ts`.
+
+## Observação da ficha fora de Registros (2026-11-20)
+
+- O "+ Observação" da ficha do colaborador grava um feedback com origem `ficha` (`POST /api/members/:id/records/observations`). Registros, o checklist de Feedbacks e as contas do Dashboard deixam essa origem de fora (`OUTSIDE_REGISTROS` em `registro/domain/registros-scope.ts`).
+- O histórico da ficha lê `GET /api/members/:id/records/feedbacks`, que mostra a observação da ficha e também o feedback lançado em Registros com a pessoa como alvo.
+- As observações gravadas antes disso têm origem `inbox`: não dá para saber de qual tela vieram, então continuam nas duas telas.
+- A data do "último feedback" na faixa Equipe do Dashboard conta as duas origens, porque fala da última conversa com a pessoa.
+- Observação da ficha não troca de tipo (`assertRetype`).
