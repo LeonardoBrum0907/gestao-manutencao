@@ -82,14 +82,14 @@ export type DemoPdi = { member: string; sponsor: string[]; development: string[]
 export const DEMO_PDIS: readonly DemoPdi[] = [
   {
     member: "c1", sponsor: ["l1"], development: ["l2"], items: [
-      { title: "Acompanhar a troca da Peça 1 no Subconjunto 2", skill: { model: "a", index: 4 }, competencyIndex: null, line: "l2", responsible: "c3", dueInDays: 20, status: "in_progress" },
+      { title: "Acompanhar a troca da Peça 1 no Subconjunto 2", skill: { model: "a", index: 6 }, competencyIndex: null, line: "l2", responsible: "c3", dueInDays: 20, status: "in_progress" },
       { title: "Apresentar a análise do RP 0003 para o turno", skill: null, competencyIndex: 11, line: null, responsible: "s1", dueInDays: 35, status: "planned" },
     ],
   },
   {
     member: "c5", sponsor: [], development: ["l3"], items: [
       { title: "Fazer a troca de formato do Equipamento C com o padrinho", skill: { model: "c", index: 0 }, competencyIndex: null, line: "l3", responsible: "c7", dueInDays: 15, status: "planned" },
-      { title: "Curso de leitura de diagrama elétrico", skill: { model: "a", index: 11 }, competencyIndex: 3, line: null, responsible: null, dueInDays: -10, status: "done" },
+      { title: "Curso de leitura de diagrama elétrico", skill: { model: "a", index: 18 }, competencyIndex: 3, line: null, responsible: null, dueInDays: -10, status: "done" },
     ],
   },
   {
@@ -99,7 +99,7 @@ export const DEMO_PDIS: readonly DemoPdi[] = [
   },
   {
     member: "c6", sponsor: ["l3"], development: ["l5"], items: [
-      { title: "Treinar o diagnóstico do painel do Equipamento B", skill: { model: "b", index: 11 }, competencyIndex: null, line: "l5", responsible: "c9", dueInDays: 45, status: "planned" },
+      { title: "Treinar o diagnóstico do painel do Equipamento B", skill: { model: "b", index: 18 }, competencyIndex: null, line: "l5", responsible: "c9", dueInDays: 45, status: "planned" },
     ],
   },
 ];

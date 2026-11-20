@@ -17,11 +17,14 @@ export const DEMO_SUBASSEMBLIES = [
   "Subconjunto 4 · Painel elétrico",
 ] as const;
 
-// Por subconjunto: duas habilidades de mecânico e uma de eletricista.
+// Por subconjunto: três habilidades de mecânico e duas de eletricista. Com 12 e 8 por modelo, a
+// aderência anda em passos pequenos e a Matriz da equipe mostra quem está perto do corte.
 const SKILL_ACTIONS: { action: string; category: MatrixCategory }[] = [
   { action: "ajustar e regular", category: "mechanical" },
   { action: "trocar peças de desgaste", category: "mechanical" },
+  { action: "revisar o conjunto em bancada", category: "mechanical" },
   { action: "diagnosticar falha elétrica", category: "electrical" },
+  { action: "ajustar sensores e parâmetros", category: "electrical" },
 ];
 const LEVELS: CompetencyLevel[] = ["basic", "intermediate", "advanced"];
 
@@ -55,7 +58,8 @@ export function demoModels(): DemoModel[] {
   return ["a", "b", "c"].map((key, index) => ({
     key,
     name: `Equipamento ${key.toUpperCase()}`,
-    minQualified: index === 2 ? 1 : 2,
+    // Meta de 4 qualificados: o Equipamento C fica abaixo dela no cenário da matriz (demo-matrix.ts).
+    minQualified: 4,
     subassemblies: [...DEMO_SUBASSEMBLIES],
     skills: demoSkills(),
   }));
