@@ -1,0 +1,90 @@
+# Demonstração no Coolify (VPS nova): o app inteiro (tela, API e banco) com dados genéricos, para
+# apresentar sem mostrar nada da produção. Substitui o docker-compose.demo.yml da VPS antiga, que
+# dependia do Caddy e do caderno-admin de lá.
+#
+# No Coolify: aplicação "Docker Compose" deste repositório (main), no ambiente demo do projeto
+# caderno-gestor. O domínio vai só no serviço web: o nginx da tela (apps/web/nginx.conf) repassa
+# /api e /health para o serviço "api" pela rede do próprio compose, então a tela e a API ficam no
+# mesmo endereço e o login por cookie funciona sem CORS. As rotas do MCP não passam: a demo não tem MCP.
+#
+# Segredos: POSTGRES_PASSWORD, SESSION_SECRET e GESTOR_PASSWORD são variáveis do Coolify (a senha
+# de entrar na demo é a GESTOR_PASSWORD, vista em Environment Variables). Sem VAPID, então nenhum
+# aviso chega no celular.
+#
+# Dados: a API carrega os dados genéricos (apps/api/src/demo) ao subir. A carga só roda com
+# DEMO_SEED=permitido e num banco sem cadastro; nos deploys seguintes ela recusa e a API sobe com
+# os dados que já estão lá. Para recarregar (as datas são relativas ao dia da carga): parar a
+# aplicação, apagar o volume demo-pgdata e o demo-attachments no Coolify e fazer deploy de novo.
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: manutencao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no Coolify}
+      POSTGRES_DB: manutencao
+    volumes:
+      - demo-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U manutencao -d manutencao"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  # O nome "api" é o que o nginx da tela procura (apps/web/nginx.conf).
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    restart: unless-stopped
+    init: true
+    # Igual ao apps/api/docker-entrypoint.sh, com a carga da demo entre a migração e a API. O "||"
+    # deixa a API subir quando a carga recusa porque o banco já tem dados (o motivo sai no log).
+    command:
+      - sh
+      - -c
+      - >-
+        cd /repo/apps/api && pnpm exec prisma migrate deploy && cd /repo &&
+        (node apps/api/dist/demo/seed-demo.js || echo "Carga da demo não rodou; a API sobe com os dados atuais.") &&
+        exec node apps/api/dist/main.js
+    environment:
+      DATABASE_URL: postgresql://manutencao:${POSTGRES_PASSWORD}@db:5432/manutencao?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:?Defina SESSION_SECRET no Coolify}
+      GESTOR_PASSWORD: ${GESTOR_PASSWORD:?Defina GESTOR_PASSWORD no Coolify}
+      COOKIE_SECURE: "true"
+      PUBLIC_URL: ${PUBLIC_URL:-https://demo.leobrum.run}
+      ATTACHMENT_DIR: /data/attachments
+      PORT: "3000"
+      # Libera a carga de dados genéricos (apps/api/src/demo/seed-demo.ts); a produção nunca tem.
+      DEMO_SEED: permitido
+    volumes:
+      - demo-attachments:/data/attachments
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 120s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  demo-pgdata:
+  demo-attachments:
