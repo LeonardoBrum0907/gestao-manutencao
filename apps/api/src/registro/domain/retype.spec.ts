@@ -55,4 +55,11 @@ describe("trocar o tipo do registro", () => {
     const task = { ...captureRecord({ type: "task", body: "Trocar correia", occurredAt: when, memberId: null, tone: null }), status: "in_progress" as const };
     assert.equal(retypeState(task, "entry").status, "open");
   });
+
+  it("observação da ficha do colaborador continua feedback", () => {
+    assert.throws(
+      () => assertRetype({ type: "feedback", origin: "ficha", chamadoId: null, attachments: 0 }, "task"),
+      /Observação da ficha do colaborador continua feedback/,
+    );
+  });
 });

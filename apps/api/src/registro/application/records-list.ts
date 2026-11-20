@@ -4,6 +4,7 @@ import { DomainError } from "../../kernel/domain-error";
 import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { RecordRepository } from "../infra/record.repository";
 import type { RecordListFilter } from "../domain/record-list";
+import { parseRecordList, type RecordListQuery } from "./parse-record-list";
 
 @Injectable()
 export class RecordsList {
@@ -26,6 +27,15 @@ export class RecordsList {
 
   feedbackBoard(now: Date = new Date()): Promise<FeedbackBoardDto> {
     return this.records.feedbackBoard(now);
+  }
+
+  /**
+   * Histórico de observações da ficha: os feedbacks da pessoa, inclusive os gravados na própria ficha, que Registros não mostra.
+   * @example list.memberFeedbacks("m1", { cursor: "r9" })
+   */
+  async memberFeedbacks(memberId: string, query: RecordListQuery, now: Date = new Date()): Promise<RecordPageDto> {
+    const filter = parseRecordList({ cursor: query.cursor, limit: query.limit, memberId, type: "feedback" });
+    return this.records.listPage(filter, now, "ficha");
   }
 
   async memberSummary(memberId: string, now: Date = new Date()): Promise<MemberRecordSummaryDto> {
