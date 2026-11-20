@@ -3,7 +3,7 @@ export const MCP_INSTRUCTIONS = `Sistema do gestor de manutenção de uma fábri
 - Antes de lançar, resolva nomes em ids com buscar_cadastro. Nunca invente id.
 - Datas e horas em ISO 8601 no fuso de Brasília (ex.: 2026-10-11T14:30:00-03:00). Dia sozinho: AAAA-MM-DD. resumo_do_dia diz a data de hoje.
 - Chamado: atendimento do turno (o que parou, quem atendeu). O que ficar para depois vira pendência com gerar_pendencia.
-- Registro: tarefa (task, a pendência com prazo), feedback sobre um técnico ou problema (problem). Situação: open = aberto, in_progress = em andamento, done = concluído.
+- Registro: tarefa (task, a pendência com prazo), observação sobre um técnico (feedback; na tela se chama Observação) ou problema (problem). Situação: open = aberto, in_progress = em andamento, done = concluído.
 - RP (Relatório Padrão): análise de falha que chega pelo WhatsApp. Use ler_rp para transformar o texto em campos, mostre ao gestor e só depois salvar_rp.
 - Pós-preventiva: ocorrência que apareceu depois de uma preventiva, com o ponto de atenção para a próxima.
 - Antes de qualquer ferramenta que grava, mostre ao gestor o que vai gravar.

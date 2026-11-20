@@ -56,10 +56,10 @@ describe("trocar o tipo do registro", () => {
     assert.equal(retypeState(task, "entry").status, "open");
   });
 
-  it("observação da ficha do colaborador continua feedback", () => {
+  it("feedback da ficha do colaborador não troca de tipo", () => {
     assert.throws(
       () => assertRetype({ type: "feedback", origin: "ficha", chamadoId: null, attachments: 0 }, "task"),
-      /Observação da ficha do colaborador continua feedback/,
+      /Feedback da ficha do colaborador não troca de tipo/,
     );
   });
 });

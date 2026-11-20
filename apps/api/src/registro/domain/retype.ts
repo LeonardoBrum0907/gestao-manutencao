@@ -17,7 +17,7 @@ export type RetypeSubject = {
 export function assertRetype(subject: RetypeSubject, target: RecordType): void {
   if (subject.type === target) return;
   if (subject.origin === "ficha") {
-    throw new DomainError("retype_origin", 400, "Observação da ficha do colaborador continua feedback.");
+    throw new DomainError("retype_origin", 400, "Feedback da ficha do colaborador não troca de tipo.");
   }
   if (subject.origin !== "inbox") {
     throw new DomainError("retype_origin", 400, `Só registro lançado pela Entrada troca de tipo; este veio de "${subject.origin}".`);

@@ -30,7 +30,7 @@ export class RecordsList {
   }
 
   /**
-   * Histórico de observações da ficha: os feedbacks da pessoa, inclusive os gravados na própria ficha, que Registros não mostra.
+   * Cartão Feedbacks da ficha: só os feedbacks gravados nela. As observações de Registros vêm de GET /api/records?memberId.
    * @example list.memberFeedbacks("m1", { cursor: "r9" })
    */
   async memberFeedbacks(memberId: string, query: RecordListQuery, now: Date = new Date()): Promise<RecordPageDto> {

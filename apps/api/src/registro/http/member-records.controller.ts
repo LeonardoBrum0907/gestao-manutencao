@@ -15,14 +15,14 @@ export class MemberRecordsController {
     return this.records.memberSummary(memberId);
   }
 
-  // Histórico de observações da ficha (feedbacks da pessoa, com os que Registros não mostra).
+  // Cartão Feedbacks da ficha: o que o gestor gravou nela, fora de Registros.
   @Get("feedbacks")
   feedbacks(@Param("memberId") memberId: string, @Query() query: RecordListQuery) {
     return this.records.memberFeedbacks(memberId, query);
   }
 
-  @Post("observations")
-  observe(@Param("memberId") memberId: string, @Body() body: unknown) {
-    return this.writer.observe(memberId, body);
+  @Post("feedbacks")
+  giveFeedback(@Param("memberId") memberId: string, @Body() body: unknown) {
+    return this.writer.giveMemberFeedback(memberId, body);
   }
 }

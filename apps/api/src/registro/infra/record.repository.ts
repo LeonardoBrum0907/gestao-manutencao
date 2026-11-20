@@ -30,7 +30,7 @@ import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
 import { reminderWrite } from "../../lembrete/domain/reminder-input";
 import { completionStep } from "./record-completion";
-import { inRegistros, scopeWhere, type RecordScope } from "../domain/registros-scope";
+import { inMemberFeedbacks, inRegistros, scopeWhere, type RecordScope } from "../domain/registros-scope";
 
 const include = {
   attachments: { orderBy: { createdAt: "asc" as const } },
@@ -452,16 +452,17 @@ export class RecordRepository {
   async memberSummary(memberId: string, now: Date): Promise<MemberRecordSummaryDto> {
     const mine = involving(memberId);
     const pending = { type: { not: "feedback" }, ...inRegistros } as const;
-    const [open, overdue, done, chamados, feedbacks] = await Promise.all([
+    const [open, overdue, done, chamados, feedbacks, observations] = await Promise.all([
       this.prisma.record.count({ where: { AND: [mine, pending, { status: { not: "done" } }] } }),
       this.prisma.record.count({
         where: { AND: [mine, { type: "task", status: { not: "done" }, dueAt: dueRange("overdue", now) }] },
       }),
       this.prisma.record.count({ where: { AND: [mine, pending, { status: "done" }] } }),
       this.prisma.record.count({ where: { AND: [mine, { origin: "chamado" }] } }),
-      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }] } }),
+      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }, inMemberFeedbacks] } }),
+      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }, inRegistros] } }),
     ]);
-    return { open, overdue, done, chamados, feedbacks };
+    return { open, overdue, done, chamados, feedbacks, observations };
   }
 
   async find(id: string): Promise<RecordDto | null> {

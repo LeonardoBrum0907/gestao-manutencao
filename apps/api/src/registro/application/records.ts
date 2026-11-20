@@ -6,7 +6,7 @@ import { CADASTRO_REFS, type CadastroRefs } from "../../ports/cadastro-refs";
 import { dueAtOnDay } from "../domain/agenda-day";
 import { assertBoardChange, boardDueAt, boardDueHasTime, parseBoardChange, type BoardChange } from "../domain/board";
 import { captureRecord } from "../domain/capture";
-import { observationRecord } from "../domain/member-observation";
+import { memberFeedbackRecord } from "../domain/member-feedback";
 import { priorityReminders } from "../domain/priority-reminders";
 import { recordRemovalWarnings } from "../domain/record-removal";
 import { assertRetype, retypeState } from "../domain/retype";
@@ -14,7 +14,7 @@ import type { RecordState } from "../domain/record-state";
 import { applyEntrySheet, applyFeedbackSheet, applyProblemSheet, applyTaskSheet } from "../domain/sheets";
 import { AttachmentStorage } from "../infra/attachment.storage";
 import { RecordRepository } from "../infra/record.repository";
-import { parseCapture, parseEntrySheet, parseObservation, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
+import { parseCapture, parseEntrySheet, parseMemberFeedback, parseFeedbackSheet, parseProblemSheet, parseSheetType, parseTaskSheet } from "./parse-record";
 import { parseRepeatChange } from "./parse-task-repeat";
 import { TaskRepeats } from "./task-repeats";
 
@@ -74,11 +74,11 @@ export class Records {
     return this.records.insert(captureRecord(input));
   }
 
-  // Observação da ficha do colaborador: feedback que não aparece em Registros.
-  async observe(memberId: string, body: unknown): Promise<RecordDto> {
-    const input = parseObservation(body);
+  // Feedback da ficha do colaborador: não aparece em Registros.
+  async giveMemberFeedback(memberId: string, body: unknown): Promise<RecordDto> {
+    const input = parseMemberFeedback(body);
     await this.assertMember(memberId);
-    return this.records.insert(observationRecord(memberId, input));
+    return this.records.insert(memberFeedbackRecord(memberId, input));
   }
 
   async updateSheet(id: string, body: unknown): Promise<RecordDto> {
