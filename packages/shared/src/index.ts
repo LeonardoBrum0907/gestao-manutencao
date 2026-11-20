@@ -26,7 +26,7 @@ export function isFeedbackTone(value: string): value is FeedbackTone {
 export const RECORD_PRIORITIES = ["low", "medium", "high"] as const;
 export type RecordPriority = (typeof RECORD_PRIORITIES)[number];
 
-// "ficha": observação gravada na ficha do colaborador; fica fora de Registros (pedido do Léo, 2026-11-20).
+// "ficha": feedback gravado na ficha do colaborador; fica fora de Registros (pedido do Léo, 2026-11-20).
 export const RECORD_ORIGINS = ["inbox", "chamado", "ocorrencia", "rp", "ficha"] as const;
 export type RecordOrigin = (typeof RECORD_ORIGINS)[number];
 
@@ -61,7 +61,8 @@ export type MemberRoleName = (typeof MEMBER_ROLES)[number];
 
 export const RECORD_TYPE_LABELS: Record<RecordType, { short: string; gestor: string }> = {
   task: { short: "Tarefa", gestor: "Pendências do dia a dia" },
-  feedback: { short: "Feedback", gestor: "Pessoas" },
+  // Na tela o tipo "feedback" de Registros se chama Observação; Feedback é o da ficha do colaborador (troca pedida pelo Léo em 2026-11-20).
+  feedback: { short: "Observação", gestor: "Pessoas" },
   problem: { short: "Problema", gestor: "Pendências Preventivas" },
   entry: { short: "Entrada", gestor: "Entrada" },
 };
@@ -416,7 +417,9 @@ export type MemberRecordSummaryDto = {
   overdue: number;
   done: number;
   chamados: number;
+  // Feedbacks gravados na ficha (origem "ficha"); observations são os feedbacks de Registros com a pessoa como alvo.
   feedbacks: number;
+  observations: number;
 };
 
 // O que a lista precisa para desenhar a linha: sem anexos, observações e técnicos do chamado.
