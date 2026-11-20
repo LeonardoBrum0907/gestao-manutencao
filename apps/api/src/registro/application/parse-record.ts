@@ -1,6 +1,7 @@
 import { isFeedbackTone, isRecordPriority, isRecordStatus, isRecordType, type FeedbackTone, type RecordPriority, type RecordType } from "@manutencao/shared";
 import { DomainError } from "../../kernel/domain-error";
 import { optionalBoolean, optionalDate, optionalString, readObject, requiredDate, requiredString } from "../../kernel/parse";
+import type { MemberFeedbackInput } from "../domain/member-feedback";
 import type { CaptureInput, EntrySheetInput, FeedbackSheetInput, ProblemSheetInput, TaskSheetInput } from "../domain/record-state";
 
 function parseTone(source: Record<string, unknown>): FeedbackTone | null {
@@ -14,13 +15,23 @@ export function parseCapture(body: unknown): CaptureInput {
   const source = readObject(body);
   const type = requiredString(source, "type", "Escolha o tipo.");
   if (!isRecordType(type)) {
-    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Feedback ou Problema.");
+    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Observação ou Problema.");
   }
   return {
     type,
     body: requiredString(source, "body", "Escreva o texto do registro."),
     occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     memberId: optionalString(source, "memberId"),
+    tone: parseTone(source),
+  };
+}
+
+/** Feedback da ficha do colaborador: texto, quando e tom; o tipo e a pessoa vêm da rota. */
+export function parseMemberFeedback(body: unknown): MemberFeedbackInput {
+  const source = readObject(body);
+  return {
+    body: requiredString(source, "body", "Escreva o feedback."),
+    occurredAt: requiredDate(source, "occurredAt", "Informe quando aconteceu."),
     tone: parseTone(source),
   };
 }

@@ -8,13 +8,13 @@ export function captureRecord(input: CaptureInput): RecordState {
     throw new DomainError("empty_body", 400, "Escreva o texto do registro.");
   }
   if (!isRecordType(input.type)) {
-    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Feedback ou Problema.");
+    throw new DomainError("type", 400, "Escolha Entrada, Tarefa, Observação ou Problema.");
   }
   if (Number.isNaN(input.occurredAt.getTime())) {
     throw new DomainError("when", 400, "Informe quando aconteceu.");
   }
   if (input.tone && input.type !== "feedback") {
-    throw new DomainError("tone", 400, "Tom é só do feedback.");
+    throw new DomainError("tone", 400, "Tom é só da observação ou do feedback.");
   }
   return {
     type: input.type,

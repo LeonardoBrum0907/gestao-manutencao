@@ -28,7 +28,7 @@ const tabs: { param: string; label: string; type: RecordType | null }[] = [
   { param: "", label: "Todos", type: null },
   { param: "tarefas", label: "Tarefas", type: "task" },
   { param: "problemas", label: "Problemas", type: "problem" },
-  { param: "feedbacks", label: "Feedbacks", type: "feedback" },
+  { param: "feedbacks", label: "Observações", type: "feedback" },
 ];
 const scopeLabel: Record<StatusScope, string> = { abertos: "Abertos", concluidos: "Concluídos", todos: "Todas as situações" };
 const groupLabel: Record<GroupMode, string> = { nenhum: "Sem agrupar", tipo: "Agrupar por tipo", linha: "Agrupar por linha", maquina: "Agrupar por máquina", situacao: "Agrupar por situação", pessoa: "Agrupar por pessoa" };
@@ -102,7 +102,7 @@ export function RecordsPage() {
 
   return (
     <div>
-      <PageTitle title="Registros" text="Todas as tarefas, problemas e feedbacks, inclusive os concluídos. Procure, filtre e agrupe." />
+      <PageTitle title="Registros" text="Todas as tarefas, problemas e observações, inclusive os concluídos. Procure, filtre e agrupe." />
       <div role="tablist" aria-label="Tipo de registro" className="-mt-2 mb-4 flex gap-1 overflow-x-auto border-b border-line">
         {tabs.map((tab) => {
           const count = withoutType.filter((row) => !tab.type || row.type === tab.type).length;

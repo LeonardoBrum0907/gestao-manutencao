@@ -26,3 +26,13 @@ A pedido do Léo, o RP não cria mais Problema em Registros. O que ficou do espe
 - Os problemas `origin = "rp"` gravados antes continuam no banco, escondidos de Registros, Dashboard e ficha do colaborador por `inRegistros` (`apps/api/src/registro/domain/registros-scope.ts`). Excluir o RP ainda apaga o espelho dele. Apagar os que sobraram é passo à parte, com o ok do Léo.
 - `Rp.problemRecordId` fica nulo nos RPs novos. A coluna só sai depois que nenhum código ler (regra das migrações: dois PRs).
 - Código que só serve ao espelho antigo: `GET /api/rp/by-problem/:recordId` (rota pública, perguntar antes), `RpMirror` em `RecordSheetPage.tsx`, o desvio de `origin === "rp"` em `sheet-redirect.ts` e `board.ts`, o `rpId` do quadro de Problemas e o aviso de RP em `record-removal.ts`.
+
+## Feedback da ficha e Observação de Registros (2026-11-20)
+
+- Troca de nomes pedida pelo Léo: na tela, o tipo `feedback` de Registros se chama **Observação** (`RECORD_TYPE_LABELS`), e **Feedback** é o que o gestor grava na ficha do colaborador. No banco os dois continuam com `type = "feedback"`; o que separa é a origem (`ficha` para o da ficha). Use `recordKindName` no web para mostrar o nome certo.
+- O feedback da ficha entra por `POST /api/members/:id/records/feedbacks` e sai por `GET` na mesma rota (só origem `ficha`). Registros, o checklist e as contas do Dashboard deixam essa origem de fora (`OUTSIDE_REGISTROS` em `registro/domain/registros-scope.ts`).
+- A aba Comportamento da ficha tem dois cartões: Feedbacks (os da ficha) e Observações (os de Registros com a pessoa como alvo, por `GET /api/records?memberId&type=feedback`). O resumo traz `feedbacks` e `observations` separados.
+- O que foi gravado na ficha antes disso tem origem `inbox`: não dá para saber de qual tela veio, então aparece como Observação, também em Registros.
+- A data do "último feedback" na faixa Equipe do Dashboard conta os dois (feedback e observação), porque fala da última conversa com a pessoa.
+- Na URL de Registros o tipo continua `?tipo=feedbacks`, para não quebrar links salvos.
+- Feedback da ficha não troca de tipo (`assertRetype`).

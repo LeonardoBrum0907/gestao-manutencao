@@ -30,7 +30,7 @@ import type { RecordLinks } from "../domain/record-removal";
 import type { RecordState } from "../domain/record-state";
 import { reminderWrite } from "../../lembrete/domain/reminder-input";
 import { completionStep } from "./record-completion";
-import { inRegistros } from "../domain/registros-scope";
+import { inMemberFeedbacks, inRegistros, scopeWhere, type RecordScope } from "../domain/registros-scope";
 
 const include = {
   attachments: { orderBy: { createdAt: "asc" as const } },
@@ -218,8 +218,8 @@ function involving(memberId: string): Prisma.RecordWhereInput {
 
 // Os filtros vão para o banco: antes a API trazia todos os registros e filtrava no Node.
 
-function listWhere(filter: RecordListFilter, now: Date): Prisma.RecordWhereInput {
-  const and: Prisma.RecordWhereInput[] = [inRegistros];
+function listWhere(filter: RecordListFilter, now: Date, scope: RecordScope): Prisma.RecordWhereInput {
+  const and: Prisma.RecordWhereInput[] = [scopeWhere(scope)];
   if (filter.types) and.push({ type: { in: filter.types } });
   if (filter.statuses) and.push({ status: { in: filter.statuses } });
   if (filter.lineIds) and.push({ lineId: { in: filter.lineIds } });
@@ -375,7 +375,7 @@ export class RecordRepository {
   // Feedbacks a conversar e os conversados do último mês; a tela agrupa por colaborador, tom ou data.
   async feedbackBoard(now: Date): Promise<FeedbackBoardDto> {
     const rows = await this.prisma.record.findMany({
-      where: { AND: [{ type: "feedback" }, openOrDoneSince(doneSince(now, FEEDBACK_DONE_WINDOW_DAYS))] },
+      where: { AND: [inRegistros, { type: "feedback" }, openOrDoneSince(doneSince(now, FEEDBACK_DONE_WINDOW_DAYS))] },
       select: {
         id: true,
         body: true,
@@ -433,9 +433,9 @@ export class RecordRepository {
     await this.prisma.$transaction(steps);
   }
 
-  async listPage(filter: RecordListFilter, now: Date): Promise<RecordPageDto> {
+  async listPage(filter: RecordListFilter, now: Date, scope: RecordScope = "registros"): Promise<RecordPageDto> {
     const rows = await this.prisma.record.findMany({
-      where: listWhere(filter, now),
+      where: listWhere(filter, now, scope),
       select: listSelect,
       orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
       take: filter.limit + 1,
@@ -452,16 +452,17 @@ export class RecordRepository {
   async memberSummary(memberId: string, now: Date): Promise<MemberRecordSummaryDto> {
     const mine = involving(memberId);
     const pending = { type: { not: "feedback" }, ...inRegistros } as const;
-    const [open, overdue, done, chamados, feedbacks] = await Promise.all([
+    const [open, overdue, done, chamados, feedbacks, observations] = await Promise.all([
       this.prisma.record.count({ where: { AND: [mine, pending, { status: { not: "done" } }] } }),
       this.prisma.record.count({
         where: { AND: [mine, { type: "task", status: { not: "done" }, dueAt: dueRange("overdue", now) }] },
       }),
       this.prisma.record.count({ where: { AND: [mine, pending, { status: "done" }] } }),
       this.prisma.record.count({ where: { AND: [mine, { origin: "chamado" }] } }),
-      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }] } }),
+      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }, inMemberFeedbacks] } }),
+      this.prisma.record.count({ where: { AND: [mine, { type: "feedback" }, inRegistros] } }),
     ]);
-    return { open, overdue, done, chamados, feedbacks };
+    return { open, overdue, done, chamados, feedbacks, observations };
   }
 
   async find(id: string): Promise<RecordDto | null> {

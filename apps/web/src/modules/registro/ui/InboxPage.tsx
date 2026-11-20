@@ -52,7 +52,7 @@ export function InboxPage() {
     <div>
       <PageTitle
         title="Entrada"
-        text="Anote aqui o que aparecer no turno. Depois, com calma, abra cada rascunho e escolha se é tarefa, problema ou feedback: aí ele vai para Registros."
+        text="Anote aqui o que aparecer no turno. Depois, com calma, abra cada rascunho e escolha se é tarefa, problema ou observação: aí ele vai para Registros."
       />
       <p className="mb-3 hidden justify-end text-sm text-muted md:flex">{pendingLine(items.length)}</p>
       <ChecklistBox frame={{ itemHeader: "Rascunho", columns: ENTRY_COLUMNS, summary: pendingLine(items.length) }}>

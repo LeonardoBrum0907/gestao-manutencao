@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useSearchParams, type To } from "react-router-dom";
 import type { RecordOrigin } from "@manutencao/shared";
+import { opensInModal } from "../model/record";
 
 // O registro aberto fica no endereço (?registro=id): F5 e o voltar do navegador mantêm o modal.
 const PARAM = "registro";
@@ -20,7 +21,7 @@ function isModalState(state: unknown): state is ModalState {
 export function useRecordLink(): (item: { id: string; origin: RecordOrigin }) => RecordLink {
   const [params] = useSearchParams();
   return (item) => {
-    if (item.origin !== "inbox") return { to: `/registros/${item.id}` };
+    if (!opensInModal(item.origin)) return { to: `/registros/${item.id}` };
     const next = new URLSearchParams(params);
     next.set(PARAM, item.id);
     return { to: { search: `?${next}` }, state: { recordModal: true }, recordId: item.id };
