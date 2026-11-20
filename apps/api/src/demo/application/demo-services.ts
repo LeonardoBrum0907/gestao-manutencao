@@ -13,6 +13,7 @@ import type { Roles } from "../../cadastro/application/roles";
 import type { Subassemblies } from "../../cadastro/application/subassemblies";
 import type { Teams } from "../../cadastro/application/teams";
 import type { MatrixCatalog } from "../../competencia/application/matrix-catalog";
+import type { MatrixSettings } from "../../competencia/application/matrix-settings";
 import type { MemberMatrix } from "../../competencia/application/member-matrix";
 import type { TechCards } from "../../documentacao/application/tech-cards";
 import type { PostPreventives } from "../../pos-preventiva/application/post-preventives";
@@ -35,6 +36,7 @@ export type DemoServices = {
   machines: Machines;
   subassemblies: Subassemblies;
   matrixCatalog: MatrixCatalog;
+  matrixSettings: MatrixSettings;
   roles: Roles;
   grades: Grades;
   teams: Teams;

@@ -17,6 +17,7 @@ import { Roles } from "../cadastro/application/roles";
 import { Subassemblies } from "../cadastro/application/subassemblies";
 import { Teams } from "../cadastro/application/teams";
 import { MatrixCatalog } from "../competencia/application/matrix-catalog";
+import { MatrixSettings } from "../competencia/application/matrix-settings";
 import { MemberMatrix } from "../competencia/application/member-matrix";
 import { TechCards } from "../documentacao/application/tech-cards";
 import { PostPreventives } from "../pos-preventiva/application/post-preventives";
@@ -39,7 +40,7 @@ function servicesOf(app: INestApplicationContext): DemoServices {
   const get = <T>(type: Type<T>): T => app.get(type, { strict: false });
   return {
     factories: get(Factories), lines: get(Lines), machines: get(Machines), subassemblies: get(Subassemblies),
-    matrixCatalog: get(MatrixCatalog), roles: get(Roles), grades: get(Grades), teams: get(Teams), members: get(Members),
+    matrixCatalog: get(MatrixCatalog), matrixSettings: get(MatrixSettings), roles: get(Roles), grades: get(Grades), teams: get(Teams), members: get(Members),
     memberMatrix: get(MemberMatrix), performance: get(MemberPerformance), competencies: get(Competencies),
     behaviorTags: get(BehaviorTags), behavior: get(MemberBehavior), pdi: get(MemberPdi), pdiItems: get(MemberPdiItems),
     chamados: get(Chamados), records: get(Records), rps: get(Rps), publicLinks: get(PublicLinks),
